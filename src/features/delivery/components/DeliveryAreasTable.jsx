@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const statusClasses = {
   Active: "bg-[#e9fff0] text-[#219653]",
@@ -70,6 +71,7 @@ function StatusBadge({ status }) {
 }
 
 export default function DeliveryAreasTable({ currentPage, onPageChange, pageSize, rows, totalItems }) {
+  const navigate = useNavigate();
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, totalItems);
@@ -114,6 +116,7 @@ export default function DeliveryAreasTable({ currentPage, onPageChange, pageSize
                 <td className="px-4 py-4 text-right">
                   <button
                     className="inline-flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-[12px] font-bold text-[#cf6e38] transition hover:text-[#b75d31]"
+                    onClick={() => navigate(`/delivery/${row.id}`)}
                     type="button"
                   >
                     Manage Area

@@ -116,6 +116,13 @@ export default function AdminLayout() {
       };
     }
 
+    if (location.pathname.startsWith("/delivery/")) {
+      return {
+        title: "Delivery Area Details",
+        subtitle: "Manage postal coverage, service controls, and local configuration.",
+      };
+    }
+
     return pageMeta[location.pathname] || pageMeta["/dashboard"];
   }, [location.pathname]);
   const initials = useMemo(() => {

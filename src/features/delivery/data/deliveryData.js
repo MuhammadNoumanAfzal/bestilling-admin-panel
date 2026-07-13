@@ -35,6 +35,18 @@ export const deliveryAreaRows = [
     vendors: 45,
     status: "Active",
     updatedAt: "2024-03-15",
+    maxDeliveryRadius: 30,
+    leadTimeDays: 1,
+    coverageType: "All City Coverage",
+    coveragePercent: "88%",
+    country: "Norway",
+    postalAreas: [
+      { id: "0590", postalCode: "0590", areaName: "Oslo Sentrum", status: "Active", vendors: 21 },
+      { id: "0250", postalCode: "0250", areaName: "Frogner", status: "Active", vendors: 16 },
+      { id: "0360", postalCode: "0360", areaName: "Majorstuen", status: "Active", vendors: 15 },
+      { id: "0450", postalCode: "0450", areaName: "Grunerlokka", status: "Active", vendors: 13 },
+      { id: "0580", postalCode: "0580", areaName: "Storo", status: "Inactive", vendors: 10 },
+    ],
   },
   {
     id: "bergen",
@@ -44,6 +56,15 @@ export const deliveryAreaRows = [
     vendors: 48,
     status: "Active",
     updatedAt: "2024-03-14",
+    maxDeliveryRadius: 24,
+    leadTimeDays: 2,
+    coverageType: "Selected Postal Codes Only",
+    coveragePercent: "73%",
+    country: "Norway",
+    postalAreas: [
+      { id: "5003", postalCode: "5003", areaName: "Bergenhus", status: "Active", vendors: 18 },
+      { id: "5052", postalCode: "5052", areaName: "Minde", status: "Active", vendors: 12 },
+    ],
   },
   {
     id: "trondheim",
@@ -53,6 +74,14 @@ export const deliveryAreaRows = [
     vendors: 20,
     status: "Active",
     updatedAt: "2024-03-14",
+    maxDeliveryRadius: 20,
+    leadTimeDays: 1,
+    coverageType: "Selected Postal Codes Only",
+    coveragePercent: "61%",
+    country: "Norway",
+    postalAreas: [
+      { id: "7011", postalCode: "7011", areaName: "Midtbyen", status: "Active", vendors: 10 },
+    ],
   },
   {
     id: "stavanger",
@@ -62,6 +91,14 @@ export const deliveryAreaRows = [
     vendors: 50,
     status: "Active",
     updatedAt: "2024-03-15",
+    maxDeliveryRadius: 18,
+    leadTimeDays: 1,
+    coverageType: "All City Coverage",
+    coveragePercent: "82%",
+    country: "Norway",
+    postalAreas: [
+      { id: "4005", postalCode: "4005", areaName: "Sentrum", status: "Active", vendors: 19 },
+    ],
   },
   {
     id: "tromso",
@@ -71,6 +108,14 @@ export const deliveryAreaRows = [
     vendors: 30,
     status: "Inactive",
     updatedAt: "2024-03-15",
+    maxDeliveryRadius: 15,
+    leadTimeDays: 3,
+    coverageType: "Selected Postal Codes Only",
+    coveragePercent: "32%",
+    country: "Norway",
+    postalAreas: [
+      { id: "9008", postalCode: "9008", areaName: "Sentrum", status: "Inactive", vendors: 9 },
+    ],
   },
   {
     id: "drammen",
@@ -80,6 +125,14 @@ export const deliveryAreaRows = [
     vendors: 10,
     status: "Active",
     updatedAt: "2024-03-15",
+    maxDeliveryRadius: 16,
+    leadTimeDays: 2,
+    coverageType: "All City Coverage",
+    coveragePercent: "58%",
+    country: "Norway",
+    postalAreas: [
+      { id: "3015", postalCode: "3015", areaName: "Bragernes", status: "Active", vendors: 5 },
+    ],
   },
   {
     id: "alesund",
@@ -89,6 +142,12 @@ export const deliveryAreaRows = [
     vendors: 12,
     status: "Active",
     updatedAt: "2024-03-12",
+    maxDeliveryRadius: 14,
+    leadTimeDays: 2,
+    coverageType: "Selected Postal Codes Only",
+    coveragePercent: "49%",
+    country: "Norway",
+    postalAreas: [],
   },
   {
     id: "kristiansand",
@@ -98,6 +157,12 @@ export const deliveryAreaRows = [
     vendors: 18,
     status: "Active",
     updatedAt: "2024-03-10",
+    maxDeliveryRadius: 19,
+    leadTimeDays: 2,
+    coverageType: "Selected Postal Codes Only",
+    coveragePercent: "55%",
+    country: "Norway",
+    postalAreas: [],
   },
   {
     id: "fredrikstad",
@@ -107,6 +172,12 @@ export const deliveryAreaRows = [
     vendors: 9,
     status: "Inactive",
     updatedAt: "2024-03-08",
+    maxDeliveryRadius: 12,
+    leadTimeDays: 3,
+    coverageType: "Selected Postal Codes Only",
+    coveragePercent: "27%",
+    country: "Norway",
+    postalAreas: [],
   },
   {
     id: "bodo",
@@ -116,9 +187,19 @@ export const deliveryAreaRows = [
     vendors: 8,
     status: "Active",
     updatedAt: "2024-03-11",
+    maxDeliveryRadius: 12,
+    leadTimeDays: 2,
+    coverageType: "Selected Postal Codes Only",
+    coveragePercent: "39%",
+    country: "Norway",
+    postalAreas: [],
   },
 ];
 
 export const deliveryPagination = {
   pageSize: 6,
 };
+
+export function getDeliveryAreaById(areaId) {
+  return deliveryAreaRows.find((area) => area.id === areaId) || null;
+}

@@ -2,9 +2,9 @@ import DeliveryStatusPill from "./DeliveryStatusPill.jsx";
 
 function SettingField({ label, value }) {
   return (
-    <div className="space-y-1.5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#a39388]">{label}</p>
-      <div className="rounded-[10px] border border-[#e6dbd3] bg-[#f8f4f1] px-3 py-2.5 text-[13px] font-semibold text-[#2a1f19]">
+    <div className="space-y-2">
+      <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#a39388]">{label}</p>
+      <div className="rounded-[12px] border border-[#e6dbd3] bg-[#f8f4f1] px-4 py-3 text-[15px] font-medium text-[#18120f]">
         {value}
       </div>
     </div>
@@ -13,16 +13,16 @@ function SettingField({ label, value }) {
 
 export default function DeliverySettingsCard({ area }) {
   return (
-    <section className="rounded-[18px] border border-[#ddd4cd] bg-white p-4 shadow-[0_10px_24px_rgba(55,31,13,0.05)]">
-      <div className="mb-4 flex items-center justify-between gap-3">
+    <section className="rounded-[18px] border border-[#ddd4cd] bg-white p-5 shadow-[0_10px_24px_rgba(55,31,13,0.05)]">
+      <div className="mb-5 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-[18px] font-bold text-[#231913]">General Settings</h2>
-          <p className="mt-1 text-[12px] leading-5 text-[#8d8077]">Edit city metadata for this delivery area.</p>
+          <h2 className="text-[24px] font-bold tracking-[-0.03em] text-[#18120f]">General Settings</h2>
+          <p className="mt-2 text-[15px] leading-6 text-[#6f645d]">Edit city metadata for this delivery area.</p>
         </div>
         <DeliveryStatusPill status={area.status} />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <SettingField label="City Name" value={area.city} />
         <SettingField label="Region" value={area.region} />
         <SettingField label="Maximum Delivery Radius (km)" value={area.maxDeliveryRadius} />

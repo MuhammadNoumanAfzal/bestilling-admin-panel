@@ -4,7 +4,7 @@ function ActionButton({ children, onClick, tone = "default" }) {
       ? "border-[#f0b8ab] bg-white text-[#d15b42] hover:bg-[#fff4f1]"
       : tone === "active"
         ? "border-transparent bg-[#cf6e38] text-white hover:bg-[#bc6030]"
-        : "border-[#ddd2ca] bg-[#faf6f2] text-[#2f241d] hover:border-[#cf6e38]/35 hover:bg-[#fff5ef]";
+        : "border-[#ddd2ca] bg-[#faf6f2] text-[#18120f] hover:border-[#cf6e38]/35 hover:bg-[#fff5ef]";
 
   return (
     <button

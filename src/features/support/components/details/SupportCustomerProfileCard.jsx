@@ -2,8 +2,8 @@ import { Mail, MapPin, Phone, UserRound } from "lucide-react";
 
 function InfoRow({ icon: Icon, children }) {
   return (
-    <div className="flex items-center gap-2.5 text-[13px] text-[#786c65]">
-      <Icon size={14} />
+    <div className="flex items-center gap-2.5 text-[13px] text-[#18120f]">
+      <Icon className="text-[#786c65]" size={14} />
       <span>{children}</span>
     </div>
   );
@@ -24,7 +24,7 @@ export default function SupportCustomerProfileCard({ ticket }) {
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-[17px] font-bold text-[#2a1e17]">{ticket.user}</p>
+            <p className="text-[17px] font-bold text-[#18120f]">{ticket.user}</p>
             <p className="text-[14px] font-medium text-[#8d8077]">{ticket.type}</p>
             <div className="mt-1.5 inline-flex rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-bold text-[#cf6e38]">
               Active requester
@@ -41,7 +41,7 @@ export default function SupportCustomerProfileCard({ ticket }) {
       </div>
 
       <button
-        className="mx-4 mb-4 inline-flex h-9 w-[calc(100%-2rem)] cursor-pointer items-center justify-center rounded-[10px] border border-[#ddd2ca] bg-[#faf6f2] text-[13px] font-bold text-[#2f241d] transition hover:border-[#cf6e38]/35 hover:bg-[#fff5ef]"
+        className="mx-4 mb-4 inline-flex h-9 w-[calc(100%-2rem)] cursor-pointer items-center justify-center rounded-[10px] border border-[#ddd2ca] bg-[#faf6f2] text-[13px] font-bold text-[#18120f] transition hover:border-[#cf6e38]/35 hover:bg-[#fff5ef]"
         type="button"
       >
         View Customer Profile

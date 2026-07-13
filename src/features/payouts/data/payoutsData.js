@@ -137,6 +137,26 @@ export const payoutsTopVendors = [
   { id: "vendor-4", name: "12 AM Hunger", share: "9%", avatar: "12" },
 ];
 
+export const globalCommissionSettings = {
+  currentRate: "12%",
+  label: "Platform Default",
+  description:
+    "This commission is applied to all vendors unless an Area or Vendor-specific commission is configured. Changes here affect all transactions across the entire platform.",
+};
+
+export const vendorCommissionRows = [
+  { id: "vendor-row-1", vendor: "Grill Bar", area: "Oslo", currentCommission: "12%", avatar: "GB" },
+  { id: "vendor-row-2", vendor: "Chop Chop", area: "Bergen", currentCommission: "8%", avatar: "CC" },
+  { id: "vendor-row-3", vendor: "Flavor Hunt", area: "Oslo", currentCommission: "10%", avatar: "FH" },
+];
+
+export const areaCommissionRows = [
+  { id: "area-row-1", area: "Oslo", commissionRate: "12%", activeVendors: "11%", orderShare: "15%" },
+  { id: "area-row-2", area: "Bergen", commissionRate: "8%", activeVendors: "8%", orderShare: "8%" },
+  { id: "area-row-3", area: "Oslo", commissionRate: "10%", activeVendors: "10%", orderShare: "6%" },
+  { id: "area-row-4", area: "Oslo", commissionRate: "10%", activeVendors: "10%", orderShare: "6%" },
+];
+
 export const payoutsPagination = {
   pageSize: 6,
 };

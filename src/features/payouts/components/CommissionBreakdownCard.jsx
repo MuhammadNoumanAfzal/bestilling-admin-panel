@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 function RegionRow({ label, value }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-[12px] bg-[#fcf8f5] px-3 py-2.5">
@@ -33,6 +35,8 @@ function VendorShareRow({ name, share, avatar }) {
 }
 
 export default function CommissionBreakdownCard({ regions, vendors }) {
+  const navigate = useNavigate();
+
   return (
     <section className="overflow-hidden rounded-[18px] border border-[#d8ccc2] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]">
       <div className="flex flex-col gap-4 border-b border-[#e9dfd8] bg-[linear-gradient(180deg,#fff8f2_0%,#fffdfa_100%)] px-5 py-5 lg:flex-row lg:items-end lg:justify-between">
@@ -72,6 +76,7 @@ export default function CommissionBreakdownCard({ regions, vendors }) {
       <div className="border-t border-[#e9dfd8] px-5 py-4">
         <button
           className="inline-flex h-10 w-full cursor-pointer items-center justify-center rounded-[10px] bg-[#cf6e38] px-4 text-[13px] font-bold text-white transition hover:bg-[#bc6030]"
+          onClick={() => navigate("/payouts/commission-settings")}
           type="button"
         >
           Edit Commission

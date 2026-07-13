@@ -123,6 +123,13 @@ export default function AdminLayout() {
       };
     }
 
+    if (location.pathname.startsWith("/payouts/commission-settings")) {
+      return {
+        title: "Commission Settings",
+        subtitle: "Manage platform commission rates for all vendors.",
+      };
+    }
+
     return pageMeta[location.pathname] || pageMeta["/dashboard"];
   }, [location.pathname]);
   const initials = useMemo(() => {

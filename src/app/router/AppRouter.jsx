@@ -11,6 +11,7 @@ import VendorsPage from "../../features/vendors/pages/VendorsPage.jsx";
 import OrdersPage from "../../features/orders/pages/OrdersPage.jsx";
 import CustomersPage from "../../features/customers/pages/CustomersPage.jsx";
 import PayoutsPage from "../../features/payouts/pages/PayoutsPage.jsx";
+import CommissionSettingsPage from "../../features/payouts/pages/CommissionSettingsPage.jsx";
 import DeliveryPage from "../../features/delivery/pages/DeliveryPage.jsx";
 import DeliveryAreaDetailPage from "../../features/delivery/pages/DeliveryAreaDetailPage.jsx";
 import ReportsPage from "../../features/reports/pages/ReportsPage.jsx";
@@ -43,6 +44,7 @@ export default function AppRouter() {
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/payouts" element={<PayoutsPage />} />
+          <Route path="/payouts/commission-settings" element={<CommissionSettingsPage />} />
           <Route path="/delivery" element={<DeliveryPage />} />
           <Route path="/delivery/:areaId" element={<DeliveryAreaDetailPage />} />
           <Route path="/reports" element={<ReportsPage />} />

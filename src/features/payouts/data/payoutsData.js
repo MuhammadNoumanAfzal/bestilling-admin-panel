@@ -178,10 +178,10 @@ export const payoutsCommissionByRegion = [
 ];
 
 export const payoutsTopVendors = [
-  { id: "vendor-1", name: "Omar Had", share: "6%", avatar: "OH" },
-  { id: "vendor-2", name: "Lia El Hunger", share: "10%", avatar: "LH" },
-  { id: "vendor-3", name: "BBQ Taste", share: "8%", avatar: "BT" },
-  { id: "vendor-4", name: "12 AM Hunger", share: "9%", avatar: "12" },
+  { id: "vendor-1", name: "Omar Had", share: "6%", avatar: "OH", avatarUrl: "https://i.pravatar.cc/120?img=65" },
+  { id: "vendor-2", name: "Lia El Hunger", share: "10%", avatar: "LH", avatarUrl: "https://i.pravatar.cc/120?img=41" },
+  { id: "vendor-3", name: "BBQ Taste", share: "8%", avatar: "BT", avatarUrl: "https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=120&q=80" },
+  { id: "vendor-4", name: "12 AM Hunger", share: "9%", avatar: "12", avatarUrl: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=120&q=80" },
 ];
 
 export const globalCommissionSettings = {

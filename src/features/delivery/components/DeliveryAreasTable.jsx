@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPinned, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const statusClasses = {
@@ -79,51 +79,65 @@ export default function DeliveryAreasTable({ currentPage, onPageChange, pageSize
 
   return (
     <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-2">
-      <div className="w-full">
-        <table className="w-full table-fixed border-collapse">
+      <div className="w-full overflow-x-auto">
+        <table className="min-w-[980px] w-full table-fixed border-collapse">
           <colgroup>
+            <col className="w-[13%]" />
+            <col className="w-[15%]" />
+            <col className="w-[17%]" />
             <col className="w-[14%]" />
-            <col className="w-[16%]" />
-            <col className="w-[18%]" />
+            <col className="w-[15%]" />
+            <col className="w-[12%]" />
             <col className="w-[14%]" />
-            <col className="w-[16%]" />
-            <col className="w-[12%]" />
-            <col className="w-[12%]" />
           </colgroup>
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="px-4 py-5 text-[13px] font-bold text-[#9b8f86]">City</th>
-              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Region</th>
-              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Active Postal Codes</th>
-              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Registered Vendors</th>
-              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Coverage Status</th>
-              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Last Updated</th>
-              <th className="px-4 py-5 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
+              <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">City</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Region</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Active Postal Codes</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Registered Vendors</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Coverage Status</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Last Updated</th>
+              <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
             </tr>
           </thead>
 
-          <tbody className="[&_tr:first-child_td]:pt-6">
-            {rows.map((row) => (
-              <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
-                <td className="px-4 py-4 text-[13px] font-semibold text-[#2a1e17]">{row.city}</td>
-                <td className="px-3 py-4 text-[13px] font-medium text-[#584c45]">{row.region}</td>
-                <td className="px-3 py-4 text-[13px] font-medium text-[#584c45]">{row.activePostalCodes}</td>
-                <td className="px-3 py-4 text-[13px] font-medium text-[#584c45]">{row.vendors}</td>
-                <td className="px-3 py-4">
-                  <StatusBadge status={row.status} />
-                </td>
-                <td className="px-3 py-4 text-[13px] font-medium text-[#584c45]">{row.updatedAt}</td>
-                <td className="px-4 py-4 text-right">
-                  <button
-                    className="inline-flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-[12px] font-bold text-[#cf6e38] transition hover:text-[#b75d31]"
-                    onClick={() => navigate(`/delivery/${row.id}`)}
-                    type="button"
-                  >
-                    Manage Area
-                  </button>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={7}>
+                  No delivery areas match the current filters.
                 </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((row) => (
+                <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
+                  <td className="px-4 py-4 text-[15px] font-semibold text-[#18120f]">{row.city}</td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.region}</td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.activePostalCodes}</td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">
+                    <span className="inline-flex items-center gap-2">
+                      <UsersRound className="text-[#8d8077]" size={15} />
+                      <span>{row.vendors}</span>
+                    </span>
+                  </td>
+                  <td className="px-3 py-4">
+                    <StatusBadge status={row.status} />
+                  </td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.updatedAt}</td>
+                  <td className="px-4 py-4 text-right">
+                    <button
+                      className="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap text-[14px] font-semibold text-[#cf6e38] transition hover:text-[#b75d31]"
+                      onClick={() => navigate(`/delivery/${row.id}`)}
+                      type="button"
+                    >
+                      <MapPinned size={15} />
+                      <span>Manage Area</span>
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

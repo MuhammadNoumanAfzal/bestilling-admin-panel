@@ -1,4 +1,4 @@
-import { CircleDot, X } from "lucide-react";
+import { CircleDot, Plus, X } from "lucide-react";
 import { useState } from "react";
 import AddDeliveryAreaField from "./add-area/AddDeliveryAreaField.jsx";
 import AddDeliveryPostalCodesTable from "./add-area/AddDeliveryPostalCodesTable.jsx";
@@ -21,7 +21,7 @@ const postalModeOptions = [
 ];
 
 const initialPostalRows = [
-  { id: "0590", postalCode: "0590", areaName: "Oslo Sentrum", status: "Active" },
+  { id: "0590", postalCode: "0590", areaName: "Oslo Sentrum", status: "Active", vendors: 42 },
 ];
 
 function SectionTitle({ children }) {
@@ -46,21 +46,84 @@ export default function AddDeliveryAreaModal({ onClose }) {
     postalMode: "city",
   });
   const [postalRows, setPostalRows] = useState(initialPostalRows);
+  const [postalForm, setPostalForm] = useState({
+    id: "",
+    postalCode: "",
+    areaName: "",
+    status: "Active",
+    vendors: "",
+  });
+
+  function updatePostalField(key, value) {
+    setPostalForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function resetPostalForm() {
+    setPostalForm({
+      id: "",
+      postalCode: "",
+      areaName: "",
+      status: "Active",
+      vendors: "",
+    });
+  }
 
   function updateField(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
   function handleAddPostalCode() {
+    if (!postalForm.postalCode.trim() || !postalForm.areaName.trim()) {
+      return;
+    }
+
+    if (postalForm.id) {
+      setPostalRows((current) =>
+        current.map((row) =>
+          row.id === postalForm.id
+            ? {
+                ...row,
+                postalCode: postalForm.postalCode,
+                areaName: postalForm.areaName,
+                status: postalForm.status,
+                vendors: Number(postalForm.vendors || 0),
+              }
+            : row,
+        ),
+      );
+      resetPostalForm();
+      return;
+    }
+
     setPostalRows((current) => [
       ...current,
       {
         id: `code-${current.length + 1}`,
-        postalCode: `0${610 + current.length}`,
-        areaName: `Area ${current.length + 1}`,
-        status: "Active",
+        postalCode: postalForm.postalCode,
+        areaName: postalForm.areaName,
+        status: postalForm.status,
+        vendors: Number(postalForm.vendors || 0),
       },
     ]);
+    resetPostalForm();
+  }
+
+  function handleDeletePostalCode(id) {
+    setPostalRows((current) => current.filter((row) => row.id !== id));
+
+    if (postalForm.id === id) {
+      resetPostalForm();
+    }
+  }
+
+  function handleEditPostalCode(row) {
+    setPostalForm({
+      id: row.id,
+      postalCode: row.postalCode,
+      areaName: row.areaName,
+      status: row.status,
+      vendors: String(row.vendors),
+    });
   }
 
   return (
@@ -160,7 +223,55 @@ export default function AddDeliveryAreaModal({ onClose }) {
 
           <section className="rounded-[14px] border border-[#eee3db] bg-white p-3.5">
             <SectionTitle>Postal Codes</SectionTitle>
-            <AddDeliveryPostalCodesTable onAdd={handleAddPostalCode} rows={postalRows} />
+            <div className="mb-3 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+              <AddDeliveryAreaField
+                label="Postal Code"
+                onChange={(event) => updatePostalField("postalCode", event.target.value)}
+                placeholder="0590"
+                value={postalForm.postalCode}
+              />
+              <AddDeliveryAreaField
+                label="Area Name"
+                onChange={(event) => updatePostalField("areaName", event.target.value)}
+                placeholder="Oslo Sentrum"
+                value={postalForm.areaName}
+              />
+              <AddDeliveryAreaField
+                as="select"
+                label="Status"
+                onChange={(event) => updatePostalField("status", event.target.value)}
+                options={[
+                  { value: "Active", label: "Active" },
+                  { value: "Inactive", label: "Inactive" },
+                ]}
+                value={postalForm.status}
+              />
+              <AddDeliveryAreaField
+                label="Vendors"
+                onChange={(event) => updatePostalField("vendors", event.target.value)}
+                placeholder="42"
+                type="number"
+                value={postalForm.vendors}
+              />
+            </div>
+
+            <div className="mb-3 flex justify-end">
+              <button
+                className="inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-[8px] bg-[#cf6e38] px-3 text-[12px] font-bold text-white transition hover:bg-[#bc6030]"
+                onClick={handleAddPostalCode}
+                type="button"
+              >
+                <Plus size={12} />
+                <span>{postalForm.id ? "Update Code" : "Add Code"}</span>
+              </button>
+            </div>
+
+            <AddDeliveryPostalCodesTable
+              onAdd={handleAddPostalCode}
+              onDelete={handleDeletePostalCode}
+              onEdit={handleEditPostalCode}
+              rows={postalRows}
+            />
           </section>
 
           <div className="flex flex-wrap items-center justify-end gap-2.5">

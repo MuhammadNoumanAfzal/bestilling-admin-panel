@@ -1,6 +1,6 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, UsersRound } from "lucide-react";
 
-export default function AddDeliveryPostalCodesTable({ rows, onAdd }) {
+export default function AddDeliveryPostalCodesTable({ rows, onAdd, onDelete, onEdit }) {
   return (
     <div className="rounded-[12px] border border-[#e6ddd6] bg-white">
       <div className="flex items-center justify-between gap-3 border-b border-[#eee4dd] px-4 py-2.5">
@@ -22,6 +22,7 @@ export default function AddDeliveryPostalCodesTable({ rows, onAdd }) {
               <th className="px-4 py-2.5 text-[11px] font-bold text-[#9b8f86]">Postal Code</th>
               <th className="px-3 py-2.5 text-[11px] font-bold text-[#9b8f86]">Area Name</th>
               <th className="px-3 py-2.5 text-[11px] font-bold text-[#9b8f86]">Status</th>
+              <th className="px-3 py-2.5 text-[11px] font-bold text-[#9b8f86]">Vendors</th>
               <th className="px-4 py-2.5 text-right text-[11px] font-bold text-[#9b8f86]">Actions</th>
             </tr>
           </thead>
@@ -29,15 +30,29 @@ export default function AddDeliveryPostalCodesTable({ rows, onAdd }) {
             {rows.map((row) => (
               <tr key={row.id} className="border-t border-[#f1e9e2]">
                 <td className="px-4 py-2.5 text-[12px] font-semibold text-[#2a1e17]">{row.postalCode}</td>
-                <td className="px-3 py-2.5 text-[12px] text-[#584c45]">{row.areaName}</td>
+                <td className="px-3 py-2.5 text-[12px] text-[#2a1e17]">{row.areaName}</td>
                 <td className="px-3 py-2.5">
                   <span className="inline-flex rounded-full bg-[#e9fff0] px-2.5 py-1 text-[10px] font-bold text-[#219653]">
                     {row.status}
                   </span>
                 </td>
+                <td className="px-3 py-2.5 text-[12px] text-[#2a1e17]">
+                  <span className="inline-flex items-center gap-1.5">
+                    <UsersRound className="text-[#8d8077]" size={13} />
+                    <span>{row.vendors}</span>
+                  </span>
+                </td>
                 <td className="px-4 py-2.5 text-right">
                   <button
+                    className="inline-flex cursor-pointer items-center justify-center rounded-[8px] p-1.5 text-[#8d8077] transition hover:bg-[#f7f1ed] hover:text-[#cf6e38]"
+                    onClick={() => onEdit(row)}
+                    type="button"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                  <button
                     className="inline-flex cursor-pointer items-center justify-center rounded-[8px] p-1.5 text-[#d15b42] transition hover:bg-[#fff4f1]"
+                    onClick={() => onDelete(row.id)}
                     type="button"
                   >
                     <Trash2 size={13} />

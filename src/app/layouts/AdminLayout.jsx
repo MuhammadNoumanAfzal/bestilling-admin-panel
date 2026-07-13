@@ -8,12 +8,10 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
-  Menu,
   LifeBuoy,
   Search,
   ReceiptText,
   Settings,
-  ShieldCheck,
   Truck,
   UsersRound,
 } from "lucide-react";

@@ -15,6 +15,7 @@ import DeliveryPage from "../../features/delivery/pages/DeliveryPage.jsx";
 import ReportsPage from "../../features/reports/pages/ReportsPage.jsx";
 import SettingsPage from "../../features/settings/pages/SettingsPage.jsx";
 import SupportPage from "../../features/support/pages/SupportPage.jsx";
+import NotificationsPage from "../../features/notifications/pages/NotificationsPage.jsx";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
 
 function RootRedirect() {
@@ -42,6 +43,7 @@ export default function AppRouter() {
           <Route path="/delivery" element={<DeliveryPage />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/support" element={<SupportPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>

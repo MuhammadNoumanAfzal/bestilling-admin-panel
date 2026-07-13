@@ -64,10 +64,10 @@ function ChannelDots({ channels }) {
         return (
           <span
             key={channel}
-            className="inline-flex h-7 min-w-7 cursor-pointer items-center justify-center rounded-full border border-[#d8d1cb] bg-[#efefef] px-2 text-[#6e655e] transition hover:border-[#cf6e38]/35 hover:bg-[#fff2ea] hover:text-[#cf6e38]"
+            className="inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-full border border-[#d8d1cb] bg-[#f6f3f1] px-2 text-[#5b4f47] transition hover:border-[#cf6e38]/35 hover:bg-[#fff2ea] hover:text-[#cf6e38]"
             title={meta.label}
           >
-            <Icon size={13} />
+            <Icon size={14} />
           </span>
         );
       })}
@@ -150,41 +150,49 @@ export default function NotificationsTable({
           </thead>
 
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
-                <td className="px-4 py-4 align-middle">
-                  <p className="max-w-[360px] text-[15px] font-semibold leading-6 text-[#2a1e17]">{row.title}</p>
-                </td>
-                <td className="px-3 py-4 align-middle">
-                  <AudienceBadge audience={row.audience} />
-                </td>
-                <td className="px-3 py-4 align-middle">
-                  <ChannelDots channels={row.channels} />
-                </td>
-                <td className="px-3 py-4 align-middle">
-                  <StatusBadge status={row.status} />
-                </td>
-                <td className="px-3 py-4 align-middle text-[14px] font-medium text-[#584c45]">
-                  {row.scheduledAt}
-                </td>
-                <td className="px-4 py-4 align-middle text-right">
-                  <button
-                    className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] font-bold text-[#2a1e17] transition hover:text-[#cf6e38]"
-                    onClick={() => onViewDetails(row)}
-                    type="button"
-                  >
-                    <Eye size={14} />
-                    <span>View Details</span>
-                  </button>
+            {rows.length === 0 ? (
+              <tr>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={6}>
+                  No notifications match the current filters.
                 </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((row) => (
+                <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
+                  <td className="px-4 py-4 align-middle">
+                    <p className="max-w-[360px] text-[16px] font-semibold leading-6 text-[#18120f]">{row.title}</p>
+                  </td>
+                  <td className="px-3 py-4 align-middle">
+                    <AudienceBadge audience={row.audience} />
+                  </td>
+                  <td className="px-3 py-4 align-middle">
+                    <ChannelDots channels={row.channels} />
+                  </td>
+                  <td className="px-3 py-4 align-middle">
+                    <StatusBadge status={row.status} />
+                  </td>
+                  <td className="px-3 py-4 align-middle text-[15px] font-medium text-[#18120f]">
+                    {row.scheduledAt}
+                  </td>
+                  <td className="px-4 py-4 align-middle text-right">
+                    <button
+                      className="inline-flex cursor-pointer items-center gap-1.5 text-[15px] font-semibold text-[#18120f] transition hover:text-[#cf6e38]"
+                      onClick={() => onViewDetails(row)}
+                      type="button"
+                    >
+                      <Eye size={15} />
+                      <span>View Details</span>
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       <div className="flex flex-col gap-4 border-t border-[#eee4dd] px-4 py-4 text-[13px] text-[#6c6058] sm:flex-row sm:items-center sm:justify-between">
-        <p>
+        <p className="text-[14px] text-[#5b4f47]">
           Showing {start} - {end} of {totalItems} Notifications
         </p>
 

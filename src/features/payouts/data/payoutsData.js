@@ -192,9 +192,9 @@ export const globalCommissionSettings = {
 };
 
 export const vendorCommissionRows = [
-  { id: "vendor-row-1", vendor: "Grill Bar", area: "Oslo", currentCommission: "12%", avatar: "GB" },
-  { id: "vendor-row-2", vendor: "Chop Chop", area: "Bergen", currentCommission: "8%", avatar: "CC" },
-  { id: "vendor-row-3", vendor: "Flavor Hunt", area: "Oslo", currentCommission: "10%", avatar: "FH" },
+  { id: "vendor-row-1", vendor: "Grill Bar", area: "Oslo", currentCommission: "12%", avatar: "GB", avatarUrl: "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=120&q=80" },
+  { id: "vendor-row-2", vendor: "Chop Chop", area: "Bergen", currentCommission: "8%", avatar: "CC", avatarUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=120&q=80" },
+  { id: "vendor-row-3", vendor: "Flavor Hunt", area: "Oslo", currentCommission: "10%", avatar: "FH", avatarUrl: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=120&q=80" },
 ];
 
 export const areaCommissionRows = [

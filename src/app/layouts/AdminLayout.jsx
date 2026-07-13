@@ -130,6 +130,13 @@ export default function AdminLayout() {
       };
     }
 
+    if (location.pathname.startsWith("/payouts/") && location.pathname !== "/payouts/commission-settings") {
+      return {
+        title: "Payment Details",
+        subtitle: "Track customer payment and vendor payout for this order.",
+      };
+    }
+
     return pageMeta[location.pathname] || pageMeta["/dashboard"];
   }, [location.pathname]);
   const initials = useMemo(() => {

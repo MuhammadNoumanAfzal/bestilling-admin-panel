@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const orderStatusClasses = {
   Delivered: "bg-[#17b84a] text-white",
@@ -104,6 +105,7 @@ function PersonCell({ name, subtitle, avatar, tone = "orange" }) {
 }
 
 export default function PayoutsTable({ currentPage, onPageChange, pageSize, rows, totalItems }) {
+  const navigate = useNavigate();
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, totalItems);
@@ -155,6 +157,7 @@ export default function PayoutsTable({ currentPage, onPageChange, pageSize, rows
                 <td className="px-4 py-3 text-right">
                   <button
                     className="inline-flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-[11px] font-bold text-[#2a1e17] transition hover:text-[#cf6e38]"
+                    onClick={() => navigate(`/payouts/${encodeURIComponent(row.id)}`)}
                     type="button"
                   >
                     View Details

@@ -41,6 +41,15 @@ export const payoutsRows = [
     vendorAmount: "NOK 405.00",
     payoutStatus: "Paid",
     date: "Oct 24, 2023",
+    invoiceNumber: "INV-2024-001",
+    notes: "Please make weekly invoice.",
+    vendorName: "Julian There",
+    activity: [
+      "Order created Oct 24, 2023 10:00 AM",
+      "Customer payment confirmed. Awaiting payout verification.",
+      "Platform commission applied.",
+      "Vendor payout completed successfully.",
+    ],
   },
   {
     id: "#GC32423",
@@ -57,6 +66,10 @@ export const payoutsRows = [
     vendorAmount: "NOK 405.00",
     payoutStatus: "Paid",
     date: "Oct 24, 2023",
+    invoiceNumber: "INV-2024-002",
+    notes: "Vendor requested weekly invoice batch.",
+    vendorName: "Mina Vale",
+    activity: ["Order created", "Payment cleared", "Payout completed"],
   },
   {
     id: "#GCH43y3",
@@ -73,6 +86,10 @@ export const payoutsRows = [
     vendorAmount: "NOK 405.00",
     payoutStatus: "Canceled",
     date: "Oct 24, 2023",
+    invoiceNumber: "INV-2024-003",
+    notes: "Order canceled before delivery.",
+    vendorName: "Rashid Noor",
+    activity: ["Order created", "Payment canceled", "Vendor payout canceled"],
   },
   {
     id: "#GCO643",
@@ -89,6 +106,10 @@ export const payoutsRows = [
     vendorAmount: "NOK 405.00",
     payoutStatus: "Pending",
     date: "Oct 24, 2023",
+    invoiceNumber: "INV-2024-004",
+    notes: "Customer requested revised invoice.",
+    vendorName: "Sami West",
+    activity: ["Order completed", "Customer payment received", "Vendor payout pending"],
   },
   {
     id: "#GC3745y4",
@@ -105,6 +126,10 @@ export const payoutsRows = [
     vendorAmount: "NOK 405.00",
     payoutStatus: "Canceled",
     date: "Oct 24, 2023",
+    invoiceNumber: "INV-2024-005",
+    notes: "Canceled by customer.",
+    vendorName: "Adam Stone",
+    activity: ["Order created", "Canceled", "Payment reversed"],
   },
   {
     id: "#GC3745y4b",
@@ -121,6 +146,10 @@ export const payoutsRows = [
     vendorAmount: "NOK 405.00",
     payoutStatus: "Pending",
     date: "Oct 24, 2023",
+    invoiceNumber: "INV-2024-006",
+    notes: "Awaiting final payout release.",
+    vendorName: "Adam Stone",
+    activity: ["Order created", "Payment pending", "Payout pending"],
   },
 ];
 
@@ -160,3 +189,7 @@ export const areaCommissionRows = [
 export const payoutsPagination = {
   pageSize: 6,
 };
+
+export function getPayoutById(payoutId) {
+  return payoutsRows.find((row) => row.id === payoutId) || null;
+}

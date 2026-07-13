@@ -1,13 +1,11 @@
 import { useMemo, useState } from "react";
 import SupportOverviewCard from "../components/SupportOverviewCard.jsx";
-import SupportTicketDetailsModal from "../components/SupportTicketDetailsModal.jsx";
 import SupportTicketsTable from "../components/SupportTicketsTable.jsx";
 import SupportToolbar from "../components/SupportToolbar.jsx";
 import { supportPagination, supportSummary, supportTicketRows } from "../data/supportData.js";
 
 export default function SupportPage() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedTicket, setSelectedTicket] = useState(null);
   const pageSize = supportPagination.pageSize;
   const totalItems = supportTicketRows.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
@@ -45,15 +43,12 @@ export default function SupportPage() {
           <SupportTicketsTable
             currentPage={currentPage}
             onPageChange={handlePageChange}
-            onViewTicket={setSelectedTicket}
             pageSize={pageSize}
             rows={paginatedRows}
             totalItems={totalItems}
           />
         </section>
       </div>
-
-      <SupportTicketDetailsModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
     </>
   );
 }

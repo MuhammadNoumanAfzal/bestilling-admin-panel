@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const typeClasses = {
   Vendor: "bg-[#f3f0ff] text-[#6e67d8]",
@@ -91,11 +92,11 @@ function StatusBadge({ status }) {
 export default function SupportTicketsTable({
   currentPage,
   onPageChange,
-  onViewTicket,
   pageSize,
   rows,
   totalItems,
 }) {
+  const navigate = useNavigate();
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, totalItems);
@@ -142,7 +143,7 @@ export default function SupportTicketsTable({
                 <td className="px-4 py-4 text-right">
                   <button
                     className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] font-bold text-[#2a1e17] transition hover:text-[#cf6e38]"
-                    onClick={() => onViewTicket(row)}
+                    onClick={() => navigate(`/support/${row.id}`)}
                     type="button"
                   >
                     <Eye size={14} />

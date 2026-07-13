@@ -108,7 +108,16 @@ export default function AdminLayout() {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const meta = useMemo(() => pageMeta[location.pathname] || pageMeta["/dashboard"], [location.pathname]);
+  const meta = useMemo(() => {
+    if (location.pathname.startsWith("/support/")) {
+      return {
+        title: "Support Details",
+        subtitle: "Review the ticket conversation, user profile, and next actions.",
+      };
+    }
+
+    return pageMeta[location.pathname] || pageMeta["/dashboard"];
+  }, [location.pathname]);
   const initials = useMemo(() => {
     const source = user?.name?.trim() || "Admin User";
     return source

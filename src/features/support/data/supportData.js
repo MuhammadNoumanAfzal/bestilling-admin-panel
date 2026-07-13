@@ -39,6 +39,51 @@ export const supportTicketRows = [
     assignee: "Raja Haider",
     notes:
       "Customer-side pricing cache was stale for this vendor menu. Cleared cache and confirmed configuration now appears correctly in cart.",
+    avatarInitials: "AW",
+    orderCount: 42,
+    joinedDate: "Mar 2022",
+    phone: "+47 456 23 019",
+    orderReference: "#GOC-4491",
+    createdAtExact: "Oct 24, 2024 10:42 AM",
+    conversation: [
+      {
+        id: "msg-1",
+        author: "Alexander Wright",
+        role: "Customer",
+        time: "10:42 AM",
+        side: "left",
+        message:
+          "Hi support, the menu customization for our lunch order disappeared right before checkout and I could not confirm the updated options.",
+        attachments: ["receipt_GOC4491.pdf", "delivery_note.jpg"],
+      },
+      {
+        id: "msg-2",
+        author: "Admin Support",
+        role: "Support",
+        time: "10:55 AM",
+        side: "right",
+        message:
+          "Thanks for flagging this. We checked the vendor configuration and found a stale cache issue. Please refresh once more while we sync the menu options for your cart.",
+      },
+      {
+        id: "msg-3",
+        author: "Alexander Wright",
+        role: "Customer",
+        time: "11:02 AM",
+        side: "left",
+        message:
+          "I refreshed and the options are now visible again. Can you confirm the extra charges are still correct before I place the order?",
+      },
+      {
+        id: "msg-4",
+        author: "Admin Support",
+        role: "Support",
+        time: "11:05 AM",
+        side: "right",
+        message:
+          "Confirmed. The vendor pricing is now synced and the cart totals are correct. You can continue safely and we will monitor the order until it is placed.",
+      },
+    ],
   },
   {
     id: "WTKT-8795",
@@ -53,6 +98,32 @@ export const supportTicketRows = [
     assignee: "Support Queue",
     notes:
       "User submitted identity documents but account remains in pending state. Needs back-office verification review.",
+    avatarInitials: "TH",
+    orderCount: 16,
+    joinedDate: "Jun 2023",
+    phone: "+47 901 55 210",
+    orderReference: "#GOC-4480",
+    createdAtExact: "Oct 24, 2024 08:15 AM",
+    conversation: [
+      {
+        id: "msg-1",
+        author: "Tom Holland",
+        role: "Customer",
+        time: "08:15 AM",
+        side: "left",
+        message:
+          "I uploaded my verification documents yesterday but the account still shows pending review. Can you check what is missing?",
+      },
+      {
+        id: "msg-2",
+        author: "Admin Support",
+        role: "Support",
+        time: "08:32 AM",
+        side: "right",
+        message:
+          "We can see the documents in queue. The review is still pending with compliance and we have escalated it for a manual check.",
+      },
+    ],
   },
   {
     id: "WTKT-8802A",
@@ -67,6 +138,51 @@ export const supportTicketRows = [
     assignee: "Billing Desk",
     notes:
       "Vendor is requesting an update after a partial refund was issued for a canceled event order. Awaiting payment provider confirmation.",
+    avatarInitials: "SS",
+    orderCount: 28,
+    joinedDate: "Jan 2024",
+    phone: "+47 466 88 312",
+    orderReference: "#GOC-9921",
+    createdAtExact: "Oct 24, 2024 10:42 AM",
+    conversation: [
+      {
+        id: "msg-1",
+        author: "Sidney Sweeney",
+        role: "Vendor",
+        time: "10:42 AM",
+        side: "left",
+        message:
+          "Hi support, I just received my order from Healthy Bites Catering but the grilled salmon salad is missing. We have a guest waiting for this specific meal.",
+        attachments: ["receipt_GOC9921.pdf", "delivery_photo.jpg"],
+      },
+      {
+        id: "msg-2",
+        author: "Admin Support",
+        role: "Support",
+        time: "10:55 AM",
+        side: "right",
+        message:
+          "Hello Sarah, I am very sorry to hear that. I am checking with the vendor right now to see what happened. Please bear with me for a moment while I resolve this for you.",
+      },
+      {
+        id: "msg-3",
+        author: "Sidney Sweeney",
+        role: "Vendor",
+        time: "10:58 AM",
+        side: "left",
+        message:
+          "Thank you. Is it possible to have them send the missing salad immediately or should I just request a refund for that item?",
+      },
+      {
+        id: "msg-4",
+        author: "Admin Support",
+        role: "Support",
+        time: "11:05 AM",
+        side: "right",
+        message:
+          "I have spoken with Healthy Bites. They are preparing a fresh salad and sending it by express courier. It should arrive in approximately 20 minutes. Alternatively, we can offer a full refund for the item plus a 30 GoCatering credit for the inconvenience.",
+      },
+    ],
   },
   {
     id: "WTKT-8797",
@@ -81,6 +197,13 @@ export const supportTicketRows = [
     assignee: "Ops Support",
     notes:
       "User needed guidance on where to edit business hours. Walked them through settings and confirmed changes were saved.",
+    avatarInitials: "UN",
+    orderCount: 9,
+    joinedDate: "Feb 2024",
+    phone: "+47 404 18 221",
+    orderReference: "#GOC-4374",
+    createdAtExact: "Oct 22, 2024 02:22 PM",
+    conversation: [],
   },
   {
     id: "WTKT-8804",
@@ -95,6 +218,13 @@ export const supportTicketRows = [
     assignee: "Finance Team",
     notes:
       "Investigating delayed settlement due to invoice mismatch between completed delivery and vendor payout record.",
+    avatarInitials: "NK",
+    orderCount: 31,
+    joinedDate: "Aug 2023",
+    phone: "+47 990 44 871",
+    orderReference: "#OC-4491",
+    createdAtExact: "Oct 22, 2024 09:03 AM",
+    conversation: [],
   },
   {
     id: "WTKT-8805",
@@ -109,6 +239,13 @@ export const supportTicketRows = [
     assignee: "Product Support",
     notes:
       "Replicated and resolved a cart-state issue for bundled menu selections. Customer confirmed fix on follow-up.",
+    avatarInitials: "NK",
+    orderCount: 14,
+    joinedDate: "Apr 2024",
+    phone: "+47 990 44 871",
+    orderReference: "#GOC-4418",
+    createdAtExact: "Oct 22, 2024 11:48 AM",
+    conversation: [],
   },
   {
     id: "WTKT-8806",
@@ -123,6 +260,13 @@ export const supportTicketRows = [
     assignee: "Vendor Success",
     notes:
       "Explained approval workflow and checklist requirements before store activation. Ticket closed after response.",
+    avatarInitials: "AN",
+    orderCount: 6,
+    joinedDate: "Sep 2024",
+    phone: "+47 412 70 555",
+    orderReference: "#GOC-4450",
+    createdAtExact: "Oct 21, 2024 03:16 PM",
+    conversation: [],
   },
   {
     id: "WTKT-8807",
@@ -137,6 +281,13 @@ export const supportTicketRows = [
     assignee: "Billing Desk",
     notes:
       "Customer asked for an updated invoice PDF for reimbursement. Needs regeneration and resend.",
+    avatarInitials: "AB",
+    orderCount: 18,
+    joinedDate: "Jul 2023",
+    phone: "+47 421 88 910",
+    orderReference: "#GOC-4426",
+    createdAtExact: "Oct 21, 2024 09:42 AM",
+    conversation: [],
   },
   {
     id: "WTKT-8808",
@@ -151,6 +302,13 @@ export const supportTicketRows = [
     assignee: "Tech Support",
     notes:
       "Map polygon edits revert after submission. Engineering has been notified and logs are attached.",
+    avatarInitials: "MR",
+    orderCount: 22,
+    joinedDate: "Nov 2022",
+    phone: "+47 477 19 661",
+    orderReference: "#GOC-4402",
+    createdAtExact: "Oct 20, 2024 01:19 PM",
+    conversation: [],
   },
   {
     id: "WTKT-8809",
@@ -165,6 +323,13 @@ export const supportTicketRows = [
     assignee: "Account Support",
     notes:
       "Guided user through multi-user account setup and role permissions for team ordering.",
+    avatarInitials: "SN",
+    orderCount: 11,
+    joinedDate: "Jan 2024",
+    phone: "+47 454 82 114",
+    orderReference: "#GOC-4397",
+    createdAtExact: "Oct 20, 2024 11:30 AM",
+    conversation: [],
   },
   {
     id: "WTKT-8810",
@@ -179,6 +344,13 @@ export const supportTicketRows = [
     assignee: "Tech Support",
     notes:
       "Uploads fail on image compression step for larger files. Needs validation on supported image sizes.",
+    avatarInitials: "DS",
+    orderCount: 27,
+    joinedDate: "May 2023",
+    phone: "+47 489 72 500",
+    orderReference: "#GOC-4388",
+    createdAtExact: "Oct 19, 2024 04:17 PM",
+    conversation: [],
   },
   {
     id: "WTKT-8811",
@@ -193,9 +365,20 @@ export const supportTicketRows = [
     assignee: "Finance Team",
     notes:
       "Generated corrected invoice with VAT details and resent to customer for finance processing.",
+    avatarInitials: "EL",
+    orderCount: 35,
+    joinedDate: "Oct 2022",
+    phone: "+47 410 33 146",
+    orderReference: "#GOC-4379",
+    createdAtExact: "Oct 19, 2024 09:52 AM",
+    conversation: [],
   },
 ];
 
 export const supportPagination = {
   pageSize: 6,
 };
+
+export function getSupportTicketById(ticketId) {
+  return supportTicketRows.find((ticket) => ticket.id === ticketId) || null;
+}

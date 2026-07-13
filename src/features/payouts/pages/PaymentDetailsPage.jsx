@@ -8,14 +8,14 @@ import { getPayoutById } from "../data/payoutsData.js";
 
 export default function PaymentDetailsPage() {
   const { payoutId } = useParams();
-  const payout = getPayoutById(payoutId);
+  const payout = getPayoutById(decodeURIComponent(payoutId || ""));
 
   if (!payout) {
     return <Navigate replace to="/payouts" />;
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <section className="space-y-1">
         <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">Payment Details</h1>
         <p className="text-[14px] leading-6 text-[#6f645d]">
@@ -30,11 +30,11 @@ export default function PaymentDetailsPage() {
         <PaymentDetailsOverviewCard label="Payment Status" value={payout.orderPayment} />
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
         <div className="space-y-4">
           <PaymentDetailsInfoCard payout={payout} />
           <PaymentLifecycleCard payout={payout} />
-          <PaymentStatusCards />
+          <PaymentStatusCards payout={payout} />
         </div>
 
         <PaymentActivityCard activity={payout.activity} />

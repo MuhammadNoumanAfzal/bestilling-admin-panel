@@ -1,4 +1,5 @@
 import { ChevronLeft } from "lucide-react";
+import { useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import SupportConversationPanel from "../components/details/SupportConversationPanel.jsx";
 import SupportCustomerProfileCard from "../components/details/SupportCustomerProfileCard.jsx";
@@ -20,37 +21,63 @@ function TicketStatusPill({ status }) {
 export default function SupportTicketDetailPage() {
   const { ticketId } = useParams();
   const ticket = getSupportTicketById(ticketId);
+  const [currentStatus, setCurrentStatus] = useState(ticket?.status || "Open");
+  const [draftReply, setDraftReply] = useState("");
 
   if (!ticket) {
     return <Navigate replace to="/support" />;
   }
 
-  return (
-    <div className="space-y-4">
-      <section className="space-y-2">
-        <Link
-          className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-semibold text-[#7d7068] transition hover:text-[#cf6e38]"
-          to="/support"
-        >
-          <ChevronLeft size={15} />
-          <span>Back to Support</span>
-        </Link>
+  const ticketWithState = useMemo(
+    () => ({
+      ...ticket,
+      status: currentStatus,
+    }),
+    [currentStatus, ticket],
+  );
 
+  return (
+    <div className="space-y-5">
+      <section className="space-y-2">
         <div className="flex flex-wrap items-center gap-3">
           <p className="text-[13px] font-bold text-[#6d6058]">#{ticket.id}</p>
-          <TicketStatusPill status={ticket.status} />
+          <TicketStatusPill status={ticketWithState.status} />
         </div>
 
-        <h1 className="text-[34px] font-bold leading-tight tracking-[-0.04em] text-[#18120f]">{ticket.subject}</h1>
+        <div className="flex items-start gap-3">
+          <Link
+            className="mt-[6px] inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#7d7068] transition hover:bg-[#fff4ec] hover:text-[#cf6e38]"
+            to="/support"
+          >
+            <ChevronLeft size={16} />
+          </Link>
+
+          <div>
+            <h1 className="text-[34px] font-bold leading-tight tracking-[-0.04em] text-[#18120f]">{ticket.subject}</h1>
+            <p className="mt-2 max-w-[78ch] text-[17px] leading-8 text-[#746861]">
+              Review the full conversation, update the ticket status, and keep the requester informed with a clear next step.
+            </p>
+          </div>
+        </div>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
-        <SupportConversationPanel ticket={ticket} />
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <SupportConversationPanel
+          draftReply={draftReply}
+          onDraftReplyChange={setDraftReply}
+          onSendReply={() => setDraftReply("")}
+          ticket={ticket}
+        />
 
         <aside className="space-y-4">
           <SupportCustomerProfileCard ticket={ticket} />
-          <SupportTicketSummaryCard ticket={ticket} />
-          <SupportTicketActionsCard />
+          <SupportTicketSummaryCard ticket={ticketWithState} />
+          <SupportTicketActionsCard
+            onClose={() => setCurrentStatus("Open")}
+            onProgress={() => setCurrentStatus("In Progress")}
+            onResolve={() => setCurrentStatus("Resolved")}
+            status={ticketWithState.status}
+          />
         </aside>
       </div>
     </div>

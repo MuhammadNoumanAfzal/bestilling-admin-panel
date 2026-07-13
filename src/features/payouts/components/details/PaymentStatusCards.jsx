@@ -1,65 +1,94 @@
-function StatusPill({ label, tone = "default" }) {
-  const toneClass =
-    tone === "warning"
-      ? "bg-[#fff1ea] text-[#d15b42]"
-      : "bg-[#eefbf2] text-[#249f56]";
+import { BadgeCheck, CreditCard, FileText } from "lucide-react";
 
-  return <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-bold ${toneClass}`}>{label}</span>;
+function StatusDot({ label }) {
+  return (
+    <span className="inline-flex items-center gap-2 text-[14px] font-semibold text-[#cf6e38]">
+      <span className="h-2 w-2 rounded-full bg-current" />
+      {label}
+    </span>
+  );
 }
 
-function StatusActionCard({ title, description, buttonLabel, amount, statusLabel, tone = "default" }) {
-  const toneClass =
-    tone === "warning"
-      ? "border-[#f3d2bf] bg-[#fffaf6]"
-      : "border-[#d7e7ff] bg-[#f8fbff]";
-
-  const buttonTone =
-    tone === "warning"
-      ? "border-[#f0b8ab] text-[#d15b42] hover:bg-[#fff4f1]"
-      : "border-[#ddd2ca] text-[#2f241d] hover:bg-[#faf6f2]";
-
+function DetailRow({ label, value }) {
   return (
-    <section className={`rounded-[18px] border p-5 shadow-[0_10px_24px_rgba(55,31,13,0.05)] ${toneClass}`}>
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-[14px] text-[#4f433d]">{label}</span>
+      <span className="text-[14px] font-semibold text-[#18120f]">{value}</span>
+    </div>
+  );
+}
+
+function PaymentActionCard({
+  buttonLabel,
+  description,
+  details,
+  icon: Icon,
+  onClick,
+  status,
+  title,
+}) {
+  return (
+    <section className="rounded-[18px] border border-[#ddd4cd] bg-white p-4 shadow-[0_10px_24px_rgba(55,31,13,0.05)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-[16px] font-bold text-[#221914]">{title}</h3>
-          <p className="mt-2 text-[13px] leading-6 text-[#6f645d]">{description}</p>
+          <h3 className="text-[17px] font-bold text-[#221914]">{title}</h3>
+          <p className="mt-1.5 text-[14px] leading-6 text-[#5f534c]">{description}</p>
         </div>
-        <StatusPill label={statusLabel} tone={tone} />
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-[12px] bg-[#f4f7ff] text-[#657aab]">
+          <Icon size={18} />
+        </span>
       </div>
 
-      <div className="mt-4 rounded-[14px] border border-white/70 bg-white/80 px-4 py-3">
-        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#a39388]">Amount</p>
-        <p className="mt-1 text-[20px] font-bold tracking-[-0.03em] text-[#241914]">{amount}</p>
+      <div className="mt-4 rounded-[14px] bg-[#f5f6f8] px-4 py-3.5">
+        <div className="space-y-2.5">
+          {details.map((detail) => (
+            <DetailRow key={detail.label} label={detail.label} value={detail.value} />
+          ))}
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[14px] text-[#4f433d]">Status</span>
+            <StatusDot label={status} />
+          </div>
+        </div>
       </div>
 
       <button
-        className={`mt-4 inline-flex h-9 w-full cursor-pointer items-center justify-center rounded-[8px] border bg-white px-3 text-[12px] font-bold transition ${buttonTone}`}
+        className="mt-4 inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[12px] border border-[#ef9f7f] bg-white px-3 text-[13px] font-semibold text-[#cf6e38] transition hover:bg-[#fff5ef]"
+        onClick={onClick}
         type="button"
       >
-        {buttonLabel}
+        <BadgeCheck size={15} />
+        <span>{buttonLabel}</span>
       </button>
     </section>
   );
 }
 
-export default function PaymentStatusCards({ payout }) {
+export default function PaymentStatusCards({ onMarkPaid, onMarkReceived, payout }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <StatusActionCard
-        amount={payout.orderAmount}
+      <PaymentActionCard
         buttonLabel="Mark as Received"
-        description="Confirm buyer successfully received the order and payment."
-        statusLabel={payout.orderPayment}
+        description="Customer pays manually via invoice."
+        details={[
+          { label: "Invoice", value: payout.invoiceNumber },
+          { label: "Customer", value: payout.customer },
+        ]}
+        icon={FileText}
+        onClick={onMarkReceived}
+        status={payout.orderPayment}
         title="Customer Payment"
       />
-      <StatusActionCard
-        amount={payout.vendorAmount}
+      <PaymentActionCard
         buttonLabel="Mark as Paid"
-        description="Record that the vendor payment for this order has been completed."
-        statusLabel={payout.payoutStatus}
+        description="Processed manually after customer payment."
+        details={[
+          { label: "Vendor", value: payout.vendorName },
+          { label: "Payout", value: payout.vendorAmount },
+        ]}
+        icon={CreditCard}
+        onClick={onMarkPaid}
+        status={payout.payoutStatus}
         title="Vendor Payout"
-        tone="warning"
       />
     </div>
   );

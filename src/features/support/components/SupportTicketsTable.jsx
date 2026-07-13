@@ -103,37 +103,47 @@ export default function SupportTicketsTable({
   const paginationItems = buildPaginationItems(currentPage, totalPages);
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]">
-      <div className="overflow-x-auto">
-        <table className="min-w-[1120px] w-full border-collapse">
+    <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-2">
+      <div className="w-full">
+        <table className="w-full table-fixed border-collapse">
+          <colgroup>
+            <col className="w-[10%]" />
+            <col className="w-[15%]" />
+            <col className="w-[10%]" />
+            <col className="w-[27%]" />
+            <col className="w-[8%]" />
+            <col className="w-[10%]" />
+            <col className="w-[10%]" />
+            <col className="w-[10%]" />
+          </colgroup>
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]"># Ticket ID</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">User</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">User Type</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Subject</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Category</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Created</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
-              <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Action</th>
+              <th className="px-4 py-5 text-[13px] font-bold text-[#9b8f86]"># Ticket ID</th>
+              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">User</th>
+              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">User Type</th>
+              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Subject</th>
+              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Category</th>
+              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Created</th>
+              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Status</th>
+              <th className="px-4 py-5 text-right text-[13px] font-bold text-[#9b8f86]">Action</th>
             </tr>
           </thead>
 
-          <tbody>
+          <tbody className="[&_tr:first-child_td]:pt-6">
             {rows.map((row) => (
               <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
                 <td className="px-4 py-4 text-[13px] font-semibold text-[#2a1e17]">{row.id}</td>
                 <td className="px-3 py-4">
                   <div>
                     <p className="text-[13px] font-bold text-[#2a1e17]">{row.user}</p>
-                    <p className="text-[11px] text-[#8a7d74]">{row.email}</p>
+                    <p className="truncate text-[11px] text-[#8a7d74]">{row.email}</p>
                   </div>
                 </td>
                 <td className="px-3 py-4">
                   <TypeBadge type={row.type} />
                 </td>
                 <td className="px-3 py-4">
-                  <p className="max-w-[250px] text-[13px] leading-5 text-[#443933]">{row.subject}</p>
+                  <p className="break-words text-[13px] leading-5 text-[#443933]">{row.subject}</p>
                 </td>
                 <td className="px-3 py-4 text-[13px] font-medium text-[#584c45]">{row.category}</td>
                 <td className="px-3 py-4 text-[13px] font-medium text-[#584c45]">{row.created}</td>

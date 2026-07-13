@@ -19,7 +19,7 @@ function FilterButton({ children, isActive = false }) {
 
 export default function SupportToolbar() {
   return (
-    <div className="flex flex-col gap-4 border-b border-[#e7ddd5] px-4 py-4">
+    <div className="flex flex-col gap-5 border-b border-[#e7ddd5] px-4 py-4 ">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <label className="relative w-full max-w-[340px]">
           <input

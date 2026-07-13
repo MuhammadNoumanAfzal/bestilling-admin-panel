@@ -1,4 +1,5 @@
 import { ChevronDown, Plus, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function FilterButton({ children, isActive = false }) {
   return (
@@ -18,6 +19,8 @@ function FilterButton({ children, isActive = false }) {
 }
 
 export default function NotificationsToolbar() {
+  const navigate = useNavigate();
+
   return (
     <div className="flex flex-col gap-4 border-b border-[#e7ddd5] px-3 py-3 sm:px-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -34,6 +37,7 @@ export default function NotificationsToolbar() {
 
         <button
           className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 self-start rounded-[8px] bg-[#cf6e38] px-3.5 text-[13px] font-bold text-white transition hover:bg-[#bc6030]"
+          onClick={() => navigate("/notifications/create")}
           type="button"
         >
           <Plus size={12} strokeWidth={2.8} />

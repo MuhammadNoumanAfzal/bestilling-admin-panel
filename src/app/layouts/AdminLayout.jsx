@@ -64,6 +64,10 @@ const pageMeta = {
     title: "Notifications",
     subtitle: "Review platform alerts, announcements, and admin visibility.",
   },
+  "/notifications/create": {
+    title: "Create Notification",
+    subtitle: "Draft, target, and schedule a new platform notification.",
+  },
   "/support": {
     title: "Support",
     subtitle: "Handle tickets, escalations, and operational follow-up.",

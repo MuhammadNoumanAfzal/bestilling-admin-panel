@@ -6,7 +6,7 @@ export default function SettingsSectionHeader({ icon: Icon, title }) {
           <Icon size={16} />
         </span>
       ) : null}
-      <h2 className="text-[15px] font-bold text-[#2a1f18]">{title}</h2>
+      <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#2a1f18]">{title}</h2>
     </div>
   );
 }

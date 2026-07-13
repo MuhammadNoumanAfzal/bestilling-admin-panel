@@ -4,6 +4,7 @@ export default function CreateNotificationChannelCard({
   icon,
   isActive = false,
   onClick,
+  badge,
 }) {
   return (
     <button
@@ -26,7 +27,14 @@ export default function CreateNotificationChannelCard({
       </span>
 
       <span className="block">
-        <span className="block text-[17px] font-bold tracking-[-0.01em] text-[#241913]">{title}</span>
+        <span className="flex items-center gap-2">
+          <span className="block text-[17px] font-bold tracking-[-0.01em] text-[#241913]">{title}</span>
+          {badge ? (
+            <span className="inline-flex rounded-full bg-[#fff0e7] px-2.5 py-1 text-[11px] font-bold text-[#cf6e38]">
+              {badge}
+            </span>
+          ) : null}
+        </span>
         <span className="mt-1.5 block text-[14px] leading-6 text-[#8e8178]">{description}</span>
       </span>
     </button>

@@ -40,6 +40,7 @@ export const supportTicketRows = [
     notes:
       "Customer-side pricing cache was stale for this vendor menu. Cleared cache and confirmed configuration now appears correctly in cart.",
     avatarInitials: "AW",
+    avatarUrl: "https://i.pravatar.cc/80?img=12",
     orderCount: 42,
     joinedDate: "Mar 2022",
     phone: "+47 456 23 019",
@@ -99,6 +100,7 @@ export const supportTicketRows = [
     notes:
       "User submitted identity documents but account remains in pending state. Needs back-office verification review.",
     avatarInitials: "TH",
+    avatarUrl: "https://i.pravatar.cc/80?img=15",
     orderCount: 16,
     joinedDate: "Jun 2023",
     phone: "+47 901 55 210",
@@ -139,6 +141,7 @@ export const supportTicketRows = [
     notes:
       "Vendor is requesting an update after a partial refund was issued for a canceled event order. Awaiting payment provider confirmation.",
     avatarInitials: "SS",
+    avatarUrl: "https://i.pravatar.cc/80?img=32",
     orderCount: 28,
     joinedDate: "Jan 2024",
     phone: "+47 466 88 312",
@@ -198,6 +201,7 @@ export const supportTicketRows = [
     notes:
       "User needed guidance on where to edit business hours. Walked them through settings and confirmed changes were saved.",
     avatarInitials: "UN",
+    avatarUrl: "https://i.pravatar.cc/80?img=47",
     orderCount: 9,
     joinedDate: "Feb 2024",
     phone: "+47 404 18 221",
@@ -219,6 +223,7 @@ export const supportTicketRows = [
     notes:
       "Investigating delayed settlement due to invoice mismatch between completed delivery and vendor payout record.",
     avatarInitials: "NK",
+    avatarUrl: "https://i.pravatar.cc/80?img=53",
     orderCount: 31,
     joinedDate: "Aug 2023",
     phone: "+47 990 44 871",
@@ -240,6 +245,7 @@ export const supportTicketRows = [
     notes:
       "Replicated and resolved a cart-state issue for bundled menu selections. Customer confirmed fix on follow-up.",
     avatarInitials: "NK",
+    avatarUrl: "https://i.pravatar.cc/80?img=54",
     orderCount: 14,
     joinedDate: "Apr 2024",
     phone: "+47 990 44 871",
@@ -261,6 +267,7 @@ export const supportTicketRows = [
     notes:
       "Explained approval workflow and checklist requirements before store activation. Ticket closed after response.",
     avatarInitials: "AN",
+    avatarUrl: "https://i.pravatar.cc/80?img=48",
     orderCount: 6,
     joinedDate: "Sep 2024",
     phone: "+47 412 70 555",
@@ -282,6 +289,7 @@ export const supportTicketRows = [
     notes:
       "Customer asked for an updated invoice PDF for reimbursement. Needs regeneration and resend.",
     avatarInitials: "AB",
+    avatarUrl: "https://i.pravatar.cc/80?img=24",
     orderCount: 18,
     joinedDate: "Jul 2023",
     phone: "+47 421 88 910",
@@ -303,6 +311,7 @@ export const supportTicketRows = [
     notes:
       "Map polygon edits revert after submission. Engineering has been notified and logs are attached.",
     avatarInitials: "MR",
+    avatarUrl: "https://i.pravatar.cc/80?img=61",
     orderCount: 22,
     joinedDate: "Nov 2022",
     phone: "+47 477 19 661",
@@ -324,6 +333,7 @@ export const supportTicketRows = [
     notes:
       "Guided user through multi-user account setup and role permissions for team ordering.",
     avatarInitials: "SN",
+    avatarUrl: "https://i.pravatar.cc/80?img=41",
     orderCount: 11,
     joinedDate: "Jan 2024",
     phone: "+47 454 82 114",
@@ -345,6 +355,7 @@ export const supportTicketRows = [
     notes:
       "Uploads fail on image compression step for larger files. Needs validation on supported image sizes.",
     avatarInitials: "DS",
+    avatarUrl: "https://i.pravatar.cc/80?img=67",
     orderCount: 27,
     joinedDate: "May 2023",
     phone: "+47 489 72 500",
@@ -366,6 +377,7 @@ export const supportTicketRows = [
     notes:
       "Generated corrected invoice with VAT details and resent to customer for finance processing.",
     avatarInitials: "EL",
+    avatarUrl: "https://i.pravatar.cc/80?img=5",
     orderCount: 35,
     joinedDate: "Oct 2022",
     phone: "+47 410 33 146",

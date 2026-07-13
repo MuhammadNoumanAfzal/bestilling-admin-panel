@@ -1,15 +1,10 @@
 import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const typeClasses = {
-  Vendor: "bg-[#f3f0ff] text-[#6e67d8]",
-  Customer: "bg-[#fff1e8] text-[#d46b36]",
-};
-
 const statusClasses = {
-  Open: "bg-[#e9fff0] text-[#219653]",
-  Resolved: "bg-[#e9fff0] text-[#219653]",
-  "In Progress": "bg-[#fff4e6] text-[#d46b36]",
+  Open: "bg-[#fff1bf] text-[#e39a00]",
+  Resolved: "bg-[#18b63f] text-white",
+  "In Progress": "bg-[#bedeff] text-[#2e7cd8]",
 };
 
 function buildPaginationItems(currentPage, totalPages) {
@@ -63,16 +58,17 @@ function PaginationIconButton({ children, disabled = false, onClick }) {
   );
 }
 
-function TypeBadge({ type }) {
+function Avatar({ label, src }) {
   return (
-    <span
-      className={[
-        "inline-flex rounded-full px-3 py-1.5 text-[11px] font-bold leading-none",
-        typeClasses[type] || typeClasses.Customer,
-      ].join(" ")}
-    >
-      {type}
-    </span>
+    <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-[#f4eee9]">
+      {src ? (
+        <img alt={label} className="h-full w-full object-cover" src={src} />
+      ) : (
+        <span className="inline-flex h-full w-full items-center justify-center text-[11px] font-bold text-[#2f241d]">
+          {label}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -104,64 +100,73 @@ export default function SupportTicketsTable({
 
   return (
     <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-2">
-      <div className="w-full">
-        <table className="w-full table-fixed border-collapse">
+      <div className="w-full overflow-x-auto">
+        <table className="min-w-[1040px] w-full table-fixed border-collapse">
           <colgroup>
             <col className="w-[10%]" />
-            <col className="w-[15%]" />
+            <col className="w-[22%]" />
             <col className="w-[10%]" />
-            <col className="w-[27%]" />
-            <col className="w-[8%]" />
+            <col className="w-[19%]" />
             <col className="w-[10%]" />
             <col className="w-[10%]" />
+            <col className="w-[9%]" />
             <col className="w-[10%]" />
           </colgroup>
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="px-4 py-5 text-[13px] font-bold text-[#9b8f86]"># Ticket ID</th>
-              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">User</th>
-              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">User Type</th>
-              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Subject</th>
-              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Category</th>
-              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Created</th>
-              <th className="px-3 py-5 text-[13px] font-bold text-[#9b8f86]">Status</th>
-              <th className="px-4 py-5 text-right text-[13px] font-bold text-[#9b8f86]">Action</th>
+              <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">Ticket ID</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">User</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">User Type</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Subject</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Category</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Created</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
+              <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Action</th>
             </tr>
           </thead>
 
-          <tbody className="[&_tr:first-child_td]:pt-6">
-            {rows.map((row) => (
-              <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
-                <td className="px-4 py-4 text-[13px] font-semibold text-[#2a1e17]">{row.id}</td>
-                <td className="px-3 py-4">
-                  <div>
-                    <p className="text-[13px] font-bold text-[#2a1e17]">{row.user}</p>
-                    <p className="truncate text-[11px] text-[#8a7d74]">{row.email}</p>
-                  </div>
-                </td>
-                <td className="px-3 py-4">
-                  <TypeBadge type={row.type} />
-                </td>
-                <td className="px-3 py-4">
-                  <p className="break-words text-[13px] leading-5 text-[#443933]">{row.subject}</p>
-                </td>
-                <td className="px-3 py-4 text-[13px] font-medium text-[#584c45]">{row.category}</td>
-                <td className="px-3 py-4 text-[13px] font-medium text-[#584c45]">{row.created}</td>
-                <td className="px-3 py-4">
-                  <StatusBadge status={row.status} />
-                </td>
-                <td className="px-4 py-4 text-right">
-                  <button
-                    className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] font-bold text-[#2a1e17] transition hover:text-[#cf6e38]"
-                    onClick={() => navigate(`/support/${row.id}`)}
-                    type="button"
-                  >
-                    <Eye size={14} />
-                    <span>View Ticket</span>
-                  </button>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={8}>
+                  No support tickets match the current filters.
                 </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((row) => (
+                <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
+                  <td className="px-4 py-4 text-[15px] font-medium text-[#18120f]">#{row.id}</td>
+                  <td className="px-3 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <Avatar label={row.avatarInitials} src={row.avatarUrl} />
+                      <div className="min-w-0">
+                        <p className="truncate text-[15px] font-bold text-[#18120f]">{row.user}</p>
+                        <p className="truncate text-[11px] text-[#5a4d46]">{row.email}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.type}</td>
+                  <td className="px-3 py-4">
+                    <p className="break-words text-[15px] leading-5 text-[#18120f]">{row.subject}</p>
+                  </td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.category}</td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.created}</td>
+                  <td className="px-3 py-4">
+                    <StatusBadge status={row.status} />
+                  </td>
+                  <td className="px-4 py-4 text-right">
+                    <button
+                      className="inline-flex cursor-pointer items-center gap-1.5 text-[15px] font-semibold text-[#18120f] transition hover:text-[#cf6e38]"
+                      onClick={() => navigate(`/support/${row.id}`)}
+                      type="button"
+                    >
+                      <Eye size={15} />
+                      <span>View Ticket</span>
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

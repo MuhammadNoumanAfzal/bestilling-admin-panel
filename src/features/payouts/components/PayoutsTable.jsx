@@ -70,7 +70,7 @@ function StatusBadge({ status, variant = "order" }) {
   return (
     <span
       className={[
-        "inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold leading-none",
+        "inline-flex min-w-[74px] justify-center rounded-full px-2.5 py-1 text-[10px] font-bold leading-none",
         classes[status] || classes.Paid,
       ].join(" ")}
     >
@@ -79,26 +79,30 @@ function StatusBadge({ status, variant = "order" }) {
   );
 }
 
-function Avatar({ label, tone = "orange" }) {
-  const toneClass =
-    tone === "dark"
-      ? "bg-[linear-gradient(135deg,#2f241d_0%,#534038_100%)] text-white"
-      : "bg-[linear-gradient(135deg,#f5d4bf_0%,#d87a45_100%)] text-white";
-
+function Avatar({ label, src }) {
   return (
-    <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${toneClass}`}>
-      {label}
-    </span>
+    <button
+      className="inline-flex h-9 w-9 shrink-0 cursor-pointer overflow-hidden rounded-full transition hover:scale-[1.03]"
+      type="button"
+    >
+      {src ? (
+        <img alt={label} className="h-full w-full object-cover" src={src} />
+      ) : (
+        <span className="inline-flex h-full w-full items-center justify-center bg-[#f6eee8] text-[10px] font-bold text-[#2f241d]">
+          {label}
+        </span>
+      )}
+    </button>
   );
 }
 
-function PersonCell({ name, subtitle, avatar, tone = "orange" }) {
+function PersonCell({ name, src, subtitle, avatar }) {
   return (
     <div className="flex items-center gap-2.5">
-      <Avatar label={avatar} tone={tone} />
+      <Avatar label={avatar} src={src} />
       <div className="min-w-0">
-        <p className="truncate text-[12px] font-bold text-[#201712]">{name}</p>
-        <p className="truncate text-[10px] text-[#8a7d74]">{subtitle}</p>
+        <p className="truncate text-[15px] font-bold leading-5 text-[#18120f]">{name}</p>
+        <p className="truncate text-[11px] text-[#5a4d46]">{subtitle}</p>
       </div>
     </div>
   );
@@ -112,64 +116,82 @@ export default function PayoutsTable({ currentPage, onPageChange, pageSize, rows
   const paginationItems = buildPaginationItems(currentPage, totalPages);
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]">
+    <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-2">
       <div className="w-full overflow-x-auto">
         <table className="min-w-[1320px] w-full border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="px-3 py-3 text-[11px] font-bold text-[#9b8f86]">Order ID</th>
-              <th className="px-3 py-3 text-[11px] font-bold text-[#9b8f86]">Customer</th>
-              <th className="px-3 py-3 text-[11px] font-bold text-[#9b8f86]">Vendor</th>
-              <th className="px-3 py-3 text-[11px] font-bold text-[#9b8f86]">Order Amount</th>
-              <th className="px-3 py-3 text-[11px] font-bold text-[#9b8f86]">Order Status</th>
-              <th className="px-3 py-3 text-[11px] font-bold text-[#9b8f86]">Platform Comm.</th>
-              <th className="px-3 py-3 text-[11px] font-bold text-[#9b8f86]">Order Payment</th>
-              <th className="px-3 py-3 text-[11px] font-bold text-[#9b8f86]">Vendor Amount</th>
-              <th className="px-3 py-3 text-[11px] font-bold text-[#9b8f86]">Order Payment</th>
-              <th className="px-3 py-3 text-[11px] font-bold text-[#9b8f86]">Date</th>
-              <th className="px-4 py-3 text-right text-[11px] font-bold text-[#9b8f86]">Actions</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order ID</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Customer</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Amount</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Status</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Platform Comm.</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Payment</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor Amount</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Payout Status</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Date</th>
+              <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
-                <td className="px-3 py-3 text-[12px] font-bold text-[#201712]">{row.id}</td>
-                <td className="px-3 py-3">
-                  <PersonCell avatar={row.customerAvatar} name={row.customer} subtitle={row.customerEmail} />
-                </td>
-                <td className="px-3 py-3">
-                  <PersonCell avatar={row.vendorAvatar} name={row.vendor} subtitle={row.vendorCity} tone="dark" />
-                </td>
-                <td className="px-3 py-3 text-[12px] font-semibold text-[#2a1e17]">{row.orderAmount}</td>
-                <td className="px-3 py-3">
-                  <StatusBadge status={row.orderStatus} />
-                </td>
-                <td className="px-3 py-3 text-[12px] font-bold text-[#ff2c23]">{row.platformCommission}</td>
-                <td className="px-3 py-3">
-                  <StatusBadge status={row.orderPayment} variant="payment" />
-                </td>
-                <td className="px-3 py-3 text-[12px] font-bold text-[#cf6e38]">{row.vendorAmount}</td>
-                <td className="px-3 py-3">
-                  <StatusBadge status={row.payoutStatus} variant="payment" />
-                </td>
-                <td className="px-3 py-3 text-[12px] font-medium text-[#584c45]">{row.date}</td>
-                <td className="px-4 py-3 text-right">
-                  <button
-                    className="inline-flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-[11px] font-bold text-[#2a1e17] transition hover:text-[#cf6e38]"
-                    onClick={() => navigate(`/payouts/${encodeURIComponent(row.id)}`)}
-                    type="button"
-                  >
-                    View Details
-                  </button>
+            {rows.length === 0 ? (
+              <tr>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={11}>
+                  No payment records match the current filters.
                 </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((row) => (
+                <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.id}</td>
+                  <td className="px-3 py-4">
+                    <PersonCell
+                      avatar={row.customerAvatar}
+                      name={row.customer}
+                      src={row.customerAvatarUrl}
+                      subtitle={row.customerEmail}
+                    />
+                  </td>
+                  <td className="px-3 py-4">
+                    <PersonCell
+                      avatar={row.vendorAvatar}
+                      name={row.vendor}
+                      src={row.vendorAvatarUrl}
+                      subtitle={row.vendorCity}
+                    />
+                  </td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.orderAmount}</td>
+                  <td className="px-3 py-4">
+                    <StatusBadge status={row.orderStatus} />
+                  </td>
+                  <td className="px-3 py-4 text-[15px] font-semibold text-[#ff2c23]">{row.platformCommission}</td>
+                  <td className="px-3 py-4">
+                    <StatusBadge status={row.orderPayment} variant="payment" />
+                  </td>
+                  <td className="px-3 py-4 text-[15px] font-semibold text-[#cf6e38]">{row.vendorAmount}</td>
+                  <td className="px-3 py-4">
+                    <StatusBadge status={row.payoutStatus} variant="payment" />
+                  </td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.date}</td>
+                  <td className="px-4 py-4 text-right">
+                    <button
+                      className="inline-flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-[13px] font-semibold text-[#18120f] transition hover:text-[#cf6e38]"
+                      onClick={() => navigate(`/payouts/${encodeURIComponent(row.id)}`)}
+                      type="button"
+                    >
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      <div className="flex flex-col gap-4 border-t border-[#eee4dd] px-4 py-4 text-[12px] text-[#6c6058] sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 border-t border-[#eee4dd] px-4 py-4 text-[13px] text-[#6c6058] sm:flex-row sm:items-center sm:justify-between">
         <p>
           Showing {start} - {end} of {totalItems} Orders
         </p>
@@ -181,7 +203,7 @@ export default function PayoutsTable({ currentPage, onPageChange, pageSize, rows
 
           {paginationItems.map((item) =>
             String(item).startsWith("ellipsis") ? (
-              <span key={item} className="px-1 text-[12px] font-semibold text-[#7a6d66]">
+              <span key={item} className="px-1 text-[13px] font-semibold text-[#7a6d66]">
                 ...
               </span>
             ) : (

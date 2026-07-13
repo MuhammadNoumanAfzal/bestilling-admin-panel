@@ -18,7 +18,7 @@ export default function PaymentDetailsPage() {
     <div className="space-y-6">
       <section className="space-y-1">
         <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">Payment Details</h1>
-        <p className="text-[14px] leading-6 text-[#6f645d]">
+        <p className="text-[18px] leading-7">
           Track customer payment and vendor payout for this order.
         </p>
       </section>

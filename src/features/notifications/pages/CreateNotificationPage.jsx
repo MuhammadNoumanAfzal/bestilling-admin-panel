@@ -46,7 +46,7 @@ const timeOptions = [
 
 function ScheduleModeRadio({ label, value, checked, onChange }) {
   return (
-    <label className="inline-flex cursor-pointer items-center gap-2.5 text-[15px] font-medium text-[#574c45]">
+    <label className="inline-flex cursor-pointer items-center gap-2.5 text-[15px] font-medium text-[#574c45] "  >
       <input checked={checked} className="accent-[#cf6e38]" name="scheduleMode" onChange={() => onChange(value)} type="radio" />
       <span>{label}</span>
     </label>
@@ -79,7 +79,7 @@ export default function CreateNotificationPage() {
         </p>
       </section>
 
-      <div className="max-w-[920px] space-y-5">
+      <div className="max-w-[920px] space-y-5 ">
         <CreateNotificationSectionCard
           subtitle="Provide the core message and notification content."
           title="Basic Information"

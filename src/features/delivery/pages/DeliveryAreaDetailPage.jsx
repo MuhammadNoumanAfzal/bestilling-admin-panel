@@ -36,7 +36,7 @@ export default function DeliveryAreaDetailPage() {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="text-[38px] font-bold tracking-[-0.04em] text-[#18120f]">{area.city}</h1>
-            <p className="text-[14px] leading-6 text-[#6f645d]">
+            <p className="text-[18px] leading-7 ">
               View postal code coverage, service controls, and local delivery configuration.
             </p>
           </div>

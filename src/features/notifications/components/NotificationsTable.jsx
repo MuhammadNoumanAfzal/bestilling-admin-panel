@@ -123,7 +123,7 @@ export default function NotificationsTable({
   const paginationItems = buildPaginationItems(currentPage, totalPages);
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]">
+    <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-2">
       <div className="overflow-x-auto">
         <table className="min-w-[980px] w-full border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">

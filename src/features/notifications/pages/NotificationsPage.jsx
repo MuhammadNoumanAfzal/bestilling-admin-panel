@@ -33,7 +33,7 @@ export default function NotificationsPage() {
       <div className="space-y-5">
         <section className="space-y-1">
           <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">Notifications</h1>
-          <p className="text-[14px] leading-6 text-[#6f645d]">
+          <p className="text-[18px] leading-7 ">
             Create, manage and monitor platform-wide notifications for users and vendors.
           </p>
         </section>

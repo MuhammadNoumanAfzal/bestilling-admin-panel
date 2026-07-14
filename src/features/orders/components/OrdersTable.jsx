@@ -116,10 +116,10 @@ export default function OrdersTable({
   return (
     <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] mt-4">
       <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-[1100px] border-collapse">
+        <table className="w-full min-w-[900px] border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="w-12 px-3 py-4 text-center">
+              <th className="w-10 px-2 py-4 text-center">
                 <input
                   type="checkbox"
                   checked={orders.length > 0 && selectedIds.length === orders.length}
@@ -127,15 +127,15 @@ export default function OrdersTable({
                   className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
                 />
               </th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order ID</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Customer</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Event Type</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Date & Time</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Amount</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Payment</th>
-              <th className="w-20 px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Order ID</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Customer</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Event Type</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Date & Time</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Amount</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Payment</th>
+              <th className="w-16 px-2 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
             </tr>
           </thead>
 
@@ -158,7 +158,7 @@ export default function OrdersTable({
                       isSelected ? "bg-[#fffcf8]" : ""
                     }`}
                   >
-                    <td className="px-3 py-4 text-center align-middle">
+                    <td className="px-2 py-4 text-center align-middle">
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -166,7 +166,7 @@ export default function OrdersTable({
                         className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
                       />
                     </td>
-                    <td className="px-3 py-4 text-[15px] font-semibold text-[#18120f] align-middle">
+                    <td className="px-2 py-4 text-[15px] font-semibold text-[#18120f] align-middle">
                       <button
                         onClick={() => navigate(`/orders/${encodeURIComponent(row.id.replace("#", ""))}`)}
                         className="text-[#d96834] hover:underline cursor-pointer font-bold outline-none text-left"
@@ -174,7 +174,7 @@ export default function OrdersTable({
                         {row.id}
                       </button>
                     </td>
-                    <td className="px-3 py-4 align-middle">
+                    <td className="px-2 py-4 align-middle">
                       <PersonCell
                         avatar={row.customerAvatar}
                         name={row.customer}
@@ -182,7 +182,7 @@ export default function OrdersTable({
                         subtitle={row.customerEmail}
                       />
                     </td>
-                    <td className="px-3 py-4 align-middle">
+                    <td className="px-2 py-4 align-middle">
                       <PersonCell
                         avatar={row.vendorAvatar}
                         name={row.vendor}
@@ -190,16 +190,16 @@ export default function OrdersTable({
                         subtitle={row.vendorCity}
                       />
                     </td>
-                    <td className="px-3 py-4 text-[15px] font-medium text-[#18120f] align-middle">
+                    <td className="px-2 py-4 text-[15px] font-medium text-[#18120f] align-middle">
                       {row.eventType}
                     </td>
-                    <td className="px-3 py-4 text-[15px] text-[#18120f] align-middle">
+                    <td className="px-2 py-4 text-[15px] text-[#18120f] align-middle">
                       {row.dateTime}
                     </td>
-                    <td className="px-3 py-4 text-[15px] font-bold text-[#18120f] align-middle">
+                    <td className="px-2 py-4 text-[15px] font-bold text-[#18120f] align-middle">
                       {row.amount}
                     </td>
-                    <td className="px-3 py-4 align-middle">
+                    <td className="px-2 py-4 align-middle">
                       <span
                         className={`inline-flex min-w-[76px] justify-center rounded-full px-2.5 py-1 text-[11px] font-bold leading-none ${
                           statusClasses[row.status] || "bg-[#fcfbfa] text-[#6f655e]"
@@ -208,12 +208,12 @@ export default function OrdersTable({
                         {row.status}
                       </span>
                     </td>
-                    <td className="px-3 py-4 align-middle">
+                    <td className="px-2 py-4 align-middle">
                       <span className={paymentClasses[row.paymentStatus] || "text-[#18120f] font-medium"}>
                         {row.paymentStatus}
                       </span>
                     </td>
-                    <td className="relative px-4 py-4 text-right align-middle">
+                    <td className="relative px-2 py-4 text-right align-middle">
                       <button
                         onClick={() => setActiveMenuId(activeMenuId === row.id ? null : row.id)}
                         className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[#6f655e] transition hover:bg-[#f1e9e2] hover:text-[#1f1711] cursor-pointer"

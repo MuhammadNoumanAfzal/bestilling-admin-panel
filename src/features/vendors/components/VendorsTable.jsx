@@ -77,10 +77,10 @@ export default function VendorsTable({
   return (
     <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] mt-4">
       <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-[1100px] border-collapse">
+        <table className="w-full min-w-[900px] border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="w-12 px-3 py-4 text-center">
+              <th className="w-10 px-2 py-4 text-center">
                 <input
                   type="checkbox"
                   checked={vendors.length > 0 && selectedIds.length === vendors.length}
@@ -88,15 +88,15 @@ export default function VendorsTable({
                   className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
                 />
               </th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86] w-64">Vendor</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Business Type</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">City</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86] text-center">Order</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Revenue</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Rating</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Join Date</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
-              <th className="w-20 px-3 py-4 text-center text-[13px] font-bold text-[#9b8f86]">Actions</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] w-48">Vendor</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Business Type</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">City</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] text-center">Order</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Revenue</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Rating</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Join Date</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
+              <th className="w-16 px-2 py-4 text-center text-[13px] font-bold text-[#9b8f86]">Actions</th>
             </tr>
           </thead>
 
@@ -127,7 +127,7 @@ export default function VendorsTable({
                         className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
                       />
                     </td>
-                    <td className="px-3 py-4 align-middle">
+                    <td className="px-2 py-4 align-middle">
                       <PersonCell
                         avatar={row.avatar}
                         name={row.name}
@@ -135,28 +135,28 @@ export default function VendorsTable({
                         subtitle={row.city}
                       />
                     </td>
-                    <td className="px-3 py-4 text-[15px] text-[#18120f] font-semibold align-middle">
+                    <td className="px-2 py-4 text-[15px] text-[#18120f] font-semibold align-middle">
                       {row.businessType}
                     </td>
-                    <td className="px-3 py-4 text-[15px] text-[#5a4d46] align-middle">
+                    <td className="px-2 py-4 text-[15px] text-[#5a4d46] align-middle">
                       {row.city}
                     </td>
-                    <td className="px-3 py-4 text-[15px] text-[#18120f] font-semibold align-middle text-center">
+                    <td className="px-2 py-4 text-[15px] text-[#18120f] font-semibold align-middle text-center">
                       {row.ordersCount}
                     </td>
-                    <td className="px-3 py-4 text-[15px] font-bold text-[#18120f] align-middle">
+                    <td className="px-2 py-4 text-[15px] font-bold text-[#18120f] align-middle">
                       {row.revenue}
                     </td>
-                    <td className="px-3 py-4 text-[15px] font-semibold text-[#18120f] align-middle">
+                    <td className="px-2 py-4 text-[15px] font-semibold text-[#18120f] align-middle">
                       <span className="inline-flex items-center gap-1">
                         <Star size={13} fill="#ffc107" stroke="none" />
                         {row.rating}
                       </span>
                     </td>
-                    <td className="px-3 py-4 text-[15px] text-[#5a4d46] align-middle">
+                    <td className="px-2 py-4 text-[15px] text-[#5a4d46] align-middle">
                       {row.joinDate}
                     </td>
-                    <td className="px-3 py-4 align-middle">
+                    <td className="px-2 py-4 align-middle">
                       <span
                         className={`inline-flex min-w-[100px] justify-center rounded-full px-2.5 py-1 text-[11px] font-bold leading-none ${
                           statusClasses[row.status] || "bg-[#fcfbfa] text-[#6f655e]"
@@ -165,7 +165,7 @@ export default function VendorsTable({
                         {row.status}
                       </span>
                     </td>
-                    <td className="relative px-4 py-4 text-center align-middle">
+                    <td className="relative px-2 py-4 text-center align-middle">
                       <button
                         onClick={() => setActiveMenuId(activeMenuId === row.id ? null : row.id)}
                         className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[#6f655e] transition hover:bg-[#f1e9e2] hover:text-[#1f1711] cursor-pointer"

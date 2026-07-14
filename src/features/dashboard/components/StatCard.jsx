@@ -1,29 +1,19 @@
 import { ArrowUpRight } from "lucide-react";
 
-export default function StatCard({ title, value, note, accent = "orange", icon: Icon }) {
-  const toneClasses = {
-    orange: "bg-[#fff4ee] text-[#cf6432]",
-    slate: "bg-[#f4f1ee] text-[#4d4138]",
-    green: "bg-[#edf8f1] text-[#2b9e62]",
-    amber: "bg-[#fff7e7] text-[#c8881b]",
-  };
-
+export default function StatCard({ title, value, icon: Icon }) {
   return (
-    <article className="rounded-[12px] border border-[#ddd6cf] bg-white p-4 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-2">
-          <p className="text-[12px] font-bold uppercase tracking-[0.24em] text-[#9a7f68]">{title}</p>
-          <strong className="block text-[clamp(1.8rem,3vw,2.5rem)] leading-none text-[#1e1712]">
-            {value}
-          </strong>
-        </div>
-        <div
-          className={`flex h-11 w-11 items-center justify-center rounded-[10px] ${toneClasses[accent] || toneClasses.orange}`}
-        >
-          {Icon ? <Icon size={20} /> : <ArrowUpRight size={18} />}
-        </div>
+    <article className="rounded-[14px] border border-[#ece4de] bg-white px-4 py-4 shadow-[0_8px_20px_rgba(55,31,13,0.07)] flex flex-col gap-4 items-start transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(55,31,13,0.09)]">
+      <div className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#d96834] shrink-0">
+        {Icon ? <Icon size={17} strokeWidth={2.2} /> : <ArrowUpRight size={17} strokeWidth={2.2} />}
       </div>
-      {note ? <p className="mt-3 text-[13px] leading-6 text-[#6f655e]">{note}</p> : null}
+      
+      <div className="space-y-4">
+        <p className="text-[13px] font-bold leading-5 text-[#4d423b]">{title}</p>
+        <strong className="block text-[28px] font-extrabold leading-[1.05] tracking-[-0.035em] text-[#221914]">
+          {value}
+        </strong>
+      </div>
     </article>
   );
 }
+

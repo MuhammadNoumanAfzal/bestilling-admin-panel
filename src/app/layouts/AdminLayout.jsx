@@ -137,6 +137,13 @@ export default function AdminLayout() {
       };
     }
 
+    if (location.pathname.startsWith("/orders/") && location.pathname !== "/orders") {
+      return {
+        title: "Order Details",
+        subtitle: "Review order details, items invoice, customer & vendor profiles.",
+      };
+    }
+
     return pageMeta[location.pathname] || pageMeta["/dashboard"];
   }, [location.pathname]);
   const initials = useMemo(() => {

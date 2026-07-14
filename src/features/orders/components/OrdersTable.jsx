@@ -236,16 +236,6 @@ export default function OrdersTable({
                             >
                               View Details
                             </button>
-                            <button
-                              onClick={() => {
-                                alert(`Invoice for Order ${row.id}`);
-                                setActiveMenuId(null);
-                              }}
-                              className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
-                              type="button"
-                            >
-                              Download Invoice
-                            </button>
                           </div>
                         </>
                       )}

@@ -14,6 +14,7 @@ import VendorBreakdownCard from "../components/VendorBreakdownCard.jsx";
 import TopPerformingVendors from "../components/TopPerformingVendors.jsx";
 import PendingVendorApprovalsTable from "../components/PendingVendorApprovalsTable.jsx";
 import QuickActionsGrid from "../components/QuickActionsGrid.jsx";
+import DateFilterDropdown from "../components/DateFilterDropdown.jsx";
 
 import {
   dashboardStats,
@@ -23,6 +24,8 @@ import {
 export default function DashboardPage() {
   const [approvals, setApprovals] = useState(initialPendingApprovals);
   const [timeframe, setTimeframe] = useState("Last 7 days");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
 
   // Map stat IDs to their respective Lucide icons
   const statIcons = {
@@ -41,6 +44,11 @@ export default function DashboardPage() {
     );
   };
 
+  const handleCustomDateChange = (start, end) => {
+    setCustomStart(start);
+    setCustomEnd(end);
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header & Subtitle */}
@@ -55,14 +63,13 @@ export default function DashboardPage() {
         </div>
 
         <div>
-          <select
-            value={timeframe}
-            onChange={(e) => setTimeframe(e.target.value)}
-            className="rounded-[8px] border border-[#d8ccc2] bg-white px-4 py-2 text-[13px] font-semibold text-[#4d423b] outline-none transition focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)] cursor-pointer"
-          >
-            <option value="Last 7 days">Last 7 days</option>
-            <option value="Last Month">Last Month</option>
-          </select>
+          <DateFilterDropdown
+            selectedFilter={timeframe}
+            onChangeFilter={setTimeframe}
+            startDate={customStart}
+            endDate={customEnd}
+            onCustomDateChange={handleCustomDateChange}
+          />
         </div>
       </section>
 

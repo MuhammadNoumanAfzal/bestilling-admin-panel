@@ -1,193 +1,269 @@
+import { useState } from "react";
 import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
 
 const statusClasses = {
-  Active: "bg-[#18b24b] text-white",
-  Blocked: "bg-[#dd1111] text-white",
+  Active: "bg-[#2b9e62] text-white",
+  Blocked: "bg-[#d83f3f] text-white",
 };
 
-function buildPaginationItems(currentPage, totalPages) {
-  if (totalPages <= 5) {
-    return Array.from({ length: totalPages }, (_, index) => index + 1);
-  }
-
-  if (currentPage <= 3) {
-    return [1, 2, 3, "ellipsis", totalPages];
-  }
-
-  if (currentPage >= totalPages - 2) {
-    return [1, "ellipsis", totalPages - 2, totalPages - 1, totalPages];
-  }
-
-  return [1, "ellipsis", currentPage, "ellipsis-2", totalPages];
-}
-
-function PaginationButton({ children, isActive = false, onClick }) {
+function PersonCell({ name, src, email, avatar }) {
   return (
-    <button
-      className={[
-        "inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-[8px] border px-2.5 text-[13px] font-semibold transition",
-        isActive
-          ? "border-[#cf6e38] bg-[#cf6e38] text-white"
-          : "border-transparent bg-transparent text-[#635751] hover:border-[#e5d8cf] hover:bg-[#faf6f2]",
-      ].join(" ")}
-      onClick={onClick}
-      type="button"
-    >
-      {children}
-    </button>
+    <div className="flex items-center gap-2.5">
+      {src ? (
+        <img
+          alt={name}
+          className="h-9 w-9 shrink-0 rounded-full object-cover border border-[#eee4dd]"
+          src={src}
+        />
+      ) : (
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f6eee8] text-[10px] font-bold text-[#2f241d]">
+          {avatar}
+        </span>
+      )}
+      <div className="min-w-0">
+        <p className="truncate text-[14px] font-bold leading-5 text-[#18120f]">{name}</p>
+        <p className="truncate text-[11px] text-[#5a4d46]">{email}</p>
+      </div>
+    </div>
   );
 }
 
-function PaginationIconButton({ children, disabled = false, onClick }) {
-  return (
-    <button
-      className={[
-        "inline-flex h-8 w-8 items-center justify-center rounded-[8px] border text-[#83766f] transition",
-        disabled
-          ? "cursor-not-allowed border-[#ebe1d9] bg-[#f7f3f0] text-[#c4b8b0]"
-          : "cursor-pointer border-[#e6dad1] hover:bg-[#faf5f1]",
-      ].join(" ")}
-      disabled={disabled}
-      onClick={onClick}
-      type="button"
-    >
-      {children}
-    </button>
-  );
-}
+export default function CustomersTable({
+  currentPage,
+  onPageChange,
+  pageSize,
+  rows,
+  totalItems,
+}) {
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [activeMenuId, setActiveMenuId] = useState(null);
 
-function StatusBadge({ status }) {
-  return (
-    <span
-      className={[
-        "inline-flex min-w-[74px] justify-center rounded-full px-3 py-1.5 text-[11px] font-bold leading-none",
-        statusClasses[status] || statusClasses.Active,
-      ].join(" ")}
-    >
-      {status}
-    </span>
-  );
-}
-
-function Avatar({ label, tone = "orange" }) {
-  const toneClass =
-    tone === "dark"
-      ? "bg-[linear-gradient(135deg,#2f241d_0%,#534038_100%)] text-white"
-      : "bg-[linear-gradient(135deg,#f5d4bf_0%,#d87a45_100%)] text-white";
-
-  return (
-    <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${toneClass}`}>
-      {label}
-    </span>
-  );
-}
-
-export default function CustomersTable({ currentPage, onPageChange, pageSize, rows, totalItems }) {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, totalItems);
-  const paginationItems = buildPaginationItems(currentPage, totalPages);
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(rows.map((r) => r.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const buildPaginationItems = () => {
+    const items = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) items.push(i);
+    } else {
+      if (currentPage <= 3) {
+        items.push(1, 2, 3, "...", totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        items.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        items.push(1, "...", currentPage, "...", totalPages);
+      }
+    }
+    return items;
+  };
+
+  const paginationItems = buildPaginationItems();
 
   return (
-    <div className="m-2 overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]">
+    <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-4">
       <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-[1080px] border-collapse">
+        <table className="w-full min-w-[900px] border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="px-4 py-4 text-[12px] font-bold text-[#9b8f86]">Customer ID</th>
-              <th className="px-3 py-4 text-[12px] font-bold text-[#9b8f86]">Customer</th>
-              <th className="px-3 py-4 text-[12px] font-bold text-[#9b8f86]">Phone</th>
-              <th className="px-3 py-4 text-[12px] font-bold text-[#9b8f86]">City</th>
-              <th className="px-3 py-4 text-[12px] font-bold text-[#9b8f86]">Total Orders</th>
-              <th className="px-3 py-4 text-[12px] font-bold text-[#9b8f86]">Amount</th>
-              <th className="px-3 py-4 text-[12px] font-bold text-[#9b8f86]">Status</th>
-              <th className="px-4 py-4 text-right text-[12px] font-bold text-[#9b8f86]">Actions</th>
+              <th className="w-10 px-2 py-4 text-center">
+                <input
+                  type="checkbox"
+                  checked={rows.length > 0 && selectedIds.length === rows.length}
+                  onChange={handleSelectAll}
+                  className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
+                />
+              </th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] w-32">Customer ID</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] w-52">Customer</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Phone</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">City</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] text-center">Total Orders</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Amount</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
+              <th className="w-16 px-2 py-4 text-center text-[13px] font-bold text-[#9b8f86]">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {rows.map((row, index) => (
-              <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
-                <td className={`px-4 py-4 text-[13px] font-semibold text-[#2a1e17] ${index === 0 ? "pt-5" : ""}`}>
-                  {row.id}
-                </td>
-                <td className={`px-3 py-4 ${index === 0 ? "pt-5" : ""}`}>
-                  <div className="flex items-center gap-3">
-                    <Avatar label={row.avatar} tone={index % 2 === 0 ? "orange" : "dark"} />
-                    <div className="min-w-0">
-                      <p className="truncate text-[13px] font-bold text-[#2a1e17]">{row.name}</p>
-                      <p className="truncate text-[11px] text-[#8a7d74]">{row.email}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className={`px-3 py-4 text-[13px] font-medium text-[#584c45] ${index === 0 ? "pt-5" : ""}`}>
-                  {row.phone}
-                </td>
-                <td className={`px-3 py-4 text-[13px] font-medium text-[#584c45] ${index === 0 ? "pt-5" : ""}`}>
-                  {row.city}
-                </td>
-                <td className={`px-3 py-4 text-[13px] font-medium text-[#584c45] ${index === 0 ? "pt-5" : ""}`}>
-                  {row.totalOrders}
-                </td>
-                <td className={`px-3 py-4 text-[13px] font-semibold text-[#2a1e17] ${index === 0 ? "pt-5" : ""}`}>
-                  {row.amount}
-                </td>
-                <td className={`px-3 py-4 ${index === 0 ? "pt-5" : ""}`}>
-                  <StatusBadge status={row.status} />
-                </td>
-                <td className={`px-4 py-4 text-right ${index === 0 ? "pt-5" : ""}`}>
-                  <button
-                    className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-[#2a1e17] transition hover:bg-[#fff4ec] hover:text-[#cf6e38]"
-                    type="button"
-                  >
-                    <MoreVertical size={16} />
-                  </button>
+            {rows.length === 0 ? (
+              <tr>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={9}>
+                  No customers match the current filters.
                 </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((row) => {
+                const isSelected = selectedIds.includes(row.id);
+                const isMenuOpen = activeMenuId === row.id;
+
+                return (
+                  <tr
+                    key={row.id}
+                    className={`border-b border-[#f1e9e2] last:border-b-0 transition hover:bg-[#faf9f8] ${
+                      isSelected ? "bg-[#fffcf8]" : ""
+                    }`}
+                  >
+                    <td className="px-2 py-4 text-center align-middle">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleSelectRow(row.id)}
+                        className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
+                      />
+                    </td>
+                    <td className="px-2 py-4 text-[15px] font-bold text-[#18120f] align-middle">
+                      {row.id}
+                    </td>
+                    <td className="px-2 py-4 align-middle">
+                      <PersonCell
+                        avatar={row.avatar}
+                        name={row.name}
+                        src={row.avatarUrl}
+                        email={row.email}
+                      />
+                    </td>
+                    <td className="px-2 py-4 text-[15px] text-[#5a4d46] align-middle">
+                      {row.phone}
+                    </td>
+                    <td className="px-2 py-4 text-[15px] text-[#5a4d46] align-middle">
+                      {row.city}
+                    </td>
+                    <td className="px-2 py-4 text-[15px] text-[#18120f] font-semibold align-middle text-center">
+                      {row.totalOrders}
+                    </td>
+                    <td className="px-2 py-4 text-[15px] font-bold text-[#18120f] align-middle">
+                      {row.amount}
+                    </td>
+                    <td className="px-2 py-4 align-middle">
+                      <span
+                        className={`inline-flex min-w-[76px] justify-center rounded-full px-2.5 py-1 text-[11px] font-bold leading-none ${
+                          statusClasses[row.status] || "bg-[#fcfbfa] text-[#6f655e]"
+                        }`}
+                      >
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="relative px-2 py-4 text-center align-middle">
+                      <button
+                        onClick={() => setActiveMenuId(activeMenuId === row.id ? null : row.id)}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[#6f655e] transition hover:bg-[#f1e9e2] hover:text-[#1f1711] cursor-pointer"
+                        type="button"
+                      >
+                        <MoreVertical size={14} />
+                      </button>
+
+                      {isMenuOpen && (
+                        <>
+                          <div className="fixed inset-0 z-20" onClick={() => setActiveMenuId(null)} />
+                          <div className="absolute right-4 top-10 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
+                            <button
+                              onClick={() => {
+                                alert(`View details of ${row.name}`);
+                                setActiveMenuId(null);
+                              }}
+                              className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
+                              type="button"
+                            >
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => {
+                                alert(`Toggle active/blocked for ${row.name}`);
+                                setActiveMenuId(null);
+                              }}
+                              className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
+                              type="button"
+                            >
+                              Toggle Status
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
 
-      <div className="flex items-center justify-center border-t border-[#eee4dd] px-4 py-3">
+      <div className="flex items-center justify-center border-t border-[#eee4dd] px-4 py-3 bg-[#fcfbfa]">
         <button
-          className="inline-flex cursor-pointer items-center justify-center text-[13px] font-semibold text-[#564942] transition hover:text-[#cf6e38]"
+          onClick={() => alert("Viewing all customer lists")}
+          className="inline-flex cursor-pointer items-center justify-center text-[13px] font-bold text-[#cf6e38] transition hover:underline outline-none"
           type="button"
         >
           View all
         </button>
       </div>
 
-      <div className="flex flex-col gap-4 border-t border-[#eee4dd] px-4 py-4 text-[13px] text-[#6c6058] sm:flex-row sm:items-center sm:justify-between">
-        <p>
-          Showing {start} - {end} of {totalItems} Orders
+      {/* Pagination controls */}
+      <footer className="flex flex-col items-center justify-between gap-4 border-t border-[#eee4dd] bg-[#fcfbfa] px-6 py-4 sm:flex-row">
+        <p className="text-[13px] font-semibold text-[#6f645d]">
+          Showing {start} - {end} of {totalItems} Customers
         </p>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <PaginationIconButton disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)}>
-            <ChevronLeft size={15} />
-          </PaginationIconButton>
+        <div className="flex items-center gap-1">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(currentPage - 1)}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#d8ccc2] bg-white text-[#4d423b] transition hover:bg-[#faf5f1] disabled:opacity-40 disabled:hover:bg-white cursor-pointer"
+            type="button"
+          >
+            <ChevronLeft size={14} />
+          </button>
 
-          {paginationItems.map((item) =>
-            String(item).startsWith("ellipsis") ? (
-              <span key={item} className="px-1 text-[13px] font-semibold text-[#7a6d66]">
-                ...
-              </span>
-            ) : (
-              <PaginationButton key={item} isActive={item === currentPage} onClick={() => onPageChange(item)}>
+          {paginationItems.map((item, idx) => {
+            const isCurrent = item === currentPage;
+            if (item === "...") {
+              return (
+                <span key={idx} className="px-1 text-[13px] text-[#9b8f86]">
+                  ...
+                </span>
+              );
+            }
+            return (
+              <button
+                key={idx}
+                onClick={() => onPageChange(item)}
+                className={`inline-flex h-8 w-8 items-center justify-center rounded-[8px] text-[13px] font-bold transition cursor-pointer ${
+                  isCurrent
+                    ? "bg-[#d96834] text-white"
+                    : "border border-[#d8ccc2] bg-white text-[#4d423b] hover:bg-[#faf5f1]"
+                }`}
+                type="button"
+              >
                 {item}
-              </PaginationButton>
-            ),
-          )}
+              </button>
+            );
+          })}
 
-          <PaginationIconButton
+          <button
             disabled={currentPage === totalPages}
             onClick={() => onPageChange(currentPage + 1)}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#d8ccc2] bg-white text-[#4d423b] transition hover:bg-[#faf5f1] disabled:opacity-40 disabled:hover:bg-white cursor-pointer"
+            type="button"
           >
-            <ChevronRight size={15} />
-          </PaginationIconButton>
+            <ChevronRight size={14} />
+          </button>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

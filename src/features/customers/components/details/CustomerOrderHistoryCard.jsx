@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ShoppingBag, CheckCircle, XCircle, TrendingUp, Search, Users, ArrowUpRight, Clock } from "lucide-react";
+import { ShoppingBag, XCircle, TrendingUp, Search, Users, ArrowUpRight, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const STATUS_BADGE = {
@@ -25,10 +25,10 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
     }).format(rawSpent);
 
     return [
-      { label: "Total Orders", value: total, icon: ShoppingBag },
-      { label: "Completed", value: completed, icon: Clock },
-      { label: "Cancelled", value: cancelled, icon: XCircle },
-      { label: "Total Spending", value: spending, icon: TrendingUp },
+      { label: "Total Orders", value: total, icon: ShoppingBag, color: "text-[#d96834]", bg: "bg-[#fff0e7]" },
+      { label: "Completed", value: completed, icon: Clock, color: "text-[#1f8c52]", bg: "bg-[#e8f8ef]" },
+      { label: "Cancelled", value: cancelled, icon: XCircle, color: "text-[#c23b3b]", bg: "bg-[#fdeded]" },
+      { label: "Total Spending", value: spending, icon: TrendingUp, color: "text-[#4f46e5]", bg: "bg-[#eef2ff]" },
     ];
   }, [ordersData]);
 
@@ -51,33 +51,33 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
   return (
     <section className="space-y-4">
       {/* Section Header */}
-      <div className="flex items-center gap-2 px-1">
-        <span className="h-4.5 w-[3px] bg-[#d96834] rounded-full" />
-        <span className="inline-flex h-5 w-5 items-center justify-center rounded-[6px] bg-[#fff0e7] text-[#d96834]">
+      <div className="flex items-center gap-2.5 px-1">
+        <span className="h-5 w-[3px] bg-[#d96834] rounded-full" />
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#d96834] shadow-sm">
           <ShoppingBag size={13} strokeWidth={2.5} />
         </span>
-        <h3 className="text-[18px] font-bold text-[#18120f]">
+        <h3 className="text-[18px] font-extrabold tracking-tight text-[#18120f]">
           Order History
         </h3>
       </div>
 
       {/* Stats Cards Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => {
           const Icon = s.icon;
           return (
             <div
               key={s.label}
-              className="flex items-center gap-3.5 rounded-[12px] border border-[#ddd6cf] bg-white px-4.5 py-3.5 shadow-[0_4px_12px_rgba(53,34,20,0.02)] transition duration-150 hover:border-[#cf6e38]/20"
+              className="flex items-center gap-4 rounded-[14px] border border-[#ddd6cf] bg-white px-5 py-4 shadow-[0_4px_16px_rgba(53,34,20,0.02)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#cf6e38]/15"
             >
-              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#cf6432]">
-                <Icon size={16} strokeWidth={2.5} />
+              <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] shadow-sm ${s.bg} ${s.color}`}>
+                <Icon size={18} strokeWidth={2.5} />
               </span>
-              <div>
-                <span className="block text-[12px] font-bold uppercase tracking-wider text-[#9a8f86]">
+              <div className="min-w-0">
+                <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
                   {s.label}
                 </span>
-                <span className="block text-[18px] font-bold text-[#18120f] leading-none mt-1">
+                <span className="block text-[19px] font-extrabold text-[#18120f] leading-none mt-1 tracking-tight truncate">
                   {s.value}
                 </span>
               </div>
@@ -87,10 +87,10 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
       </div>
 
       {/* Table Card Container */}
-      <div className="rounded-[14px] border border-[#ddd6cf] bg-white shadow-[0_6px_16px_rgba(53,34,20,0.05)] overflow-hidden">
+      <div className="rounded-[16px] border border-[#ddd6cf] bg-white shadow-[0_8px_24px_rgba(53,34,20,0.04)] overflow-hidden transition-all duration-300 hover:border-[#cf6e38]/10">
         {/* Search Header */}
-        <div className="p-4 border-b border-[#eee4dd] bg-[#faf9f8]">
-          <div className="relative max-w-[360px]">
+        <div className="p-4 border-b border-[#eee4dd] bg-[#faf9f8] flex items-center justify-between">
+          <div className="relative w-full max-w-[360px]">
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#baaea0]">
               <Search size={14} />
             </span>
@@ -99,10 +99,13 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by Order ID or Vendor..."
-              className="h-10 w-full rounded-[8px] border border-[#ddd4cb] bg-white pl-9 pr-3 text-[13px] text-[#231913] outline-none transition duration-150
+              className="h-10 w-full rounded-[10px] border border-[#ddd4cb] bg-white pl-9.5 pr-3 text-[13px] text-[#231913] outline-none transition duration-150
                          placeholder:text-[#c0b4a8] focus:border-[#cf6e38] focus:shadow-[0_0_0_2px_rgba(207,110,56,0.1)]"
             />
           </div>
+          <span className="text-[12px] font-extrabold text-[#8d7e72] hidden sm:inline-block">
+            {filteredOrders.length} orders found
+          </span>
         </div>
 
         {/* Table */}
@@ -123,7 +126,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
                   <th
                     key={i}
                     style={{ width: th.width }}
-                    className={`px-4 py-3.5 text-[13px] font-bold text-[#9b8f86] ${
+                    className={`px-5.5 py-4 text-[12px] font-extrabold uppercase tracking-wider text-[#9b8f86] ${
                       th.align || ""
                     }`}
                   >
@@ -135,7 +138,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
             <tbody>
               {displayedOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center text-[13px] font-semibold text-[#a89f97]">
+                  <td colSpan={8} className="py-12 text-center text-[13px] font-semibold text-[#a89f97]">
                     No orders matching your search.
                   </td>
                 </tr>
@@ -143,33 +146,33 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
                 displayedOrders.map((order, idx) => (
                   <tr
                     key={`${order.id}-${idx}`}
-                    className="border-b border-[#f3ece6] last:border-0 transition-colors duration-150 hover:bg-[#faf8f6]"
+                    className="border-b border-[#f3ece6] last:border-0 transition-colors duration-200 hover:bg-[#fffdfb]/80"
                   >
-                    <td className="px-4 py-3.5 font-bold text-[#cf6432]">{order.id}</td>
-                    <td className="px-4 py-3.5 font-bold text-[#18120f]">{order.vendor}</td>
-                    <td className="px-4 py-3.5 font-semibold text-[#5a4d46]">{order.eventType}</td>
-                    <td className="px-4 py-3.5 text-center">
-                      <span className="inline-flex items-center gap-1 font-semibold text-[#5a4d46]">
-                        <Users size={12} className="text-[#a89f97] -mt-0.5" />
+                    <td className="px-5.5 py-3.5 font-bold text-[#cf6432]">{order.id}</td>
+                    <td className="px-5.5 py-3.5 font-bold text-[#18120f]">{order.vendor}</td>
+                    <td className="px-5.5 py-3.5 font-semibold text-[#5a4d46]">{order.eventType}</td>
+                    <td className="px-5.5 py-3.5 text-center">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#faf9f8] px-2.5 py-0.5 border border-[#eee4dd] text-[13px] font-bold text-[#5a4d46]">
+                        <Users size={12} className="text-[#9a8f86]" />
                         {order.guests}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 text-[13px] text-[#7a6e66]">{order.dateTime}</td>
-                    <td className="px-4 py-3.5 font-bold text-[#18120f]">{order.amount}</td>
-                    <td className="px-4 py-3.5">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wide uppercase leading-none ${
+                    <td className="px-5.5 py-3.5 text-[13px] text-[#7a6e66]">{order.dateTime}</td>
+                    <td className="px-5.5 py-3.5 font-extrabold text-[#18120f]">{order.amount}</td>
+                    <td className="px-5.5 py-3.5">
+                      <span className={`inline-block rounded-[6px] px-2.5 py-0.5 text-[10.5px] font-extrabold tracking-wider uppercase leading-none shadow-sm ${
                         STATUS_BADGE[order.status] || "bg-[#f0ebe6] text-[#6f655e]"
                       }`}>
                         {order.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 text-center">
+                    <td className="px-5.5 py-3.5 text-center">
                       <button
                         onClick={() => navigate(`/orders/${order.id.replace("#", "")}`)}
                         type="button"
-                        className="inline-flex items-center gap-0.5 text-[13px] font-bold text-[#cf6432] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none"
+                        className="inline-flex items-center gap-1 text-[13px] font-bold text-[#cf6e38] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none active:scale-95"
                       >
-                        View Order
+                        View
                         <ArrowUpRight size={11} />
                       </button>
                     </td>
@@ -182,13 +185,13 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
 
         {/* View All Button */}
         {filteredOrders.length > 5 && (
-          <div className="flex justify-center border-t border-[#eee4dd] p-3.5 bg-white">
+          <div className="flex justify-center border-t border-[#eee4dd] p-4 bg-white">
             <button
               onClick={() => setShowAll(!showAll)}
               type="button"
-              className="text-[13px] font-bold text-[#cf6432] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none"
+              className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#e6dad1] bg-white px-6 text-[13px] font-bold text-[#cf6e38] transition duration-150 hover:bg-[#fff0e7] hover:border-[#f0d4ca] cursor-pointer outline-none shadow-sm active:scale-95"
             >
-              {showAll ? "View Less" : "View all"}
+              {showAll ? "View Less Orders" : "View All Orders"}
             </button>
           </div>
         )}

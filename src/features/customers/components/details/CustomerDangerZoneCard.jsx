@@ -47,14 +47,14 @@ export default function CustomerDangerZoneCard({ customerName }) {
   };
 
   return (
-    <section className="space-y-3.5">
+    <section className="space-y-4">
       {/* Section Header */}
-      <div className="flex items-center gap-2 px-1">
-        <span className="h-4.5 w-[3px] bg-[#d83f3f] rounded-full" />
-        <span className="inline-flex h-5 w-5 items-center justify-center rounded-[6px] bg-[#fdeded] text-[#d83f3f]">
+      <div className="flex items-center gap-2.5 px-1">
+        <span className="h-5 w-[3px] bg-[#d83f3f] rounded-full" />
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded-[8px] bg-[#fdeded] text-[#d83f3f] shadow-sm">
           <AlertTriangle size={13} strokeWidth={2.5} />
         </span>
-        <h3 className="text-[18px] font-bold text-[#d83f3f]">
+        <h3 className="text-[18px] font-extrabold tracking-tight text-[#d83f3f]">
           Administrative Danger Zone
         </h3>
       </div>
@@ -62,38 +62,38 @@ export default function CustomerDangerZoneCard({ customerName }) {
       {/* Two side-by-side cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Deactivate & Block */}
-        <article className="flex flex-col justify-between rounded-[14px] border border-[#fbcaca] bg-[#fffcfc] p-5 shadow-[0_6px_16px_rgba(216,63,63,0.03)] space-y-4">
+        <article className="flex flex-col justify-between rounded-[16px] border border-[#fbcaca] bg-gradient-to-br from-white to-[#fffcfc] p-6 shadow-[0_4px_16px_rgba(216,63,63,0.02)] space-y-5 transition-all duration-300 hover:shadow-md hover:border-[#d83f3f]/30">
           <div className="space-y-2">
-            <h4 className="text-[16px] font-bold text-[#18120f]">
+            <h4 className="text-[16px] font-extrabold text-[#18120f]">
               Deactivate & Block Customer
             </h4>
-            <p className="text-[13px] text-[#5a4d46] leading-relaxed">
+            <p className="text-[13px] text-[#5a4d46] leading-relaxed font-medium">
               Prevents the customer from logging in or placing any future orders. Active orders will be cancelled.
             </p>
           </div>
           <button
             onClick={handleDeactivate}
             type="button"
-            className="w-full flex h-10 cursor-pointer items-center justify-center rounded-[10px] border border-[#d83f3f] bg-white text-[13px] font-bold text-[#d83f3f] outline-none transition duration-150 hover:bg-[#fdf2f2]"
+            className="w-full flex h-10 cursor-pointer items-center justify-center rounded-[10px] border border-[#d83f3f] bg-white text-[13px] font-bold text-[#d83f3f] outline-none transition duration-150 hover:bg-[#fdf2f2] active:scale-98 shadow-sm"
           >
             Block Account
           </button>
         </article>
 
         {/* Permanently Delete */}
-        <article className="flex flex-col justify-between rounded-[14px] border border-[#fbcaca] bg-[#fffcfc] p-5 shadow-[0_6px_16px_rgba(216,63,63,0.03)] space-y-4">
+        <article className="flex flex-col justify-between rounded-[16px] border border-[#fbcaca] bg-gradient-to-br from-white to-[#fffcfc] p-6 shadow-[0_4px_16px_rgba(216,63,63,0.02)] space-y-5 transition-all duration-300 hover:shadow-md hover:border-[#d83f3f]/30">
           <div className="space-y-2">
-            <h4 className="text-[16px] font-bold text-[#18120f]">
+            <h4 className="text-[16px] font-extrabold text-[#18120f]">
               Permanently Delete Account
             </h4>
-            <p className="text-[13px] text-[#5a4d46] leading-relaxed">
+            <p className="text-[13px] text-[#5a4d46] leading-relaxed font-medium">
               Removes all PII data from the live database. Historical transactional records are anonymized for legal reporting.
             </p>
           </div>
           <button
             onClick={handleDelete}
             type="button"
-            className="w-full flex h-10 cursor-pointer items-center justify-center rounded-[10px] bg-[#d83f3f] text-[13px] font-bold text-white outline-none transition duration-150 hover:bg-[#b03030] shadow-sm shadow-red-200"
+            className="w-full flex h-10 cursor-pointer items-center justify-center rounded-[10px] bg-[#d83f3f] text-[13px] font-bold text-white outline-none transition duration-150 hover:bg-[#b03030] shadow-sm shadow-red-100 active:scale-98"
           >
             Delete Account Data
           </button>

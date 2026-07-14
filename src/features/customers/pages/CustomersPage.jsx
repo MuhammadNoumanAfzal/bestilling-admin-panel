@@ -58,7 +58,7 @@ export default function CustomersPage() {
       result = result.filter((row) => row.city === cityFilter);
     }
 
-    // 4. Timeframe filter (registration date value)
+    // 4. Registration Date timeframe filter
     if (timeframeFilter) {
       const now = new Date();
       result = result.filter((row) => {
@@ -77,8 +77,40 @@ export default function CustomersPage() {
       });
     }
 
+    // 5. Header Timeframe filter dropdown
+    if (timeframe) {
+      if (timeframe === "Custom Date" && customStart && customEnd) {
+        const start = new Date(customStart);
+        const end = new Date(customEnd);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+        result = result.filter((row) => {
+          const joinDate = new Date(row.joinDateValue);
+          joinDate.setHours(0, 0, 0, 0);
+          return joinDate >= start && joinDate <= end;
+        });
+      } else if (timeframe !== "Custom Date" && timeframe !== "Clear Filter") {
+        const limitDate = new Date();
+        limitDate.setHours(0, 0, 0, 0);
+
+        if (timeframe === "Last 7 days") {
+          limitDate.setDate(limitDate.getDate() - 7);
+        } else if (timeframe === "Last Month") {
+          limitDate.setMonth(limitDate.getMonth() - 1);
+        } else if (timeframe === "This Year") {
+          limitDate.setFullYear(2026, 0, 1);
+        }
+
+        result = result.filter((row) => {
+          const joinDate = new Date(row.joinDateValue);
+          joinDate.setHours(0, 0, 0, 0);
+          return joinDate >= limitDate;
+        });
+      }
+    }
+
     return result;
-  }, [searchTerm, statusFilter, cityFilter, timeframeFilter]);
+  }, [searchTerm, statusFilter, cityFilter, timeframeFilter, timeframe, customStart, customEnd]);
 
   // Paginated Rows
   const paginatedRows = useMemo(() => {

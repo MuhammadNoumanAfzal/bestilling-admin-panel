@@ -32,7 +32,7 @@ const iconMap = {
 export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [vendorFilter, setVendorFilter] = useState("");
-  const [eventTypeFilter, setEventTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("");
   const [timeframe, setTimeframe] = useState("Last 7 days");
   const [customStart, setCustomStart] = useState("");
@@ -44,7 +44,7 @@ export default function OrdersPage() {
   const handleResetFilters = () => {
     setSearchTerm("");
     setVendorFilter("");
-    setEventTypeFilter("");
+    setStatusFilter("");
     setPaymentFilter("");
     setTimeframe("Last 7 days");
     setCustomStart("");
@@ -63,8 +63,8 @@ export default function OrdersPage() {
     setCurrentPage(1);
   };
 
-  const handleEventTypeFilterChange = (val) => {
-    setEventTypeFilter(val);
+  const handleStatusFilterChange = (val) => {
+    setStatusFilter(val);
     setCurrentPage(1);
   };
 
@@ -90,11 +90,6 @@ export default function OrdersPage() {
     return Array.from(set);
   }, []);
 
-  const eventTypes = useMemo(() => {
-    const set = new Set(initialOrders.map((o) => o.eventType));
-    return Array.from(set);
-  }, []);
-
   const paymentStatuses = useMemo(() => {
     const set = new Set(initialOrders.map((o) => o.paymentStatus));
     return Array.from(set);
@@ -117,8 +112,8 @@ export default function OrdersPage() {
       // Vendor check
       if (vendorFilter && order.vendor !== vendorFilter) return false;
 
-      // Event Type check
-      if (eventTypeFilter && order.eventType !== eventTypeFilter) return false;
+      // Status check
+      if (statusFilter && order.status !== statusFilter) return false;
 
       // Payment Status check
       if (paymentFilter && order.paymentStatus !== paymentFilter) return false;
@@ -159,7 +154,7 @@ export default function OrdersPage() {
   }, [
     searchTerm,
     vendorFilter,
-    eventTypeFilter,
+    statusFilter,
     paymentFilter,
     timeframe,
     customStart,
@@ -216,8 +211,8 @@ export default function OrdersPage() {
           onSearchChange={handleSearchChange}
           vendorFilter={vendorFilter}
           onVendorFilterChange={handleVendorFilterChange}
-          eventTypeFilter={eventTypeFilter}
-          onEventTypeFilterChange={handleEventTypeFilterChange}
+          statusFilter={statusFilter}
+          onStatusFilterChange={handleStatusFilterChange}
           paymentFilter={paymentFilter}
           onPaymentFilterChange={handlePaymentFilterChange}
           timeframe={timeframe}
@@ -227,7 +222,7 @@ export default function OrdersPage() {
           onCustomDateChange={handleCustomDateChange}
           onResetFilters={handleResetFilters}
           vendors={vendors}
-          eventTypes={eventTypes}
+          statuses={["Delivered", "Pending", "Canceled"]}
           paymentStatuses={paymentStatuses}
         />
 

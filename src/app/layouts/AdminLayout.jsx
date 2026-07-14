@@ -144,6 +144,13 @@ export default function AdminLayout() {
       };
     }
 
+    if (location.pathname.startsWith("/customers/") && location.pathname !== "/customers") {
+      return {
+        title: "Customer Details",
+        subtitle: "Review the customer profile, order history, ratings, and active interactions.",
+      };
+    }
+
     return pageMeta[location.pathname] || pageMeta["/dashboard"];
   }, [location.pathname]);
   const initials = useMemo(() => {

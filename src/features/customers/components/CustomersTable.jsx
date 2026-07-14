@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
 
 const statusClasses = {
@@ -35,6 +36,7 @@ export default function CustomersTable({
   rows,
   totalItems,
 }) {
+  const navigate = useNavigate();
   const [selectedIds, setSelectedIds] = useState([]);
   const [activeMenuId, setActiveMenuId] = useState(null);
 
@@ -127,7 +129,12 @@ export default function CustomersTable({
                       />
                     </td>
                     <td className="px-2 py-4 text-[15px] font-bold text-[#18120f] align-middle">
-                      {row.id}
+                      <button
+                        onClick={() => navigate(`/customers/${encodeURIComponent(row.id.replace("#", ""))}`)}
+                        className="text-[#d96834] hover:underline cursor-pointer font-bold outline-none text-left"
+                      >
+                        {row.id}
+                      </button>
                     </td>
                     <td className="px-2 py-4 align-middle">
                       <PersonCell
@@ -173,7 +180,7 @@ export default function CustomersTable({
                           <div className="absolute right-4 top-10 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
                             <button
                               onClick={() => {
-                                alert(`View details of ${row.name}`);
+                                navigate(`/customers/${encodeURIComponent(row.id.replace("#", ""))}`);
                                 setActiveMenuId(null);
                               }}
                               className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"

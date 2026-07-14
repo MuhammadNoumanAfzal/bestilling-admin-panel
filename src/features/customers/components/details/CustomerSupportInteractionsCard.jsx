@@ -3,8 +3,8 @@ import { LifeBuoy, AlertCircle, CheckCircle, ArrowUpRight, HelpCircle } from "lu
 import { useNavigate } from "react-router-dom";
 
 const TICKET_STATUS = {
-  Resolved: "bg-[#e8f8ef] text-[#1f8c52] rounded-[4px] px-2 py-0.5 text-[10px] font-extrabold tracking-wide uppercase",
-  Open: "bg-[#fffbeb] text-[#b45309] rounded-[4px] px-2 py-0.5 text-[10px] font-extrabold tracking-wide uppercase",
+  Resolved: "bg-[#e8f8ef] text-[#1f8c52] rounded-[4px] px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase",
+  Open: "bg-[#fffbeb] text-[#b45309] rounded-[4px] px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase",
 };
 
 export default function CustomerSupportInteractionsCard({ ticketsData = [] }) {
@@ -23,7 +23,7 @@ export default function CustomerSupportInteractionsCard({ ticketsData = [] }) {
   }, [ticketsData]);
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       {/* Section Header */}
       <div className="flex items-center gap-2 px-1">
         <span className="h-4.5 w-[3px] bg-[#d96834] rounded-full" />
@@ -42,16 +42,16 @@ export default function CustomerSupportInteractionsCard({ ticketsData = [] }) {
           return (
             <div
               key={s.label}
-              className="flex items-center gap-3 rounded-[12px] border border-[#ddd6cf] bg-white px-4 py-3 shadow-[0_4px_12px_rgba(53,34,20,0.02)] transition duration-150 hover:border-[#cf6e38]/20"
+              className="flex items-center gap-3.5 rounded-[12px] border border-[#ddd6cf] bg-white px-4.5 py-3.5 shadow-[0_4px_12px_rgba(53,34,20,0.02)] transition duration-150 hover:border-[#cf6e38]/20"
             >
-              <span className="inline-flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#cf6432]">
-                <Icon size={14} strokeWidth={2.5} />
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#cf6432]">
+                <Icon size={16} strokeWidth={2.5} />
               </span>
               <div>
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
+                <span className="block text-[12px] font-bold uppercase tracking-wider text-[#9a8f86]">
                   {s.label}
                 </span>
-                <span className="block text-[16px] font-bold text-[#18120f] mt-0.5 leading-none">
+                <span className="block text-[18px] font-bold text-[#18120f] mt-0.5 leading-none">
                   {s.value}
                 </span>
               </div>
@@ -63,7 +63,7 @@ export default function CustomerSupportInteractionsCard({ ticketsData = [] }) {
       {/* Tickets Table Card */}
       <div className="rounded-[14px] border border-[#ddd6cf] bg-white shadow-[0_6px_16px_rgba(53,34,20,0.05)] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[500px] border-collapse text-[13px]">
+          <table className="w-full min-w-[500px] border-collapse text-[14px]">
             <thead>
               <tr className="bg-[#faf8f6] text-left border-b border-[#eee4dd]">
                 {[
@@ -76,7 +76,7 @@ export default function CustomerSupportInteractionsCard({ ticketsData = [] }) {
                   <th
                     key={i}
                     style={{ width: th.width }}
-                    className={`px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-[#9a8f86] ${
+                    className={`px-4 py-3.5 text-[13px] font-bold text-[#9b8f86] ${
                       th.align || ""
                     }`}
                   >
@@ -98,15 +98,15 @@ export default function CustomerSupportInteractionsCard({ ticketsData = [] }) {
                       {t.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3.5 text-[12px] text-[#7a6e66]">{t.createdDate}</td>
+                  <td className="px-4 py-3.5 text-[13px] text-[#7a6e66]">{t.createdDate}</td>
                   <td className="px-4 py-3.5 text-center">
                     <button
                       onClick={() => navigate(`/support/${t.id.replace("#", "")}`)}
                       type="button"
-                      className="inline-flex cursor-pointer items-center justify-center h-7 w-7 rounded-[6px] border border-[#e0d5cc] bg-white text-[#cf6e38] transition hover:border-[#cf6e38] hover:bg-[#fff6f0] outline-none"
+                      className="inline-flex cursor-pointer items-center justify-center h-8.5 w-8.5 rounded-[6px] border border-[#e0d5cc] bg-white text-[#cf6e38] transition hover:border-[#cf6e38] hover:bg-[#fff6f0] outline-none"
                       title="View Ticket details"
                     >
-                      <ArrowUpRight size={13} />
+                      <ArrowUpRight size={14} />
                     </button>
                   </td>
                 </tr>

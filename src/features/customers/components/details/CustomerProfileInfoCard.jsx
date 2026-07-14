@@ -10,7 +10,7 @@ const FALLBACKS = {
 
 export default function CustomerProfileInfoCard({ customer = {} }) {
   return (
-    <section className="space-y-3">
+    <section className="space-y-3.5">
       {/* Section Header */}
       <div className="flex items-center gap-2 px-1">
         <span className="h-4.5 w-[3px] bg-[#d96834] rounded-full" />
@@ -23,63 +23,63 @@ export default function CustomerProfileInfoCard({ customer = {} }) {
       </div>
 
       {/* Profile Details Card */}
-      <div className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
+      <div className="rounded-[14px] border border-[#ddd6cf] bg-white p-5.5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-y-5 gap-x-8">
           {/* Column 1 */}
-          <div className="space-y-4">
+          <div className="space-y-4.5">
             <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
+              <span className="block text-[12px] font-bold uppercase tracking-wider text-[#9a8f86]">
                 Full Name
               </span>
-              <span className="block text-[13px] font-semibold text-[#18120f] leading-5 mt-0.5">
+              <span className="block text-[15px] font-bold text-[#18120f] mt-1">
                 {customer.name}
               </span>
             </div>
             <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
+              <span className="block text-[12px] font-bold uppercase tracking-wider text-[#9a8f86]">
                 Street Address
               </span>
-              <span className="block text-[13px] font-semibold text-[#18120f] leading-5 mt-0.5">
+              <span className="block text-[15px] font-bold text-[#18120f] mt-1">
                 {customer.streetAddress || FALLBACKS.streetAddress}
               </span>
             </div>
           </div>
 
           {/* Column 2 */}
-          <div className="space-y-4">
+          <div className="space-y-4.5">
             <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
+              <span className="block text-[12px] font-bold uppercase tracking-wider text-[#9a8f86]">
                 Email Address
               </span>
-              <span className="block text-[13px] font-semibold text-[#18120f] leading-5 mt-0.5 break-all">
+              <span className="block text-[15px] font-bold text-[#18120f] mt-1 break-all">
                 {customer.email || FALLBACKS.email}
               </span>
             </div>
             <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
+              <span className="block text-[12px] font-bold uppercase tracking-wider text-[#9a8f86]">
                 City & State
               </span>
-              <span className="block text-[13px] font-semibold text-[#18120f] leading-5 mt-0.5">
+              <span className="block text-[15px] font-bold text-[#18120f] mt-1">
                 {customer.cityState || (customer.city ? `${customer.city}, Norway` : FALLBACKS.cityState)}
               </span>
             </div>
           </div>
 
           {/* Column 3 */}
-          <div className="space-y-4">
+          <div className="space-y-4.5">
             <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
+              <span className="block text-[12px] font-bold uppercase tracking-wider text-[#9a8f86]">
                 Phone Number
               </span>
-              <span className="block text-[13px] font-semibold text-[#18120f] leading-5 mt-0.5">
+              <span className="block text-[15px] font-bold text-[#18120f] mt-1">
                 {customer.phone || FALLBACKS.phone}
               </span>
             </div>
             <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
+              <span className="block text-[12px] font-bold uppercase tracking-wider text-[#9a8f86]">
                 Country
               </span>
-              <span className="block text-[13px] font-semibold text-[#18120f] leading-5 mt-0.5">
+              <span className="block text-[15px] font-bold text-[#18120f] mt-1">
                 {customer.country || FALLBACKS.country}
               </span>
             </div>

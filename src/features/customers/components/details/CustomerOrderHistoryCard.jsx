@@ -49,7 +49,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
   }, [filteredOrders, showAll]);
 
   return (
-    <section className="space-y-3.5">
+    <section className="space-y-4">
       {/* Section Header */}
       <div className="flex items-center gap-2 px-1">
         <span className="h-4.5 w-[3px] bg-[#d96834] rounded-full" />
@@ -68,16 +68,16 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
           return (
             <div
               key={s.label}
-              className="flex items-center gap-3 rounded-[12px] border border-[#ddd6cf] bg-white px-4 py-3 shadow-[0_4px_12px_rgba(53,34,20,0.02)] transition duration-150 hover:border-[#cf6e38]/20"
+              className="flex items-center gap-3.5 rounded-[12px] border border-[#ddd6cf] bg-white px-4.5 py-3.5 shadow-[0_4px_12px_rgba(53,34,20,0.02)] transition duration-150 hover:border-[#cf6e38]/20"
             >
-              <span className="inline-flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#cf6432]">
-                <Icon size={14} strokeWidth={2.5} />
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#cf6432]">
+                <Icon size={16} strokeWidth={2.5} />
               </span>
               <div>
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
+                <span className="block text-[12px] font-bold uppercase tracking-wider text-[#9a8f86]">
                   {s.label}
                 </span>
-                <span className="block text-[16px] font-bold text-[#18120f] leading-none mt-1">
+                <span className="block text-[18px] font-bold text-[#18120f] leading-none mt-1">
                   {s.value}
                 </span>
               </div>
@@ -92,14 +92,14 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
         <div className="p-4 border-b border-[#eee4dd] bg-[#faf9f8]">
           <div className="relative max-w-[360px]">
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#baaea0]">
-              <Search size={13} />
+              <Search size={14} />
             </span>
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by Order ID or Vendor..."
-              className="h-9 w-full rounded-[8px] border border-[#ddd4cb] bg-white pl-9 pr-3 text-[12px] text-[#231913] outline-none transition duration-150
+              className="h-10 w-full rounded-[8px] border border-[#ddd4cb] bg-white pl-9 pr-3 text-[13px] text-[#231913] outline-none transition duration-150
                          placeholder:text-[#c0b4a8] focus:border-[#cf6e38] focus:shadow-[0_0_0_2px_rgba(207,110,56,0.1)]"
             />
           </div>
@@ -107,7 +107,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] border-collapse text-[13px]">
+          <table className="w-full min-w-[760px] border-collapse text-[14px]">
             <thead>
               <tr className="bg-[#faf8f6] text-left border-b border-[#eee4dd]">
                 {[
@@ -123,7 +123,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
                   <th
                     key={i}
                     style={{ width: th.width }}
-                    className={`px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-[#9a8f86] ${
+                    className={`px-4 py-3.5 text-[13px] font-bold text-[#9b8f86] ${
                       th.align || ""
                     }`}
                   >
@@ -135,7 +135,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
             <tbody>
               {displayedOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center text-[12px] font-semibold text-[#a89f97]">
+                  <td colSpan={8} className="py-10 text-center text-[13px] font-semibold text-[#a89f97]">
                     No orders matching your search.
                   </td>
                 </tr>
@@ -145,32 +145,32 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
                     key={`${order.id}-${idx}`}
                     className="border-b border-[#f3ece6] last:border-0 transition-colors duration-150 hover:bg-[#faf8f6]"
                   >
-                    <td className="px-4 py-3 font-bold text-[#cf6432]">{order.id}</td>
-                    <td className="px-4 py-3 font-bold text-[#18120f]">{order.vendor}</td>
-                    <td className="px-4 py-3 text-[13px] font-semibold text-[#5a4d46]">{order.eventType}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#5a4d46]">
-                        <Users size={11} className="text-[#a89f97]" />
+                    <td className="px-4 py-3.5 font-bold text-[#cf6432]">{order.id}</td>
+                    <td className="px-4 py-3.5 font-bold text-[#18120f]">{order.vendor}</td>
+                    <td className="px-4 py-3.5 font-semibold text-[#5a4d46]">{order.eventType}</td>
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="inline-flex items-center gap-1 font-semibold text-[#5a4d46]">
+                        <Users size={12} className="text-[#a89f97] -mt-0.5" />
                         {order.guests}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[12px] text-[#7a6e66]">{order.dateTime}</td>
-                    <td className="px-4 py-3 font-bold text-[#18120f]">{order.amount}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold tracking-wide uppercase leading-none ${
+                    <td className="px-4 py-3.5 text-[13px] text-[#7a6e66]">{order.dateTime}</td>
+                    <td className="px-4 py-3.5 font-bold text-[#18120f]">{order.amount}</td>
+                    <td className="px-4 py-3.5">
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wide uppercase leading-none ${
                         STATUS_BADGE[order.status] || "bg-[#f0ebe6] text-[#6f655e]"
                       }`}>
                         {order.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3.5 text-center">
                       <button
                         onClick={() => navigate(`/orders/${order.id.replace("#", "")}`)}
                         type="button"
-                        className="inline-flex items-center gap-0.5 text-[12px] font-bold text-[#cf6432] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none"
+                        className="inline-flex items-center gap-0.5 text-[13px] font-bold text-[#cf6432] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none"
                       >
                         View Order
-                        <ArrowUpRight size={10} />
+                        <ArrowUpRight size={11} />
                       </button>
                     </td>
                   </tr>
@@ -182,11 +182,11 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
 
         {/* View All Button */}
         {filteredOrders.length > 5 && (
-          <div className="flex justify-center border-t border-[#eee4dd] p-3 bg-white">
+          <div className="flex justify-center border-t border-[#eee4dd] p-3.5 bg-white">
             <button
               onClick={() => setShowAll(!showAll)}
               type="button"
-              className="text-[12px] font-bold text-[#cf6432] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none"
+              className="text-[13px] font-bold text-[#cf6432] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none"
             >
               {showAll ? "View Less" : "View all"}
             </button>

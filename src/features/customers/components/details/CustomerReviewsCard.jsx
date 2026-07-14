@@ -31,7 +31,7 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
   };
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-3.5">
       {/* Section Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-1">
         <div className="flex items-center gap-2">
@@ -42,14 +42,14 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
           <h3 className="text-[18px] font-bold text-[#18120f]">
             Customer Reviews
           </h3>
-          <span className="rounded-full bg-[#fff0e7] px-2 py-0.5 text-[10px] font-bold text-[#cf6e38]">
+          <span className="rounded-full bg-[#fff0e7] px-2.5 py-0.5 text-[11px] font-bold text-[#cf6e38]">
             ★ 4.8 Average Rating Given
           </span>
         </div>
       </div>
 
       {/* Main Review Card */}
-      <div className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)] space-y-4">
+      <div className="rounded-[14px] border border-[#ddd6cf] bg-white p-5.5 shadow-[0_6px_16px_rgba(53,34,20,0.05)] space-y-4">
         {/* Filters Toolbar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#f3ece6]">
           {/* Stars Tabs */}
@@ -59,13 +59,13 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
                 key={v}
                 onClick={() => setRatingFilter(v)}
                 type="button"
-                className={`rounded-[8px] px-3 py-1.5 text-[11px] font-bold cursor-pointer outline-none transition duration-150 ${
+                className={`rounded-[8px] px-3.5 py-2 text-[12px] font-bold cursor-pointer outline-none transition duration-150 ${
                   ratingFilter === v
                     ? "bg-[#d96834] text-white shadow-sm"
                     : "border border-[#e0d5cc] bg-white text-[#6f655e] hover:bg-[#faf5f1]"
                 }`}
               >
-                {v === "All" ? "All" : `${v} ★`}
+                {v === "All" ? "All Stars" : `${v} ★`}
               </button>
             ))}
           </div>
@@ -76,9 +76,9 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
               <button
                 onClick={() => setDropOpen(!dropOpen)}
                 type="button"
-                className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-[8px] border border-[#e0d5cc] bg-white px-3 text-[11px] font-bold text-[#4d423b] outline-none hover:bg-[#faf9f8] transition duration-150"
+                className="inline-flex h-8.5 cursor-pointer items-center gap-1.5 rounded-[8px] border border-[#e0d5cc] bg-white px-3.5 text-[12px] font-bold text-[#4d423b] outline-none hover:bg-[#faf9f8] transition duration-150"
               >
-                {timeframe} <ChevronDown size={12} />
+                {timeframe} <ChevronDown size={13} />
               </button>
               {dropOpen && (
                 <>
@@ -92,7 +92,7 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
                           setDropOpen(false);
                         }}
                         type="button"
-                        className={`block w-full px-3 py-1.5 text-left text-[11px] font-bold cursor-pointer transition ${
+                        className={`block w-full px-3.5 py-2 text-left text-[12px] font-bold cursor-pointer transition ${
                           timeframe === opt
                             ? "bg-[#fff3ec] text-[#d96834]"
                             : "text-[#6f655e] hover:bg-[#faf5f1]"
@@ -109,7 +109,7 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
             <button
               onClick={handleResetFilters}
               type="button"
-              className="inline-flex h-8 cursor-pointer items-center rounded-[8px] border border-[#ddd4cb] bg-[#f0ebe6] px-3 text-[11px] font-bold text-[#5a4d46] hover:bg-[#e6dad1] outline-none transition duration-150"
+              className="inline-flex h-8.5 cursor-pointer items-center rounded-[8px] border border-[#ddd4cb] bg-[#f0ebe6] px-3.5 text-[12px] font-bold text-[#5a4d46] hover:bg-[#e6dad1] outline-none transition duration-150"
             >
               Clear Filters
             </button>
@@ -119,22 +119,22 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
         {/* Reviews List */}
         <div className="divide-y divide-[#f3ece6]">
           {displayedReviews.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center text-[#a89f97]">
-              <MessageSquare size={16} className="mb-1 text-[#baaea0]" />
-              <p className="text-[12px] font-semibold">No reviews matching the filters.</p>
+            <div className="flex flex-col items-center justify-center py-12 text-center text-[#a89f97]">
+              <MessageSquare size={20} className="mb-2 text-[#baaea0]" />
+              <p className="text-[13px] font-semibold">No reviews matching the filters.</p>
             </div>
           ) : (
             displayedReviews.map((rev) => (
-              <div key={rev.id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
+              <div key={rev.id} className="flex gap-4 py-4.5 first:pt-0 last:pb-0">
                 {/* Avatar */}
                 {rev.avatarUrl ? (
                   <img
                     src={rev.avatarUrl}
                     alt={rev.name}
-                    className="h-10 w-10 shrink-0 rounded-full object-cover border border-[#eee4dd] shadow-sm"
+                    className="h-11 w-11 shrink-0 rounded-full object-cover border border-[#eee4dd] shadow-sm"
                   />
                 ) : (
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f6eee8] text-[11px] font-bold text-[#2f241d] border border-[#eee4dd] shadow-sm">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f6eee8] text-[12px] font-bold text-[#2f241d] border border-[#eee4dd] shadow-sm">
                     {rev.name?.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "AW"}
                   </div>
                 )}
@@ -143,12 +143,12 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                     <div>
-                      <span className="block text-[14px] font-bold text-[#18120f]">{rev.name}</span>
-                      <div className="flex items-center gap-0.5 mt-0.5">
+                      <span className="block text-[15px] font-bold text-[#18120f]">{rev.name}</span>
+                      <div className="flex items-center gap-0.5 mt-1">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star
                             key={i}
-                            size={11}
+                            size={12}
                             fill={i < rev.rating ? "#ffc107" : "none"}
                             stroke={i < rev.rating ? "none" : "#ccc"}
                           />
@@ -156,11 +156,11 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
                       </div>
                     </div>
 
-                    <span className="text-[10px] font-bold text-[#cf6e38] bg-[#fff0e7] rounded-full px-2 py-0.5">
+                    <span className="text-[11px] font-bold text-[#cf6e38] bg-[#fff0e7] rounded-full px-2.5 py-0.5 uppercase tracking-wider">
                       ORDER REF {rev.orderRef || "#ORD-8829"}
                     </span>
                   </div>
-                  <p className="mt-2 text-[12px] leading-relaxed text-[#5a4d46]">
+                  <p className="mt-2.5 text-[13px] leading-relaxed text-[#5a4d46]">
                     {rev.content}
                   </p>
                 </div>
@@ -171,11 +171,11 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
 
         {/* View All Button */}
         {filteredReviews.length > 3 && (
-          <div className="flex justify-center border-t border-[#f3ece6] pt-3">
+          <div className="flex justify-center border-t border-[#f3ece6] pt-3.5">
             <button
               onClick={() => setShowAll(!showAll)}
               type="button"
-              className="text-[12px] font-bold text-[#cf6e38] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none"
+              className="text-[13px] font-bold text-[#cf6e38] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none"
             >
               {showAll ? "View Less" : "View All"}
             </button>

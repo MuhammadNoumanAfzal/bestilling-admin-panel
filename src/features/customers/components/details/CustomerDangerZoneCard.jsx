@@ -47,7 +47,7 @@ export default function CustomerDangerZoneCard({ customerName }) {
   };
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-3.5">
       {/* Section Header */}
       <div className="flex items-center gap-2 px-1">
         <span className="h-4.5 w-[3px] bg-[#d83f3f] rounded-full" />
@@ -63,18 +63,18 @@ export default function CustomerDangerZoneCard({ customerName }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Deactivate & Block */}
         <article className="flex flex-col justify-between rounded-[14px] border border-[#fbcaca] bg-[#fffcfc] p-5 shadow-[0_6px_16px_rgba(216,63,63,0.03)] space-y-4">
-          <div className="space-y-1.5">
-            <h4 className="text-[15px] font-bold text-[#18120f]">
+          <div className="space-y-2">
+            <h4 className="text-[16px] font-bold text-[#18120f]">
               Deactivate & Block Customer
             </h4>
-            <p className="text-[12px] text-[#5a4d46] leading-relaxed">
+            <p className="text-[13px] text-[#5a4d46] leading-relaxed">
               Prevents the customer from logging in or placing any future orders. Active orders will be cancelled.
             </p>
           </div>
           <button
             onClick={handleDeactivate}
             type="button"
-            className="w-full flex h-9.5 cursor-pointer items-center justify-center rounded-[10px] border border-[#d83f3f] bg-white text-[12px] font-bold text-[#d83f3f] outline-none transition duration-150 hover:bg-[#fdf2f2]"
+            className="w-full flex h-10 cursor-pointer items-center justify-center rounded-[10px] border border-[#d83f3f] bg-white text-[13px] font-bold text-[#d83f3f] outline-none transition duration-150 hover:bg-[#fdf2f2]"
           >
             Block Account
           </button>
@@ -82,18 +82,18 @@ export default function CustomerDangerZoneCard({ customerName }) {
 
         {/* Permanently Delete */}
         <article className="flex flex-col justify-between rounded-[14px] border border-[#fbcaca] bg-[#fffcfc] p-5 shadow-[0_6px_16px_rgba(216,63,63,0.03)] space-y-4">
-          <div className="space-y-1.5">
-            <h4 className="text-[15px] font-bold text-[#18120f]">
+          <div className="space-y-2">
+            <h4 className="text-[16px] font-bold text-[#18120f]">
               Permanently Delete Account
             </h4>
-            <p className="text-[12px] text-[#5a4d46] leading-relaxed">
+            <p className="text-[13px] text-[#5a4d46] leading-relaxed">
               Removes all PII data from the live database. Historical transactional records are anonymized for legal reporting.
             </p>
           </div>
           <button
             onClick={handleDelete}
             type="button"
-            className="w-full flex h-9.5 cursor-pointer items-center justify-center rounded-[10px] bg-[#d83f3f] text-[12px] font-bold text-white outline-none transition duration-150 hover:bg-[#b03030] shadow-sm shadow-red-200"
+            className="w-full flex h-10 cursor-pointer items-center justify-center rounded-[10px] bg-[#d83f3f] text-[13px] font-bold text-white outline-none transition duration-150 hover:bg-[#b03030] shadow-sm shadow-red-200"
           >
             Delete Account Data
           </button>

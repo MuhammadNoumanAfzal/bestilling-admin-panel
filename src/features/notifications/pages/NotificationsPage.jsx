@@ -66,7 +66,7 @@ export default function NotificationsPage() {
           </p>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           {notificationSummary.map((item) => (
             <NotificationOverviewCard key={item.id} {...item} />
           ))}

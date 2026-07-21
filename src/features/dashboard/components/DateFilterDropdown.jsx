@@ -85,7 +85,10 @@ export default function DateFilterDropdown({
   const displayRange = getDateRangeDisplay();
 
   return (
-    <div className="relative inline-flex items-center gap-2 select-none" ref={dropdownRef}>
+    <div
+      className="relative inline-flex max-w-full items-center gap-2 select-none"
+      ref={dropdownRef}
+    >
       {/* Date Range Pill Display */}
       {displayRange && (
         <button
@@ -93,27 +96,29 @@ export default function DateFilterDropdown({
             setIsOpen(true);
             setShowCustomFields(selectedFilter === "Custom Date");
           }}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#f9dac6] bg-[#fff3ec] px-4 py-1.5 text-[13px] font-bold text-[#d96834] transition hover:bg-[#ffebd8] outline-none"
+          className="inline-flex max-w-[calc(100vw-8rem)] cursor-pointer items-center gap-1.5 rounded-full border border-[#f9dac6] bg-[#fff3ec] px-4 py-1.5 text-[13px] font-bold text-[#d96834] transition hover:bg-[#ffebd8] outline-none sm:max-w-none"
           type="button"
         >
-          <span>{displayRange}</span>
-          <ChevronDown size={14} className="text-[#d96834]" />
+          <span className="truncate">{displayRange}</span>
+          <ChevronDown size={14} className="shrink-0 text-[#d96834]" />
         </button>
       )}
 
       {/* Selector Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#d8ccc2] bg-white px-4 py-1.5 text-[13px] font-bold text-[#231913] transition hover:bg-[#faf9f8] outline-none focus:border-[#cf6e38]"
+        className="inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-full border border-[#d8ccc2] bg-white px-4 py-1.5 text-[13px] font-bold text-[#231913] transition hover:bg-[#faf9f8] outline-none focus:border-[#cf6e38]"
         type="button"
       >
-        <span>{selectedFilter === "Custom Date" ? "Custom Date" : selectedFilter}</span>
-        <ChevronDown size={14} className="text-[#6f655e]" />
+        <span className="truncate">
+          {selectedFilter === "Custom Date" ? "Custom Date" : selectedFilter}
+        </span>
+        <ChevronDown size={14} className="shrink-0 text-[#6f655e]" />
       </button>
 
       {/* Dropdown Menu Popup */}
       {isOpen && (
-        <div className="absolute right-0 top-full z-40 mt-1.5 w-56 rounded-[12px] border border-[#d8ccc2] bg-white py-2 shadow-[0_8px_24px_rgba(53,34,20,0.12)]">
+        <div className="absolute left-0 top-full z-40 mt-1.5 w-[min(14rem,calc(100vw-2rem))] rounded-[12px] border border-[#d8ccc2] bg-white py-2 shadow-[0_8px_24px_rgba(53,34,20,0.12)] sm:left-auto sm:right-0 sm:w-56">
           {!showCustomFields ? (
             <div className="flex flex-col">
               {dashboardFilterOptions.map((opt) => {

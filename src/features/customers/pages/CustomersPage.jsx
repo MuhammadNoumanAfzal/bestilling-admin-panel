@@ -4,6 +4,7 @@ import CustomerOverviewCard from "../components/CustomerOverviewCard.jsx";
 import CustomersTable from "../components/CustomersTable.jsx";
 import CustomersToolbar from "../components/CustomersToolbar.jsx";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
+import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 
 import { customerRows, customersSummary, customersPagination } from "../data/customersData.js";
 
@@ -24,6 +25,7 @@ export default function CustomersPage() {
   const handleCustomDateChange = (start, end) => {
     setCustomStart(start);
     setCustomEnd(end);
+    setCurrentPage(1);
   };
 
   // Extract unique cities
@@ -60,18 +62,20 @@ export default function CustomersPage() {
 
     // 4. Registration Date timeframe filter
     if (timeframeFilter) {
-      const now = new Date();
+      const inlineFilterLabel =
+        timeframeFilter === "7days"
+          ? "Last 7 days"
+          : timeframeFilter === "month"
+            ? "Last Month"
+            : timeframeFilter === "year"
+              ? "This Year"
+              : "";
+      const inlineRange = inlineFilterLabel ? getDateRangeForFilter(inlineFilterLabel) : null;
+
       result = result.filter((row) => {
         const joinDate = new Date(row.joinDateValue);
-        const limitDate = new Date();
-        if (timeframeFilter === "7days") {
-          limitDate.setDate(now.getDate() - 7);
-          return joinDate >= limitDate;
-        } else if (timeframeFilter === "month") {
-          limitDate.setMonth(now.getMonth() - 1);
-          return joinDate >= limitDate;
-        } else if (timeframeFilter === "year") {
-          return joinDate.getFullYear() === 2026;
+        if (inlineRange) {
+          return joinDate >= inlineRange.start && joinDate <= inlineRange.end;
         }
         return true;
       });
@@ -79,34 +83,11 @@ export default function CustomersPage() {
 
     // 5. Header Timeframe filter dropdown
     if (timeframe) {
-      if (timeframe === "Custom Date" && customStart && customEnd) {
-        const start = new Date(customStart);
-        const end = new Date(customEnd);
-        start.setHours(0, 0, 0, 0);
-        end.setHours(0, 0, 0, 0);
-        result = result.filter((row) => {
-          const joinDate = new Date(row.joinDateValue);
-          joinDate.setHours(0, 0, 0, 0);
-          return joinDate >= start && joinDate <= end;
-        });
-      } else if (timeframe !== "Custom Date" && timeframe !== "Clear Filter") {
-        const limitDate = new Date();
-        limitDate.setHours(0, 0, 0, 0);
-
-        if (timeframe === "Last 7 days") {
-          limitDate.setDate(limitDate.getDate() - 7);
-        } else if (timeframe === "Last Month") {
-          limitDate.setMonth(limitDate.getMonth() - 1);
-        } else if (timeframe === "This Year") {
-          limitDate.setFullYear(2026, 0, 1);
-        }
-
-        result = result.filter((row) => {
-          const joinDate = new Date(row.joinDateValue);
-          joinDate.setHours(0, 0, 0, 0);
-          return joinDate >= limitDate;
-        });
-      }
+      const headerRange = getDateRangeForFilter(timeframe, customStart, customEnd);
+      result = result.filter((row) => {
+        const joinDate = new Date(row.joinDateValue);
+        return joinDate >= headerRange.start && joinDate <= headerRange.end;
+      });
     }
 
     return result;

@@ -3,13 +3,14 @@ import { Users, Wifi, Clock, AlertTriangle, CircleAlert, DollarSign } from "luci
 
 import StatCard from "../../dashboard/components/StatCard.jsx";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
+import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 import VendorsToolbar from "../components/VendorsToolbar.jsx";
 import VendorsTable from "../components/VendorsTable.jsx";
 import TopPerformingVendorsCard from "../components/TopPerformingVendorsCard.jsx";
 import RecentVendorRequestsCard from "../components/RecentVendorRequestsCard.jsx";
 import VendorStatusOverviewCard from "../components/VendorStatusOverviewCard.jsx";
 
-import { vendorsStats, initialVendors } from "../data/vendorsData.js";
+import { initialVendors } from "../data/vendorsData.js";
 
 const iconMap = {
   total: Users,
@@ -18,6 +19,27 @@ const iconMap = {
   suspended: AlertTriangle,
   revenue: DollarSign,
 };
+
+function getJoinedRangeForInlineFilter(filterValue) {
+  switch (filterValue) {
+    case "7days":
+      return getDateRangeForFilter("Last 7 days");
+    case "month":
+      return getDateRangeForFilter("Last Month");
+    case "year":
+      return getDateRangeForFilter("This Year");
+    default:
+      return null;
+  }
+}
+
+function formatCompactRevenue(value) {
+  if (value >= 1000000) {
+    return `NOK ${(value / 1000000).toFixed(2)}M`;
+  }
+
+  return `NOK ${value.toLocaleString()}`;
+}
 
 export default function VendorsPage() {
   // Filters & State
@@ -38,6 +60,7 @@ export default function VendorsPage() {
   const handleCustomDateChange = (start, end) => {
     setCustomStart(start);
     setCustomEnd(end);
+    setCurrentPage(1);
   };
 
   // Unique vendor names
@@ -85,24 +108,26 @@ export default function VendorsPage() {
 
     // 5. Joined Date timeframe filter
     if (timeframeFilter) {
-      const now = new Date();
+      const joinedRange = getJoinedRangeForInlineFilter(timeframeFilter);
       result = result.filter((v) => {
         const joinDate = new Date(v.joinDateValue);
-        const limitDate = new Date();
-        if (timeframeFilter === "7days") {
-          limitDate.setDate(now.getDate() - 7);
-          return joinDate >= limitDate;
-        } else if (timeframeFilter === "month") {
-          limitDate.setMonth(now.getMonth() - 1);
-          return joinDate >= limitDate;
-        } else if (timeframeFilter === "year") {
-          return joinDate.getFullYear() === 2026;
+        if (joinedRange) {
+          return joinDate >= joinedRange.start && joinDate <= joinedRange.end;
         }
         return true;
       });
     }
 
-    // 6. Tab selection filter
+    // 6. Header timeframe filter
+    if (timeframe) {
+      const headerRange = getDateRangeForFilter(timeframe, customStart, customEnd);
+      result = result.filter((v) => {
+        const joinDate = new Date(v.joinDateValue);
+        return joinDate >= headerRange.start && joinDate <= headerRange.end;
+      });
+    }
+
+    // 7. Tab selection filter
     if (activeTab !== "All") {
       if (activeTab === "Top Performing") {
         // Sort by revenue descending
@@ -114,13 +139,64 @@ export default function VendorsPage() {
     }
 
     return result;
-  }, [searchTerm, vendorFilter, cityFilter, ratingFilter, timeframeFilter, activeTab]);
+  }, [
+    activeTab,
+    cityFilter,
+    customEnd,
+    customStart,
+    ratingFilter,
+    searchTerm,
+    timeframe,
+    timeframeFilter,
+    vendorFilter,
+  ]);
 
   // Paginated list
   const paginatedVendors = useMemo(() => {
     const startIdx = (currentPage - 1) * pageSize;
     return processedVendors.slice(startIdx, startIdx + pageSize);
   }, [processedVendors, currentPage]);
+
+  const vendorStats = useMemo(() => {
+    const totalRevenue = processedVendors.reduce(
+      (sum, vendor) => sum + Number(vendor.revenueValue || 0),
+      0,
+    );
+
+    return [
+      {
+        id: "total",
+        title: "Total Vendor",
+        value: processedVendors.length.toLocaleString(),
+      },
+      {
+        id: "active",
+        title: "Active Vendor",
+        value: processedVendors
+          .filter((vendor) => vendor.status === "Active")
+          .length.toLocaleString(),
+      },
+      {
+        id: "pending",
+        title: "Pending Approval",
+        value: processedVendors
+          .filter((vendor) => vendor.status === "Pending Approval")
+          .length.toLocaleString(),
+      },
+      {
+        id: "suspended",
+        title: "Suspended",
+        value: processedVendors
+          .filter((vendor) => vendor.status === "Suspended")
+          .length.toLocaleString(),
+      },
+      {
+        id: "revenue",
+        title: "Total Vendor Revenue",
+        value: formatCompactRevenue(totalRevenue),
+      },
+    ];
+  }, [processedVendors]);
 
   // Reset pagination when filter parameters change
   const handleSearchChange = (val) => {
@@ -179,7 +255,7 @@ export default function VendorsPage() {
 
       {/* 5 Cards Stats Row */}
       <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-        {vendorsStats.map((stat) => (
+        {vendorStats.map((stat) => (
           <StatCard
             key={stat.id}
             title={stat.title}

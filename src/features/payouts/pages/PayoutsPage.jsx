@@ -12,7 +12,7 @@ import {
 } from "../data/payoutsData.js";
 
 function isWithinDays(dateString, days) {
-  const currentDate = new Date("2026-07-13T00:00:00");
+  const currentDate = new Date("2026-07-21T00:00:00");
   const targetDate = new Date(`${dateString}T00:00:00`);
   const diffInMs = currentDate - targetDate;
   const diffInDays = diffInMs / (1000 * 60 * 60 * 24);

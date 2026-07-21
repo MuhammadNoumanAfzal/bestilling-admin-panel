@@ -74,7 +74,7 @@ export default function DeliveryPage() {
           </p>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           {deliverySummary.map((item) => (
             <DeliveryOverviewCard key={item.id} {...item} />
           ))}

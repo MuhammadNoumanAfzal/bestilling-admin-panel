@@ -15,7 +15,6 @@ import TopCateringCategoriesChart from "../components/TopCateringCategoriesChart
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 
 import {
-  ordersStats,
   initialOrders,
 } from "../data/ordersData.js";
 
@@ -28,6 +27,59 @@ const iconMap = {
   delivered: CheckCircle,
   canceled: XCircle,
 };
+
+function parseOrderDate(dateTime) {
+  const [day, month, year] = String(dateTime || "").split(" ");
+  if (!day || !month || !year) {
+    return new Date(Number.NaN);
+  }
+
+  return new Date(`${month} ${day}, ${year}`);
+}
+
+function getDateRange(timeframe, customStart, customEnd) {
+  const today = new Date("2026-07-21T12:00:00");
+  const end = new Date(today);
+  end.setHours(23, 59, 59, 999);
+
+  if (timeframe === "Custom Date" && customStart && customEnd) {
+    const start = new Date(`${customStart}T00:00:00`);
+    const customEndDate = new Date(`${customEnd}T23:59:59`);
+
+    if (
+      !Number.isNaN(start.getTime()) &&
+      !Number.isNaN(customEndDate.getTime()) &&
+      start <= customEndDate
+    ) {
+      return { start, end: customEndDate };
+    }
+  }
+
+  const start = new Date(today);
+
+  switch (timeframe) {
+    case "Last Month":
+      start.setDate(start.getDate() - 30);
+      break;
+    case "Last 3 Months":
+      start.setDate(start.getDate() - 90);
+      break;
+    case "Last 6 Months":
+      start.setDate(start.getDate() - 180);
+      break;
+    case "This Year":
+      start.setMonth(0, 1);
+      break;
+    case "Last 7 days":
+    default:
+      start.setDate(start.getDate() - 7);
+      break;
+  }
+
+  start.setHours(0, 0, 0, 0);
+
+  return { start, end };
+}
 
 export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -97,6 +149,8 @@ export default function OrdersPage() {
 
   // Filter logic
   const filteredOrders = useMemo(() => {
+    const { start, end } = getDateRange(timeframe, customStart, customEnd);
+
     return initialOrders.filter((order) => {
       // Search check
       if (searchTerm) {
@@ -118,35 +172,9 @@ export default function OrdersPage() {
       // Payment Status check
       if (paymentFilter && order.paymentStatus !== paymentFilter) return false;
 
-      // Date Range check
-      if (timeframe && timeframe !== "Clear Filter") {
-        if (timeframe === "Custom Date" && customStart && customEnd) {
-          const orderDate = new Date(order.dateTime.split(" ").slice(0, 3).join(" "));
-          const start = new Date(customStart);
-          const end = new Date(customEnd);
-          orderDate.setHours(0, 0, 0, 0);
-          start.setHours(0, 0, 0, 0);
-          end.setHours(0, 0, 0, 0);
-          if (orderDate < start || orderDate > end) return false;
-        } else if (timeframe !== "Custom Date") {
-          const orderDate = new Date(order.dateTime.split(" ").slice(0, 3).join(" "));
-          orderDate.setHours(0, 0, 0, 0);
-          const limitDate = new Date();
-          limitDate.setHours(0, 0, 0, 0);
-
-          if (timeframe === "Last 7 days") {
-            limitDate.setDate(limitDate.getDate() - 7);
-          } else if (timeframe === "Last Month") {
-            limitDate.setMonth(limitDate.getMonth() - 1);
-          } else if (timeframe === "Last 3 Months") {
-            limitDate.setMonth(limitDate.getMonth() - 3);
-          } else if (timeframe === "Last 6 Months") {
-            limitDate.setMonth(limitDate.getMonth() - 6);
-          } else if (timeframe === "This Year") {
-            limitDate.setFullYear(2026, 0, 1);
-          }
-          if (orderDate < limitDate) return false;
-        }
+      const orderDate = parseOrderDate(order.dateTime);
+      if (Number.isNaN(orderDate.getTime()) || orderDate < start || orderDate > end) {
+        return false;
       }
 
       return true;
@@ -167,20 +195,68 @@ export default function OrdersPage() {
     return filteredOrders.slice(startIdx, startIdx + pageSize);
   }, [filteredOrders, currentPage]);
 
+  const orderStats = useMemo(() => {
+    const totalRevenue = filteredOrders.reduce(
+      (sum, order) => sum + Number(order.amountValue || 0),
+      0,
+    );
+
+    return [
+      {
+        id: "total",
+        title: "Total Orders",
+        value: filteredOrders.length.toLocaleString(),
+      },
+      {
+        id: "new",
+        title: "Paid Orders",
+        value: filteredOrders
+          .filter((order) => order.paymentStatus === "Paid")
+          .length.toLocaleString(),
+      },
+      {
+        id: "pending",
+        title: "Pending",
+        value: filteredOrders
+          .filter((order) => order.status === "Pending")
+          .length.toLocaleString(),
+      },
+      {
+        id: "delivery",
+        title: "Refund / Review",
+        value: filteredOrders
+          .filter((order) => order.paymentStatus !== "Paid")
+          .length.toLocaleString(),
+      },
+      {
+        id: "delivered",
+        title: "Delivered",
+        value: filteredOrders
+          .filter((order) => order.status === "Delivered")
+          .length.toLocaleString(),
+      },
+      {
+        id: "canceled",
+        title: "Revenue",
+        value: `NOK ${totalRevenue.toLocaleString()}`,
+      },
+    ];
+  }, [filteredOrders]);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Top Header & Subtitle */}
       <section className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div className="space-y-1">
-          <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">
+          <h1 className="text-[28px] font-bold tracking-[-0.04em] text-[#18120f] sm:text-[40px]">
             Orders Management
           </h1>
-          <p className="text-[18px] leading-7 text-[#6f645d]">
+          <p className="text-[15px] leading-6 text-[#6f645d] sm:text-[18px] sm:leading-7">
             Manage and track all orders status.
           </p>
         </div>
 
-        <div>
+        <div className="w-full md:w-auto md:max-w-full [&>*]:w-full md:[&>*]:w-auto">
           <DateFilterDropdown
             selectedFilter={timeframe}
             onChangeFilter={handleTimeframeChange}
@@ -193,7 +269,7 @@ export default function OrdersPage() {
 
       {/* 6 Grid Stats Overview */}
       <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
-        {ordersStats.map((stat) => (
+        {orderStats.map((stat) => (
           <StatCard
             key={stat.id}
             title={stat.title}
@@ -226,7 +302,7 @@ export default function OrdersPage() {
           paymentStatuses={paymentStatuses}
         />
 
-        <div className="p-4">
+        <div className="p-3 sm:p-4">
           <OrdersTable
             orders={paginatedOrders}
             currentPage={currentPage}

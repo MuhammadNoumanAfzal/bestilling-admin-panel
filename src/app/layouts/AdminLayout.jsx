@@ -3,20 +3,30 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   Bell,
+  Box,
+  CircleDollarSign,
+  FileText,
   Grid2x2,
   LogOut,
   LifeBuoy,
   Settings as SettingsIcon,
   Search,
+  Store,
   Truck,
   UserRound,
+  UsersRound,
 } from "lucide-react";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
 
 const navigation = [
   { label: "Dashboard", to: "/dashboard", icon: Grid2x2 },
+  { label: "Orders", to: "/orders", icon: Box },
+  { label: "Vendor", to: "/vendors", icon: Store },
+  { label: "Customers", to: "/customers", icon: UsersRound },
+  { label: "Payments", to: "/payouts", icon: CircleDollarSign },
   { label: "Delivery", to: "/delivery", icon: Truck },
   { label: "Supports", to: "/support", icon: LifeBuoy },
+  { label: "Reports", to: "/reports", icon: FileText },
   { label: "Notification", to: "/notifications", icon: Bell },
   { label: "Settings", to: "/settings", icon: SettingsIcon },
 ];
@@ -27,9 +37,29 @@ const pageMeta = {
     subtitle:
       "A clean overview of admin activity, vendor movement, and platform health.",
   },
+  "/vendors": {
+    title: "Vendors",
+    subtitle: "Track onboarding, approvals, and store readiness in one place.",
+  },
+  "/orders": {
+    title: "Orders",
+    subtitle: "Monitor order flow, exceptions, and service level performance.",
+  },
+  "/customers": {
+    title: "Customers",
+    subtitle: "Understand account volume, activity, and retention patterns.",
+  },
+  "/payouts": {
+    title: "Payouts",
+    subtitle: "Review settlement batches, release timing, and payment states.",
+  },
   "/delivery": {
     title: "Delivery",
     subtitle: "Manage delivery zones, timings, and service coverage.",
+  },
+  "/reports": {
+    title: "Reports",
+    subtitle: "Summaries, exports, and operational visibility for the team.",
   },
   "/notifications": {
     title: "Notifications",
@@ -93,6 +123,45 @@ export default function AdminLayout() {
         title: "Delivery Area Details",
         subtitle:
           "Manage postal coverage, service controls, and local configuration.",
+      };
+    }
+
+    if (location.pathname.startsWith("/payouts/commission-settings")) {
+      return {
+        title: "Commission Settings",
+        subtitle: "Manage platform commission rates for all vendors.",
+      };
+    }
+
+    if (
+      location.pathname.startsWith("/payouts/") &&
+      location.pathname !== "/payouts/commission-settings"
+    ) {
+      return {
+        title: "Payment Details",
+        subtitle: "Track customer payment and vendor payout for this order.",
+      };
+    }
+
+    if (
+      location.pathname.startsWith("/orders/") &&
+      location.pathname !== "/orders"
+    ) {
+      return {
+        title: "Order Details",
+        subtitle:
+          "Review order details, items invoice, customer & vendor profiles.",
+      };
+    }
+
+    if (
+      location.pathname.startsWith("/customers/") &&
+      location.pathname !== "/customers"
+    ) {
+      return {
+        title: "Customer Details",
+        subtitle:
+          "Review the customer profile, order history, ratings, and active interactions.",
       };
     }
 

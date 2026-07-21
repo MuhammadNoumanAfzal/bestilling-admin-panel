@@ -26,6 +26,11 @@ export default function OrdersToolbar({
   const [tempEnd, setTempEnd] = useState(customEnd || "");
   const toolbarRef = useRef(null);
 
+  useEffect(() => {
+    setTempStart(customStart || "");
+    setTempEnd(customEnd || "");
+  }, [customStart, customEnd]);
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -74,7 +79,7 @@ export default function OrdersToolbar({
 
   const handleApplyCustomDate = (e) => {
     e.preventDefault();
-    if (tempStart && tempEnd) {
+    if (tempStart && tempEnd && tempStart <= tempEnd) {
       onCustomDateChange(tempStart, tempEnd);
       onTimeframeChange("Custom Date");
       setActiveDropdown(null);
@@ -83,6 +88,7 @@ export default function OrdersToolbar({
   };
 
   const dateOptions = [
+    "Last 7 days",
     "Last Month",
     "Last 3 Months",
     "Last 6 Months",
@@ -111,7 +117,7 @@ export default function OrdersToolbar({
       </div>
 
       {/* Floating Dropdown Filters list */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
         
         {/* Dropdown 1: All Vendors */}
         <div className="relative">
@@ -120,7 +126,7 @@ export default function OrdersToolbar({
               setActiveDropdown(activeDropdown === "vendor" ? null : "vendor");
               setShowCustomFields(false);
             }}
-            className="inline-flex h-9 items-center justify-between gap-1.5 rounded-[8px] border border-[#d8ccc2] bg-white px-3 text-[12px] font-semibold text-[#4d423b] outline-none transition hover:bg-[#faf9f8] cursor-pointer"
+            className="inline-flex h-9 w-full items-center justify-between gap-1.5 rounded-[8px] border border-[#d8ccc2] bg-white px-3 text-[12px] font-semibold text-[#4d423b] outline-none transition hover:bg-[#faf9f8] cursor-pointer sm:w-auto"
             type="button"
           >
             <span>{vendorFilter || "All Vendors"}</span>
@@ -128,7 +134,7 @@ export default function OrdersToolbar({
           </button>
 
           {activeDropdown === "vendor" && (
-            <div className="absolute left-0 mt-1 z-30 w-44 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
+            <div className="absolute left-0 mt-1 z-30 w-full min-w-[11rem] rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left sm:w-44">
               <button
                 onClick={() => handleSelectVendor("")}
                 className={`block w-full px-3.5 py-1.5 text-left text-[12px] font-semibold transition cursor-pointer ${
@@ -165,7 +171,7 @@ export default function OrdersToolbar({
               setActiveDropdown(activeDropdown === "status" ? null : "status");
               setShowCustomFields(false);
             }}
-            className="inline-flex h-9 items-center justify-between gap-1.5 rounded-[8px] border border-[#d8ccc2] bg-white px-3 text-[12px] font-semibold text-[#4d423b] outline-none transition hover:bg-[#faf9f8] cursor-pointer"
+            className="inline-flex h-9 w-full items-center justify-between gap-1.5 rounded-[8px] border border-[#d8ccc2] bg-white px-3 text-[12px] font-semibold text-[#4d423b] outline-none transition hover:bg-[#faf9f8] cursor-pointer sm:w-auto"
             type="button"
           >
             <span>{statusFilter || "All Orders Type"}</span>
@@ -173,7 +179,7 @@ export default function OrdersToolbar({
           </button>
 
           {activeDropdown === "status" && (
-            <div className="absolute left-0 mt-1 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
+            <div className="absolute left-0 mt-1 z-30 w-full min-w-[11rem] rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left sm:w-36">
               <button
                 onClick={() => handleSelectStatus("")}
                 className={`block w-full px-3.5 py-1.5 text-left text-[12px] font-semibold transition cursor-pointer ${
@@ -210,7 +216,7 @@ export default function OrdersToolbar({
               setActiveDropdown(activeDropdown === "payment" ? null : "payment");
               setShowCustomFields(false);
             }}
-            className="inline-flex h-9 items-center justify-between gap-1.5 rounded-[8px] border border-[#d8ccc2] bg-white px-3 text-[12px] font-semibold text-[#4d423b] outline-none transition hover:bg-[#faf9f8] cursor-pointer"
+            className="inline-flex h-9 w-full items-center justify-between gap-1.5 rounded-[8px] border border-[#d8ccc2] bg-white px-3 text-[12px] font-semibold text-[#4d423b] outline-none transition hover:bg-[#faf9f8] cursor-pointer sm:w-auto"
             type="button"
           >
             <span>{paymentFilter || "All Payment Status"}</span>
@@ -218,7 +224,7 @@ export default function OrdersToolbar({
           </button>
 
           {activeDropdown === "payment" && (
-            <div className="absolute left-0 mt-1 z-30 w-44 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
+            <div className="absolute left-0 mt-1 z-30 w-full min-w-[11rem] rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left sm:w-44">
               <button
                 onClick={() => handleSelectPayment("")}
                 className={`block w-full px-3.5 py-1.5 text-left text-[12px] font-semibold transition cursor-pointer ${
@@ -255,21 +261,17 @@ export default function OrdersToolbar({
               setActiveDropdown(activeDropdown === "date" ? null : "date");
               setShowCustomFields(timeframe === "Custom Date");
             }}
-            className="inline-flex h-9 items-center justify-between gap-1.5 rounded-[8px] border border-[#d8ccc2] bg-white px-3 text-[12px] font-semibold text-[#4d423b] outline-none transition hover:bg-[#faf9f8] cursor-pointer"
+            className="inline-flex h-9 w-full items-center justify-between gap-1.5 rounded-[8px] border border-[#d8ccc2] bg-white px-3 text-[12px] font-semibold text-[#4d423b] outline-none transition hover:bg-[#faf9f8] cursor-pointer sm:w-auto"
             type="button"
           >
             <span>
-              {timeframe === "Custom Date"
-                ? "Custom Date"
-                : timeframe === "Last 7 days"
-                ? "Date Range" // Matches default button label 'Date Range' in mockup
-                : timeframe}
+              {timeframe === "Custom Date" ? "Custom Date" : timeframe || "Date Range"}
             </span>
             <ChevronDown size={13} className="text-[#8c8077]" />
           </button>
 
           {activeDropdown === "date" && (
-            <div className="absolute right-0 lg:left-0 mt-1 z-30 w-52 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
+            <div className="absolute left-0 mt-1 z-30 w-full min-w-[13rem] rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left sm:w-52">
               {!showCustomFields ? (
                 <div className="flex flex-col">
                   {dateOptions.map((opt) => {
@@ -357,11 +359,18 @@ export default function OrdersToolbar({
                     </button>
                     <button
                       type="submit"
+                      disabled={!tempStart || !tempEnd || tempStart > tempEnd}
                       className="flex-1 rounded-[4px] bg-[#d96834] py-1 text-[10px] font-bold text-white transition hover:bg-[#b75424] cursor-pointer"
                     >
                       Apply
                     </button>
                   </div>
+
+                  {tempStart && tempEnd && tempStart > tempEnd ? (
+                    <p className="text-[10px] font-medium text-[#d83f3f]">
+                      End date must be after start date.
+                    </p>
+                  ) : null}
                 </form>
               )}
             </div>
@@ -371,7 +380,7 @@ export default function OrdersToolbar({
         {/* Reset Filter Button */}
         <button
           onClick={onResetFilters}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-[8px] border border-[#d8ccc2] bg-white text-[#5b4f47] transition hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer outline-none"
+          className="inline-flex h-9 w-full items-center justify-center rounded-[8px] border border-[#d8ccc2] bg-white text-[#5b4f47] transition hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer outline-none sm:w-9"
           title="Reset Filters"
           type="button"
         >

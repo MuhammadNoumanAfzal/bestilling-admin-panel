@@ -156,7 +156,7 @@ export default function CustomerDetailPage() {
   }, [customerId]);
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="mx-auto max-w-6xl space-y-5 px-0 sm:space-y-6">
       {/* 1. Detail Header Info */}
       <CustomerDetailHeader customer={customer} />
 

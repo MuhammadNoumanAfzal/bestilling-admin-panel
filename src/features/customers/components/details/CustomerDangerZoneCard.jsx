@@ -60,9 +60,9 @@ export default function CustomerDangerZoneCard({ customerName }) {
       </div>
 
       {/* Two side-by-side cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Deactivate & Block */}
-        <article className="flex flex-col justify-between rounded-[16px] border border-[#fbcaca] bg-gradient-to-br from-white to-[#fffcfc] p-6 shadow-[0_4px_16px_rgba(216,63,63,0.02)] space-y-5 transition-all duration-300 hover:shadow-md hover:border-[#d83f3f]/30">
+        <article className="flex flex-col justify-between space-y-5 rounded-[16px] border border-[#fbcaca] bg-gradient-to-br from-white to-[#fffcfc] p-4 shadow-[0_4px_16px_rgba(216,63,63,0.02)] transition-all duration-300 hover:border-[#d83f3f]/30 hover:shadow-md sm:p-6">
           <div className="space-y-2">
             <h4 className="text-[16px] font-extrabold text-[#18120f]">
               Deactivate & Block Customer
@@ -81,7 +81,7 @@ export default function CustomerDangerZoneCard({ customerName }) {
         </article>
 
         {/* Permanently Delete */}
-        <article className="flex flex-col justify-between rounded-[16px] border border-[#fbcaca] bg-gradient-to-br from-white to-[#fffcfc] p-6 shadow-[0_4px_16px_rgba(216,63,63,0.02)] space-y-5 transition-all duration-300 hover:shadow-md hover:border-[#d83f3f]/30">
+        <article className="flex flex-col justify-between space-y-5 rounded-[16px] border border-[#fbcaca] bg-gradient-to-br from-white to-[#fffcfc] p-4 shadow-[0_4px_16px_rgba(216,63,63,0.02)] transition-all duration-300 hover:border-[#d83f3f]/30 hover:shadow-md sm:p-6">
           <div className="space-y-2">
             <h4 className="text-[16px] font-extrabold text-[#18120f]">
               Permanently Delete Account

@@ -23,11 +23,11 @@ export default function CustomerProfileInfoCard({ customer = {} }) {
       </div>
 
       {/* Profile Details Card */}
-      <div className="rounded-[16px] border border-[#ddd6cf] bg-white p-6 shadow-[0_8px_24px_rgba(53,34,20,0.04)] transition-all duration-300 hover:border-[#cf6e38]/10 hover:shadow-[0_12px_32px_rgba(53,34,20,0.06)]">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="rounded-[16px] border border-[#ddd6cf] bg-white p-4 shadow-[0_8px_24px_rgba(53,34,20,0.04)] transition-all duration-300 hover:border-[#cf6e38]/10 hover:shadow-[0_12px_32px_rgba(53,34,20,0.06)] sm:p-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3 md:gap-6">
           {/* Column 1 */}
-          <div className="space-y-5">
-            <div className="rounded-[12px] bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef] border border-[#f0eae4]/60">
+          <div className="space-y-4 sm:space-y-5">
+            <div className="rounded-[12px] border border-[#f0eae4]/60 bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef]">
               <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
                 Full Name
               </span>
@@ -46,8 +46,8 @@ export default function CustomerProfileInfoCard({ customer = {} }) {
           </div>
 
           {/* Column 2 */}
-          <div className="space-y-5">
-            <div className="rounded-[12px] bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef] border border-[#f0eae4]/60">
+          <div className="space-y-4 sm:space-y-5">
+            <div className="rounded-[12px] border border-[#f0eae4]/60 bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef]">
               <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
                 Email Address
               </span>
@@ -66,8 +66,8 @@ export default function CustomerProfileInfoCard({ customer = {} }) {
           </div>
 
           {/* Column 3 */}
-          <div className="space-y-5">
-            <div className="rounded-[12px] bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef] border border-[#f0eae4]/60">
+          <div className="space-y-4 sm:space-y-5">
+            <div className="rounded-[12px] border border-[#f0eae4]/60 bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef]">
               <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
                 Phone Number
               </span>

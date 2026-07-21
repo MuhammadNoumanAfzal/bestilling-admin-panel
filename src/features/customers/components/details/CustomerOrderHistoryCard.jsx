@@ -62,13 +62,13 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
       </div>
 
       {/* Stats Cards Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {stats.map((s) => {
           const Icon = s.icon;
           return (
             <div
               key={s.label}
-              className="flex items-center gap-4 rounded-[14px] border border-[#ddd6cf] bg-white px-5 py-4 shadow-[0_4px_16px_rgba(53,34,20,0.02)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-[#cf6e38]/15"
+              className="flex items-center gap-3 rounded-[14px] border border-[#ddd6cf] bg-white px-3 py-3.5 shadow-[0_4px_16px_rgba(53,34,20,0.02)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cf6e38]/15 hover:shadow-md sm:gap-4 sm:px-5 sm:py-4"
             >
               <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] shadow-sm ${s.bg} ${s.color}`}>
                 <Icon size={18} strokeWidth={2.5} />
@@ -77,7 +77,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
                 <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
                   {s.label}
                 </span>
-                <span className="block text-[19px] font-extrabold text-[#18120f] leading-none mt-1 tracking-tight truncate">
+                <span className="mt-1 block truncate text-[16px] font-extrabold leading-none tracking-tight text-[#18120f] sm:text-[19px]">
                   {s.value}
                 </span>
               </div>
@@ -87,10 +87,10 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
       </div>
 
       {/* Table Card Container */}
-      <div className="rounded-[16px] border border-[#ddd6cf] bg-white shadow-[0_8px_24px_rgba(53,34,20,0.04)] overflow-hidden transition-all duration-300 hover:border-[#cf6e38]/10">
+      <div className="overflow-hidden rounded-[16px] border border-[#ddd6cf] bg-white shadow-[0_8px_24px_rgba(53,34,20,0.04)] transition-all duration-300 hover:border-[#cf6e38]/10">
         {/* Search Header */}
-        <div className="p-4 border-b border-[#eee4dd] bg-[#faf9f8] flex items-center justify-between">
-          <div className="relative w-full max-w-[360px]">
+        <div className="flex flex-col gap-3 border-b border-[#eee4dd] bg-[#faf9f8] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:max-w-[360px]">
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#baaea0]">
               <Search size={14} />
             </span>
@@ -103,13 +103,68 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
                          placeholder:text-[#c0b4a8] focus:border-[#cf6e38] focus:shadow-[0_0_0_2px_rgba(207,110,56,0.1)]"
             />
           </div>
-          <span className="text-[12px] font-extrabold text-[#8d7e72] hidden sm:inline-block">
+          <span className="text-[12px] font-extrabold text-[#8d7e72] sm:inline-block">
             {filteredOrders.length} orders found
           </span>
         </div>
 
+        <div className="space-y-3 p-3 sm:hidden">
+          {displayedOrders.length === 0 ? (
+            <div className="rounded-[14px] border border-dashed border-[#ddd6cf] px-4 py-10 text-center text-[13px] font-semibold text-[#a89f97]">
+              No orders matching your search.
+            </div>
+          ) : (
+            displayedOrders.map((order, idx) => (
+              <article
+                key={`${order.id}-${idx}`}
+                className="rounded-[14px] border border-[#eee4dd] bg-[#fcfbfa] p-4 shadow-[0_4px_16px_rgba(53,34,20,0.03)]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[14px] font-extrabold text-[#cf6432]">{order.id}</p>
+                    <p className="mt-1 text-[14px] font-bold text-[#18120f]">{order.vendor}</p>
+                  </div>
+                  <span className={`inline-block rounded-[6px] px-2.5 py-1 text-[10.5px] font-extrabold uppercase leading-none tracking-wider shadow-sm ${
+                    STATUS_BADGE[order.status] || "bg-[#f0ebe6] text-[#6f655e]"
+                  }`}>
+                    {order.status}
+                  </span>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="rounded-[12px] bg-white px-3 py-2.5">
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9a8f86]">Event</p>
+                    <p className="mt-1.5 text-[13px] font-bold text-[#18120f]">{order.eventType}</p>
+                  </div>
+                  <div className="rounded-[12px] bg-white px-3 py-2.5">
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9a8f86]">Guests</p>
+                    <p className="mt-1.5 text-[13px] font-bold text-[#18120f]">{order.guests}</p>
+                  </div>
+                  <div className="rounded-[12px] bg-white px-3 py-2.5">
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9a8f86]">Delivery</p>
+                    <p className="mt-1.5 text-[13px] font-medium leading-5 text-[#5a4d46]">{order.dateTime}</p>
+                  </div>
+                  <div className="rounded-[12px] bg-white px-3 py-2.5">
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9a8f86]">Amount</p>
+                    <p className="mt-1.5 text-[13px] font-extrabold text-[#18120f]">{order.amount}</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => navigate(`/orders/${order.id.replace("#", "")}`)}
+                  type="button"
+                  className="mt-4 inline-flex items-center gap-1 text-[13px] font-bold text-[#cf6e38] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none active:scale-95"
+                >
+                  View
+                  <ArrowUpRight size={11} />
+                </button>
+              </article>
+            ))
+          )}
+        </div>
+
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full min-w-[760px] border-collapse text-[14px]">
             <thead>
               <tr className="bg-[#faf8f6] text-left border-b border-[#eee4dd]">

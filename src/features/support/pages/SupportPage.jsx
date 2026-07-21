@@ -115,7 +115,7 @@ export default function SupportPage() {
           </p>
         </section>
 
-        <div className="flex justify-end">
+        <div className="flex justify-start sm:justify-end">
           <DateFilterDropdown
             selectedFilter={timeframe}
             onChangeFilter={setTimeframe}
@@ -125,7 +125,7 @@ export default function SupportPage() {
           />
         </div>
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           {supportSummary.map((item) => (
             <SupportOverviewCard key={item.id} {...item} />
           ))}

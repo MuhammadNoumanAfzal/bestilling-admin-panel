@@ -9,7 +9,7 @@ function InfoRow({ icon: Icon, children }) {
   );
 }
 
-export default function SupportCustomerProfileCard({ ticket }) {
+export default function SupportCustomerProfileCard({ onViewProfile, ticket }) {
   return (
     <section className="overflow-hidden rounded-[18px] border border-[#eadcd3] bg-white shadow-[0_10px_24px_rgba(55,31,13,0.05)]">
       <div className="bg-[linear-gradient(135deg,#fff8f2_0%,#fff2ea_55%,#fff7fb_100%)] px-4 py-3.5">
@@ -42,6 +42,7 @@ export default function SupportCustomerProfileCard({ ticket }) {
 
       <button
         className="mx-4 mb-4 inline-flex h-9 w-[calc(100%-2rem)] cursor-pointer items-center justify-center rounded-[10px] border border-[#ddd2ca] bg-[#faf6f2] text-[13px] font-bold text-[#18120f] transition hover:border-[#cf6e38]/35 hover:bg-[#fff5ef]"
+        onClick={onViewProfile}
         type="button"
       >
         View Customer Profile

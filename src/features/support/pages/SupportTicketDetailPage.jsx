@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import SupportConversationPanel from "../components/details/SupportConversationPanel.jsx";
 import SupportCustomerProfileCard from "../components/details/SupportCustomerProfileCard.jsx";
+import SupportCustomerProfileModal from "../components/details/SupportCustomerProfileModal.jsx";
 import SupportTicketActionsCard from "../components/details/SupportTicketActionsCard.jsx";
 import SupportTicketSummaryCard from "../components/details/SupportTicketSummaryCard.jsx";
 import { getSupportTicketById } from "../data/supportData.js";
@@ -23,6 +24,7 @@ export default function SupportTicketDetailPage() {
   const ticket = getSupportTicketById(ticketId);
   const [currentStatus, setCurrentStatus] = useState(ticket?.status || "Open");
   const [draftReply, setDraftReply] = useState("");
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   if (!ticket) {
     return <Navigate replace to="/support" />;
@@ -70,7 +72,10 @@ export default function SupportTicketDetailPage() {
         />
 
         <aside className="space-y-4">
-          <SupportCustomerProfileCard ticket={ticket} />
+          <SupportCustomerProfileCard
+            onViewProfile={() => setIsProfileModalOpen(true)}
+            ticket={ticket}
+          />
           <SupportTicketSummaryCard ticket={ticketWithState} />
           <SupportTicketActionsCard
             onClose={() => setCurrentStatus("Open")}
@@ -80,6 +85,12 @@ export default function SupportTicketDetailPage() {
           />
         </aside>
       </div>
+
+      <SupportCustomerProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        ticket={ticketWithState}
+      />
     </div>
   );
 }

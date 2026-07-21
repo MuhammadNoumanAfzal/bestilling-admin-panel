@@ -8,6 +8,8 @@ import {
   Settings,
 } from "lucide-react";
 
+const disabledPaths = new Set(["/vendors", "/orders", "/payouts", "/reports"]);
+
 export default function QuickActionsGrid() {
   const navigate = useNavigate();
 
@@ -57,14 +59,24 @@ export default function QuickActionsGrid() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {actions.map((act) => {
           const Icon = act.icon;
+          const isDisabled = disabledPaths.has(act.path);
           return (
             <button
               key={act.label}
-              onClick={() => navigate(act.path)}
-              className="flex items-center justify-center gap-2.5 rounded-[10px] border border-[#ddd6cf] bg-[#faf8f6] px-4 py-3.5 text-[14px] font-bold text-[#18120f] transition hover:border-[#d96834] hover:bg-white cursor-pointer"
+              onClick={() => {
+                if (!isDisabled) {
+                  navigate(act.path);
+                }
+              }}
+              className={`flex items-center justify-center gap-2.5 rounded-[10px] border px-4 py-3.5 text-[14px] font-bold transition ${
+                isDisabled
+                  ? "cursor-not-allowed border-[#e8dfd8] bg-[#f4efeb] text-[#b3a79d] opacity-70"
+                  : "cursor-pointer border-[#ddd6cf] bg-[#faf8f6] text-[#18120f] hover:border-[#d96834] hover:bg-white"
+              }`}
+              disabled={isDisabled}
               type="button"
             >
-              <Icon size={16} className={act.color} />
+              <Icon size={16} className={isDisabled ? "text-[#b3a79d]" : act.color} />
               <span>{act.label}</span>
             </button>
           );

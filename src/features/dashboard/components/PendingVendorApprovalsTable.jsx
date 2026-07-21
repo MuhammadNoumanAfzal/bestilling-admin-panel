@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MoreVertical, Check, X, ArrowUpRight } from "lucide-react";
 
+const applicationsPageHidden = true;
+
 const statusClasses = {
   Pending: "bg-[#fff7e7] text-[#c8881b] border border-[#fce9c0]",
   Reviewing: "bg-[#eef5fc] text-[#2e82cf] border border-[#cbe1f8]",
@@ -54,8 +56,17 @@ export default function PendingVendorApprovalsTable({ approvals, onUpdateStatus 
           </p>
         </div>
         <button
-          onClick={() => navigate("/vendors")}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-[8px] border border-[#e6dad1] bg-white px-3.5 py-2 text-[13px] font-bold text-[#4d423b] transition hover:bg-[#faf5f1] hover:text-[#cf6e38]"
+          onClick={() => {
+            if (!applicationsPageHidden) {
+              navigate("/vendors");
+            }
+          }}
+          className={`inline-flex items-center gap-1.5 rounded-[8px] border px-3.5 py-2 text-[13px] font-bold transition ${
+            applicationsPageHidden
+              ? "cursor-not-allowed border-[#e8dfd8] bg-[#f4efeb] text-[#b3a79d] opacity-70"
+              : "cursor-pointer border-[#e6dad1] bg-white text-[#4d423b] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
+          }`}
+          disabled={applicationsPageHidden}
           type="button"
         >
           <span>View All Applications</span>

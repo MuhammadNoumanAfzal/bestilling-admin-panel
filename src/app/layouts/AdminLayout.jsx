@@ -3,30 +3,20 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   Bell,
-  Box,
-  CircleDollarSign,
-  FileText,
   Grid2x2,
   LogOut,
   LifeBuoy,
   Settings as SettingsIcon,
   Search,
-  Store,
   Truck,
   UserRound,
-  UsersRound,
 } from "lucide-react";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
 
 const navigation = [
   { label: "Dashboard", to: "/dashboard", icon: Grid2x2 },
-  { label: "Orders", to: "/orders", icon: Box },
-  { label: "Vendor", to: "/vendors", icon: Store },
-  { label: "Customers", to: "/customers", icon: UsersRound },
-  { label: "Payments", to: "/payouts", icon: CircleDollarSign },
   { label: "Delivery", to: "/delivery", icon: Truck },
   { label: "Supports", to: "/support", icon: LifeBuoy },
-  { label: "Reports", to: "/reports", icon: FileText },
   { label: "Notification", to: "/notifications", icon: Bell },
   { label: "Settings", to: "/settings", icon: SettingsIcon },
 ];

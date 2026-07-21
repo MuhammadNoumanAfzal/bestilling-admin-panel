@@ -6,7 +6,15 @@ import CustomersToolbar from "../components/CustomersToolbar.jsx";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 
-import { customerRows, customersSummary, customersPagination } from "../data/customersData.js";
+import { customerRows, customersPagination } from "../data/customersData.js";
+
+function formatCompactCurrency(value) {
+  if (value >= 1000000) {
+    return `NOK ${(value / 1000000).toFixed(2)}M`;
+  }
+
+  return `NOK ${value.toLocaleString()}`;
+}
 
 export default function CustomersPage() {
   // Filter States
@@ -126,8 +134,63 @@ export default function CustomersPage() {
     setStatusFilter("");
     setCityFilter("");
     setTimeframeFilter("");
+    setTimeframe("Last 7 days");
+    setCustomStart("");
+    setCustomEnd("");
     setCurrentPage(1);
   };
+
+  const customerSummary = useMemo(() => {
+    const totalOrders = filteredRows.reduce((sum, row) => sum + Number(row.totalOrders || 0), 0);
+    const totalSpending = filteredRows.reduce((sum, row) => sum + Number(row.amountValue || 0), 0);
+    const activeCustomers = filteredRows.filter((row) => row.status === "Active").length;
+    const now = new Date("2026-07-21T12:00:00");
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const newThisMonth = filteredRows.filter(
+      (row) => new Date(row.joinDateValue) >= monthStart,
+    ).length;
+
+    return [
+      {
+        id: "total",
+        label: "Total Customers",
+        value: filteredRows.length.toLocaleString(),
+        accent: "soft",
+      },
+      {
+        id: "active",
+        label: "Active Customers",
+        value: activeCustomers.toLocaleString(),
+        accent: "warm",
+      },
+      {
+        id: "new",
+        label: "New This Month",
+        value: newThisMonth.toLocaleString(),
+        accent: "neutral",
+      },
+      {
+        id: "orders",
+        label: "Total Orders",
+        value: totalOrders.toLocaleString(),
+        accent: "strong",
+      },
+      {
+        id: "average",
+        label: "Avg. Order Value",
+        value: filteredRows.length
+          ? `NOK ${Math.round(totalSpending / filteredRows.length).toLocaleString()}`
+          : "NOK 0",
+        accent: "soft",
+      },
+      {
+        id: "spending",
+        label: "Total Spending",
+        value: formatCompactCurrency(totalSpending),
+        accent: "warm",
+      },
+    ];
+  }, [filteredRows]);
 
   return (
     <div className="space-y-6">
@@ -153,7 +216,7 @@ export default function CustomersPage() {
 
       {/* 6 Cards Stats Row */}
       <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-        {customersSummary.map((item) => (
+        {customerSummary.map((item) => (
           <CustomerOverviewCard key={item.id} {...item} />
         ))}
       </section>

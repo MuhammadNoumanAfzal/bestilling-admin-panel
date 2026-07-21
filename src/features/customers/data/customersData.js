@@ -1,42 +1,3 @@
-export const customersSummary = [
-  {
-    id: "total",
-    label: "Total Customers",
-    value: "12,482",
-    accent: "soft",
-  },
-  {
-    id: "active",
-    label: "Active Customers",
-    value: "8,924",
-    accent: "warm",
-  },
-  {
-    id: "new",
-    label: "New This Month",
-    value: "452",
-    accent: "neutral",
-  },
-  {
-    id: "orders",
-    label: "Total Orders",
-    value: "48,291",
-    accent: "strong",
-  },
-  {
-    id: "average",
-    label: "Avg. Order Value",
-    value: "$142.50",
-    accent: "soft",
-  },
-  {
-    id: "spending",
-    label: "Total Spending",
-    value: "$6.8M",
-    accent: "warm",
-  },
-];
-
 export const customerRows = [
   {
     id: "#GC00349",
@@ -50,8 +11,8 @@ export const customerRows = [
     status: "Active",
     avatar: "AW",
     avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80",
-    joinDate: "20 April 2026",
-    joinDateValue: "2026-04-20",
+    joinDate: "19 July 2026",
+    joinDateValue: "2026-07-19",
   },
   {
     id: "#GC32423",
@@ -65,8 +26,8 @@ export const customerRows = [
     status: "Active",
     avatar: "TH",
     avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80",
-    joinDate: "20 April 2026",
-    joinDateValue: "2026-04-20",
+    joinDate: "16 July 2026",
+    joinDateValue: "2026-07-16",
   },
   {
     id: "#GCH43y3",
@@ -80,8 +41,8 @@ export const customerRows = [
     status: "Blocked",
     avatar: "SS",
     avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80",
-    joinDate: "20 April 2026",
-    joinDateValue: "2026-04-20",
+    joinDate: "30 June 2026",
+    joinDateValue: "2026-06-30",
   },
   {
     id: "#GC0643",
@@ -95,8 +56,8 @@ export const customerRows = [
     status: "Active",
     avatar: "UN",
     avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=120&q=80",
-    joinDate: "20 April 2026",
-    joinDateValue: "2026-04-20",
+    joinDate: "27 June 2026",
+    joinDateValue: "2026-06-27",
   },
   {
     id: "#GC3745y4",
@@ -110,8 +71,8 @@ export const customerRows = [
     status: "Blocked",
     avatar: "NK",
     avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80",
-    joinDate: "20 April 2026",
-    joinDateValue: "2026-04-20",
+    joinDate: "11 June 2026",
+    joinDateValue: "2026-06-11",
   },
   {
     id: "#GC3745y4b",
@@ -125,8 +86,8 @@ export const customerRows = [
     status: "Active",
     avatar: "NK",
     avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80",
-    joinDate: "20 April 2026",
-    joinDateValue: "2026-04-20",
+    joinDate: "05 June 2026",
+    joinDateValue: "2026-06-05",
   },
   {
     id: "#GCO8812",
@@ -140,8 +101,8 @@ export const customerRows = [
     status: "Active",
     avatar: "AN",
     avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80",
-    joinDate: "15 April 2026",
-    joinDateValue: "2026-04-15",
+    joinDate: "23 May 2026",
+    joinDateValue: "2026-05-23",
   },
   {
     id: "#GCO8813",
@@ -155,8 +116,8 @@ export const customerRows = [
     status: "Blocked",
     avatar: "MR",
     avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
-    joinDate: "12 April 2026",
-    joinDateValue: "2026-04-12",
+    joinDate: "14 May 2026",
+    joinDateValue: "2026-05-14",
   },
   {
     id: "#GCO8814",
@@ -170,8 +131,8 @@ export const customerRows = [
     status: "Active",
     avatar: "SN",
     avatarUrl: "https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&w=120&q=80",
-    joinDate: "10 April 2026",
-    joinDateValue: "2026-04-10",
+    joinDate: "18 April 2026",
+    joinDateValue: "2026-04-18",
   },
   {
     id: "#GCO8815",
@@ -184,8 +145,8 @@ export const customerRows = [
     amountValue: 6512,
     status: "Active",
     avatar: "EL",
-    joinDate: "10 April 2026",
-    joinDateValue: "2026-04-10",
+    joinDate: "09 March 2026",
+    joinDateValue: "2026-03-09",
   },
   {
     id: "#GCO8816",
@@ -198,8 +159,8 @@ export const customerRows = [
     amountValue: 3240,
     status: "Active",
     avatar: "LW",
-    joinDate: "05 April 2026",
-    joinDateValue: "2026-04-05",
+    joinDate: "21 February 2026",
+    joinDateValue: "2026-02-21",
   },
   {
     id: "#GCO8817",
@@ -212,8 +173,8 @@ export const customerRows = [
     amountValue: 5110,
     status: "Active",
     avatar: "MH",
-    joinDate: "02 April 2026",
-    joinDateValue: "2026-04-02",
+    joinDate: "13 January 2026",
+    joinDateValue: "2026-01-13",
   },
   {
     id: "#GCO8818",
@@ -226,8 +187,8 @@ export const customerRows = [
     amountValue: 1450,
     status: "Blocked",
     avatar: "OO",
-    joinDate: "28 March 2026",
-    joinDateValue: "2026-03-28",
+    joinDate: "28 December 2025",
+    joinDateValue: "2025-12-28",
   },
   {
     id: "#GCO8819",
@@ -240,8 +201,8 @@ export const customerRows = [
     amountValue: 9120,
     status: "Active",
     avatar: "ER",
-    joinDate: "25 March 2026",
-    joinDateValue: "2026-03-25",
+    joinDate: "08 November 2025",
+    joinDateValue: "2025-11-08",
   },
 ];
 

@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AdminLayout from "../layouts/AdminLayout.jsx";
+import ScrollToTop from "./ScrollToTop.jsx";
 import { ProtectedRoute } from "../../features/auth/components/ProtectedRoute.jsx";
 import ForgotPasswordPage from "../../features/auth/pages/ForgotPasswordPage.jsx";
 import LoginPage from "../../features/auth/pages/LoginPage.jsx";
@@ -32,36 +33,39 @@ function RootRedirect() {
 
 export default function AppRouter() {
   return (
-    <Routes>
-      <Route path="/" element={<RootRedirect />} />
-      <Route path="/auth/login" element={<LoginPage />} />
-      <Route path="/auth/register" element={<RegisterPage />} />
-      <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/auth/verification" element={<VerificationPage />} />
-      <Route path="/auth/new-password" element={<NewPasswordPage />} />
-      <Route path="/auth" element={<Navigate replace to="/auth/login" />} />
-      <Route element={<ProtectedRoute />}>
-        <Route element={<AdminLayout />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/vendors" element={<VendorsPage />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/orders/:orderId" element={<OrderDetailPage />} />
-          <Route path="/customers" element={<CustomersPage />} />
-          <Route path="/customers/:customerId" element={<CustomerDetailPage />} />
-          <Route path="/payouts" element={<PayoutsPage />} />
-          <Route path="/payouts/:payoutId" element={<PaymentDetailsPage />} />
-          <Route path="/payouts/commission-settings" element={<CommissionSettingsPage />} />
-          <Route path="/delivery" element={<DeliveryPage />} />
-          <Route path="/delivery/:areaId" element={<DeliveryAreaDetailPage />} />
-          <Route path="/reports" element={<ReportsPage />} />
-          <Route path="/support" element={<SupportPage />} />
-          <Route path="/support/:ticketId" element={<SupportTicketDetailPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/notifications/create" element={<CreateNotificationPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="/auth/login" element={<LoginPage />} />
+        <Route path="/auth/register" element={<RegisterPage />} />
+        <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/auth/verification" element={<VerificationPage />} />
+        <Route path="/auth/new-password" element={<NewPasswordPage />} />
+        <Route path="/auth" element={<Navigate replace to="/auth/login" />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/vendors" element={<VendorsPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+            <Route path="/customers" element={<CustomersPage />} />
+            <Route path="/customers/:customerId" element={<CustomerDetailPage />} />
+            <Route path="/payouts" element={<PayoutsPage />} />
+            <Route path="/payouts/:payoutId" element={<PaymentDetailsPage />} />
+            <Route path="/payouts/commission-settings" element={<CommissionSettingsPage />} />
+            <Route path="/delivery" element={<DeliveryPage />} />
+            <Route path="/delivery/:areaId" element={<DeliveryAreaDetailPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/support" element={<SupportPage />} />
+            <Route path="/support/:ticketId" element={<SupportTicketDetailPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/notifications/create" element={<CreateNotificationPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
         </Route>
-      </Route>
-      <Route path="*" element={<Navigate replace to="/" />} />
-    </Routes>
+        <Route path="*" element={<Navigate replace to="/" />} />
+      </Routes>
+    </>
   );
 }

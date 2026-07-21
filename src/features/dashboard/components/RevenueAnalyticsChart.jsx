@@ -1,53 +1,10 @@
-import { useState, useMemo } from "react";
-import { chartAnalyticsData } from "../data/dashboardData.js";
-import DateFilterDropdown from "./DateFilterDropdown.jsx";
+import { useMemo, useState } from "react";
 
-export default function RevenueAnalyticsChart() {
+export default function RevenueAnalyticsChart({ timeframe, chartData = [] }) {
   const [activeTab, setActiveTab] = useState("revenue"); // "revenue" | "orders"
-  const [timeframe, setTimeframe] = useState("Last 7 days");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
-  const data = useMemo(() => {
-    if (timeframe === "Last Month") {
-      return chartAnalyticsData["Last Month"];
-    }
-    if (timeframe === "Last 3 Months") {
-      return [
-        { label: "May", revenue: 98000, orders: 890 },
-        { label: "Jun", revenue: 154000, orders: 1420 },
-        { label: "Jul", revenue: 248560, orders: 2280 },
-      ];
-    }
-    if (timeframe === "Last 6 Months") {
-      return [
-        { label: "Feb", revenue: 75000, orders: 680 },
-        { label: "Mar", revenue: 110000, orders: 990 },
-        { label: "Apr", revenue: 95000, orders: 870 },
-        { label: "May", revenue: 125000, orders: 1120 },
-        { label: "Jun", revenue: 180000, orders: 1650 },
-        { label: "Jul", revenue: 248560, orders: 2280 },
-      ];
-    }
-    if (timeframe === "This Year") {
-      return [
-        { label: "Q1", revenue: 320000, orders: 2900 },
-        { label: "Q2", revenue: 480000, orders: 4300 },
-        { label: "Q3", revenue: 650000, orders: 5800 },
-        { label: "Q4", revenue: 840000, orders: 7500 },
-      ];
-    }
-    if (timeframe === "Custom Date") {
-      return [
-        { label: "Period A", revenue: 42000, orders: 380 },
-        { label: "Period B", revenue: 68000, orders: 610 },
-        { label: "Period C", revenue: 89000, orders: 820 },
-        { label: "Period D", revenue: 54000, orders: 490 },
-      ];
-    }
-    return chartAnalyticsData["Last 7 days"];
-  }, [timeframe]);
+  const data = useMemo(() => chartData, [chartData]);
 
   // Calculate maximum value to scale the chart
   const maxValue = useMemo(() => {
@@ -88,11 +45,6 @@ export default function RevenueAnalyticsChart() {
   const chartWidth = svgWidth - paddingLeft - paddingRight;
   const chartHeight = svgHeight - paddingTop - paddingBottom;
 
-  const handleCustomDateChange = (start, end) => {
-    setCustomStart(start);
-    setCustomEnd(end);
-  };
-
   return (
     <div className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
       {/* Header controls */}
@@ -102,7 +54,7 @@ export default function RevenueAnalyticsChart() {
           <p className="text-[13px] leading-5 text-[#6f655e]">
             {timeframe === "Last 7 days"
               ? "Daily performance data for the last 7 days"
-              : "Performance metrics based on selected date filter"}
+              : `Performance metrics for ${timeframe.toLowerCase()}`}
           </p>
         </div>
 
@@ -132,15 +84,6 @@ export default function RevenueAnalyticsChart() {
               Orders
             </button>
           </div>
-
-          {/* Timeframe Dropdown filter */}
-          <DateFilterDropdown
-            selectedFilter={timeframe}
-            onChangeFilter={setTimeframe}
-            startDate={customStart}
-            endDate={customEnd}
-            onCustomDateChange={handleCustomDateChange}
-          />
         </div>
       </div>
 

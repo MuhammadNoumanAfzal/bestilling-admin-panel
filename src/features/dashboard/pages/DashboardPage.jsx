@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   DollarSign,
   Calendar,
@@ -17,15 +17,14 @@ import QuickActionsGrid from "../components/QuickActionsGrid.jsx";
 import DateFilterDropdown from "../components/DateFilterDropdown.jsx";
 
 import {
-  dashboardStats,
-  initialPendingApprovals,
+  getDashboardSnapshot,
 } from "../data/dashboardData.js";
 
 export default function DashboardPage() {
-  const [approvals, setApprovals] = useState(initialPendingApprovals);
   const [timeframe, setTimeframe] = useState("Last 7 days");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [approvalOverrides, setApprovalOverrides] = useState({});
 
   // Map stat IDs to their respective Lucide icons
   const statIcons = {
@@ -37,11 +36,24 @@ export default function DashboardPage() {
     support: Headphones,
   };
 
+  const dashboardSnapshot = useMemo(
+    () => getDashboardSnapshot(timeframe, customStart, customEnd),
+    [timeframe, customStart, customEnd]
+  );
+
+  const approvals = useMemo(
+    () =>
+      dashboardSnapshot.approvals.map((approval) =>
+        approvalOverrides[approval.id]
+          ? { ...approval, status: approvalOverrides[approval.id] }
+          : approval
+      ),
+    [approvalOverrides, dashboardSnapshot.approvals]
+  );
+
   // Handle status update of inline vendor approvals
   const handleUpdateStatus = (id, newStatus) => {
-    setApprovals((prev) =>
-      prev.map((app) => (app.id === id ? { ...app, status: newStatus } : app))
-    );
+    setApprovalOverrides((prev) => ({ ...prev, [id]: newStatus }));
   };
 
   const handleCustomDateChange = (start, end) => {
@@ -75,7 +87,7 @@ export default function DashboardPage() {
 
       {/* 6 Grid Stats Overview */}
       <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
-        {dashboardStats.map((stat) => (
+        {dashboardSnapshot.stats.map((stat) => (
           <StatCard
             key={stat.id}
             title={stat.title}
@@ -90,11 +102,14 @@ export default function DashboardPage() {
       {/* Two Column Grid: Chart & Side Panel */}
       <section className="grid gap-6 lg:grid-cols-12">
         <div className="lg:col-span-8">
-          <RevenueAnalyticsChart />
+          <RevenueAnalyticsChart
+            timeframe={timeframe}
+            chartData={dashboardSnapshot.chartData}
+          />
         </div>
         <div className="lg:col-span-4 flex flex-col gap-4">
-          <VendorBreakdownCard />
-          <TopPerformingVendors />
+          <VendorBreakdownCard breakdown={dashboardSnapshot.vendorBreakdown} />
+          <TopPerformingVendors vendors={dashboardSnapshot.topPerformingVendors} />
         </div>
       </section>
 

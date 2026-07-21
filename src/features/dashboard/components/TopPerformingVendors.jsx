@@ -1,13 +1,12 @@
 import { Star } from "lucide-react";
-import { topPerformingVendors } from "../data/dashboardData.js";
 
-export default function TopPerformingVendors() {
+export default function TopPerformingVendors({ vendors = [] }) {
   return (
     <article className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)] mt-3">
       <h2 className="text-[18px] font-bold text-[#18120f] mb-4">Top Performing Vendors</h2>
 
       <div className="space-y-3">
-        {topPerformingVendors.map((vendor) => (
+        {vendors.map((vendor) => (
           <div
             key={vendor.id}
             className="flex items-center justify-between rounded-[10px] border border-[#f1e9e2] bg-[#fcfbfa] p-2.5 transition hover:border-[#cf6e38] cursor-pointer"

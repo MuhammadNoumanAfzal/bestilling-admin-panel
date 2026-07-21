@@ -34,7 +34,8 @@ const navigation = [
 const pageMeta = {
   "/dashboard": {
     title: "Dashboard",
-    subtitle: "A clean overview of admin activity, vendor movement, and platform health.",
+    subtitle:
+      "A clean overview of admin activity, vendor movement, and platform health.",
   },
   "/vendors": {
     title: "Vendors",
@@ -112,14 +113,16 @@ export default function AdminLayout() {
     if (location.pathname.startsWith("/support/")) {
       return {
         title: "Support Details",
-        subtitle: "Review the ticket conversation, user profile, and next actions.",
+        subtitle:
+          "Review the ticket conversation, user profile, and next actions.",
       };
     }
 
     if (location.pathname.startsWith("/delivery/")) {
       return {
         title: "Delivery Area Details",
-        subtitle: "Manage postal coverage, service controls, and local configuration.",
+        subtitle:
+          "Manage postal coverage, service controls, and local configuration.",
       };
     }
 
@@ -130,24 +133,35 @@ export default function AdminLayout() {
       };
     }
 
-    if (location.pathname.startsWith("/payouts/") && location.pathname !== "/payouts/commission-settings") {
+    if (
+      location.pathname.startsWith("/payouts/") &&
+      location.pathname !== "/payouts/commission-settings"
+    ) {
       return {
         title: "Payment Details",
         subtitle: "Track customer payment and vendor payout for this order.",
       };
     }
 
-    if (location.pathname.startsWith("/orders/") && location.pathname !== "/orders") {
+    if (
+      location.pathname.startsWith("/orders/") &&
+      location.pathname !== "/orders"
+    ) {
       return {
         title: "Order Details",
-        subtitle: "Review order details, items invoice, customer & vendor profiles.",
+        subtitle:
+          "Review order details, items invoice, customer & vendor profiles.",
       };
     }
 
-    if (location.pathname.startsWith("/customers/") && location.pathname !== "/customers") {
+    if (
+      location.pathname.startsWith("/customers/") &&
+      location.pathname !== "/customers"
+    ) {
       return {
         title: "Customer Details",
-        subtitle: "Review the customer profile, order history, ratings, and active interactions.",
+        subtitle:
+          "Review the customer profile, order history, ratings, and active interactions.",
       };
     }
 
@@ -197,7 +211,11 @@ export default function AdminLayout() {
       <div className="mx-auto min-h-screen max-w-[1440px] bg-[#f4f1ee] lg:grid lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="hidden bg-[linear-gradient(180deg,#cb6432_0%,#c55b2d_100%)] text-white lg:flex lg:flex-col">
           <div className="flex h-[84px] items-center justify-center border-b border-white/12 px-4">
-            <img className="h-10 w-auto max-w-[84px]" src="/logo2.webp" alt="Bestilling Admin" />
+            <img
+              className="h-10 w-auto max-w-[84px]"
+              src="/logo.png"
+              alt="Bestilling Admin"
+            />
           </div>
 
           <div className="flex-1 overflow-auto px-3 py-6 hide-scrollbar">
@@ -225,7 +243,11 @@ export default function AdminLayout() {
             <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-5">
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 <div className="flex items-center gap-2 lg:hidden">
-                  <img className="h-8 w-auto max-w-[72px]" src="/logo2.webp" alt="Bestilling Admin" />
+                  <img
+                    className="h-8 w-auto max-w-[72px]"
+                    src="/logo2.webp"
+                    alt="Bestilling Admin"
+                  />
                 </div>
                 <label className="relative w-full max-w-[460px]">
                   <input
@@ -253,7 +275,9 @@ export default function AdminLayout() {
                   <UserRound size={18} />
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-[12px] font-bold text-[#1f1711]">{user?.name || "Raja Haider"}</p>
+                  <p className="truncate text-[12px] font-bold text-[#1f1711]">
+                    {user?.name || "Raja Haider"}
+                  </p>
                   <p className="truncate text-[11px] text-[#7f746d]">Admin</p>
                 </div>
               </div>
@@ -282,7 +306,9 @@ export default function AdminLayout() {
                   className={({ isActive }) =>
                     [
                       "flex min-w-[84px] flex-1 flex-col items-center justify-center gap-1 rounded-[16px] px-3 py-2 text-[10px] font-semibold transition",
-                      isActive ? "bg-[#d96834] text-white" : "text-[#6f655e] hover:bg-[#faf4ee]",
+                      isActive
+                        ? "bg-[#d96834] text-white"
+                        : "text-[#6f655e] hover:bg-[#faf4ee]",
                     ].join(" ")
                   }
                   to={item.to}

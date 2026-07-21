@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MoreVertical, Check, X, ArrowUpRight } from "lucide-react";
 
@@ -13,6 +13,15 @@ export default function PendingVendorApprovalsTable({ approvals, onUpdateStatus 
   const navigate = useNavigate();
   const [selectedIds, setSelectedIds] = useState([]);
   const [activeMenuId, setActiveMenuId] = useState(null);
+
+  useEffect(() => {
+    setSelectedIds((current) =>
+      current.filter((id) => approvals.some((approval) => approval.id === id))
+    );
+    setActiveMenuId((current) =>
+      approvals.some((approval) => approval.id === current) ? current : null
+    );
+  }, [approvals]);
 
   // Toggle master checkbox
   const handleSelectAll = (e) => {
@@ -90,6 +99,17 @@ export default function PendingVendorApprovalsTable({ approvals, onUpdateStatus 
             </tr>
           </thead>
           <tbody>
+            {approvals.length === 0 ? (
+              <tr>
+                <td
+                  colSpan="7"
+                  className="px-4 py-10 text-center text-[14px] font-medium text-[#6f645d]"
+                >
+                  No vendor applications match the selected filter.
+                </td>
+              </tr>
+            ) : null}
+
             {approvals.map((app) => {
               const isSelected = selectedIds.includes(app.id);
               const isMenuOpen = activeMenuId === app.id;

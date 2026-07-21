@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Calendar, X } from "lucide-react";
+import { dashboardFilterOptions } from "../data/dashboardData.js";
 
 export default function DateFilterDropdown({
   selectedFilter,
@@ -13,6 +14,11 @@ export default function DateFilterDropdown({
   const [tempStart, setTempStart] = useState(startDate || "");
   const [tempEnd, setTempEnd] = useState(endDate || "");
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    setTempStart(startDate || "");
+    setTempEnd(endDate || "");
+  }, [startDate, endDate]);
 
   // Close when clicking outside
   useEffect(() => {
@@ -40,7 +46,7 @@ export default function DateFilterDropdown({
 
   const handleApplyCustomDate = (e) => {
     e.preventDefault();
-    if (tempStart && tempEnd) {
+    if (tempStart && tempEnd && tempStart <= tempEnd) {
       onCustomDateChange(tempStart, tempEnd);
       onChangeFilter("Custom Date");
       setIsOpen(false);
@@ -78,16 +84,6 @@ export default function DateFilterDropdown({
 
   const displayRange = getDateRangeDisplay();
 
-  const filterOptions = [
-    "Last 7 days",
-    "Last Month",
-    "Last 3 Months",
-    "Last 6 Months",
-    "This Year",
-    "Custom Date",
-    "Clear Filter",
-  ];
-
   return (
     <div className="relative inline-flex items-center gap-2 select-none" ref={dropdownRef}>
       {/* Date Range Pill Display */}
@@ -120,7 +116,7 @@ export default function DateFilterDropdown({
         <div className="absolute right-0 top-full z-40 mt-1.5 w-56 rounded-[12px] border border-[#d8ccc2] bg-white py-2 shadow-[0_8px_24px_rgba(53,34,20,0.12)]">
           {!showCustomFields ? (
             <div className="flex flex-col">
-              {filterOptions.map((opt) => {
+              {dashboardFilterOptions.map((opt) => {
                 if (opt === "Clear Filter") {
                   return (
                     <button
@@ -205,11 +201,18 @@ export default function DateFilterDropdown({
                 </button>
                 <button
                   type="submit"
+                  disabled={!tempStart || !tempEnd || tempStart > tempEnd}
                   className="flex-1 rounded-[6px] bg-[#d96834] py-1.5 text-[11px] font-bold text-white transition hover:bg-[#b75424] cursor-pointer"
                 >
                   Apply
                 </button>
               </div>
+
+              {tempStart && tempEnd && tempStart > tempEnd ? (
+                <p className="text-[11px] font-medium text-[#d83f3f]">
+                  End date must be the same as or after the start date.
+                </p>
+              ) : null}
             </form>
           )}
         </div>

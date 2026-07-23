@@ -9,6 +9,7 @@ import RegisterPage from "../../features/auth/pages/RegisterPage.jsx";
 import VerificationPage from "../../features/auth/pages/VerificationPage.jsx";
 import DashboardPage from "../../features/dashboard/pages/DashboardPage.jsx";
 import VendorsPage from "../../features/vendors/pages/VendorsPage.jsx";
+import VendorDetailPage from "../../features/vendors/pages/VendorDetailPage.jsx";
 import OrdersPage from "../../features/orders/pages/OrdersPage.jsx";
 import OrderDetailPage from "../../features/orders/pages/OrderDetailPage.jsx";
 import CustomersPage from "../../features/customers/pages/CustomersPage.jsx";
@@ -47,6 +48,7 @@ export default function AppRouter() {
           <Route element={<AdminLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/vendors" element={<VendorsPage />} />
+            <Route path="/vendors/:vendorId" element={<VendorDetailPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/orders/:orderId" element={<OrderDetailPage />} />
             <Route path="/customers" element={<CustomersPage />} />

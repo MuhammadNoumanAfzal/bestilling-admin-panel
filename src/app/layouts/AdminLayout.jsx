@@ -138,6 +138,17 @@ export default function AdminLayout() {
     }
 
     if (
+      location.pathname.startsWith("/vendors/") &&
+      location.pathname !== "/vendors"
+    ) {
+      return {
+        title: "Vendor Details",
+        subtitle:
+          "Review menus, documents, financials, and vendor operations in one place.",
+      };
+    }
+
+    if (
       location.pathname.startsWith("/orders/") &&
       location.pathname !== "/orders"
     ) {

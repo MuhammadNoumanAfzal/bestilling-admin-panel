@@ -1,0 +1,51 @@
+import {
+  CircleDollarSign,
+  Clock3,
+  Receipt,
+  ShoppingBag,
+  Store,
+  Users,
+} from "lucide-react";
+
+const accentClasses = {
+  soft: "bg-[#fff3ec] text-[#d46f3b]",
+  warm: "bg-[#fff1ea] text-[#d66a36]",
+  neutral: "bg-[#fff5ef] text-[#d97442]",
+};
+
+const statIcons = {
+  wallet: CircleDollarSign,
+  orders: ShoppingBag,
+  store: Store,
+  users: Users,
+  clock: Clock3,
+  receipt: Receipt,
+};
+
+export default function ReportsStatCard({ label, value, icon, accent = "soft" }) {
+  const Icon = statIcons[icon] || CircleDollarSign;
+
+  return (
+    <article className="flex min-h-[92px] rounded-[14px] border border-[#ece4de] bg-white px-4 py-3 shadow-[0_8px_18px_rgba(55,31,13,0.05)]">
+      <div className="space-y-2">
+        <span
+          className={[
+            "inline-flex h-7 w-7 items-center justify-center rounded-full",
+            accentClasses[accent] || accentClasses.soft,
+          ].join(" ")}
+        >
+          <Icon size={13} strokeWidth={2.2} />
+        </span>
+
+        <div className="space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.03em] text-[#8c7f76]">
+            {label}
+          </p>
+          <p className="break-words text-[15px] font-extrabold leading-[1.05] tracking-[-0.04em] text-[#1f1711] sm:text-[17px] xl:text-[18px]">
+            {value}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}

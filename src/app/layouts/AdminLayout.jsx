@@ -6,6 +6,7 @@ import {
   Grid2x2,
   LogOut,
   LifeBuoy,
+  FileText,
   Settings as SettingsIcon,
   Search,
   Truck,
@@ -16,6 +17,7 @@ import { useAuth } from "../../features/auth/hooks/useAuth.js";
 const navigation = [
   { label: "Dashboard", to: "/dashboard", icon: Grid2x2 },
   { label: "Delivery", to: "/delivery", icon: Truck },
+  { label: "Reports", to: "/reports", icon: FileText },
   { label: "Supports", to: "/support", icon: LifeBuoy },
   { label: "Notification", to: "/notifications", icon: Bell },
   { label: "Settings", to: "/settings", icon: SettingsIcon },

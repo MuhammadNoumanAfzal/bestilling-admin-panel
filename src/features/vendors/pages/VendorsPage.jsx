@@ -299,7 +299,7 @@ export default function VendorsPage() {
       <section className="grid gap-6 grid-cols-1 md:grid-cols-3">
         <TopPerformingVendorsCard />
         <RecentVendorRequestsCard />
-        <VendorStatusOverviewCard />
+        <VendorStatusOverviewCard vendors={processedVendors} />
       </section>
     </div>
   );

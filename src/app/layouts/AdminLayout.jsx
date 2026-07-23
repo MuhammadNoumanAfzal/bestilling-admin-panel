@@ -9,6 +9,7 @@ import {
   FileText,
   Settings as SettingsIcon,
   Search,
+  Store,
   Truck,
   UserRound,
 } from "lucide-react";
@@ -16,6 +17,7 @@ import { useAuth } from "../../features/auth/hooks/useAuth.js";
 
 const navigation = [
   { label: "Dashboard", to: "/dashboard", icon: Grid2x2 },
+  { label: "Vendors", to: "/vendors", icon: Store },
   { label: "Delivery", to: "/delivery", icon: Truck },
   { label: "Reports", to: "/reports", icon: FileText },
   { label: "Supports", to: "/support", icon: LifeBuoy },

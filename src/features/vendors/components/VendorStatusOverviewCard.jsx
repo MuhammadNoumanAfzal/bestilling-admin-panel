@@ -1,85 +1,78 @@
-export default function VendorStatusOverviewCard() {
-  const data = [
-    { label: "Active", count: 198, percentage: "77.3%", color: "#48c774" },
-    { label: "Pending", count: 28, percentage: "10.9%", color: "#ffb020" },
-    { label: "Suspended", count: 12, percentage: "4.7%", color: "#d0021b" },
-    { label: "Rejected", count: 18, percentage: "7.0%", color: "#d1d5db" },
-  ];
+const statusConfig = [
+  { key: "Active", label: "Active", color: "#59c779" },
+  { key: "Pending Approval", label: "Pending", color: "#f3b433" },
+  { key: "Suspended", label: "Suspended", color: "#d81616" },
+  { key: "Rejected", label: "Rejected", color: "#d7dde5" },
+];
 
-  // Donut chart stroke math
-  // Radius = 36, Circumference = 2 * PI * 36 = 226.19
-  const circumference = 226.19;
-  const slices = [
-    { pct: 0.773, color: "#48c774" },
-    { pct: 0.109, color: "#ffb020" },
-    { pct: 0.047, color: "#d0021b" },
-    { pct: 0.071, color: "#d1d5db" },
-  ];
+function buildDonutGradient(items) {
+  const total = items.reduce((sum, item) => sum + item.count, 0);
 
-  let accumulatedPercent = 0;
+  if (!total) {
+    return "conic-gradient(#edf0f4 0% 100%)";
+  }
+
+  let runningShare = 0;
+  const stops = items.map((item) => {
+    const start = runningShare;
+    runningShare += (item.count / total) * 100;
+    return `${item.color} ${start}% ${runningShare}%`;
+  });
+
+  return `conic-gradient(${stops.join(", ")})`;
+}
+
+export default function VendorStatusOverviewCard({ vendors = [] }) {
+  const totalVendors = vendors.length;
+  const overviewItems = statusConfig.map((status) => {
+    const count = vendors.filter((vendor) => vendor.status === status.key).length;
+    const percentage = totalVendors > 0 ? ((count / totalVendors) * 100).toFixed(1) : "0.0";
+
+    return {
+      ...status,
+      count,
+      percentage,
+    };
+  });
+
+  const donutBackground = buildDonutGradient(overviewItems);
 
   return (
-    <article className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)] h-full">
-      <h3 className="text-[18px] font-bold text-[#18120f] mb-6">Vendor Status Overview</h3>
+    <article className="self-start rounded-[14px] border border-[#ddd6cf] bg-white p-3.5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
+      <h3 className="mb-3 text-[16px] font-bold tracking-[-0.03em] text-[#18120f]">
+        Vendor Status Overview
+      </h3>
 
-      {/* Grid: Donut Left, Legend Right */}
-      <div className="flex flex-col sm:flex-row items-center gap-8 py-2">
-        
-        {/* SVG Donut */}
-        <div className="relative h-32 w-32 shrink-0">
-          <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-            {/* Background Track Circle */}
-            <circle
-              cx="50"
-              cy="50"
-              r="36"
-              fill="transparent"
-              stroke="#f3ede8"
-              strokeWidth="9"
-            />
-            {/* Slices */}
-            {slices.map((slice, idx) => {
-              // Subtract 3.5 pixels from each slice stroke length to create crisp gaps
-              const strokeLength = slice.pct * circumference - 3.5;
-              const strokeOffset = circumference - accumulatedPercent * circumference;
-              accumulatedPercent += slice.pct;
-
-              return (
-                <circle
-                  key={idx}
-                  cx="50"
-                  cy="50"
-                  r="36"
-                  fill="transparent"
-                  stroke={slice.color}
-                  strokeWidth="9"
-                  strokeDasharray={`${strokeLength} ${circumference}`}
-                  strokeDashoffset={strokeOffset}
-                  className="transition-all duration-500 ease-out"
-                />
-              );
-            })}
-          </svg>
-          {/* Centered Labels */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[18px] font-extrabold text-[#18120f] leading-none">256</span>
-            <span className="text-[9px] font-bold text-[#8c8077] uppercase tracking-wider mt-1.5">Total Vendors</span>
+      <div className="flex items-center gap-4">
+        <div className="relative h-[104px] w-[104px] shrink-0">
+          <div
+            className="h-full w-full rounded-full"
+            style={{ background: donutBackground }}
+          />
+          <div className="absolute inset-[14px] flex flex-col items-center justify-center rounded-full bg-white">
+            <span className="text-[22px] font-extrabold leading-none tracking-[-0.04em] text-[#17110d]">
+              {totalVendors}
+            </span>
+            <span className="mt-1 text-[9px] font-medium text-[#8c8077]">
+              Total Vendors
+            </span>
           </div>
         </div>
 
-        {/* Legend */}
-        <div className="flex-1 space-y-3.5 w-full">
-          {data.map((item, idx) => (
-            <div key={idx} className="flex items-start gap-2.5">
+        <div className="min-w-0 flex-1 space-y-2.5">
+          {overviewItems.map((item) => (
+            <div key={item.key} className="flex items-start gap-2.5">
               <span
-                className="h-2.5 w-2.5 rounded-full shrink-0 mt-1"
+                className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: item.color }}
               />
-              <div className="flex flex-col min-w-0">
-                <span className="text-[13px] font-bold text-[#1f1711] leading-none">{item.label}</span>
-                <span className="text-[11px] font-semibold text-[#8c8077] mt-1 leading-none">
-                  {item.count} ({item.percentage})
-                </span>
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold leading-none text-[#1f1711]">
+                  {item.label}
+                </p>
+                <p className="mt-1 text-[10px] font-medium leading-none text-[#8c8077]">
+                  {item.count} ({item.percentage}%)
+                </p>
               </div>
             </div>
           ))}

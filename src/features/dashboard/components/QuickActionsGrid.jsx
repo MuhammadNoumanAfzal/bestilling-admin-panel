@@ -8,7 +8,7 @@ import {
   Settings,
 } from "lucide-react";
 
-const disabledPaths = new Set(["/vendors", "/orders", "/payouts"]);
+const disabledPaths = new Set(["/orders", "/payouts"]);
 
 export default function QuickActionsGrid() {
   const navigate = useNavigate();

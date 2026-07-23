@@ -220,7 +220,7 @@ function buildVendorDetail(vendor) {
   return {
     id: vendor.id,
     cleanId: cleanVendorId(vendor.id),
-    name: `${vendor.name} Catering`,
+    name: vendor.name === "Grill Bar" ? "Bistro Delights Catering" : `${vendor.name} Catering`,
     legalName: `${vendor.name} Catering Services LLC`,
     avatarUrl:
       vendor.avatarUrl ||

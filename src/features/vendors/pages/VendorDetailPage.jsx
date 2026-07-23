@@ -17,7 +17,7 @@ export default function VendorDetailPage() {
   const vendor = useMemo(() => getVendorDetail(vendorId), [vendorId]);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6">
+    <div className="mx-auto max-w-7xl space-y-4 sm:space-y-5">
       <VendorDetailHeader vendor={vendor} />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">

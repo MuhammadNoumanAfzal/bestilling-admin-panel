@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import CategoryPerformanceCard from "../components/CategoryPerformanceCard.jsx";
 import CustomerAnalyticsCard from "../components/CustomerAnalyticsCard.jsx";
 import OperationalHealthCard from "../components/OperationalHealthCard.jsx";
@@ -10,29 +11,46 @@ import {
   categoryPerformance,
   customerAnalyticsStats,
   customerSatisfaction,
+  getReportSnapshot,
   operationalHealth,
-  orderAnalytics,
   reportFilterOptions,
-  reportsSummary,
-  revenueAnalytics,
   topVendors,
   vendorRegistration,
 } from "../data/reportsData.js";
 
 export default function ReportsPage() {
+  const [selectedFilter, setSelectedFilter] = useState("Last 7 days");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+
+  const reportSnapshot = useMemo(
+    () => getReportSnapshot(selectedFilter, customStartDate, customEndDate),
+    [customEndDate, customStartDate, selectedFilter],
+  );
+
   return (
     <div className="space-y-4">
-      <ReportsHeader filterLabel={reportFilterOptions[0]} />
+      <ReportsHeader
+        endDate={customEndDate}
+        filterLabel={selectedFilter}
+        filterOptions={reportFilterOptions}
+        onChangeFilter={setSelectedFilter}
+        onCustomDateChange={(startDate, endDate) => {
+          setCustomStartDate(startDate);
+          setCustomEndDate(endDate);
+        }}
+        startDate={customStartDate}
+      />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-        {reportsSummary.map((item) => (
+        {reportSnapshot.summary.map((item) => (
           <ReportsStatCard key={item.id} {...item} />
         ))}
       </section>
 
       <section className="grid items-stretch gap-3 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
-        <RevenueAnalyticsCard analytics={revenueAnalytics} />
-        <OrderAnalyticsCard analytics={orderAnalytics} />
+        <RevenueAnalyticsCard analytics={reportSnapshot.revenueAnalytics} />
+        <OrderAnalyticsCard analytics={reportSnapshot.orderAnalytics} />
       </section>
 
       <section className="grid items-stretch gap-4 xl:grid-cols-2">

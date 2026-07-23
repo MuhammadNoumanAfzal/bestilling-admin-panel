@@ -1,6 +1,14 @@
 import { Download } from "lucide-react";
+import ReportsFilterDropdown from "./ReportsFilterDropdown.jsx";
 
-export default function ReportsHeader({ filterLabel }) {
+export default function ReportsHeader({
+  filterLabel,
+  filterOptions,
+  onChangeFilter,
+  onCustomDateChange,
+  startDate,
+  endDate,
+}) {
   return (
     <section className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
       <div className="space-y-1.5">
@@ -21,12 +29,14 @@ export default function ReportsHeader({ filterLabel }) {
           <span>Export Report</span>
         </button>
 
-        <button
-          className="rounded-full border border-[#dbd0c7] bg-white px-3 py-2 text-[11px] font-semibold text-[#4c4139] transition hover:border-[#d1c2b6] hover:bg-[#faf7f5]"
-          type="button"
-        >
-          {filterLabel}
-        </button>
+        <ReportsFilterDropdown
+          endDate={endDate}
+          onChangeFilter={onChangeFilter}
+          onCustomDateChange={onCustomDateChange}
+          options={filterOptions}
+          selectedFilter={filterLabel}
+          startDate={startDate}
+        />
       </div>
     </section>
   );

@@ -1,6 +1,8 @@
-import { topPerformingVendors } from "../data/vendorsData.js";
+export default function TopPerformingVendorsCard({ vendors = [] }) {
+  const topPerformingVendors = [...vendors]
+    .sort((left, right) => right.revenueValue - left.revenueValue)
+    .slice(0, 5);
 
-export default function TopPerformingVendorsCard() {
   return (
     <article className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)] flex flex-col justify-between h-full">
       <div>
@@ -8,35 +10,40 @@ export default function TopPerformingVendorsCard() {
           <h3 className="text-[18px] font-bold text-[#18120f]">Top Performing Vendors</h3>
         </header>
 
-        {/* Top 5 list */}
-        <div className="space-y-4">
-          {topPerformingVendors.map((vendor, idx) => (
-            <div key={idx} className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="text-[14px] font-bold text-[#cf6432] w-4 shrink-0">
-                  {idx + 1}
-                </span>
-                {vendor.avatarUrl ? (
-                  <img
-                    src={vendor.avatarUrl}
-                    alt={vendor.name}
-                    className="h-9 w-9 rounded-full object-cover border border-[#eee4dd] shrink-0"
-                  />
-                ) : (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f6eee8] text-[11px] font-bold text-[#2f241d] shrink-0">
-                    {vendor.avatar}
-                  </div>
-                )}
-                <span className="truncate text-[14px] font-bold text-[#18120f]">
-                  {vendor.name}
+        {topPerformingVendors.length > 0 ? (
+          <div className="space-y-4">
+            {topPerformingVendors.map((vendor, idx) => (
+              <div key={vendor.id} className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-[14px] font-bold text-[#cf6432] w-4 shrink-0">
+                    {idx + 1}
+                  </span>
+                  {vendor.avatarUrl ? (
+                    <img
+                      src={vendor.avatarUrl}
+                      alt={vendor.name}
+                      className="h-9 w-9 rounded-full object-cover border border-[#eee4dd] shrink-0"
+                    />
+                  ) : (
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f6eee8] text-[11px] font-bold text-[#2f241d] shrink-0">
+                      {vendor.avatar}
+                    </div>
+                  )}
+                  <span className="truncate text-[14px] font-bold text-[#18120f]">
+                    {vendor.name}
+                  </span>
+                </div>
+                <span className="text-[14px] font-bold text-[#18120f] shrink-0">
+                  {vendor.revenue}
                 </span>
               </div>
-              <span className="text-[14px] font-bold text-[#18120f] shrink-0">
-                {vendor.revenue}
-              </span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="py-8 text-center text-[14px] font-medium text-[#6f645d]">
+            No vendors match the current filters.
+          </p>
+        )}
       </div>
 
       <button

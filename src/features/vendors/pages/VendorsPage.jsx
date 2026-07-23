@@ -151,6 +151,20 @@ export default function VendorsPage() {
     vendorFilter,
   ]);
 
+  const topVendors = useMemo(
+    () => [...processedVendors].sort((left, right) => right.revenueValue - left.revenueValue).slice(0, 5),
+    [processedVendors],
+  );
+
+  const recentVendorRequests = useMemo(
+    () =>
+      processedVendors
+        .filter((vendor) => vendor.status === "Pending Approval")
+        .sort((left, right) => new Date(right.joinDateValue) - new Date(left.joinDateValue))
+        .slice(0, 5),
+    [processedVendors],
+  );
+
   // Paginated list
   const paginatedVendors = useMemo(() => {
     const startIdx = (currentPage - 1) * pageSize;
@@ -229,6 +243,24 @@ export default function VendorsPage() {
     setCurrentPage(1);
   };
 
+  const handleHeaderFilterChange = (value) => {
+    setTimeframe(value);
+    setCurrentPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setVendorFilter("");
+    setCityFilter("");
+    setRatingFilter("");
+    setTimeframeFilter("");
+    setActiveTab("All");
+    setTimeframe("Last 7 days");
+    setCustomStart("");
+    setCustomEnd("");
+    setCurrentPage(1);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header section */}
@@ -245,7 +277,7 @@ export default function VendorsPage() {
         <div>
           <DateFilterDropdown
             selectedFilter={timeframe}
-            onChangeFilter={setTimeframe}
+            onChangeFilter={handleHeaderFilterChange}
             startDate={customStart}
             endDate={customEnd}
             onCustomDateChange={handleCustomDateChange}
@@ -280,6 +312,7 @@ export default function VendorsPage() {
           onTimeframeFilterChange={handleTimeframeFilterChange}
           activeTab={activeTab}
           onTabChange={handleTabChange}
+          onResetFilters={handleResetFilters}
           vendors={vendorNames}
           cities={cities}
         />
@@ -297,8 +330,8 @@ export default function VendorsPage() {
 
       {/* 3 Columns Footer grid */}
       <section className="grid gap-6 grid-cols-1 md:grid-cols-3">
-        <TopPerformingVendorsCard />
-        <RecentVendorRequestsCard />
+        <TopPerformingVendorsCard vendors={topVendors} />
+        <RecentVendorRequestsCard vendors={recentVendorRequests} />
         <VendorStatusOverviewCard vendors={processedVendors} />
       </section>
     </div>

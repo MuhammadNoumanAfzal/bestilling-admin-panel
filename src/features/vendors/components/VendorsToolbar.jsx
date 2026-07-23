@@ -14,6 +14,7 @@ export default function VendorsToolbar({
   onTimeframeFilterChange,
   activeTab,
   onTabChange,
+  onResetFilters,
   vendors,
   cities,
 }) {
@@ -249,6 +250,14 @@ export default function VendorsToolbar({
               </div>
             )}
           </div>
+
+          <button
+            className="inline-flex h-9 items-center justify-center rounded-[8px] border border-[#ead7ca] bg-[#fff8f4] px-3 text-[12px] font-semibold text-[#cf6e38] transition hover:bg-[#fff1e8]"
+            onClick={onResetFilters}
+            type="button"
+          >
+            Clear Filters
+          </button>
         </div>
       </div>
 

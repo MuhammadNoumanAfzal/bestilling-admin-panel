@@ -274,8 +274,9 @@ function buildVendorDetail(vendor) {
       ],
       pendingPayout: "$4,850.00",
       payoutStatus: "Awaiting Admin Transfer",
-      estimatedPayout: "Sep 09, 2025",
-      lastPayout: "Sep 26, 2025",
+      estimatedPayout: "Oct 25, 2023",
+      lastPayout: "Sep 28, 2023",
+      payoutNote: "Payments are processed manually by GoCatering Admin",
       breakdown: [
         { label: "Gross Revenue", value: "$24,500.00", tone: "neutral" },
         { label: "Platform Commission", value: "- $2,450.00", tone: "negative" },

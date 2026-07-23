@@ -1,3 +1,5 @@
+import { BadgeDollarSign, CalendarDays, CircleAlert } from "lucide-react";
+
 function RevenueChart({ series }) {
   const maxValue = Math.max(...series.map((item) => item.value), 1);
   const chartHeight = 180;
@@ -72,17 +74,20 @@ export default function VendorFinancialPerformanceSection({ financial }) {
     <section className="space-y-4">
       <div className="flex items-center gap-2 px-1">
         <span className="h-5 w-[3px] rounded-full bg-[#d96834]" />
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded-[8px] bg-[#fff2ea] text-[#d96834] shadow-sm">
+          <BadgeDollarSign size={12} />
+        </span>
         <h2 className="text-[18px] font-extrabold tracking-tight text-[#18120f]">
           Financial Performance
         </h2>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,1fr)]">
-        <article className="rounded-[16px] border border-[#ddd6cf] bg-white p-5 shadow-[0_8px_20px_rgba(53,34,20,0.04)]">
+        <article className="rounded-[16px] border border-[#d6cbc2] bg-white p-5 shadow-[0_8px_20px_rgba(53,34,20,0.04)]">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-[18px] font-extrabold text-[#18120f]">{financial.chartTitle}</h3>
-              <p className="text-[12px] text-[#8a7f76]">{financial.chartSubtitle}</p>
+              <h3 className="text-[20px] font-extrabold tracking-[-0.04em] text-[#18120f]">{financial.chartTitle}</h3>
+              <p className="text-[12px] font-medium text-[#8a7f76]">{financial.chartSubtitle}</p>
             </div>
             <span className="rounded-full border border-[#e4d7ce] bg-white px-3 py-1.5 text-[10px] font-semibold text-[#5f534b]">
               {financial.filterLabel}
@@ -92,32 +97,50 @@ export default function VendorFinancialPerformanceSection({ financial }) {
         </article>
 
         <div className="space-y-4">
-          <article className="rounded-[16px] border border-[#ddd6cf] bg-white p-5 shadow-[0_8px_20px_rgba(53,34,20,0.04)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8c8077]">Pending Payout</p>
-            <p className="mt-2 text-[30px] font-extrabold leading-none tracking-[-0.04em] text-[#18120f]">
+          <article className="overflow-hidden rounded-[16px] border border-[#d6cbc2] bg-white shadow-[0_8px_20px_rgba(53,34,20,0.04)]">
+            <div className="p-5">
+              <p className="text-[12px] font-medium uppercase tracking-[0.03em] text-[#8c8077]">Pending Payout</p>
+              <p className="mt-1.5 text-[18px] font-extrabold leading-none tracking-[-0.04em] text-[#18120f]">
               {financial.pendingPayout}
-            </p>
-            <span className="mt-2 inline-flex rounded-full bg-[#fff0e7] px-2.5 py-1 text-[10px] font-bold text-[#cf6e38]">
+              </p>
+              <span className="mt-2 inline-flex rounded-full border border-[#f2c8b4] bg-[#fff4ec] px-2.5 py-1 text-[10px] font-bold text-[#cf6e38]">
               {financial.payoutStatus}
-            </span>
+              </span>
+            </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.04em] text-[#8c8077]">Est. Payout</p>
-                <p className="mt-1 text-[12px] font-bold text-[#1f1711]">{financial.estimatedPayout}</p>
+            <div className="grid gap-0 border-t border-[#ddd6cf] sm:grid-cols-2">
+              <div className="px-5 py-4 sm:border-r sm:border-[#ddd6cf]">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.04em] text-[#8c8077]">Est. Payout</p>
+                <p className="mt-1 flex items-center gap-1.5 text-[12px] font-bold text-[#1f1711]">
+                  <CalendarDays size={12} className="text-[#6f645d]" />
+                  {financial.estimatedPayout}
+                </p>
               </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.04em] text-[#8c8077]">Last Payout</p>
-                <p className="mt-1 text-[12px] font-bold text-[#1f1711]">{financial.lastPayout}</p>
+              <div className="px-5 py-4">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.04em] text-[#8c8077]">Last Payout</p>
+                <p className="mt-1 flex items-center gap-1.5 text-[12px] font-bold text-[#1f1711]">
+                  <CalendarDays size={12} className="text-[#6f645d]" />
+                  {financial.lastPayout}
+                </p>
               </div>
+            </div>
+
+            <div className="border-t border-[#ddd6cf] px-5 py-3">
+              <p className="flex items-center gap-2 text-[10px] font-medium text-[#5f534b]">
+                <CircleAlert size={12} className="text-[#1f1711]" />
+                {financial.payoutNote}
+              </p>
             </div>
           </article>
 
-          <article className="rounded-[16px] border border-[#ddd6cf] bg-white p-5 shadow-[0_8px_20px_rgba(53,34,20,0.04)]">
-            <h3 className="text-[16px] font-extrabold text-[#18120f]">Financial Breakdown</h3>
-            <div className="mt-4 space-y-3">
-              {financial.breakdown.map((item) => (
-                <div key={item.label} className="flex items-center justify-between gap-4">
+          <article className="overflow-hidden rounded-[16px] border border-[#d6cbc2] bg-white shadow-[0_8px_20px_rgba(53,34,20,0.04)]">
+            <div className="p-5">
+              <h3 className="text-[16px] font-medium text-[#5f534b]">Financial Breakdown</h3>
+              <div className="mt-4 space-y-3">
+                {financial.breakdown
+                  .filter((item) => item.label !== "Net Earnings")
+                  .map((item) => (
+                    <div key={item.label} className="flex items-center justify-between gap-4">
                   <span className="text-[12px] font-medium text-[#8a7f76]">{item.label}</span>
                   <span
                     className={[
@@ -131,9 +154,22 @@ export default function VendorFinancialPerformanceSection({ financial }) {
                   >
                     {item.value}
                   </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {financial.breakdown
+              .filter((item) => item.label === "Net Earnings")
+              .map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between gap-4 border-t border-[#ddd6cf] px-5 py-4"
+                >
+                  <span className="text-[13px] font-bold text-[#18120f]">{item.label}</span>
+                  <span className="text-[13px] font-extrabold text-[#57b332]">{item.value}</span>
                 </div>
               ))}
-            </div>
           </article>
         </div>
       </div>

@@ -10,7 +10,22 @@ export default function ReportsBarChart({
   const chartWidth = Math.max(bars.length * 44, 280);
   const barWidth = Math.min(28, Math.max(18, Math.floor(chartWidth / (bars.length * 2.2))));
   const stepX = chartWidth / bars.length;
-  const barRadius = 10;
+
+  function buildBarPath(x, y, width, height, radius) {
+    const safeRadius = Math.min(radius, width / 2, height);
+    const right = x + width;
+    const bottom = y + height;
+
+    return [
+      `M ${x} ${bottom}`,
+      `L ${x} ${y + safeRadius}`,
+      `Q ${x} ${y} ${x + safeRadius} ${y}`,
+      `L ${right - safeRadius} ${y}`,
+      `Q ${right} ${y} ${right} ${y + safeRadius}`,
+      `L ${right} ${bottom}`,
+      "Z",
+    ].join(" ");
+  }
 
   return (
     <div className={["h-[220px] min-w-0", className].join(" ")}>
@@ -53,17 +68,13 @@ export default function ReportsBarChart({
                 const barHeight = Math.max((bar.value / maxValue) * (chartHeight - 8), 16);
                 const x = stepX * index + (stepX - barWidth) / 2;
                 const y = chartHeight - barHeight;
+                const path = buildBarPath(x, y, barWidth, barHeight, 10);
 
                 return (
-                  <rect
+                  <path
                     key={bar.label}
+                    d={path}
                     fill="#d46a37"
-                    height={barHeight}
-                    rx={barRadius}
-                    ry={barRadius}
-                    width={barWidth}
-                    x={x}
-                    y={y}
                   />
                 );
               })}

@@ -18,7 +18,6 @@ import {
   initialOrders,
 } from "../data/ordersData.js";
 
-// Map metrics to Lucide Icons
 const iconMap = {
   total: ShoppingBag,
   new: PlusCircle,
@@ -92,7 +91,6 @@ export default function OrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
-  // Reset all filters
   const handleResetFilters = () => {
     setSearchTerm("");
     setVendorFilter("");
@@ -104,7 +102,6 @@ export default function OrdersPage() {
     setCurrentPage(1);
   };
 
-  // Safe handlers that also reset pagination
   const handleSearchChange = (val) => {
     setSearchTerm(val);
     setCurrentPage(1);
@@ -136,7 +133,6 @@ export default function OrdersPage() {
     setCurrentPage(1);
   };
 
-  // Extract unique filters from base dataset
   const vendors = useMemo(() => {
     const set = new Set(initialOrders.map((o) => o.vendor));
     return Array.from(set);
@@ -147,12 +143,10 @@ export default function OrdersPage() {
     return Array.from(set);
   }, []);
 
-  // Filter logic
   const filteredOrders = useMemo(() => {
     const { start, end } = getDateRange(timeframe, customStart, customEnd);
 
     return initialOrders.filter((order) => {
-      // Search check
       if (searchTerm) {
         const s = searchTerm.toLowerCase();
         const matches =
@@ -163,13 +157,10 @@ export default function OrdersPage() {
         if (!matches) return false;
       }
 
-      // Vendor check
       if (vendorFilter && order.vendor !== vendorFilter) return false;
 
-      // Status check
       if (statusFilter && order.status !== statusFilter) return false;
 
-      // Payment Status check
       if (paymentFilter && order.paymentStatus !== paymentFilter) return false;
 
       const orderDate = parseOrderDate(order.dateTime);
@@ -189,7 +180,6 @@ export default function OrdersPage() {
     customEnd,
   ]);
 
-  // Pagination slice
   const paginatedOrders = useMemo(() => {
     const startIdx = (currentPage - 1) * pageSize;
     return filteredOrders.slice(startIdx, startIdx + pageSize);
@@ -245,7 +235,6 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      {/* Top Header & Subtitle */}
       <section className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div className="space-y-1">
           <h1 className="text-[28px] font-bold tracking-[-0.04em] text-[#18120f] sm:text-[40px]">
@@ -267,7 +256,6 @@ export default function OrdersPage() {
         </div>
       </section>
 
-      {/* 6 Grid Stats Overview */}
       <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
         {orderStats.map((stat) => (
           <StatCard
@@ -280,7 +268,6 @@ export default function OrdersPage() {
         ))}
       </section>
 
-      {/* Toolbar and Orders Table Card */}
       <section className="rounded-[14px] border border-[#ddd6cf] bg-white shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
         <OrdersToolbar
           searchTerm={searchTerm}
@@ -313,7 +300,6 @@ export default function OrdersPage() {
         </div>
       </section>
 
-      {/* Top Catering Categories */}
       <section className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2">
           <TopCateringCategoriesChart />

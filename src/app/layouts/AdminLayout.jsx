@@ -4,20 +4,28 @@ import Swal from "sweetalert2";
 import {
   Bell,
   Grid2x2,
+  HandCoins,
   LogOut,
   LifeBuoy,
   FileText,
+  ShoppingBag,
   Settings as SettingsIcon,
   Search,
   Store,
   Truck,
   UserRound,
+  Users,
+  Wallet,
 } from "lucide-react";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
 
 const navigation = [
   { label: "Dashboard", to: "/dashboard", icon: Grid2x2 },
   { label: "Vendors", to: "/vendors", icon: Store },
+  { label: "Orders", to: "/orders", icon: ShoppingBag },
+  { label: "Customers", to: "/customers", icon: Users },
+  { label: "Payments", to: "/payouts", icon: Wallet },
+  { label: "Commission", to: "/payouts/commission-settings", icon: HandCoins },
   { label: "Delivery", to: "/delivery", icon: Truck },
   { label: "Reports", to: "/reports", icon: FileText },
   { label: "Supports", to: "/support", icon: LifeBuoy },

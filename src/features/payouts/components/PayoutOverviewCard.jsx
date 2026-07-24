@@ -18,21 +18,25 @@ export default function PayoutOverviewCard({ id, label, value, accent = "soft" }
   const Icon = summaryIcons[id] || CircleDollarSign;
 
   return (
-    <article className="rounded-[14px] border border-[#ece4de] bg-white px-4 py-4 shadow-[0_8px_20px_rgba(55,31,13,0.07)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(55,31,13,0.09)]">
-      <div className="space-y-4">
+    <article className="flex min-h-[92px] rounded-[14px] border border-[#ece4de] bg-white px-4 py-3 shadow-[0_8px_18px_rgba(55,31,13,0.05)]">
+      <div className="space-y-2">
         <div className="flex items-center gap-3">
           <span
             className={[
-              "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+              "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
               accentClasses[accent] || accentClasses.soft,
             ].join(" ")}
           >
-            <Icon size={17} strokeWidth={2.2} />
+            <Icon size={13} strokeWidth={2.2} />
           </span>
-          <p className="text-[13px] font-bold leading-5 text-[#4d423b]">{label}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.03em] text-[#8c7f76]">
+            {label}
+          </p>
         </div>
 
-        <p className="text-[28px] font-extrabold leading-[1.05] tracking-[-0.035em] text-[#221914]">{value}</p>
+        <p className="break-words text-[15px] font-extrabold leading-[1.05] tracking-[-0.04em] text-[#1f1711] sm:text-[17px] xl:text-[18px]">
+          {value}
+        </p>
       </div>
     </article>
   );

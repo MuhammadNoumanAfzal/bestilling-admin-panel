@@ -27,6 +27,11 @@ function PersonCell({ name, src, subtitle, avatar }) {
   );
 }
 
+function getVendorNavigationPath(row) {
+  const cleanId = encodeURIComponent(row.id.replace("#", ""));
+  return row.status === "Pending Approval" ? `/vendors/${cleanId}/review` : `/vendors/${cleanId}`;
+}
+
 export default function VendorsTable({
   vendors,
   currentPage,
@@ -132,7 +137,7 @@ export default function VendorsTable({
                     <td className="px-2 py-4 align-middle">
                       <button
                         className="w-full text-left"
-                        onClick={() => navigate(`/vendors/${encodeURIComponent(row.id.replace("#", ""))}`)}
+                        onClick={() => navigate(getVendorNavigationPath(row))}
                         type="button"
                       >
                         <PersonCell
@@ -165,13 +170,15 @@ export default function VendorsTable({
                       {row.joinDate}
                     </td>
                     <td className="px-2 py-4 align-middle">
-                      <span
+                      <button
                         className={`inline-flex min-w-[100px] justify-center rounded-full px-2.5 py-1 text-[11px] font-bold leading-none ${
                           statusClasses[row.status] || "bg-[#fcfbfa] text-[#6f655e]"
                         }`}
+                        onClick={() => navigate(getVendorNavigationPath(row))}
+                        type="button"
                       >
                         {row.status}
-                      </span>
+                      </button>
                     </td>
                     <td className="relative px-2 py-4 text-center align-middle">
                       <button
@@ -188,13 +195,13 @@ export default function VendorsTable({
                           <div className="absolute right-4 top-10 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
                             <button
                               onClick={() => {
-                                navigate(`/vendors/${encodeURIComponent(row.id.replace("#", ""))}`);
+                                navigate(getVendorNavigationPath(row));
                                 setActiveMenuId(null);
                               }}
                               className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
                               type="button"
                             >
-                              View Details
+                              {row.status === "Pending Approval" ? "Review Application" : "View Details"}
                             </button>
                             <button
                               onClick={() => {

@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 function getRelativeTimeLabel(dateValue) {
   const joinedDate = new Date(`${dateValue}T00:00:00`);
   const now = new Date("2026-07-23T00:00:00");
@@ -20,6 +22,7 @@ function getRelativeTimeLabel(dateValue) {
 }
 
 export default function RecentVendorRequestsCard({ vendors = [] }) {
+  const navigate = useNavigate();
   const recentVendorRequests = vendors
     .filter((vendor) => vendor.status === "Pending Approval")
     .sort((left, right) => new Date(right.joinDateValue) - new Date(left.joinDateValue))
@@ -40,7 +43,12 @@ export default function RecentVendorRequestsCard({ vendors = [] }) {
         {recentVendorRequests.length > 0 ? (
           <div className="space-y-4">
             {recentVendorRequests.map((req) => (
-              <div key={req.id} className="flex items-center justify-between gap-3">
+              <button
+                key={req.id}
+                className="flex w-full items-center justify-between gap-3 text-left"
+                onClick={() => navigate(`/vendors/${encodeURIComponent(req.id.replace("#", ""))}/review`)}
+                type="button"
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   {req.avatarUrl ? (
                     <img
@@ -65,7 +73,7 @@ export default function RecentVendorRequestsCard({ vendors = [] }) {
                     {req.status}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         ) : (
@@ -76,7 +84,7 @@ export default function RecentVendorRequestsCard({ vendors = [] }) {
       </div>
 
       <button
-        onClick={() => alert("Redirecting to vendor onboarding requests page")}
+        onClick={() => navigate("/vendors?tab=Pending%20Approval")}
         className="mt-6 w-full text-center text-[12px] font-bold text-[#cf6e38] hover:underline cursor-pointer flex items-center justify-center gap-1 outline-none"
         type="button"
       >

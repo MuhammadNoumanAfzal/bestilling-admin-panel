@@ -147,6 +147,17 @@ export default function AdminLayout() {
 
     if (
       location.pathname.startsWith("/vendors/") &&
+      location.pathname.endsWith("/review")
+    ) {
+      return {
+        title: "Vendor Application Review",
+        subtitle:
+          "Review submitted documents, storefront details, and operational readiness before approval.",
+      };
+    }
+
+    if (
+      location.pathname.startsWith("/vendors/") &&
       location.pathname !== "/vendors"
     ) {
       return {

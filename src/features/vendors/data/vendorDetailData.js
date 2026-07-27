@@ -182,6 +182,88 @@ function buildReviewEntries() {
   ];
 }
 
+function buildApplicationDocuments() {
+  return [
+    {
+      id: "doc-1",
+      title: "Business Registration",
+      subtitle: "Uploaded on Oct 12, 2022",
+      status: "Verified",
+    },
+    {
+      id: "doc-2",
+      title: "Food Safety License",
+      subtitle: "Uploaded on Jan 05, 2024",
+      status: "Verified",
+    },
+    {
+      id: "doc-3",
+      title: "VAT/Tax ID",
+      subtitle: "Uploaded on Oct 12, 2022",
+      status: "Verified",
+    },
+    {
+      id: "doc-4",
+      title: "Liability Insurance",
+      subtitle: "Uploaded on Jun 18, 2024",
+      status: "Pending",
+    },
+  ];
+}
+
+function buildApplicationMenus() {
+  return [
+    {
+      id: "submitted-menu-1",
+      title: "Grand Wedding Banquet",
+      description:
+        "A luxurious 7-course dining experience featuring prime rib, lobster, and live action dessert station.",
+      servings: "Min. 50 guests",
+      notice: "11 items included",
+      price: "$65 per person",
+      badge: "Signature",
+      imageUrl:
+        "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=80",
+    },
+    {
+      id: "submitted-menu-2",
+      title: "Corporate Power Lunch",
+      description:
+        "Fresh seasonal assortment, gourmet wraps, grilled salmon, and artisan dessert platter designed for efficiency.",
+      servings: "Min. 40 guests",
+      notice: "17 items included",
+      price: "$50 per person",
+      badge: "Popular",
+      imageUrl:
+        "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80",
+    },
+    {
+      id: "submitted-menu-3",
+      title: "Backyard Summer BBQ",
+      description:
+        "Slow-marinated meats, side grazing table, chef-led grill line, and house-made sauces for casual gatherings.",
+      servings: "Min. 45 guests",
+      notice: "16 items included",
+      price: "$250 per person",
+      badge: "New",
+      imageUrl:
+        "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=800&q=80",
+    },
+    {
+      id: "submitted-menu-4",
+      title: "Corporate Power Lunch",
+      description:
+        "Fresh seasonal assortment, gourmet wraps, grilled salmon, and artisan dessert platter designed for efficiency.",
+      servings: "Min. 40 guests",
+      notice: "17 items included",
+      price: "$50 per person",
+      badge: "Signature",
+      imageUrl:
+        "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80",
+    },
+  ];
+}
+
 function buildDocuments() {
   return [
     {
@@ -326,4 +408,75 @@ export function getVendorDetail(vendorId) {
     ) || initialVendors[0];
 
   return buildVendorDetail(match);
+}
+
+export function getVendorApplicationReview(vendorId) {
+  const vendor = getVendorDetail(vendorId);
+  const checklist = [
+    { label: "Verify Business Registration Number matches public records", complete: true },
+    { label: "Confirm Food Safety License is currently valid", complete: true },
+    { label: "Cross-reference VAT Number with tax authorities", complete: true },
+    { label: "Review Identity Document (Passport/ID) of the Owner", complete: true },
+    { label: "Validate Insurance Certificate coverage and expiry", complete: true },
+    { label: "Check operating hours consistency with delivery zones", complete: true },
+    { label: "Audit store description and tags for compliance", complete: false },
+  ];
+  const completed = checklist.filter((item) => item.complete).length;
+
+  return {
+    id: "VND-82910",
+    name: "Bistro Delights Catering",
+    logoUrl:
+      "https://images.unsplash.com/photo-1528605105345-5344ea20e269?auto=format&fit=crop&w=240&q=80",
+    owner: "Sara Jenkins (Owner)",
+    submittedDate: "Oct 24, 2024",
+    location: "Oslo, Norway",
+    applicationStatus: "Pending Approval",
+    businessSummary: [
+      [
+        { label: "Business Name", value: "Bistro Delights Catering Services LLC" },
+        { label: "Legal Structure", value: "Limited Liability Company (LLC)" },
+        { label: "Organization Number", value: "992-881-203-9" },
+        { label: "VAT Number", value: "GB 221 8891 00" },
+      ],
+      [
+        { label: "Owner Name", value: "Sara Jenkins" },
+        { label: "Contact Email", value: "contact@bistrodelights.com" },
+        { label: "Business Address", value: "842 Industrial Way, Ste 200, Austin, TX 78701" },
+        { label: "Phone Number", value: "+1 (512) 555-0192" },
+      ],
+    ],
+    description:
+      "The Artisan Hearth is a family-owned destination specializing in sourdough fermentation and traditional hearth-baked breads. Our bistro menu focuses on seasonal ingredients sourced from local farms in Kent. We offer a curated selection of artisanal pastries, wood fired pizzas, and Mediterranean-inspired small plates designed for communal dining.",
+    tags: ["Italian Cuisine", "Bakery & Pastry", "Organic Ingredients", "Farm-to-Table"],
+    operations: [
+      { label: "Delivery Radius", value: "15 Miles" },
+      { label: "Prep Time", value: "48 Hours" },
+    ],
+    operatingDays: [
+      { label: "M", day: "M", active: true },
+      { label: "T", day: "T", active: true },
+      { label: "W", day: "W", active: true },
+      { label: "T2", day: "T", active: true },
+      { label: "F", day: "F", active: true },
+      { label: "S", day: "S", active: false },
+      { label: "S2", day: "S", active: false },
+    ],
+    operatingHours: "08:00 AM - 10:30 PM Daily",
+    documents: buildApplicationDocuments(),
+    preview: {
+      name: vendor.name,
+      coverImage:
+        "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1400&q=80",
+      logoImage:
+        "https://images.unsplash.com/photo-1528605105345-5344ea20e269?auto=format&fit=crop&w=280&q=80",
+      rating: "4.8",
+      reviews: "450",
+      address: "45 Storgata, Oslo",
+    },
+    submittedMenus: buildApplicationMenus(),
+    checklist,
+    checklistCompleted: completed,
+    progressPercent: Math.round((completed / checklist.length) * 100),
+  };
 }

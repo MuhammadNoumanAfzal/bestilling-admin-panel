@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Users, Wifi, Clock, AlertTriangle, CircleAlert, DollarSign } from "lucide-react";
 
 import StatCard from "../../dashboard/components/StatCard.jsx";
@@ -42,13 +43,14 @@ function formatCompactRevenue(value) {
 }
 
 export default function VendorsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   // Filters & State
   const [searchTerm, setSearchTerm] = useState("");
   const [vendorFilter, setVendorFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
   const [timeframeFilter, setTimeframeFilter] = useState("");
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "All");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
 
@@ -56,6 +58,14 @@ export default function VendorsPage() {
   const [timeframe, setTimeframe] = useState("This Year");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+      setCurrentPage(1);
+    }
+  }, [activeTab, searchParams]);
 
   const handleCustomDateChange = (start, end) => {
     setCustomStart(start);
@@ -240,6 +250,17 @@ export default function VendorsPage() {
 
   const handleTabChange = (val) => {
     setActiveTab(val);
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+
+      if (val === "All") {
+        nextParams.delete("tab");
+      } else {
+        nextParams.set("tab", val);
+      }
+
+      return nextParams;
+    });
     setCurrentPage(1);
   };
 
@@ -255,6 +276,11 @@ export default function VendorsPage() {
     setRatingFilter("");
     setTimeframeFilter("");
     setActiveTab("All");
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      nextParams.delete("tab");
+      return nextParams;
+    });
     setTimeframe("This Year");
     setCustomStart("");
     setCustomEnd("");

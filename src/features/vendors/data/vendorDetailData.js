@@ -146,6 +146,7 @@ function buildReviewEntries() {
       rating: 5,
       reviewId: "#ORD-8829",
       timeAgo: "5 hours ago",
+      createdAt: "2026-07-27T07:00:00Z",
       avatarUrl:
         "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80",
       content:
@@ -157,7 +158,8 @@ function buildReviewEntries() {
       name: "Sarah Jenkins",
       rating: 2,
       reviewId: "#ORD-8712",
-      timeAgo: "5 hours ago",
+      timeAgo: "6 days ago",
+      createdAt: "2026-07-21T12:00:00Z",
       avatarUrl:
         "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80",
       content:
@@ -169,7 +171,8 @@ function buildReviewEntries() {
       name: "Marcus Thorne",
       rating: 4,
       reviewId: "#ORD-8655",
-      timeAgo: "1 hour ago",
+      timeAgo: "7 weeks ago",
+      createdAt: "2026-06-08T12:00:00Z",
       avatarUrl:
         "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80",
       content:

@@ -53,7 +53,7 @@ export default function VendorsPage() {
   const pageSize = 6;
 
   // Header date range dropdown (for overall timeframe overview)
-  const [timeframe, setTimeframe] = useState("Last 7 days");
+  const [timeframe, setTimeframe] = useState("This Year");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
 
@@ -255,7 +255,7 @@ export default function VendorsPage() {
     setRatingFilter("");
     setTimeframeFilter("");
     setActiveTab("All");
-    setTimeframe("Last 7 days");
+    setTimeframe("This Year");
     setCustomStart("");
     setCustomEnd("");
     setCurrentPage(1);

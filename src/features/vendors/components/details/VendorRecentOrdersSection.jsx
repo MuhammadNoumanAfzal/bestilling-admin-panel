@@ -13,11 +13,11 @@ export default function VendorRecentOrdersSection({ orders }) {
   return (
     <section className="space-y-4">
       <div className="flex items-center gap-2 px-1">
-        <span className="h-5 w-[3px] rounded-full bg-[#d96834]" />
-        <span className="inline-flex h-6 w-6 items-center justify-center rounded-[8px] bg-[#fff2ea] text-[#d96834] shadow-sm">
-          <ClipboardList size={12} />
+        <span className="h-6 w-[4px] rounded-full bg-[#d96834]" />
+        <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#fff2ea] text-[#d96834] shadow-sm">
+          <ClipboardList size={15} />
         </span>
-        <h2 className="text-[18px] font-extrabold tracking-tight text-[#18120f]">
+        <h2 className="text-[22px] font-extrabold tracking-tight text-[#18120f]">
           Recent Orders
         </h2>
       </div>
@@ -28,7 +28,7 @@ export default function VendorRecentOrdersSection({ orders }) {
             <thead className="border-b border-[#ddd6cf] bg-[#fcfbfa]">
               <tr>
                 {["Order ID", "Customer", "Event", "Guests", "Delivery date", "Status"].map((label) => (
-                  <th key={label} className="px-5 py-4 text-left text-[12px] font-bold text-[#1f1711]">
+                  <th key={label} className="px-5 py-4 text-left text-[13px] font-bold text-[#1f1711]">
                     {label}
                   </th>
                 ))}
@@ -37,22 +37,22 @@ export default function VendorRecentOrdersSection({ orders }) {
             <tbody>
               {orders.map((order) => (
                 <tr key={`${order.id}-${order.customer}-${order.event}`} className="border-b border-[#ece4dd] last:border-b-0">
-                  <td className="px-5 py-3.5 text-[14px] font-extrabold text-[#1f1711]">{order.id}</td>
-                  <td className="px-5 py-3.5 text-[14px] font-medium text-[#1f1711]">{order.customer}</td>
-                  <td className="px-5 py-3.5 text-[14px] font-medium text-[#1f1711]">{order.event}</td>
+                  <td className="px-5 py-4 text-[15px] font-extrabold text-[#1f1711]">{order.id}</td>
+                  <td className="px-5 py-4 text-[15px] font-medium text-[#1f1711]">{order.customer}</td>
+                  <td className="px-5 py-4 text-[15px] font-medium text-[#1f1711]">{order.event}</td>
                   <td className="px-5 py-3.5">
-                    <span className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1f1711]">
-                      <Users size={13} className="text-[#9d928a]" />
+                    <span className="inline-flex items-center gap-1.5 text-[15px] font-medium text-[#1f1711]">
+                      <Users size={14} className="text-[#9d928a]" />
                       {order.guests}
                     </span>
                   </td>
                   <td className="px-5 py-3.5">
-                    <p className="text-[11px] font-semibold text-[#1f1711]">{order.deliveryDate}</p>
-                    <p className="mt-0.5 text-[9px] font-medium text-[#8c8077]">{order.deliveryTime}</p>
+                    <p className="text-[12px] font-semibold text-[#1f1711]">{order.deliveryDate}</p>
+                    <p className="mt-0.5 text-[10px] font-medium text-[#8c8077]">{order.deliveryTime}</p>
                   </td>
                   <td className="px-5 py-3.5">
                     <span
-                      className={`inline-flex min-w-[96px] justify-center rounded-full border px-2.5 py-1 text-[10px] font-bold shadow-[0_1px_2px_rgba(53,34,20,0.04)] ${
+                      className={`inline-flex min-w-[104px] justify-center rounded-full border px-3 py-1 text-[11px] font-bold shadow-[0_1px_2px_rgba(53,34,20,0.04)] ${
                         statusClasses[order.status] || "border-[#d8d2cc] bg-[#f7f4f2] text-[#6f645d]"
                       }`}
                     >

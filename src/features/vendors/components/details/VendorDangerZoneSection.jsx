@@ -32,10 +32,10 @@ export default function VendorDangerZoneSection({ vendorName, dangerZone }) {
 
       <div className="grid gap-4 md:grid-cols-2">
         <article className="rounded-[16px] border border-[#fbcaca] bg-gradient-to-br from-white to-[#fffcfc] p-5 shadow-[0_4px_16px_rgba(216,63,63,0.03)]">
-          <h3 className="text-[16px] font-extrabold text-[#18120f]">{dangerZone.suspendTitle}</h3>
-          <p className="mt-2 text-[13px] leading-6 text-[#5a4d46]">{dangerZone.suspendDescription}</p>
+          <h3 className="text-[18px] font-extrabold text-[#18120f]">{dangerZone.suspendTitle}</h3>
+          <p className="mt-2 text-[14px] leading-6 text-[#5a4d46]">{dangerZone.suspendDescription}</p>
           <button
-            className="mt-4 w-full rounded-[10px] border border-[#d83f3f] bg-white px-4 py-2.5 text-[12px] font-bold text-[#d83f3f] transition hover:bg-[#fff5f5]"
+            className="mt-4 w-full rounded-[10px] border border-[#d83f3f] bg-white px-4 py-3 text-[13px] font-bold text-[#d83f3f] transition hover:bg-[#fff5f5]"
             onClick={handleSuspend}
             type="button"
           >
@@ -44,10 +44,10 @@ export default function VendorDangerZoneSection({ vendorName, dangerZone }) {
         </article>
 
         <article className="rounded-[16px] border border-[#fbcaca] bg-gradient-to-br from-white to-[#fffcfc] p-5 shadow-[0_4px_16px_rgba(216,63,63,0.03)]">
-          <h3 className="text-[16px] font-extrabold text-[#18120f]">{dangerZone.deleteTitle}</h3>
-          <p className="mt-2 text-[13px] leading-6 text-[#5a4d46]">{dangerZone.deleteDescription}</p>
+          <h3 className="text-[18px] font-extrabold text-[#18120f]">{dangerZone.deleteTitle}</h3>
+          <p className="mt-2 text-[14px] leading-6 text-[#5a4d46]">{dangerZone.deleteDescription}</p>
           <button
-            className="mt-4 w-full rounded-[10px] bg-[#d83f3f] px-4 py-2.5 text-[12px] font-bold text-white transition hover:bg-[#b03030]"
+            className="mt-4 w-full rounded-[10px] bg-[#d83f3f] px-4 py-3 text-[13px] font-bold text-white transition hover:bg-[#b03030]"
             onClick={handleDelete}
             type="button"
           >

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, MoreVertical, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -42,6 +42,27 @@ export default function VendorsTable({
   const navigate = useNavigate();
   const [selectedIds, setSelectedIds] = useState([]);
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const tableRef = useRef(null);
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (tableRef.current && !tableRef.current.contains(event.target)) {
+        setActiveMenuId(null);
+      }
+    }
+
+    function handleWindowScroll() {
+      setActiveMenuId(null);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("scroll", handleWindowScroll, true);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("scroll", handleWindowScroll, true);
+    };
+  }, []);
 
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
@@ -82,7 +103,10 @@ export default function VendorsTable({
   const paginationItems = buildPaginationItems();
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] mt-4">
+    <div
+      ref={tableRef}
+      className="mt-4 overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]"
+    >
       <div className="w-full overflow-x-auto">
         <table className="w-full min-w-[900px] border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
@@ -190,31 +214,28 @@ export default function VendorsTable({
                       </button>
 
                       {isMenuOpen && (
-                        <>
-                          <div className="fixed inset-0 z-20" onClick={() => setActiveMenuId(null)} />
-                          <div className="absolute right-4 top-10 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
-                            <button
-                              onClick={() => {
-                                navigate(getVendorNavigationPath(row));
-                                setActiveMenuId(null);
-                              }}
-                              className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
-                              type="button"
-                            >
-                              {row.status === "Pending Approval" ? "Review Application" : "View Details"}
-                            </button>
-                            <button
-                              onClick={() => {
-                                alert(`Toggle active/suspended for ${row.name}`);
-                                setActiveMenuId(null);
-                              }}
-                              className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
-                              type="button"
-                            >
-                              Toggle Status
-                            </button>
-                          </div>
-                        </>
+                        <div className="absolute right-4 top-10 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
+                          <button
+                            onClick={() => {
+                              navigate(getVendorNavigationPath(row));
+                              setActiveMenuId(null);
+                            }}
+                            className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
+                            type="button"
+                          >
+                            {row.status === "Pending Approval" ? "Review Application" : "View Details"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              alert(`Toggle active/suspended for ${row.name}`);
+                              setActiveMenuId(null);
+                            }}
+                            className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
+                            type="button"
+                          >
+                            Toggle Status
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>

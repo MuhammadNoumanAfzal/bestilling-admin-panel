@@ -1,4 +1,5 @@
-import { Mail, MapPin, Phone, ShoppingBag, UserRound, X } from "lucide-react";
+import { Mail, MapPin, Phone, ShoppingBag, X } from "lucide-react";
+import { formatReadableDate, formatStatusLabel, formatUserTypeLabel } from "../../supportUtils.js";
 
 function InfoItem({ icon: Icon, label, value }) {
   return (
@@ -17,6 +18,8 @@ export default function SupportCustomerProfileModal({ isOpen, onClose, ticket })
     return null;
   }
 
+  const requester = ticket.requester;
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[#211713]/48 px-4 py-6 backdrop-blur-[4px]">
       <div className="flex min-h-full items-center justify-center">
@@ -24,8 +27,8 @@ export default function SupportCustomerProfileModal({ isOpen, onClose, ticket })
           <div className="flex items-start justify-between gap-4 border-b border-[#f1e2d8] px-5 py-4">
             <div className="flex min-w-0 items-start gap-3">
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-white/80 bg-[#ffe4d4] shadow-[0_8px_16px_rgba(207,110,56,0.15)]">
-                {ticket.avatarUrl ? (
-                  <img alt={ticket.user} className="h-full w-full object-cover" src={ticket.avatarUrl} />
+                {requester?.avatarUrl ? (
+                  <img alt={requester.fullName} className="h-full w-full object-cover" src={requester.avatarUrl} />
                 ) : (
                   <span className="inline-flex h-full w-full items-center justify-center text-[15px] font-bold text-[#c86735]">
                     {ticket.avatarInitials}
@@ -35,12 +38,12 @@ export default function SupportCustomerProfileModal({ isOpen, onClose, ticket })
 
               <div className="min-w-0">
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#cf6e38]">
-                  Customer Profile
+                  Requester Profile
                 </p>
                 <h2 className="mt-2 text-[22px] font-bold leading-7 tracking-[-0.03em] text-[#1d1612]">
-                  {ticket.user}
+                  {requester?.fullName || "Unknown requester"}
                 </h2>
-                <p className="mt-1 text-[14px] font-medium text-[#8d8077]">{ticket.type}</p>
+                <p className="mt-1 text-[14px] font-medium text-[#8d8077]">{formatUserTypeLabel(requester?.type)}</p>
               </div>
             </div>
 
@@ -55,10 +58,14 @@ export default function SupportCustomerProfileModal({ isOpen, onClose, ticket })
 
           <div className="space-y-4 overflow-y-auto px-5 py-4">
             <div className="grid gap-3 md:grid-cols-2">
-              <InfoItem icon={Mail} label="Email" value={ticket.email} />
-              <InfoItem icon={Phone} label="Phone" value={ticket.phone} />
-              <InfoItem icon={ShoppingBag} label="Order Reference" value={ticket.orderReference} />
-              <InfoItem icon={MapPin} label="Joined" value={ticket.joinedDate} />
+              <InfoItem icon={Mail} label="Email" value={requester?.email || "Not available"} />
+              <InfoItem icon={Phone} label="Phone" value={requester?.phone || "Not available"} />
+              <InfoItem icon={ShoppingBag} label="Order Reference" value={ticket.orderReference || "Not linked"} />
+              <InfoItem
+                icon={MapPin}
+                label="Joined"
+                value={formatReadableDate(requester?.joinedAt, { includeTime: false })}
+              />
             </div>
 
             <div className="rounded-[16px] border border-[#f0e2d8] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
@@ -71,19 +78,19 @@ export default function SupportCustomerProfileModal({ isOpen, onClose, ticket })
                   <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">
                     Total Orders
                   </p>
-                  <p className="mt-2 text-[24px] font-extrabold text-[#201712]">{ticket.orderCount}</p>
+                  <p className="mt-2 text-[24px] font-extrabold text-[#201712]">{requester?.totalOrders ?? 0}</p>
                 </div>
                 <div className="rounded-[12px] border border-[#f4e5db] bg-[#fffaf6] px-3 py-3">
                   <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">
                     Ticket Status
                   </p>
-                  <p className="mt-2 text-[16px] font-bold text-[#201712]">{ticket.status}</p>
+                  <p className="mt-2 text-[16px] font-bold text-[#201712]">{formatStatusLabel(ticket.status)}</p>
                 </div>
                 <div className="rounded-[12px] border border-[#f4e5db] bg-[#fffaf6] px-3 py-3">
                   <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">
                     User Type
                   </p>
-                  <p className="mt-2 text-[16px] font-bold text-[#201712]">{ticket.type}</p>
+                  <p className="mt-2 text-[16px] font-bold text-[#201712]">{formatUserTypeLabel(requester?.type)}</p>
                 </div>
               </div>
             </div>
@@ -92,7 +99,9 @@ export default function SupportCustomerProfileModal({ isOpen, onClose, ticket })
               <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">
                 Notes
               </p>
-              <p className="mt-2 text-[14px] leading-6 text-[#40342e]">{ticket.notes}</p>
+              <p className="mt-2 text-[14px] leading-6 text-[#40342e]">
+                {ticket.notes || "No internal notes on this ticket."}
+              </p>
             </div>
 
             <div className="flex justify-end">

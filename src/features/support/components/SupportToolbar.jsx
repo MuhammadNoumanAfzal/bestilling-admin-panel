@@ -1,15 +1,16 @@
 import { RotateCw, Search } from "lucide-react";
 
-function FilterSelect({ value, onChange, options }) {
+function FilterSelect({ value, onChange, options, label }) {
   return (
-    <label>
+    <label className="flex flex-col gap-1">
+      {label ? <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9b8f86]">{label}</span> : null}
       <select
         className="h-9 cursor-pointer appearance-none rounded-[10px] border border-[#ddd2ca] bg-white px-3.5 pr-9 text-[13px] font-semibold text-[#3f3530] outline-none transition hover:border-[#cf6e38]/50 hover:bg-[#fff9f5] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
         onChange={(event) => onChange(event.target.value)}
         value={value}
       >
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option key={option.value || "all"} value={option.value}>
             {option.label}
           </option>
         ))}
@@ -26,17 +27,19 @@ export default function SupportToolbar({
   userFilter,
   onUserFilterChange,
   onResetFilters,
+  statusOptions = [],
+  userTypeOptions = [],
 }) {
   const isAllActive = !searchTerm && !statusFilter && !userFilter;
 
   return (
     <div className="flex flex-col gap-5 border-b border-[#e7ddd5] px-4 py-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <label className="relative w-full max-w-[340px]">
+        <label className="relative w-full max-w-[360px]">
           <input
             className="h-10 w-full rounded-full border border-[#ebe2db] bg-[#f6f4f2] pl-9 pr-3 text-[14px] text-[#2a1f19] outline-none transition placeholder:text-[#b3aaa2] focus:border-[#cf6e38] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search by ticket ID, user or subject..."
+            placeholder="Search by ticket ID, requester, subject or category..."
             type="search"
             value={searchTerm}
           />
@@ -68,25 +71,17 @@ export default function SupportToolbar({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-end gap-3">
         <FilterSelect
+          label="Status"
           onChange={onStatusFilterChange}
-          options={[
-            { label: "All Status", value: "" },
-            { label: "Resolved", value: "Resolved" },
-            { label: "Open", value: "Open" },
-            { label: "In Progress", value: "In Progress" },
-          ]}
+          options={[{ label: "All Status", value: "" }, ...statusOptions]}
           value={statusFilter}
         />
-
         <FilterSelect
+          label="User Type"
           onChange={onUserFilterChange}
-          options={[
-            { label: "All Users", value: "" },
-            { label: "Customer", value: "Customer" },
-            { label: "Vendor", value: "Vendor" },
-          ]}
+          options={[{ label: "All Users", value: "" }, ...userTypeOptions]}
           value={userFilter}
         />
       </div>

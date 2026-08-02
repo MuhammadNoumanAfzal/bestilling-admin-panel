@@ -1,27 +1,25 @@
 import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  formatPriorityLabel,
+  formatReadableDate,
+  formatStatusLabel,
+  formatUserTypeLabel,
+} from "../supportUtils.js";
 
 const statusClasses = {
-  Open: "bg-[#fff1bf] text-[#e39a00]",
-  Resolved: "bg-[#18b63f] text-white",
-  "In Progress": "bg-[#bedeff] text-[#2e7cd8]",
+  OPEN: "bg-[#fff1bf] text-[#e39a00]",
+  RESOLVED: "bg-[#18b63f] text-white",
+  IN_PROGRESS: "bg-[#bedeff] text-[#2e7cd8]",
+  CLOSED: "bg-[#ece6e1] text-[#6b5f57]",
 };
 
-function buildPaginationItems(currentPage, totalPages) {
-  if (totalPages <= 5) {
-    return Array.from({ length: totalPages }, (_, index) => index + 1);
-  }
-
-  if (currentPage <= 3) {
-    return [1, 2, 3, "ellipsis", totalPages];
-  }
-
-  if (currentPage >= totalPages - 2) {
-    return [1, "ellipsis", totalPages - 2, totalPages - 1, totalPages];
-  }
-
-  return [1, "ellipsis", currentPage, "ellipsis-2", totalPages];
-}
+const priorityClasses = {
+  LOW: "bg-[#eef8ef] text-[#2f8f57]",
+  MEDIUM: "bg-[#fff3e8] text-[#cf6e38]",
+  HIGH: "bg-[#fff0cf] text-[#d99615]",
+  URGENT: "bg-[#ffe9e4] text-[#c44a31]",
+};
 
 function PaginationButton({ children, isActive = false, onClick }) {
   return (
@@ -77,49 +75,70 @@ function StatusBadge({ status }) {
     <span
       className={[
         "inline-flex rounded-full px-3 py-1.5 text-[11px] font-bold leading-none",
-        statusClasses[status] || statusClasses.Open,
+        statusClasses[status] || statusClasses.OPEN,
       ].join(" ")}
     >
-      {status}
+      {formatStatusLabel(status)}
     </span>
   );
+}
+
+function PriorityBadge({ priority }) {
+  return (
+    <span
+      className={[
+        "inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold",
+        priorityClasses[priority] || priorityClasses.MEDIUM,
+      ].join(" ")}
+    >
+      {formatPriorityLabel(priority)}
+    </span>
+  );
+}
+
+function buildPaginationItems(currentPage, totalPages) {
+  if (totalPages <= 5) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  if (currentPage <= 3) {
+    return [1, 2, 3, "ellipsis", totalPages];
+  }
+
+  if (currentPage >= totalPages - 2) {
+    return [1, "ellipsis", totalPages - 2, totalPages - 1, totalPages];
+  }
+
+  return [1, "ellipsis", currentPage, "ellipsis-2", totalPages];
 }
 
 export default function SupportTicketsTable({
   currentPage,
   onPageChange,
-  pageSize,
+  pageInfo,
   rows,
-  totalItems,
 }) {
   const navigate = useNavigate();
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const totalItems = pageInfo?.totalItems ?? 0;
+  const totalPages = Math.max(1, pageInfo?.totalPages ?? 1);
+  const pageSize = pageInfo?.pageSize ?? 10;
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, totalItems);
   const paginationItems = buildPaginationItems(currentPage, totalPages);
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-2">
+    <div className="m-2 overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]">
       <div className="w-full overflow-x-auto">
-        <table className="min-w-[1040px] w-full table-fixed border-collapse">
-          <colgroup>
-            <col className="w-[10%]" />
-            <col className="w-[22%]" />
-            <col className="w-[10%]" />
-            <col className="w-[19%]" />
-            <col className="w-[10%]" />
-            <col className="w-[10%]" />
-            <col className="w-[9%]" />
-            <col className="w-[10%]" />
-          </colgroup>
+        <table className="min-w-[1180px] w-full table-fixed border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
               <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">Ticket ID</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">User</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">User Type</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Requester</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Type</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Subject</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Priority</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Category</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Created</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Last Activity</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
               <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Action</th>
             </tr>
@@ -128,7 +147,7 @@ export default function SupportTicketsTable({
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={8}>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={9}>
                   No support tickets match the current filters.
                 </td>
               </tr>
@@ -141,16 +160,26 @@ export default function SupportTicketsTable({
                       <Avatar label={row.avatarInitials} src={row.avatarUrl} />
                       <div className="min-w-0">
                         <p className="truncate text-[15px] font-bold text-[#18120f]">{row.user}</p>
-                        <p className="truncate text-[11px] text-[#5a4d46]">{row.email}</p>
+                        <p className="truncate text-[11px] text-[#5a4d46]">{row.email || "No email"}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.type}</td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{formatUserTypeLabel(row.type)}</td>
                   <td className="px-3 py-4">
                     <p className="break-words text-[15px] leading-5 text-[#18120f]">{row.subject}</p>
+                    {row.unreadAdminCount ? (
+                      <p className="mt-1 text-[11px] font-semibold text-[#cf6e38]">
+                        {row.unreadAdminCount} unread for admin
+                      </p>
+                    ) : null}
+                  </td>
+                  <td className="px-3 py-4">
+                    <PriorityBadge priority={row.priority} />
                   </td>
                   <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.category}</td>
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.created}</td>
+                  <td className="px-3 py-4 text-[14px] font-medium text-[#18120f]">
+                    {row.lastMessageAt ? formatReadableDate(row.lastMessageAt) : row.created}
+                  </td>
                   <td className="px-3 py-4">
                     <StatusBadge status={row.status} />
                   </td>
@@ -193,10 +222,7 @@ export default function SupportTicketsTable({
             ),
           )}
 
-          <PaginationIconButton
-            disabled={currentPage === totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-          >
+          <PaginationIconButton disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)}>
             <ChevronRight size={15} />
           </PaginationIconButton>
         </div>

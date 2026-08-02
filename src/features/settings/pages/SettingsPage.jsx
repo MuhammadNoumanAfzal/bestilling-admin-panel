@@ -570,13 +570,12 @@ export default function SettingsPage() {
         type="file"
       />
 
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-[40px] font-bold tracking-[-0.03em] text-[#18120f]">Settings</h1>
-          {headerSummary ? (
-            <p className="mt-2 text-[13px] text-[#7a6f68]">{headerSummary}</p>
-          ) : null}
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {headerSummary ? (
+          <p className="text-[13px] text-[#7a6f68]">{headerSummary}</p>
+        ) : (
+          <span />
+        )}
         <button
           className="inline-flex items-center gap-2 rounded-[10px] border border-[#dfd5cd] bg-white px-4 py-2 text-[12px] font-bold text-[#3c312a] transition hover:bg-[#faf6f2]"
           disabled={isRefreshing}

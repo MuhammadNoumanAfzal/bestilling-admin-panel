@@ -1,44 +1,123 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   Bell,
+  ChevronRight,
+  FileText,
   Grid2x2,
   HandCoins,
-  LogOut,
   LifeBuoy,
-  FileText,
-  ShoppingBag,
-  Settings as SettingsIcon,
+  LogOut,
+  Menu,
   Search,
+  Settings as SettingsIcon,
+  ShoppingBag,
   Store,
   Truck,
   UserRound,
   Users,
   Wallet,
+  X,
 } from "lucide-react";
 import { getAdminDisplayName, getAdminRoleLabel } from "../../features/auth/authConfig.js";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
 
 const navigation = [
-  { label: "Dashboard", to: "/dashboard", icon: Grid2x2 },
-  { label: "Vendors", to: "/vendors", icon: Store },
-  { label: "Orders", to: "/orders", icon: ShoppingBag },
-  { label: "Customers", to: "/customers", icon: Users },
-  { label: "Payments", to: "/payouts", icon: Wallet },
-  { label: "Commission", to: "/payouts/commission-settings", icon: HandCoins },
-  { label: "Delivery", to: "/delivery", icon: Truck },
-  { label: "Reports", to: "/reports", icon: FileText },
-  { label: "Supports", to: "/support", icon: LifeBuoy },
-  { label: "Notification", to: "/notifications", icon: Bell },
-  { label: "Settings", to: "/settings", icon: SettingsIcon },
+  {
+    label: "Dashboard",
+    to: "/dashboard",
+    icon: Grid2x2,
+    description: "Overview of platform health, approvals, and activity.",
+    keywords: ["overview", "home", "analytics", "stats"],
+    matchPaths: ["/dashboard"],
+  },
+  {
+    label: "Vendors",
+    to: "/vendors",
+    icon: Store,
+    description: "Manage onboarding, approvals, and vendor operations.",
+    keywords: ["stores", "restaurants", "applications", "onboarding"],
+    matchPaths: ["/vendors", "/Vendors"],
+  },
+  {
+    label: "Orders",
+    to: "/orders",
+    icon: ShoppingBag,
+    description: "Monitor order flow, exceptions, and details.",
+    keywords: ["purchases", "deliveries", "fulfillment"],
+    matchPaths: ["/orders"],
+  },
+  {
+    label: "Customers",
+    to: "/customers",
+    icon: Users,
+    description: "Review customer activity, history, and retention.",
+    keywords: ["users", "accounts", "buyers"],
+    matchPaths: ["/customers"],
+  },
+  {
+    label: "Payments",
+    to: "/payouts",
+    icon: Wallet,
+    description: "Track payouts, settlements, and payment details.",
+    keywords: ["payouts", "finance", "billing", "money"],
+    matchPaths: ["/payouts"],
+  },
+  {
+    label: "Commission",
+    to: "/payouts/commission-settings",
+    icon: HandCoins,
+    description: "Configure platform commission rates.",
+    keywords: ["rates", "fees", "percentages"],
+    matchPaths: ["/payouts/commission-settings"],
+  },
+  {
+    label: "Delivery",
+    to: "/delivery",
+    icon: Truck,
+    description: "Manage delivery zones and coverage.",
+    keywords: ["areas", "postal", "shipping", "coverage"],
+    matchPaths: ["/delivery"],
+  },
+  {
+    label: "Reports",
+    to: "/reports",
+    icon: FileText,
+    description: "Review performance, analytics, and exports.",
+    keywords: ["insights", "exports", "performance"],
+    matchPaths: ["/reports"],
+  },
+  {
+    label: "Support",
+    to: "/support",
+    icon: LifeBuoy,
+    description: "Handle support tickets and escalations.",
+    keywords: ["tickets", "help", "issues", "complaints"],
+    matchPaths: ["/support"],
+  },
+  {
+    label: "Notifications",
+    to: "/notifications",
+    icon: Bell,
+    description: "Manage announcements and platform alerts.",
+    keywords: ["alerts", "messages", "broadcasts"],
+    matchPaths: ["/notifications"],
+  },
+  {
+    label: "Settings",
+    to: "/settings",
+    icon: SettingsIcon,
+    description: "Update profile, preferences, and platform defaults.",
+    keywords: ["preferences", "profile", "configuration"],
+    matchPaths: ["/settings"],
+  },
 ];
 
 const pageMeta = {
   "/dashboard": {
     title: "Dashboard",
-    subtitle:
-      "A clean overview of admin activity, vendor movement, and platform health.",
+    subtitle: "A clean overview of admin activity, vendor movement, and platform health.",
   },
   "/vendors": {
     title: "Vendors",
@@ -82,29 +161,135 @@ const pageMeta = {
   },
 };
 
-function NavItem({ icon: Icon, label, to }) {
+function isNavItemActive(item, pathname) {
+  return item.matchPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+}
+
+function getCurrentMeta(pathname) {
+  if (pathname.startsWith("/support/")) {
+    return {
+      title: "Support Details",
+      subtitle: "Review the ticket conversation, user profile, and next actions.",
+    };
+  }
+
+  if (pathname.startsWith("/delivery/")) {
+    return {
+      title: "Delivery Area Details",
+      subtitle: "Manage postal coverage, service controls, and local configuration.",
+    };
+  }
+
+  if (pathname.startsWith("/payouts/commission-settings")) {
+    return {
+      title: "Commission Settings",
+      subtitle: "Manage platform commission rates for all vendors.",
+    };
+  }
+
+  if (pathname.startsWith("/payouts/") && pathname !== "/payouts/commission-settings") {
+    return {
+      title: "Payment Details",
+      subtitle: "Track customer payment and vendor payout for this order.",
+    };
+  }
+
+  if (pathname.startsWith("/vendors/") && pathname.endsWith("/review")) {
+    return {
+      title: "Vendor Application Review",
+      subtitle:
+        "Review submitted documents, storefront details, and operational readiness before approval.",
+    };
+  }
+
+  if (pathname.startsWith("/vendors/") && pathname !== "/vendors") {
+    return {
+      title: "Vendor Details",
+      subtitle: "Review menus, documents, financials, and vendor operations in one place.",
+    };
+  }
+
+  if (pathname.startsWith("/orders/") && pathname !== "/orders") {
+    return {
+      title: "Order Details",
+      subtitle: "Review order details, items invoice, customer & vendor profiles.",
+    };
+  }
+
+  if (pathname.startsWith("/customers/") && pathname !== "/customers") {
+    return {
+      title: "Customer Details",
+      subtitle: "Review the customer profile, order history, ratings, and active interactions.",
+    };
+  }
+
+  return pageMeta[pathname] || pageMeta["/dashboard"];
+}
+
+function NavItem({ item, pathname, onNavigate }) {
+  const Icon = item.icon;
+  const active = isNavItemActive(item, pathname);
+
   return (
     <NavLink
-      className={({ isActive }) =>
+      className={() =>
         [
-          "group flex items-center gap-3 rounded-[8px] px-3 py-2 text-[13px] font-semibold transition",
-          isActive
-            ? "bg-[#fff3ec] text-[#c75f2e]"
-            : "text-white hover:bg-white/8",
+          "group flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13px] font-semibold transition",
+          active ? "bg-[#fff3ec] text-[#c75f2e]" : "text-white hover:bg-white/8",
         ].join(" ")
       }
-      to={to}
+      onClick={onNavigate}
+      to={item.to}
     >
-      <span
-        className={[
-          "inline-flex h-5 w-5 items-center justify-center rounded-[6px] transition",
-          "group-hover:text-white",
-        ].join(" ")}
-      >
+      <span className="inline-flex h-5 w-5 items-center justify-center rounded-[6px] transition">
         <Icon size={14} />
       </span>
-      <span>{label}</span>
+      <span className="truncate">{item.label}</span>
     </NavLink>
+  );
+}
+
+function SearchResults({ results, onSelect, query }) {
+  if (!query.trim()) {
+    return null;
+  }
+
+  return (
+    <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-40 overflow-hidden rounded-[18px] border border-[#e8dfd8] bg-white shadow-[0_24px_60px_rgba(45,28,16,0.14)]">
+      {results.length ? (
+        <div className="max-h-[320px] overflow-y-auto p-2">
+          {results.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <button
+                key={item.to}
+                className="flex w-full items-center gap-3 rounded-[12px] px-3 py-3 text-left transition hover:bg-[#faf4ee]"
+                onClick={() => onSelect(item)}
+                type="button"
+              >
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] bg-[#fff1e8] text-[#cf6e38]">
+                  <Icon size={16} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-bold text-[#231913]">
+                    {item.label}
+                  </span>
+                  <span className="block truncate text-[12px] text-[#7b6f66]">
+                    {item.description}
+                  </span>
+                </span>
+                <ChevronRight className="shrink-0 text-[#b4a79d]" size={16} />
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="px-4 py-5 text-[12px] text-[#8c7f75]">
+          No matching resources found for “{query.trim()}”.
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -112,86 +297,14 @@ export default function AdminLayout() {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const meta = useMemo(() => {
-    if (location.pathname.startsWith("/support/")) {
-      return {
-        title: "Support Details",
-        subtitle:
-          "Review the ticket conversation, user profile, and next actions.",
-      };
-    }
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const profileMenuRef = useRef(null);
+  const searchRef = useRef(null);
 
-    if (location.pathname.startsWith("/delivery/")) {
-      return {
-        title: "Delivery Area Details",
-        subtitle:
-          "Manage postal coverage, service controls, and local configuration.",
-      };
-    }
-
-    if (location.pathname.startsWith("/payouts/commission-settings")) {
-      return {
-        title: "Commission Settings",
-        subtitle: "Manage platform commission rates for all vendors.",
-      };
-    }
-
-    if (
-      location.pathname.startsWith("/payouts/") &&
-      location.pathname !== "/payouts/commission-settings"
-    ) {
-      return {
-        title: "Payment Details",
-        subtitle: "Track customer payment and vendor payout for this order.",
-      };
-    }
-
-    if (
-      location.pathname.startsWith("/vendors/") &&
-      location.pathname.endsWith("/review")
-    ) {
-      return {
-        title: "Vendor Application Review",
-        subtitle:
-          "Review submitted documents, storefront details, and operational readiness before approval.",
-      };
-    }
-
-    if (
-      location.pathname.startsWith("/vendors/") &&
-      location.pathname !== "/vendors"
-    ) {
-      return {
-        title: "Vendor Details",
-        subtitle:
-          "Review menus, documents, financials, and vendor operations in one place.",
-      };
-    }
-
-    if (
-      location.pathname.startsWith("/orders/") &&
-      location.pathname !== "/orders"
-    ) {
-      return {
-        title: "Order Details",
-        subtitle:
-          "Review order details, items invoice, customer & vendor profiles.",
-      };
-    }
-
-    if (
-      location.pathname.startsWith("/customers/") &&
-      location.pathname !== "/customers"
-    ) {
-      return {
-        title: "Customer Details",
-        subtitle:
-          "Review the customer profile, order history, ratings, and active interactions.",
-      };
-    }
-
-    return pageMeta[location.pathname] || pageMeta["/dashboard"];
-  }, [location.pathname]);
+  const meta = useMemo(() => getCurrentMeta(location.pathname), [location.pathname]);
   const initials = useMemo(() => {
     const source = getAdminDisplayName(user);
     return source
@@ -201,9 +314,48 @@ export default function AdminLayout() {
       .join("");
   }, [user]);
 
+  const filteredNavigation = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return [];
+    }
+
+    return navigation.filter((item) => {
+      const haystack = [item.label, item.description, ...(item.keywords || [])]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(normalizedQuery);
+    });
+  }, [searchQuery]);
+
+  const shouldShowSearchResults = isSearchFocused && searchQuery.trim().length > 0;
+
   useEffect(() => {
     document.title = `${meta.title} | Bestilling Admin`;
   }, [meta.title]);
+
+  useEffect(() => {
+    setIsMobileNavOpen(false);
+    setIsProfileMenuOpen(false);
+    setIsSearchFocused(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setIsProfileMenuOpen(false);
+      }
+
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchFocused(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   async function handleLogout() {
     const result = await Swal.fire({
@@ -231,29 +383,75 @@ export default function AdminLayout() {
     navigate("/auth/login", { replace: true });
   }
 
+  function handleSearchSubmit(event) {
+    event.preventDefault();
+
+    if (!filteredNavigation.length) {
+      return;
+    }
+
+    const firstResult = filteredNavigation[0];
+    navigate(firstResult.to);
+    setSearchQuery("");
+  }
+
+  function handleSearchSelect(item) {
+    navigate(item.to);
+    setSearchQuery("");
+    setIsSearchFocused(false);
+  }
+
   return (
     <div className="min-h-screen bg-[#211f1f] text-[#201813]">
-      <div className="mx-auto min-h-screen max-w-[1440px] bg-[#f4f1ee] lg:grid lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside className="hidden bg-[linear-gradient(180deg,#cb6432_0%,#c55b2d_100%)] text-white lg:flex lg:flex-col">
-          <div className="flex h-[84px] items-center justify-center border-b border-white/12 px-4">
-            <img
-              className="h-10 w-auto max-w-[84px]"
-              src="/logo.png"
-              alt="Bestilling Admin"
-            />
+      <div className="mx-auto min-h-screen max-w-[1440px] bg-[#f4f1ee] lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">
+        {isMobileNavOpen ? (
+          <button
+            aria-label="Close navigation overlay"
+            className="fixed inset-0 z-40 bg-[#170f0a]/45 backdrop-blur-[2px] lg:hidden"
+            onClick={() => setIsMobileNavOpen(false)}
+            type="button"
+          />
+        ) : null}
+
+        <aside
+          className={[
+            "fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col bg-[linear-gradient(180deg,#cb6432_0%,#c55b2d_100%)] text-white transition duration-300 lg:static lg:w-auto lg:translate-x-0",
+            isMobileNavOpen ? "translate-x-0" : "-translate-x-full",
+          ].join(" ")}
+        >
+          <div className="flex h-[84px] items-center justify-between border-b border-white/12 px-4">
+            <img className="h-10 w-auto max-w-[92px]" src="/logo.png" alt="Bestilling Admin" />
+              <button
+                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-white/90 transition hover:bg-white/10 lg:hidden"
+                onClick={() => setIsMobileNavOpen(false)}
+                type="button"
+              >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="border-b border-white/10 px-4 py-4 lg:hidden">
+            <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">Signed in as</p>
+            <p className="mt-2 truncate text-[15px] font-bold text-white">{getAdminDisplayName(user)}</p>
+            <p className="truncate text-[12px] text-white/75">{getAdminRoleLabel(user?.role)}</p>
           </div>
 
           <div className="flex-1 overflow-auto px-3 py-6 hide-scrollbar">
             <nav className="space-y-2">
               {navigation.map((item) => (
-                <NavItem key={item.to} {...item} />
+                <NavItem
+                  item={item}
+                  key={item.to}
+                  onNavigate={() => setIsMobileNavOpen(false)}
+                  pathname={location.pathname}
+                />
               ))}
             </nav>
           </div>
 
           <div className="px-3 pb-4">
             <button
-              className="flex w-full items-center gap-3 rounded-[8px] px-3 py-2 text-[13px] font-semibold text-white transition hover:bg-white/8"
+              className="flex w-full cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13px] font-semibold text-white transition hover:bg-white/8"
               onClick={handleLogout}
               type="button"
             >
@@ -264,60 +462,130 @@ export default function AdminLayout() {
         </aside>
 
         <div className="min-h-screen bg-[#f7f5f3]">
-          <header className="border-b border-[#ebe4de] bg-white">
+          <header className="sticky top-0 z-30 border-b border-[#ebe4de] bg-white/92 backdrop-blur-xl">
             <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-5">
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <div className="flex items-center gap-2 lg:hidden">
-                  <img
-                    className="h-8 w-auto max-w-[72px]"
-                    src="/logo2.webp"
-                    alt="Bestilling Admin"
-                  />
+              <button
+                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#2f241c] transition hover:bg-[#f5f1ed] lg:hidden"
+                onClick={() => setIsMobileNavOpen(true)}
+                type="button"
+              >
+                <Menu size={18} />
+              </button>
+
+              <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center">
+                <div className="min-w-0 lg:hidden">
+                  <p className="truncate text-[22px] font-bold tracking-[-0.03em] text-[#1f1711] lg:hidden">
+                    {meta.title}
+                  </p>
                 </div>
-                <label className="relative w-full max-w-[460px]">
-                  <input
-                    className="h-10 w-full rounded-full bg-[#f1f4f8] px-4 pl-10 text-[11px] text-[#231913] outline-none transition placeholder:text-[#a9afba] focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
-                    placeholder="Search platform resources, orders, or vendors..."
-                    type="search"
-                  />
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#adb3bd]">
-                    <Search size={14} />
-                  </span>
-                </label>
+
+                <form
+                  className="relative w-full max-w-[520px]"
+                  onSubmit={handleSearchSubmit}
+                  ref={searchRef}
+                >
+                  <label className="relative block">
+                    <input
+                      className="h-11 w-full rounded-full border border-transparent bg-[#f1f4f8] px-4 pl-11 pr-4 text-[12px] text-[#231913] outline-none transition placeholder:text-[#a9afba] focus:border-[#ebddd1] focus:bg-white focus:shadow-[0_0_0_4px_rgba(206,105,56,0.11)]"
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      onFocus={() => setIsSearchFocused(true)}
+                      placeholder="Search pages, settings, vendors, orders, or reports..."
+                      type="search"
+                      value={searchQuery}
+                    />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#adb3bd]">
+                      <Search size={15} />
+                    </span>
+                  </label>
+
+                  {shouldShowSearchResults ? (
+                    <SearchResults
+                      onSelect={handleSearchSelect}
+                      query={searchQuery}
+                      results={filteredNavigation}
+                    />
+                  ) : null}
+                </form>
               </div>
 
-              <div className="flex items-center self-stretch border-l border-[#ebe4de] pl-3">
+              <div className="flex items-center gap-2 border-l border-[#ebe4de] pl-3">
                 <button
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#2f241c] transition hover:bg-[#f5f1ed]"
+                  aria-label="Open notifications"
+                  className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#2f241c] transition hover:bg-[#f5f1ed]"
+                  onClick={() => navigate("/notifications")}
                   type="button"
                 >
                   <Bell size={16} />
                 </button>
               </div>
 
-              <div className="hidden items-center gap-3 rounded-[14px] bg-white pl-3 sm:flex">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#fff0e7] text-[#d16737]">
-                  <UserRound size={18} />
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-[12px] font-bold text-[#1f1711]">
-                    {getAdminDisplayName(user)}
-                  </p>
-                  <p className="truncate text-[11px] text-[#7f746d]">
-                    {getAdminRoleLabel(user?.role)}
-                  </p>
-                </div>
-              </div>
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  className="flex cursor-pointer items-center gap-3 rounded-[14px] bg-white pl-2 pr-2 py-1 transition hover:bg-[#faf6f2]"
+                  onClick={() => setIsProfileMenuOpen((current) => !current)}
+                  type="button"
+                >
+                  {user?.avatar?.url ? (
+                    <img
+                      alt={getAdminDisplayName(user)}
+                      className="h-10 w-10 rounded-full object-cover"
+                      src={user.avatar.url}
+                    />
+                  ) : (
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#fff0e7] text-[#d16737]">
+                      <span className="hidden sm:inline">
+                        <UserRound size={18} />
+                      </span>
+                      <span className="text-[13px] font-bold sm:hidden">{initials}</span>
+                    </span>
+                  )}
+                  <div className="hidden min-w-0 text-left sm:block">
+                    <p className="truncate text-[12px] font-bold text-[#1f1711]">
+                      {getAdminDisplayName(user)}
+                    </p>
+                    <p className="truncate text-[11px] text-[#7f746d]">
+                      {getAdminRoleLabel(user?.role)}
+                    </p>
+                  </div>
+                </button>
 
-              <div className="flex items-center gap-2 rounded-[14px] bg-white sm:hidden">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#fff0e7] text-[#d16737]">
-                  {initials}
-                </span>
+                {isProfileMenuOpen ? (
+                  <div className="absolute right-0 top-[calc(100%+10px)] z-40 w-[220px] overflow-hidden rounded-[18px] border border-[#e8dfd8] bg-white shadow-[0_24px_60px_rgba(45,28,16,0.14)]">
+                    <div className="border-b border-[#f0e7e0] px-4 py-3">
+                      <p className="truncate text-[13px] font-bold text-[#231913]">
+                        {getAdminDisplayName(user)}
+                      </p>
+                      <p className="truncate text-[12px] text-[#7b6f66]">{user?.email || ""}</p>
+                    </div>
+                    <div className="p-2">
+                      <button
+                        className="flex w-full cursor-pointer items-center gap-3 rounded-[12px] px-3 py-3 text-left text-[13px] font-semibold text-[#2e241d] transition hover:bg-[#faf4ee]"
+                        onClick={() => navigate("/settings")}
+                        type="button"
+                      >
+                        <SettingsIcon size={15} />
+                        <span>Account settings</span>
+                      </button>
+                      <button
+                        className="flex w-full cursor-pointer items-center gap-3 rounded-[12px] px-3 py-3 text-left text-[13px] font-semibold text-[#b74f28] transition hover:bg-[#fff3ec]"
+                        onClick={handleLogout}
+                        type="button"
+                      >
+                        <LogOut size={15} />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           </header>
 
           <main className="px-4 py-5 pb-24 sm:px-6 lg:px-5 lg:py-5 lg:pb-8">
+            <div className="mb-5 hidden lg:block">
+              <h1 className="text-[34px] font-bold tracking-[-0.04em] text-[#18120f]">{meta.title}</h1>
+              <p className="mt-1 text-[15px] leading-7 text-[#6f645d]">{meta.subtitle}</p>
+            </div>
             <Outlet />
           </main>
         </div>
@@ -326,16 +594,15 @@ export default function AdminLayout() {
           <div className="hide-scrollbar flex items-stretch gap-1 overflow-x-auto">
             {navigation.map((item) => {
               const Icon = item.icon;
+              const active = isNavItemActive(item, location.pathname);
 
               return (
                 <NavLink
                   key={item.to}
-                  className={({ isActive }) =>
+                  className={() =>
                     [
                       "flex min-w-[84px] flex-1 flex-col items-center justify-center gap-1 rounded-[16px] px-3 py-2 text-[10px] font-semibold transition",
-                      isActive
-                        ? "bg-[#d96834] text-white"
-                        : "text-[#6f655e] hover:bg-[#faf4ee]",
+                      active ? "bg-[#d96834] text-white" : "text-[#6f655e] hover:bg-[#faf4ee]",
                     ].join(" ")
                   }
                   to={item.to}

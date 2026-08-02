@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { BadgeCent, KeyRound, RefreshCcw } from "lucide-react";
+import { BadgeCent, Clock3, Globe2, KeyRound, RefreshCcw, ShieldCheck } from "lucide-react";
 import Swal from "sweetalert2";
 import { getAdminDisplayName, validateAdminPassword } from "../../auth/authConfig.js";
 import { useAuth } from "../../auth/hooks/useAuth.js";
@@ -40,22 +40,45 @@ function SaveButton({ children, className = "", disabled = false, type = "button
 }
 
 function parseName(profile) {
-  const firstName = String(profile?.firstName || "").trim();
-  const lastName = String(profile?.lastName || "").trim();
-
   return {
-    firstName,
-    lastName,
+    firstName: String(profile?.firstName || "").trim(),
+    lastName: String(profile?.lastName || "").trim(),
   };
 }
 
 function getInitials(user) {
-  const displayName = getAdminDisplayName(user);
-  return displayName
+  return getAdminDisplayName(user)
     .split(/\s+/)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() || "")
     .join("");
+}
+
+function HeaderStatusCard({ icon: Icon, label, value, tone = "neutral" }) {
+  const toneClasses = {
+    neutral: "bg-white text-[#8b776a]",
+    warm: "bg-[#fff4ec] text-[#cf6e38]",
+    success: "bg-[#edf8f1] text-[#2f8f57]",
+  };
+
+  return (
+    <div className="flex items-center gap-3 rounded-[16px] border border-[#eadfd6] bg-white px-4 py-3 shadow-[0_10px_24px_rgba(49,30,19,0.04)]">
+      <span
+        className={[
+          "inline-flex h-10 w-10 items-center justify-center rounded-[12px]",
+          toneClasses[tone] || toneClasses.neutral,
+        ].join(" ")}
+      >
+        <Icon size={17} />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#9a8677]">
+          {label}
+        </p>
+        <p className="mt-1 truncate text-[13px] font-semibold text-[#241912]">{value}</p>
+      </div>
+    </div>
+  );
 }
 
 function ProfileInformationCard({
@@ -109,7 +132,6 @@ function ProfileInformationCard({
             onChange={onProfileFieldChange("phone")}
             value={profileForm.phone}
           />
-
           <SettingsField
             label="Role"
             readOnly
@@ -130,9 +152,7 @@ function ProfileInformationCard({
 
       {isPasswordFormOpen ? (
         <div className="mt-5 rounded-[14px] border border-[#efe4dc] bg-[#fcf8f5] p-4">
-          <div className="flex flex-col gap-1">
-            <h3 className="text-[13px] font-bold text-[#2a1f18]">Update Password</h3>
-          </div>
+          <h3 className="text-[13px] font-bold text-[#2a1f18]">Update Password</h3>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <SettingsField
@@ -186,12 +206,7 @@ function ProfileInformationCard({
   );
 }
 
-function PreferencesCard({
-  preferences,
-  onCurrencyChange,
-  onSave,
-  isSaving,
-}) {
+function PreferencesCard({ preferences, onCurrencyChange, onSave, isSaving }) {
   return (
     <SettingsShellCard>
       <SettingsSectionHeader icon={BadgeCent} title="Platform Preferences" />
@@ -547,16 +562,32 @@ export default function SettingsPage() {
 
   const headerSummary = useMemo(() => {
     if (!settingsUser) {
-      return "";
+      return [];
     }
 
-    const parts = [
-      settingsUser.preferences?.timezone || "No timezone",
-      settingsUser.preferences?.locale || "No locale",
-      settingsUser.isVerified ? "Verified" : "Verification pending",
+    return [
+      {
+        id: "timezone",
+        icon: Clock3,
+        label: "Timezone",
+        value: settingsUser.preferences?.timezone || "Timezone pending",
+        tone: settingsUser.preferences?.timezone ? "success" : "neutral",
+      },
+      {
+        id: "locale",
+        icon: Globe2,
+        label: "Locale",
+        value: settingsUser.preferences?.locale || "Locale pending",
+        tone: settingsUser.preferences?.locale ? "success" : "neutral",
+      },
+      {
+        id: "verification",
+        icon: ShieldCheck,
+        label: "Verification",
+        value: settingsUser.isVerified ? "Verified account" : "Verification pending",
+        tone: settingsUser.isVerified ? "success" : "warm",
+      },
     ];
-
-    return parts.join(" • ");
   }, [settingsUser]);
 
   return (
@@ -570,14 +601,14 @@ export default function SettingsPage() {
         type="file"
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {headerSummary ? (
-          <p className="text-[13px] text-[#7a6f68]">{headerSummary}</p>
-        ) : (
-          <span />
-        )}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="grid flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {headerSummary.map((item) => (
+            <HeaderStatusCard key={item.id} {...item} />
+          ))}
+        </div>
         <button
-          className="inline-flex items-center gap-2 rounded-[10px] border border-[#dfd5cd] bg-white px-4 py-2 text-[12px] font-bold text-[#3c312a] transition hover:bg-[#faf6f2]"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-[12px] border border-[#dfd5cd] bg-white px-4 py-2.5 text-[12px] font-bold text-[#3c312a] shadow-[0_10px_22px_rgba(49,30,19,0.04)] transition hover:bg-[#faf6f2] disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isRefreshing}
           onClick={() => loadSettings({ silent: true })}
           type="button"

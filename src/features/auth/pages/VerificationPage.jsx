@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import {
+  requestAdminPasswordResetMail,
+  verifyAdminPasswordResetCode,
+} from "../api/authApi.js";
 import AuthCard from "../components/AuthCard.jsx";
-import { ADMIN_DEMO_CREDENTIALS } from "../authConfig.js";
 import { useAuth } from "../hooks/useAuth.js";
 import AuthLayout from "../../../app/layouts/AuthLayout.jsx";
 
@@ -10,12 +13,17 @@ export default function VerificationPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
-  const identifier = location.state?.identifier || ADMIN_DEMO_CREDENTIALS.email;
+  const identifier = location.state?.identifier || "";
   const [code, setCode] = useState("");
-  const flow = location.state?.flow || "reset";
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate replace to="/dashboard" />;
+  }
+
+  if (!identifier) {
+    return <Navigate replace to="/auth/forgot-password" />;
   }
 
   async function handleSubmit() {
@@ -29,23 +37,65 @@ export default function VerificationPage() {
       return;
     }
 
-    if (flow === "register") {
-      navigate("/auth/login");
-      return;
+    try {
+      setIsSubmitting(true);
+      const result = await verifyAdminPasswordResetCode({
+        email: identifier,
+        pin: code,
+      });
+      await Swal.fire({
+        icon: "success",
+        title: "Code verified",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+      navigate("/auth/new-password", {
+        state: {
+          identifier,
+          verificationCode: result.token || code,
+        },
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Verification failed",
+        text: error?.message || "Please re-check the code and try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
+  }
 
-    navigate("/auth/new-password", {
-      state: {
-        identifier,
-        verificationCode: code,
-      },
-    });
+  async function handleResendCode() {
+    try {
+      setIsResending(true);
+      const result = await requestAdminPasswordResetMail({ email: identifier });
+      await Swal.fire({
+        icon: "success",
+        title: "Code resent",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to resend code",
+        text: error?.message || "Please try again in a moment.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsResending(false);
+    }
   }
 
   return (
     <AuthLayout allowScroll>
       <AuthCard
-        actionLabel="Verify Code"
+        actionDisabled={isSubmitting}
+        actionLabel={isSubmitting ? "Verifying..." : "Verify Code"}
+        backLinkLabel="Back to reset"
+        backLinkTo="/auth/forgot-password"
         eyebrow="Verification"
         fields={[
           {
@@ -77,9 +127,11 @@ export default function VerificationPage() {
             </div>
             <button
               className="type-subpara shrink-0 rounded-full border border-[#e6c8b6] px-3.5 py-2 text-[#bf622f] transition hover:bg-[#fff7f2]"
+              disabled={isResending}
+              onClick={handleResendCode}
               type="button"
             >
-              Resend Code
+              {isResending ? "Sending..." : "Resend Code"}
             </button>
           </div>
         }

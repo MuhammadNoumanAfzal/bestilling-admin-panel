@@ -1,22 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { ADMIN_DEMO_CREDENTIALS, ADMIN_DEMO_USER } from "../authConfig.js";
+import {
+  getCurrentAdminRequest,
+  loginAdminRequest,
+} from "../api/authApi.js";
 import {
   clearStoredAuthSession,
   loadStoredAuthSession,
   persistAuthSession,
-} from "../utils/authSession.js";
+} from "../store/authStorage.js";
 import { AuthContext } from "./authContext.js";
-
-function buildAccessToken() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return `admin-${crypto.randomUUID()}`;
-  }
-
-  return `admin-${Date.now()}`;
-}
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(() => loadStoredAuthSession());
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     if (session?.accessToken && session?.user) {
@@ -27,21 +23,53 @@ export function AuthProvider({ children }) {
     clearStoredAuthSession();
   }, [session]);
 
-  async function login(credentials) {
-    const email = String(credentials?.email || "").trim().toLowerCase();
-    const password = String(credentials?.password || "");
+  useEffect(() => {
+    let isMounted = true;
 
-    if (email !== ADMIN_DEMO_CREDENTIALS.email || password !== ADMIN_DEMO_CREDENTIALS.password) {
-      throw new Error("Use the demo admin credentials to sign in.");
+    async function restoreSession() {
+      if (!session?.accessToken) {
+        if (isMounted) {
+          setIsInitializing(false);
+        }
+        return;
+      }
+
+      try {
+        const user = await getCurrentAdminRequest(session.accessToken);
+
+        if (isMounted) {
+          setSession({
+            accessToken: session.accessToken,
+            user,
+          });
+        }
+      } catch {
+        if (isMounted) {
+          clearStoredAuthSession();
+          setSession({
+            accessToken: null,
+            user: null,
+          });
+        }
+      } finally {
+        if (isMounted) {
+          setIsInitializing(false);
+        }
+      }
     }
 
-    const nextSession = {
-      accessToken: buildAccessToken(),
-      user: {
-        ...ADMIN_DEMO_USER,
-        lastLogin: new Date().toISOString(),
-      },
+    restoreSession();
+
+    return () => {
+      isMounted = false;
     };
+  }, [session?.accessToken]);
+
+  async function login(credentials) {
+    const nextSession = await loginAdminRequest({
+      email: credentials?.email,
+      password: credentials?.password,
+    });
 
     setSession(nextSession);
     return nextSession;
@@ -57,13 +85,14 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(
     () => ({
+      isInitializing,
       isAuthenticated: Boolean(session?.accessToken && session?.user),
       accessToken: session?.accessToken || null,
       user: session?.user || null,
       login,
       logout,
     }),
-    [session],
+    [isInitializing, session],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

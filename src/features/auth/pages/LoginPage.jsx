@@ -2,20 +2,23 @@ import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import AuthCard from "../components/AuthCard.jsx";
-import { ADMIN_DEMO_CREDENTIALS } from "../authConfig.js";
 import { useAuth } from "../hooks/useAuth.js";
 import AuthLayout from "../../../app/layouts/AuthLayout.jsx";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, isInitializing, login } = useAuth();
   const [rememberMe, setRememberMe] = useState(true);
   const [form, setForm] = useState({
-    email: ADMIN_DEMO_CREDENTIALS.email,
-    password: ADMIN_DEMO_CREDENTIALS.password,
+    email: "",
+    password: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (isInitializing) {
+    return null;
+  }
 
   if (isAuthenticated) {
     return <Navigate replace to="/dashboard" />;
@@ -41,7 +44,7 @@ export default function LoginPage() {
       await Swal.fire({
         icon: "error",
         title: "Login failed",
-        text: error?.message || "Use the demo credentials.",
+        text: error?.message || "Please verify your admin credentials and try again.",
         confirmButtonColor: "#cf6e38",
       });
     } finally {
@@ -59,29 +62,16 @@ export default function LoginPage() {
         eyebrow="Admin access"
         extraContent={
           <p className="type-subpara text-center text-[12px] text-[#8d7e72]">
-            Need a new account?{" "}
-            <span
-              className="cursor-pointer font-bold text-[#cf6e38]"
-              onClick={() => navigate("/auth/register")}
-              role="link"
-              tabIndex={0}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  navigate("/auth/register");
-                }
-              }}
-            >
-              Register here
-            </span>
+            New admin accounts must be created by a super administrator inside the admin system.
           </p>
         }
         fields={[
           {
             autoComplete: "email",
-            label: "Email or Phone",
+            label: "Email Address",
             name: "email",
             onChange: (event) => setForm((current) => ({ ...current, email: event.target.value })),
-            placeholder: "Enter your email or phone",
+            placeholder: "Enter your admin email",
             type: "email",
             value: form.email,
           },
@@ -91,11 +81,12 @@ export default function LoginPage() {
             name: "password",
             onChange: (event) =>
               setForm((current) => ({ ...current, password: event.target.value })),
-            placeholder: "Enter password",
+            placeholder: "Enter your password",
             type: "password",
             value: form.password,
           },
         ]}
+        note="This portal only accepts administrator accounts such as admin, sub-admin, developer, editor, seo-manager, and system-manager."
         onAction={handleLogin}
         onRememberMeChange={() => setRememberMe((current) => !current)}
         rememberMeChecked={rememberMe}

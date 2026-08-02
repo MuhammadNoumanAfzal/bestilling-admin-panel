@@ -1,4 +1,4 @@
-import { ADMIN_DEMO_USER } from "../authConfig.js";
+import { isAllowedAdminRole } from "../authConfig.js";
 
 const AUTH_STORAGE_KEY = "bestilling-admin-auth";
 
@@ -15,29 +15,27 @@ export function loadStoredAuthSession() {
   }
 
   try {
-    const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
+    const rawSession = window.localStorage.getItem(AUTH_STORAGE_KEY);
 
-    if (!raw) {
+    if (!rawSession) {
       return createEmptySession();
     }
 
-    const parsed = JSON.parse(raw);
-    const accessToken = parsed?.accessToken || null;
-    const user = parsed?.user || null;
+    const parsedSession = JSON.parse(rawSession);
+    const accessToken = parsedSession?.accessToken || null;
+    const user = parsedSession?.user || null;
 
-    if (!accessToken || !user?.id || user.role !== "admin") {
+    if (!accessToken || !user?.id || !user?.email || !user?.isAdmin || !isAllowedAdminRole(user?.role)) {
       window.localStorage.removeItem(AUTH_STORAGE_KEY);
       return createEmptySession();
     }
 
     return {
       accessToken,
-      user: {
-        ...ADMIN_DEMO_USER,
-        ...user,
-      },
+      user,
     };
   } catch {
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
     return createEmptySession();
   }
 }
@@ -47,7 +45,13 @@ export function persistAuthSession(session) {
     return;
   }
 
-  if (!session?.accessToken || !session?.user?.id) {
+  if (
+    !session?.accessToken ||
+    !session?.user?.id ||
+    !session?.user?.email ||
+    !session?.user?.isAdmin ||
+    !isAllowedAdminRole(session?.user?.role)
+  ) {
     window.localStorage.removeItem(AUTH_STORAGE_KEY);
     return;
   }

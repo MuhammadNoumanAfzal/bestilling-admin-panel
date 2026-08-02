@@ -17,6 +17,7 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
+import { getAdminDisplayName, getAdminRoleLabel } from "../../features/auth/authConfig.js";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
 
 const navigation = [
@@ -192,13 +193,13 @@ export default function AdminLayout() {
     return pageMeta[location.pathname] || pageMeta["/dashboard"];
   }, [location.pathname]);
   const initials = useMemo(() => {
-    const source = user?.name?.trim() || "Admin User";
+    const source = getAdminDisplayName(user);
     return source
       .split(/\s+/)
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase() || "")
       .join("");
-  }, [user?.name]);
+  }, [user]);
 
   useEffect(() => {
     document.title = `${meta.title} | Bestilling Admin`;
@@ -300,9 +301,11 @@ export default function AdminLayout() {
                 </span>
                 <div className="min-w-0">
                   <p className="truncate text-[12px] font-bold text-[#1f1711]">
-                    {user?.name || "Raja Haider"}
+                    {getAdminDisplayName(user)}
                   </p>
-                  <p className="truncate text-[11px] text-[#7f746d]">Admin</p>
+                  <p className="truncate text-[11px] text-[#7f746d]">
+                    {getAdminRoleLabel(user?.role)}
+                  </p>
                 </div>
               </div>
 

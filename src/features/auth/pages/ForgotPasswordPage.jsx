@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { requestAdminPasswordResetMail } from "../api/authApi.js";
 import AuthCard from "../components/AuthCard.jsx";
 import { useAuth } from "../hooks/useAuth.js";
 import AuthLayout from "../../../app/layouts/AuthLayout.jsx";
@@ -9,6 +10,7 @@ export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [identifier, setIdentifier] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate replace to="/dashboard" />;
@@ -25,13 +27,33 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    navigate("/auth/verification", { state: { flow: "reset", identifier } });
+    try {
+      setIsSubmitting(true);
+      const result = await requestAdminPasswordResetMail({ email: identifier });
+      await Swal.fire({
+        icon: "success",
+        title: "Code sent",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+      navigate("/auth/verification", { state: { flow: "reset", identifier } });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to send code",
+        text: error?.message || "Please try again in a moment.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <AuthLayout>
       <AuthCard
-        actionLabel="Send Code"
+        actionDisabled={isSubmitting}
+        actionLabel={isSubmitting ? "Sending..." : "Send Code"}
         backLinkLabel="Back to login"
         backLinkTo="/auth/login"
         eyebrow="Password reset"
@@ -47,6 +69,7 @@ export default function ForgotPasswordPage() {
           },
         ]}
         onAction={handleSubmit}
+        note="We will request an admin-only reset flow with role set to `admin` so customer and vendor accounts cannot use this portal."
         subtitle="Enter your admin email and we will send a verification code."
         title="Forgot your password?"
       />

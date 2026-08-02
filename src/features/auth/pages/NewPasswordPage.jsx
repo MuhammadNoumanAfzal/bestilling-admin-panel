@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { resetAdminPasswordRequest } from "../api/authApi.js";
+import { validateAdminPassword } from "../authConfig.js";
 import AuthCard from "../components/AuthCard.jsx";
-import { ADMIN_DEMO_CREDENTIALS } from "../authConfig.js";
 import { useAuth } from "../hooks/useAuth.js";
 import AuthLayout from "../../../app/layouts/AuthLayout.jsx";
 
@@ -10,15 +11,20 @@ export default function NewPasswordPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
-  const identifier = location.state?.identifier || ADMIN_DEMO_CREDENTIALS.email;
-  const verificationCode = location.state?.verificationCode || "4046";
+  const identifier = location.state?.identifier || "";
+  const verificationCode = location.state?.verificationCode || "";
   const [form, setForm] = useState({
     password: "",
     confirmPassword: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate replace to="/dashboard" />;
+  }
+
+  if (!identifier || !verificationCode) {
+    return <Navigate replace to="/auth/forgot-password" />;
   }
 
   async function handleSubmit() {
@@ -42,19 +48,49 @@ export default function NewPasswordPage() {
       return;
     }
 
-    await Swal.fire({
-      icon: "success",
-      title: "Password updated",
-      text: "You can now sign in with the demo account.",
-      confirmButtonColor: "#cf6e38",
-    });
-    navigate("/auth/login");
+    const passwordValidationError = validateAdminPassword(form.password);
+
+    if (passwordValidationError) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Weak password",
+        text: passwordValidationError,
+        confirmButtonColor: "#cf6e38",
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const result = await resetAdminPasswordRequest({
+        email: identifier,
+        token: verificationCode,
+        password: form.password,
+      });
+      await Swal.fire({
+        icon: "success",
+        title: "Password updated",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+      navigate("/auth/login", { replace: true });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Reset failed",
+        text: error?.message || "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <AuthLayout allowScroll>
       <AuthCard
-        actionLabel="Reset Password"
+        actionDisabled={isSubmitting}
+        actionLabel={isSubmitting ? "Updating..." : "Reset Password"}
         backLinkLabel="Back to verification"
         backLinkTo="/auth/verification"
         dense

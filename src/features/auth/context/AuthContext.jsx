@@ -83,6 +83,22 @@ export function AuthProvider({ children }) {
     clearStoredAuthSession();
   }
 
+  function updateSessionUser(userUpdates) {
+    setSession((current) => {
+      if (!current?.accessToken || !current?.user) {
+        return current;
+      }
+
+      return {
+        ...current,
+        user: {
+          ...current.user,
+          ...userUpdates,
+        },
+      };
+    });
+  }
+
   const value = useMemo(
     () => ({
       isInitializing,
@@ -91,6 +107,7 @@ export function AuthProvider({ children }) {
       user: session?.user || null,
       login,
       logout,
+      updateSessionUser,
     }),
     [isInitializing, session],
   );

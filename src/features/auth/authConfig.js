@@ -22,6 +22,11 @@ export function isAllowedAdminRole(role) {
 }
 
 export function getAdminDisplayName(user) {
+  const explicitFullName = String(user?.fullName || "").trim();
+  if (explicitFullName) {
+    return explicitFullName;
+  }
+
   const firstName = String(user?.firstName || "").trim();
   const lastName = String(user?.lastName || "").trim();
   const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();

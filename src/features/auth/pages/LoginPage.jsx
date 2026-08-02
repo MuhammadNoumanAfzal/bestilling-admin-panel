@@ -60,11 +60,6 @@ export default function LoginPage() {
         auxiliaryLinkLabel="Forgot Password?"
         auxiliaryLinkTo="/auth/forgot-password"
         eyebrow="Admin access"
-        extraContent={
-          <p className="type-subpara text-center text-[12px] text-[#8d7e72]">
-            New admin accounts must be created by a super administrator inside the admin system.
-          </p>
-        }
         fields={[
           {
             autoComplete: "email",
@@ -86,7 +81,6 @@ export default function LoginPage() {
             value: form.password,
           },
         ]}
-        note="This portal only accepts administrator accounts such as admin, sub-admin, developer, editor, seo-manager, and system-manager."
         onAction={handleLogin}
         onRememberMeChange={() => setRememberMe((current) => !current)}
         rememberMeChecked={rememberMe}

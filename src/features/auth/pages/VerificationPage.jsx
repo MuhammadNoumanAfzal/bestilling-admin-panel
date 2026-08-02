@@ -101,7 +101,6 @@ export default function VerificationPage() {
           {
             label: "Email Address",
             name: "identifier",
-            helperText: "Use the same email where you requested the reset code.",
             placeholder: "Enter email",
             type: "email",
             value: identifier,
@@ -110,7 +109,6 @@ export default function VerificationPage() {
           {
             label: "Verification Code",
             name: "code",
-            helperText: "Enter the 4-digit code from your email.",
             onChange: (event) => setCode(event.target.value),
             placeholder: "Enter code",
             type: "text",
@@ -119,12 +117,7 @@ export default function VerificationPage() {
         ]}
         footerPanel={
           <div className="flex items-center justify-between gap-4 rounded-[12px] border border-[#efe2d7] bg-[#fcf7f2] px-3.5 py-3">
-            <div>
-              <p className="type-subpara text-[#533f31]">Didn&apos;t receive the code?</p>
-              <p className="type-subpara mt-1 text-[12px] text-[#8d7e72]">
-                Check spam first, then request a fresh code.
-              </p>
-            </div>
+            <p className="type-subpara text-[#533f31]">Didn&apos;t receive the code?</p>
             <button
               className="type-subpara shrink-0 rounded-full border border-[#e6c8b6] px-3.5 py-2 text-[#bf622f] transition hover:bg-[#fff7f2]"
               disabled={isResending}

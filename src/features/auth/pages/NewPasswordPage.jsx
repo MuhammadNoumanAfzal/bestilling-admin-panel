@@ -99,7 +99,6 @@ export default function NewPasswordPage() {
           {
             label: "Email Address",
             name: "identifier",
-            helperText: "This should match the email used in the reset flow.",
             placeholder: "Enter email",
             type: "email",
             value: identifier,
@@ -108,7 +107,6 @@ export default function NewPasswordPage() {
           {
             label: "Verification Code",
             name: "verificationCode",
-            helperText: "Use the verified code from your email.",
             placeholder: "Enter code",
             type: "text",
             value: verificationCode,
@@ -146,12 +144,7 @@ export default function NewPasswordPage() {
           </div>
         }
         footerPanel={
-          <div className="rounded-[12px] border border-[#efe2d7] bg-[#fcf7f2] px-3.5 py-3">
-            <p className="type-subpara text-[#533f31]">Almost done.</p>
-            <p className="type-subpara mt-1 text-[12px] text-[#8d7e72]">
-              Your password should be unique and not reused across other services.
-            </p>
-          </div>
+          null
         }
         maxWidthClassName="max-w-[460px]"
         onAction={handleSubmit}

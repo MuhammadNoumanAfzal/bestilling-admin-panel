@@ -69,7 +69,6 @@ export default function ForgotPasswordPage() {
           },
         ]}
         onAction={handleSubmit}
-        note="We will request an admin-only reset flow with role set to `admin` so customer and vendor accounts cannot use this portal."
         subtitle="Enter your admin email and we will send a verification code."
         title="Forgot your password?"
       />

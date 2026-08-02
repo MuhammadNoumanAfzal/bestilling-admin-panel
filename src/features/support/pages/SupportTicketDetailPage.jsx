@@ -179,6 +179,44 @@ export default function SupportTicketDetailPage() {
   }
 
   async function handleStatusUpdate(action) {
+    const actionLabels = {
+      IN_PROGRESS: {
+        title: "Mark ticket in progress?",
+        text: "This will move the ticket into the active work queue.",
+        success: "Ticket marked as in progress.",
+      },
+      RESOLVED: {
+        title: "Resolve this ticket?",
+        text: "This will mark the ticket as resolved for the requester.",
+        success: "Ticket resolved successfully.",
+      },
+      CLOSED: {
+        title: "Close this ticket?",
+        text: "This will close the ticket and end the current support flow.",
+        success: "Ticket closed successfully.",
+      },
+      OPEN: {
+        title: "Reopen this ticket?",
+        text: "This will move the ticket back to open status.",
+        success: "Ticket reopened successfully.",
+      },
+    };
+    const selectedAction = actionLabels[action];
+    const confirmation = await Swal.fire({
+      icon: "question",
+      title: selectedAction?.title || "Update ticket status?",
+      text: selectedAction?.text || "This change will update the support workflow.",
+      showCancelButton: true,
+      confirmButtonText: "Yes, continue",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d96834",
+      cancelButtonColor: "#c8b9aa",
+    });
+
+    if (!confirmation.isConfirmed) {
+      return;
+    }
+
     setIsUpdatingStatus(true);
 
     try {
@@ -193,6 +231,12 @@ export default function SupportTicketDetailPage() {
       }
 
       await refreshTicket();
+      await Swal.fire({
+        icon: "success",
+        title: "Status updated",
+        text: selectedAction?.success || "The ticket status has been updated.",
+        confirmButtonColor: "#d96834",
+      });
     } catch (error) {
       await Swal.fire({
         icon: "error",
@@ -206,11 +250,37 @@ export default function SupportTicketDetailPage() {
   }
 
   async function handleAssignment(assigneeId) {
+    const isRemovingAssignment = !assigneeId;
+    const confirmation = await Swal.fire({
+      icon: "question",
+      title: isRemovingAssignment ? "Remove assignment?" : "Assign ticket to you?",
+      text: isRemovingAssignment
+        ? "The ticket will become unassigned and visible for another admin to take."
+        : "This will make you the active owner for this support ticket.",
+      showCancelButton: true,
+      confirmButtonText: isRemovingAssignment ? "Remove assignment" : "Assign to me",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d96834",
+      cancelButtonColor: "#c8b9aa",
+    });
+
+    if (!confirmation.isConfirmed) {
+      return;
+    }
+
     setIsAssigning(true);
 
     try {
       await assignSupportTicketRequest(ticketId, assigneeId);
       await refreshTicket();
+      await Swal.fire({
+        icon: "success",
+        title: isRemovingAssignment ? "Assignment removed" : "Ticket assigned",
+        text: isRemovingAssignment
+          ? "The ticket is now unassigned."
+          : "You are now assigned to this support ticket.",
+        confirmButtonColor: "#d96834",
+      });
     } catch (error) {
       await Swal.fire({
         icon: "error",
@@ -228,11 +298,32 @@ export default function SupportTicketDetailPage() {
       return;
     }
 
+    const confirmation = await Swal.fire({
+      icon: "question",
+      title: "Update ticket priority?",
+      text: `This will change the priority from ${formatStatusLabel(ticket.priority)} to ${formatStatusLabel(nextPriority)}.`,
+      showCancelButton: true,
+      confirmButtonText: "Update priority",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d96834",
+      cancelButtonColor: "#c8b9aa",
+    });
+
+    if (!confirmation.isConfirmed) {
+      return;
+    }
+
     setIsUpdatingPriority(true);
 
     try {
       await updateSupportTicketPriorityRequest(ticketId, nextPriority);
       await refreshTicket();
+      await Swal.fire({
+        icon: "success",
+        title: "Priority updated",
+        text: `The ticket priority is now ${formatStatusLabel(nextPriority)}.`,
+        confirmButtonColor: "#d96834",
+      });
     } catch (error) {
       await Swal.fire({
         icon: "error",

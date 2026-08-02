@@ -128,19 +128,19 @@ export default function SupportTicketsTable({
 
   return (
     <div className="m-2 overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]">
-      <div className="w-full overflow-x-auto">
-        <table className="min-w-[1180px] w-full table-fixed border-collapse">
+      <div className="w-full overflow-x-auto lg:overflow-x-visible">
+        <table className="w-full table-fixed border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">Ticket ID</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Requester</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Type</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Subject</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Priority</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Category</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Last Activity</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
-              <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Action</th>
+              <th className="w-[7%] px-4 py-3 text-[12px] font-bold text-[#9b8f86]">Ticket ID</th>
+              <th className="w-[16%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Requester</th>
+              <th className="w-[10%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Type</th>
+              <th className="w-[15%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Subject</th>
+              <th className="w-[9%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Priority</th>
+              <th className="w-[10%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Category</th>
+              <th className="w-[12%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Last Activity</th>
+              <th className="w-[8%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Status</th>
+              <th className="w-[13%] px-4 py-3 text-right text-[12px] font-bold text-[#9b8f86]">Action</th>
             </tr>
           </thead>
 
@@ -153,40 +153,47 @@ export default function SupportTicketsTable({
               </tr>
             ) : (
               rows.map((row) => (
-                <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
-                  <td className="px-4 py-4 text-[15px] font-medium text-[#18120f]">#{row.id}</td>
-                  <td className="px-3 py-3.5">
-                    <div className="flex items-center gap-3">
+                <tr
+                  key={row.id}
+                  className="cursor-pointer border-b border-[#f1e9e2] transition hover:bg-[#fffaf6] last:border-b-0"
+                  onClick={() => navigate(`/support/${row.id}`)}
+                >
+                  <td className="px-4 py-3.5 text-[14px] font-medium text-[#18120f]">#{row.id}</td>
+                  <td className="px-2.5 py-3">
+                    <div className="flex items-center gap-2.5">
                       <Avatar label={row.avatarInitials} src={row.avatarUrl} />
                       <div className="min-w-0">
-                        <p className="truncate text-[15px] font-bold text-[#18120f]">{row.user}</p>
+                        <p className="truncate text-[14px] font-bold text-[#18120f]">{row.user}</p>
                         <p className="truncate text-[11px] text-[#5a4d46]">{row.email || "No email"}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{formatUserTypeLabel(row.type)}</td>
-                  <td className="px-3 py-4">
-                    <p className="break-words text-[15px] leading-5 text-[#18120f]">{row.subject}</p>
+                  <td className="px-2.5 py-3.5 text-[14px] font-medium text-[#18120f]">{formatUserTypeLabel(row.type)}</td>
+                  <td className="px-2.5 py-3.5">
+                    <p className="break-words text-[14px] leading-5 text-[#18120f]">{row.subject}</p>
                     {row.unreadAdminCount ? (
                       <p className="mt-1 text-[11px] font-semibold text-[#cf6e38]">
                         {row.unreadAdminCount} unread for admin
                       </p>
                     ) : null}
                   </td>
-                  <td className="px-3 py-4">
+                  <td className="px-2.5 py-3.5">
                     <PriorityBadge priority={row.priority} />
                   </td>
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.category}</td>
-                  <td className="px-3 py-4 text-[14px] font-medium text-[#18120f]">
+                  <td className="px-2.5 py-3.5 text-[14px] font-medium text-[#18120f] break-words">{row.category}</td>
+                  <td className="px-2.5 py-3.5 text-[13px] font-medium text-[#18120f]">
                     {row.lastMessageAt ? formatReadableDate(row.lastMessageAt) : row.created}
                   </td>
-                  <td className="px-3 py-4">
+                  <td className="px-2.5 py-3.5">
                     <StatusBadge status={row.status} />
                   </td>
-                  <td className="px-4 py-4 text-right">
+                  <td className="px-4 py-3.5 text-right">
                     <button
-                      className="inline-flex cursor-pointer items-center gap-1.5 text-[15px] font-semibold text-[#18120f] transition hover:text-[#cf6e38]"
-                      onClick={() => navigate(`/support/${row.id}`)}
+                      className="inline-flex min-w-[108px] cursor-pointer items-center justify-end gap-1 whitespace-nowrap text-[14px] font-semibold text-[#18120f] transition hover:text-[#cf6e38]"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        navigate(`/support/${row.id}`);
+                      }}
                       type="button"
                     >
                       <Eye size={15} />

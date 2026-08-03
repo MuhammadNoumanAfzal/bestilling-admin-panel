@@ -14,6 +14,7 @@ const inputClassName =
 
 export default function CommissionModal({
   fields,
+  isSubmitting = false,
   isOpen,
   onChange,
   onClose,
@@ -50,7 +51,8 @@ export default function CommissionModal({
                 <Field label={field.label}>
                   {field.type === "select" ? (
                     <select
-                      className={`${inputClassName} cursor-pointer appearance-none pr-9`}
+                      className={`${inputClassName} cursor-pointer appearance-none pr-9 disabled:cursor-not-allowed disabled:opacity-60`}
+                      disabled={field.disabled || isSubmitting}
                       onChange={(event) => onChange(field.key, event.target.value)}
                       value={field.value}
                     >
@@ -60,15 +62,60 @@ export default function CommissionModal({
                         </option>
                       ))}
                     </select>
-                  ) : (
-                    <input
-                      className={inputClassName}
+                  ) : field.type === "search-select" ? (
+                    <div className="space-y-2">
+                      <input
+                        className={`${inputClassName} disabled:cursor-not-allowed disabled:opacity-60`}
+                        disabled={field.disabled || isSubmitting}
+                        onChange={(event) => field.onSearchChange?.(event.target.value)}
+                        placeholder={field.searchPlaceholder || `Search ${field.label.toLowerCase()}`}
+                        type="search"
+                        value={field.searchValue || ""}
+                      />
+                      <select
+                        className={`${inputClassName} cursor-pointer appearance-none pr-9 disabled:cursor-not-allowed disabled:opacity-60`}
+                        disabled={field.disabled || isSubmitting}
+                        onChange={(event) => onChange(field.key, event.target.value)}
+                        value={field.value}
+                      >
+                        <option value="">{field.placeholder || `Select ${field.label}`}</option>
+                        {field.options.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="min-h-[18px] text-[11px] text-[#8e7f75]">
+                        {field.isLoadingOptions
+                          ? "Loading options..."
+                          : field.helperText ||
+                            (field.options.length === 0 ? "No matching options found." : "")}
+                      </p>
+                    </div>
+                  ) : field.type === "textarea" ? (
+                    <textarea
+                      className={`min-h-[110px] w-full rounded-[12px] border border-[#ddd2ca] bg-[#f8f5f2] px-3.5 py-3 text-[14px] font-medium text-[#18120f] outline-none transition placeholder:text-[#aa9f96] focus:border-[#cf6e38] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)] disabled:cursor-not-allowed disabled:opacity-60`}
+                      disabled={field.disabled || isSubmitting}
                       onChange={(event) => onChange(field.key, event.target.value)}
                       placeholder={field.placeholder}
+                      rows={field.rows || 4}
+                      value={field.value}
+                    />
+                  ) : (
+                    <input
+                      className={`${inputClassName} disabled:cursor-not-allowed disabled:opacity-60`}
+                      disabled={field.disabled || isSubmitting}
+                      min={field.min}
+                      onChange={(event) => onChange(field.key, event.target.value)}
+                      placeholder={field.placeholder}
+                      readOnly={field.readOnly}
                       type={field.type || "text"}
                       value={field.value}
                     />
                   )}
+                  {field.type !== "search-select" && field.helperText ? (
+                    <p className="text-[11px] leading-5 text-[#8e7f75]">{field.helperText}</p>
+                  ) : null}
                 </Field>
               </div>
             ))}
@@ -77,19 +124,21 @@ export default function CommissionModal({
 
         <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-[#f1e2d8] px-5 py-4">
           <button
-            className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[10px] border border-[#d5ccc5] bg-white px-4 text-[13px] font-semibold text-[#332822] transition hover:bg-[#faf6f2]"
+            className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[10px] border border-[#d5ccc5] bg-white px-4 text-[13px] font-semibold text-[#332822] transition hover:bg-[#faf6f2] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isSubmitting}
             onClick={onClose}
             type="button"
           >
             Cancel
           </button>
           <button
-            className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-[#cf6e38] px-4 text-[13px] font-semibold text-white transition hover:bg-[#bc6030]"
+            className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-[#cf6e38] px-4 text-[13px] font-semibold text-white transition hover:bg-[#bc6030] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isSubmitting}
             onClick={onSubmit}
             type="button"
           >
             <Save size={14} />
-            <span>{submitLabel}</span>
+            <span>{isSubmitting ? "Saving..." : submitLabel}</span>
           </button>
         </div>
       </div>

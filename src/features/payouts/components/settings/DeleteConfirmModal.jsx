@@ -1,6 +1,13 @@
 import { AlertTriangle, Trash2, X } from "lucide-react";
 
-export default function DeleteConfirmModal({ description, isOpen, onClose, onConfirm, title }) {
+export default function DeleteConfirmModal({
+  description,
+  isOpen,
+  isSubmitting = false,
+  onClose,
+  onConfirm,
+  title,
+}) {
   if (!isOpen) {
     return null;
   }
@@ -30,19 +37,21 @@ export default function DeleteConfirmModal({ description, isOpen, onClose, onCon
 
         <div className="flex flex-wrap items-center justify-end gap-2.5 px-5 py-4">
           <button
-            className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[10px] border border-[#d5ccc5] bg-white px-4 text-[13px] font-semibold text-[#332822] transition hover:bg-[#faf6f2]"
+            className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[10px] border border-[#d5ccc5] bg-white px-4 text-[13px] font-semibold text-[#332822] transition hover:bg-[#faf6f2] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isSubmitting}
             onClick={onClose}
             type="button"
           >
             Cancel
           </button>
           <button
-            className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-[#d15b42] px-4 text-[13px] font-semibold text-white transition hover:bg-[#bb4630]"
+            className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-[#d15b42] px-4 text-[13px] font-semibold text-white transition hover:bg-[#bb4630] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isSubmitting}
             onClick={onConfirm}
             type="button"
           >
             <Trash2 size={14} />
-            <span>Delete</span>
+            <span>{isSubmitting ? "Deleting..." : "Delete"}</span>
           </button>
         </div>
       </div>

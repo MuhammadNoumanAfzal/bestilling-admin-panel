@@ -8,8 +8,7 @@ export default function CustomersToolbar({
   onStatusFilterChange,
   cityFilter,
   onCityFilterChange,
-  timeframeFilter,
-  onTimeframeFilterChange,
+  statuses = [],
   cities = [],
   onResetFilters,
 }) {
@@ -39,26 +38,16 @@ export default function CustomersToolbar({
     setActiveDropdown(null);
   };
 
-  const handleSelectTimeframe = (val) => {
-    onTimeframeFilterChange(val);
-    setActiveDropdown(null);
-  };
-
   const statusOptions = [
     { label: "All Status", value: "" },
-    { label: "Active", value: "Active" },
-    { label: "Blocked", value: "Blocked" },
-  ];
-
-  const dateOptions = [
-    { label: "All Registration Dates", value: "" },
-    { label: "Last 7 days", value: "7days" },
-    { label: "Last Month", value: "month" },
-    { label: "This Year", value: "year" },
+    ...statuses.map((status) => ({
+      label: status,
+      value: status,
+    })),
   ];
 
   // Check if any specific filter is active to highlight "All" tab vs custom filters
-  const isAnyFilterActive = statusFilter || cityFilter || timeframeFilter;
+  const isAnyFilterActive = statusFilter || cityFilter;
 
   return (
     <div ref={toolbarRef} className="flex flex-col gap-4 border-b border-[#e7ddd5] bg-[#fcfbfa] p-4 select-none">
@@ -184,44 +173,6 @@ export default function CustomersToolbar({
           )}
         </div>
 
-        {/* Registration Date Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setActiveDropdown(activeDropdown === "date" ? null : "date")}
-            className={`inline-flex h-9 items-center justify-between gap-1.5 rounded-[8px] border px-3 text-[12px] font-semibold outline-none transition hover:bg-[#faf9f8] cursor-pointer ${
-              timeframeFilter
-                ? "border-[#cf6e38] bg-[#fffcfb] text-[#cf6e38]"
-                : "border-[#d8ccc2] bg-white text-[#4d423b]"
-            }`}
-            type="button"
-          >
-            <span>
-              {timeframeFilter
-                ? dateOptions.find((o) => o.value === timeframeFilter)?.label
-                : "Registration Date"}
-            </span>
-            <ChevronDown size={13} className="text-[#8c8077]" />
-          </button>
-
-          {activeDropdown === "date" && (
-            <div className="absolute left-0 mt-1 z-30 w-44 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
-              {dateOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => handleSelectTimeframe(opt.value)}
-                  className={`block w-full px-3.5 py-1.5 text-left text-[12px] font-semibold transition cursor-pointer ${
-                    timeframeFilter === opt.value
-                      ? "bg-[#fff3ec] text-[#d96834] font-bold"
-                      : "text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
-                  }`}
-                  type="button"
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

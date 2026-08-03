@@ -1,247 +1,259 @@
-import { useMemo, useState } from "react";
-
+import { useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
+import { blockCustomerRequest, getAdminCustomersRequest, unblockCustomerRequest } from "../api/customersApi.js";
 import CustomerOverviewCard from "../components/CustomerOverviewCard.jsx";
 import CustomersTable from "../components/CustomersTable.jsx";
 import CustomersToolbar from "../components/CustomersToolbar.jsx";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 
-import { customerRows, customersPagination } from "../data/customersData.js";
+const PAGE_SIZE = 10;
 
-function formatCompactCurrency(value) {
-  if (value >= 1000000) {
-    return `NOK ${(value / 1000000).toFixed(2)}M`;
+function toDisplayStatus(status) {
+  switch (`${status ?? ""}`.trim().toUpperCase()) {
+    case "BLOCKED":
+      return "Blocked";
+    case "INACTIVE":
+      return "Inactive";
+    default:
+      return "Active";
   }
-
-  return `NOK ${value.toLocaleString()}`;
 }
 
 export default function CustomersPage() {
-  // Filter States
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
-  const [timeframeFilter, setTimeframeFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = customersPagination.pageSize;
-
-  // Header Date Filter Dropdown
   const [timeframe, setTimeframe] = useState("Last 7 days");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [summaryCards, setSummaryCards] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [pageInfo, setPageInfo] = useState({
+    page: 1,
+    pageSize: PAGE_SIZE,
+    totalItems: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
+  const [filterOptions, setFilterOptions] = useState({
+    cities: [],
+    statuses: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [isUpdatingStatusId, setIsUpdatingStatusId] = useState("");
 
-  const handleCustomDateChange = (start, end) => {
+  const dateRange = useMemo(
+    () => getDateRangeForFilter(timeframe, customStart, customEnd),
+    [customEnd, customStart, timeframe],
+  );
+
+  const normalizedFilters = useMemo(
+    () => ({
+      search: searchTerm,
+      status: statusFilter ? statusFilter.toUpperCase() : null,
+      city: cityFilter || null,
+      registeredFrom: dateRange?.start || null,
+      registeredTo: dateRange?.end || null,
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+      sortBy: "joinedAt",
+      sortOrder: "DESC",
+    }),
+    [cityFilter, currentPage, dateRange, searchTerm, statusFilter],
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCustomers() {
+      setIsLoading(true);
+      setLoadError("");
+
+      try {
+        const response = await getAdminCustomersRequest(normalizedFilters);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setRows(response.rows);
+        setSummaryCards(response.summaryCards);
+        setPageInfo(response.pageInfo);
+        setFilterOptions({
+          cities: response.filterOptions.cities,
+          statuses: response.filterOptions.statuses.map(toDisplayStatus),
+        });
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(error instanceof Error ? error.message : "Unable to load customers.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadCustomers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [normalizedFilters]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, cityFilter, timeframe, customStart, customEnd]);
+
+  function handleCustomDateChange(start, end) {
     setCustomStart(start);
     setCustomEnd(end);
     setCurrentPage(1);
-  };
+  }
 
-  // Extract unique cities
-  const citiesList = useMemo(() => {
-    const set = new Set(customerRows.map((c) => c.city));
-    return Array.from(set);
-  }, []);
-
-  // Filter logic
-  const filteredRows = useMemo(() => {
-    let result = [...customerRows];
-
-    // 1. Search Query filter
-    if (searchTerm) {
-      const q = searchTerm.toLowerCase();
-      result = result.filter(
-        (row) =>
-          row.id.toLowerCase().includes(q) ||
-          row.name.toLowerCase().includes(q) ||
-          row.phone.toLowerCase().includes(q) ||
-          row.email.toLowerCase().includes(q)
-      );
-    }
-
-    // 2. Status filter
-    if (statusFilter) {
-      result = result.filter((row) => row.status === statusFilter);
-    }
-
-    // 3. City filter
-    if (cityFilter) {
-      result = result.filter((row) => row.city === cityFilter);
-    }
-
-    // 4. Registration Date timeframe filter
-    if (timeframeFilter) {
-      const inlineFilterLabel =
-        timeframeFilter === "7days"
-          ? "Last 7 days"
-          : timeframeFilter === "month"
-            ? "Last Month"
-            : timeframeFilter === "year"
-              ? "This Year"
-              : "";
-      const inlineRange = inlineFilterLabel ? getDateRangeForFilter(inlineFilterLabel) : null;
-
-      result = result.filter((row) => {
-        const joinDate = new Date(row.joinDateValue);
-        if (inlineRange) {
-          return joinDate >= inlineRange.start && joinDate <= inlineRange.end;
-        }
-        return true;
-      });
-    }
-
-    // 5. Header Timeframe filter dropdown
-    if (timeframe) {
-      const headerRange = getDateRangeForFilter(timeframe, customStart, customEnd);
-      result = result.filter((row) => {
-        const joinDate = new Date(row.joinDateValue);
-        return joinDate >= headerRange.start && joinDate <= headerRange.end;
-      });
-    }
-
-    return result;
-  }, [searchTerm, statusFilter, cityFilter, timeframeFilter, timeframe, customStart, customEnd]);
-
-  // Paginated Rows
-  const paginatedRows = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return filteredRows.slice(startIndex, endIndex);
-  }, [filteredRows, currentPage, pageSize]);
-
-  // Handler resets
-  const handleSearchChange = (val) => {
-    setSearchTerm(val);
-    setCurrentPage(1);
-  };
-
-  const handleStatusChange = (val) => {
-    setStatusFilter(val);
-    setCurrentPage(1);
-  };
-
-  const handleCityChange = (val) => {
-    setCityFilter(val);
-    setCurrentPage(1);
-  };
-
-  const handleTimeframeFilterChange = (val) => {
-    setTimeframeFilter(val);
-    setCurrentPage(1);
-  };
-
-  const handleResetFilters = () => {
+  function handleResetFilters() {
     setSearchTerm("");
     setStatusFilter("");
     setCityFilter("");
-    setTimeframeFilter("");
     setTimeframe("Last 7 days");
     setCustomStart("");
     setCustomEnd("");
     setCurrentPage(1);
-  };
+  }
 
-  const customerSummary = useMemo(() => {
-    const totalOrders = filteredRows.reduce((sum, row) => sum + Number(row.totalOrders || 0), 0);
-    const totalSpending = filteredRows.reduce((sum, row) => sum + Number(row.amountValue || 0), 0);
-    const activeCustomers = filteredRows.filter((row) => row.status === "Active").length;
-    const now = new Date("2026-07-21T12:00:00");
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const newThisMonth = filteredRows.filter(
-      (row) => new Date(row.joinDateValue) >= monthStart,
-    ).length;
+  async function handleToggleStatus(row) {
+    const isBlocked = row.status === "Blocked";
 
-    return [
-      {
-        id: "total",
-        label: "Total Customers",
-        value: filteredRows.length.toLocaleString(),
-        accent: "soft",
-      },
-      {
-        id: "active",
-        label: "Active Customers",
-        value: activeCustomers.toLocaleString(),
-        accent: "warm",
-      },
-      {
-        id: "new",
-        label: "New This Month",
-        value: newThisMonth.toLocaleString(),
-        accent: "neutral",
-      },
-      {
-        id: "orders",
-        label: "Total Orders",
-        value: totalOrders.toLocaleString(),
-        accent: "strong",
-      },
-      {
-        id: "average",
-        label: "Avg. Order Value",
-        value: filteredRows.length
-          ? `NOK ${Math.round(totalSpending / filteredRows.length).toLocaleString()}`
-          : "NOK 0",
-        accent: "soft",
-      },
-      {
-        id: "spending",
-        label: "Total Spending",
-        value: formatCompactCurrency(totalSpending),
-        accent: "warm",
-      },
-    ];
-  }, [filteredRows]);
+    const confirmation = await Swal.fire({
+      icon: "warning",
+      title: isBlocked ? "Unblock customer?" : "Block customer?",
+      text: isBlocked
+        ? `Restore access for ${row.name}?`
+        : `Block ${row.name} from logging in and placing new orders?`,
+      showCancelButton: true,
+      confirmButtonText: isBlocked ? "Yes, unblock" : "Yes, block",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: isBlocked ? "#2b9e62" : "#d83f3f",
+      cancelButtonColor: "#c8b9aa",
+    });
+
+    if (!confirmation.isConfirmed) {
+      return;
+    }
+
+    let reason = "";
+
+    if (!isBlocked) {
+      const result = await Swal.fire({
+        title: "Block reason",
+        input: "text",
+        inputLabel: "Optional reason",
+        inputPlaceholder: "Add a note for why this customer is being blocked",
+        showCancelButton: true,
+        confirmButtonText: "Continue",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#d83f3f",
+        cancelButtonColor: "#c8b9aa",
+      });
+
+      if (result.isDismissed) {
+        return;
+      }
+
+      reason = result.value || "";
+    }
+
+    try {
+      setIsUpdatingStatusId(row.id);
+      const response = isBlocked
+        ? await unblockCustomerRequest(row.id)
+        : await blockCustomerRequest(row.id, reason);
+
+      setRows((current) =>
+        current.map((item) =>
+          item.id === row.id
+            ? {
+                ...item,
+                status: response.status,
+                rawStatus: response.rawStatus,
+              }
+            : item,
+        ),
+      );
+
+      await Swal.fire({
+        icon: "success",
+        title: isBlocked ? "Customer unblocked" : "Customer blocked",
+        text: response.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: isBlocked ? "Unable to unblock customer" : "Unable to block customer",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsUpdatingStatusId("");
+    }
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header section */}
-      <section className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div className="space-y-1">
-          <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">Customers</h1>
-          <p className="text-[18px] leading-7 text-[#6f645d]">
-            Manage customer accounts, orders, and support activity.
-          </p>
-        </div>
-
-        <div>
-          <DateFilterDropdown
-            selectedFilter={timeframe}
-            onChangeFilter={setTimeframe}
-            startDate={customStart}
-            endDate={customEnd}
-            onCustomDateChange={handleCustomDateChange}
-          />
-        </div>
+      <section className="flex justify-end">
+        <DateFilterDropdown
+          selectedFilter={timeframe}
+          onChangeFilter={setTimeframe}
+          startDate={customStart}
+          endDate={customEnd}
+          onCustomDateChange={handleCustomDateChange}
+        />
       </section>
 
-      {/* 6 Cards Stats Row */}
+      {loadError ? (
+        <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
+          {loadError}
+        </div>
+      ) : null}
+
       <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-        {customerSummary.map((item) => (
+        {summaryCards.map((item) => (
           <CustomerOverviewCard key={item.id} {...item} />
         ))}
       </section>
 
-      {/* Table & Toolbar Container */}
       <section className="overflow-hidden rounded-[16px] border border-[#ddd6cf] bg-white shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
         <CustomersToolbar
           searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
+          onSearchChange={setSearchTerm}
           statusFilter={statusFilter}
-          onStatusFilterChange={handleStatusChange}
+          onStatusFilterChange={setStatusFilter}
           cityFilter={cityFilter}
-          onCityFilterChange={handleCityChange}
-          timeframeFilter={timeframeFilter}
-          onTimeframeFilterChange={handleTimeframeFilterChange}
-          cities={citiesList}
+          onCityFilterChange={setCityFilter}
+          statuses={filterOptions.statuses}
+          cities={filterOptions.cities}
           onResetFilters={handleResetFilters}
         />
-        <CustomersTable
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          pageSize={pageSize}
-          rows={paginatedRows}
-          totalItems={filteredRows.length}
-        />
+        {isLoading ? (
+          <div className="px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
+            Loading customers...
+          </div>
+        ) : (
+          <CustomersTable
+            currentPage={pageInfo.page}
+            isUpdatingStatusId={isUpdatingStatusId}
+            onPageChange={setCurrentPage}
+            onToggleStatus={handleToggleStatus}
+            pageSize={pageInfo.pageSize}
+            rows={rows}
+            totalItems={pageInfo.totalItems}
+          />
+        )}
       </section>
     </div>
   );

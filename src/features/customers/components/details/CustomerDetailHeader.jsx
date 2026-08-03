@@ -1,11 +1,14 @@
-import { useState } from "react";
 import { ArrowLeft, Mail, Ban, CheckCircle, Copy, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
+import { useState } from "react";
 
-export default function CustomerDetailHeader({ customer: initialCustomer }) {
+export default function CustomerDetailHeader({
+  customer,
+  isUpdatingStatus = false,
+  onContact,
+  onToggleBlock,
+}) {
   const navigate = useNavigate();
-  const [customer, setCustomer] = useState(initialCustomer);
   const [copied, setCopied] = useState(false);
   const isActive = customer.status !== "Blocked";
 
@@ -13,49 +16,6 @@ export default function CustomerDetailHeader({ customer: initialCustomer }) {
     navigator.clipboard.writeText(customer.id);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleContact = () => {
-    Swal.fire({
-      title: "Contact Customer",
-      html: `
-        <div class="text-left space-y-3.5 text-[14px] p-3.5 bg-[#faf9f8] rounded-2xl border border-[#eee4dd] shadow-inner">
-          <p class="flex items-center gap-2"><strong class="text-[#8d7e72]">Name:</strong> <span class="font-bold text-[#18120f]">${customer.name}</span></p>
-          <p class="flex items-center gap-2"><strong class="text-[#8d7e72]">Email:</strong> <span class="font-bold text-[#18120f]">${customer.email || "eleanor.shellstrop@heaven.com"}</span></p>
-          <p class="flex items-center gap-2"><strong class="text-[#8d7e72]">Phone:</strong> <span class="font-bold text-[#18120f]">${customer.phone || "+1 (555) 123-4567"}</span></p>
-        </div>
-      `,
-      icon: "info",
-      confirmButtonText: "Close",
-      confirmButtonColor: "#d96834",
-    });
-  };
-
-  const handleToggleBlock = () => {
-    const isCurrentlyBlocked = customer.status === "Blocked";
-    const actionText = isCurrentlyBlocked ? "Unblock" : "Block";
-
-    Swal.fire({
-      title: `${actionText} Customer?`,
-      text: `Are you sure you want to ${actionText.toLowerCase()} ${customer.name}?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: `Yes, ${actionText}`,
-      cancelButtonText: "Cancel",
-      confirmButtonColor: isCurrentlyBlocked ? "#2b9e62" : "#d83f3f",
-      cancelButtonColor: "#c8b9aa",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const updatedStatus = isCurrentlyBlocked ? "Active" : "Blocked";
-        setCustomer({ ...customer, status: updatedStatus });
-        Swal.fire({
-          title: `Customer ${isCurrentlyBlocked ? "Unblocked" : "Blocked"}`,
-          text: `${customer.name} is now ${isCurrentlyBlocked ? "Active" : "Blocked"}.`,
-          icon: "success",
-          confirmButtonColor: "#d96834",
-        });
-      }
-    });
   };
 
   return (
@@ -114,7 +74,7 @@ export default function CustomerDetailHeader({ customer: initialCustomer }) {
       {/* Right: Actions */}
       <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap md:w-auto md:justify-end">
         <button
-          onClick={handleContact}
+          onClick={onContact}
           type="button"
           className="inline-flex h-10.5 w-full cursor-pointer items-center justify-center gap-2 rounded-[11px] border border-[#e6dad1] bg-white px-4 text-[13px] font-bold text-[#cf6e38] shadow-sm transition duration-200 hover:scale-102 hover:border-[#f0d4ca] hover:bg-[#fff0e7] active:scale-98 outline-none sm:w-auto sm:px-5"
         >
@@ -122,15 +82,18 @@ export default function CustomerDetailHeader({ customer: initialCustomer }) {
           Contact Customer
         </button>
         <button
-          onClick={handleToggleBlock}
+          disabled={isUpdatingStatus}
+          onClick={onToggleBlock}
           type="button"
-          className={`inline-flex h-10.5 w-full cursor-pointer items-center justify-center gap-2 rounded-[11px] border px-4 text-[13px] font-bold transition duration-200 outline-none shadow-sm hover:scale-102 active:scale-98 sm:w-auto sm:px-5 ${
+          className={`inline-flex h-10.5 w-full items-center justify-center gap-2 rounded-[11px] border px-4 text-[13px] font-bold transition duration-200 outline-none shadow-sm disabled:cursor-not-allowed disabled:opacity-60 hover:scale-102 active:scale-98 sm:w-auto sm:px-5 ${
             isActive
               ? "border-[#fbcaca] bg-white text-[#d83f3f] hover:bg-[#fff5f5]"
               : "border-[#cce4d6] bg-white text-[#2b9e62] hover:bg-[#f3faf6]"
           }`}
         >
-          {isActive ? (
+          {isUpdatingStatus ? (
+            "Updating..."
+          ) : isActive ? (
             <>
               <Ban size={14} />
               Block Account

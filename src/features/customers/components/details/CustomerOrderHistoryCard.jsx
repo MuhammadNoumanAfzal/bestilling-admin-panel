@@ -8,17 +8,21 @@ const STATUS_BADGE = {
   Pending: "bg-[#fffbeb] text-[#b45309] border border-[#fef3c7]",
 };
 
-export default function CustomerOrderHistoryCard({ ordersData = [] }) {
+export default function CustomerOrderHistoryCard({ ordersData = [], summary = null }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [showAll, setShowAll] = useState(false);
 
   const stats = useMemo(() => {
-    const total = ordersData.length;
-    const completed = ordersData.filter((o) => o.status === "Delivered").length;
-    const cancelled = ordersData.filter((o) => o.status === "Canceled").length;
+    const total = Number(summary?.totalOrders ?? ordersData.length);
+    const completed = Number(
+      summary?.totalDelivered ?? ordersData.filter((o) => o.status === "Delivered").length,
+    );
+    const cancelled = Number(
+      summary?.totalCancelled ?? ordersData.filter((o) => o.status === "Canceled").length,
+    );
     const rawSpent = ordersData.reduce((s, o) => s + (o.amountValue || 0), 0);
-    const spending = new Intl.NumberFormat("no-NO", {
+    const spending = summary?.totalSpent || new Intl.NumberFormat("no-NO", {
       style: "currency",
       currency: "NOK",
       minimumFractionDigits: 2,
@@ -30,7 +34,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
       { label: "Cancelled", value: cancelled, icon: XCircle, color: "text-[#c23b3b]", bg: "bg-[#fdeded]" },
       { label: "Total Spending", value: spending, icon: TrendingUp, color: "text-[#4f46e5]", bg: "bg-[#eef2ff]" },
     ];
-  }, [ordersData]);
+  }, [ordersData, summary]);
 
   const filteredOrders = useMemo(() => {
     if (!query.trim()) return ordersData;
@@ -151,7 +155,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
                 </div>
 
                 <button
-                  onClick={() => navigate(`/orders/${order.id.replace("#", "")}`)}
+                  onClick={() => navigate(`/orders/${encodeURIComponent(order.id)}`)}
                   type="button"
                   className="mt-4 inline-flex items-center gap-1 text-[13px] font-bold text-[#cf6e38] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none active:scale-95"
                 >
@@ -223,7 +227,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [] }) {
                     </td>
                     <td className="px-5.5 py-3.5 text-center">
                       <button
-                        onClick={() => navigate(`/orders/${order.id.replace("#", "")}`)}
+                        onClick={() => navigate(`/orders/${encodeURIComponent(order.id)}`)}
                         type="button"
                         className="inline-flex items-center gap-1 text-[13px] font-bold text-[#cf6e38] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none active:scale-95"
                       >

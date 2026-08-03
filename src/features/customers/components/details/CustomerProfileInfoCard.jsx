@@ -8,18 +8,27 @@ const FALLBACKS = {
   country: "Norway",
 };
 
-export default function CustomerProfileInfoCard({ customer = {} }) {
+export default function CustomerProfileInfoCard({ customer = {}, onEdit }) {
   return (
     <section className="space-y-4">
       {/* Section Header */}
-      <div className="flex items-center gap-2.5 px-1">
-        <span className="h-5 w-[3px] bg-[#d96834] rounded-full" />
-        <span className="inline-flex h-6 w-6 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#d96834] shadow-sm">
-          <User size={14} strokeWidth={2.5} />
-        </span>
-        <h3 className="text-[18px] font-extrabold tracking-tight text-[#18120f]">
-          Profile Information
-        </h3>
+      <div className="flex items-center justify-between gap-3 px-1">
+        <div className="flex items-center gap-2.5">
+          <span className="h-5 w-[3px] bg-[#d96834] rounded-full" />
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#d96834] shadow-sm">
+            <User size={14} strokeWidth={2.5} />
+          </span>
+          <h3 className="text-[18px] font-extrabold tracking-tight text-[#18120f]">
+            Profile Information
+          </h3>
+        </div>
+        <button
+          className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[10px] border border-[#ddd4cb] bg-white px-4 text-[12px] font-bold text-[#cf6e38] shadow-sm transition hover:bg-[#fff2ea]"
+          onClick={onEdit}
+          type="button"
+        >
+          Edit Profile
+        </button>
       </div>
 
       {/* Profile Details Card */}
@@ -37,10 +46,10 @@ export default function CustomerProfileInfoCard({ customer = {} }) {
             </div>
             <div className="rounded-[12px] bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef] border border-[#f0eae4]/60">
               <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
-                Street Address
+                Company Name
               </span>
               <span className="block text-[15px] font-bold text-[#18120f] mt-1.5 leading-tight">
-                {customer.streetAddress || FALLBACKS.streetAddress}
+                {customer.profile?.companyName || "Not provided"}
               </span>
             </div>
           </div>
@@ -57,10 +66,10 @@ export default function CustomerProfileInfoCard({ customer = {} }) {
             </div>
             <div className="rounded-[12px] bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef] border border-[#f0eae4]/60">
               <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
-                City & State
+                Preferred Contact
               </span>
               <span className="block text-[15px] font-bold text-[#18120f] mt-1.5 leading-tight">
-                {customer.cityState || (customer.city ? `${customer.city}, Norway` : FALLBACKS.cityState)}
+                {customer.profile?.preferredContactMethod || "Not specified"}
               </span>
             </div>
           </div>
@@ -77,12 +86,31 @@ export default function CustomerProfileInfoCard({ customer = {} }) {
             </div>
             <div className="rounded-[12px] bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef] border border-[#f0eae4]/60">
               <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
-                Country
+                Email Verification
               </span>
               <span className="block text-[15px] font-bold text-[#18120f] mt-1.5 leading-tight">
-                {customer.country || FALLBACKS.country}
+                {customer.profile?.isEmailVerified ? "Verified" : "Pending verification"}
               </span>
             </div>
+          </div>
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="rounded-[12px] border border-[#f0eae4]/60 bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef]">
+            <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
+              Last Login
+            </span>
+            <span className="block text-[15px] font-bold text-[#18120f] mt-1.5 leading-tight">
+              {customer.profile?.lastLoginAt || "Not available"}
+            </span>
+          </div>
+          <div className="rounded-[12px] border border-[#f0eae4]/60 bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef]">
+            <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
+              Admin Notes
+            </span>
+            <span className="block text-[15px] font-bold text-[#18120f] mt-1.5 leading-tight">
+              {customer.profile?.notes || "No admin notes added."}
+            </span>
           </div>
         </div>
       </div>

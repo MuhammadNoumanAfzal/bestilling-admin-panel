@@ -7,20 +7,22 @@ const TICKET_STATUS = {
   Open: "bg-[#fffbeb] text-[#b45309] rounded-[6px] px-2.5 py-0.5 text-[11px] font-extrabold tracking-wide uppercase border border-[#fef3c7] shadow-sm",
 };
 
-export default function CustomerSupportInteractionsCard({ ticketsData = [] }) {
+export default function CustomerSupportInteractionsCard({ ticketsData = [], summary = null }) {
   const navigate = useNavigate();
 
   const stats = useMemo(() => {
-    const total = ticketsData.length;
-    const open = ticketsData.filter((t) => t.status === "Open").length;
-    const resolved = ticketsData.filter((t) => t.status === "Resolved").length;
+    const total = Number(summary?.totalTickets ?? ticketsData.length);
+    const open = Number(summary?.openTickets ?? ticketsData.filter((t) => t.status === "Open").length);
+    const resolved = Number(
+      summary?.resolvedTickets ?? ticketsData.filter((t) => t.status === "Resolved").length,
+    );
 
     return [
       { label: "Total Tickets", value: total, icon: HelpCircle, color: "text-[#d96834]", bg: "bg-[#fff0e7]" },
       { label: "Open Tickets", value: open, icon: AlertCircle, color: "text-[#b45309]", bg: "bg-[#fffbeb]" },
       { label: "Resolved", value: resolved, icon: CheckCircle, color: "text-[#1f8c52]", bg: "bg-[#e8f8ef]" },
     ];
-  }, [ticketsData]);
+  }, [summary, ticketsData]);
 
   return (
     <section className="space-y-4">
@@ -81,7 +83,7 @@ export default function CustomerSupportInteractionsCard({ ticketsData = [] }) {
               <div className="mt-4 flex items-center justify-between gap-3">
                 <p className="text-[12px] font-medium text-[#7a6e66]">{t.createdDate}</p>
                 <button
-                  onClick={() => navigate(`/support/${t.id.replace("#", "")}`)}
+                  onClick={() => navigate(`/support/${encodeURIComponent(t.id)}`)}
                   type="button"
                   className="inline-flex cursor-pointer items-center justify-center rounded-[8px] border border-[#e0d5cc] bg-white px-3 py-2 text-[12px] font-bold text-[#cf6e38] shadow-sm transition hover:border-[#cf6e38] hover:bg-[#fff6f0] outline-none active:scale-95"
                 >
@@ -131,7 +133,7 @@ export default function CustomerSupportInteractionsCard({ ticketsData = [] }) {
                   <td className="px-5.5 py-3.5 text-[13px] text-[#7a6e66]">{t.createdDate}</td>
                   <td className="px-5.5 py-3.5 text-center">
                     <button
-                      onClick={() => navigate(`/support/${t.id.replace("#", "")}`)}
+                      onClick={() => navigate(`/support/${encodeURIComponent(t.id)}`)}
                       type="button"
                       className="inline-flex cursor-pointer items-center justify-center h-8.5 w-8.5 rounded-[8px] border border-[#e0d5cc] bg-white text-[#cf6e38] transition hover:border-[#cf6e38] hover:bg-[#fff6f0] outline-none active:scale-95 shadow-sm"
                       title="View Ticket details"

@@ -45,7 +45,11 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
             Customer Reviews
           </h3>
           <span className="rounded-full border border-[#fff0e7] bg-[#fff0e7] px-2.5 py-0.5 text-[11px] font-bold text-[#cf6e38] shadow-sm">
-            4.8 Average Rating Given
+            {reviewsData.length
+              ? `${(
+                  reviewsData.reduce((sum, item) => sum + Number(item.rating || 0), 0) / reviewsData.length
+                ).toFixed(1)} Average Rating Given`
+              : "No Ratings Yet"}
           </span>
         </div>
       </div>
@@ -144,6 +148,11 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
                   <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                     <div>
                       <span className="block text-[15px] font-bold text-[#18120f]">{review.name}</span>
+                      {review.createdAt ? (
+                        <span className="mt-1 block text-[11px] font-semibold text-[#8d7e72]">
+                          {review.createdAt}
+                        </span>
+                      ) : null}
                       <div className="mt-1.5 flex items-center gap-0.5">
                         {Array.from({ length: 5 }).map((_, index) => (
                           <Star

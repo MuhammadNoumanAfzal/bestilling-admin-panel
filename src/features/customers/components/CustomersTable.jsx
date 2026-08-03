@@ -31,7 +31,9 @@ function PersonCell({ name, src, email, avatar }) {
 
 export default function CustomersTable({
   currentPage,
+  isUpdatingStatusId = "",
   onPageChange,
+  onToggleStatus,
   pageSize,
   rows,
   totalItems,
@@ -130,7 +132,7 @@ export default function CustomersTable({
                     </td>
                     <td className="px-2 py-4 text-[15px] font-bold text-[#18120f] align-middle">
                       <button
-                        onClick={() => navigate(`/customers/${encodeURIComponent(row.id.replace("#", ""))}`)}
+                        onClick={() => navigate(`/customers/${encodeURIComponent(row.id)}`)}
                         className="text-[#d96834] hover:underline cursor-pointer font-bold outline-none text-left"
                       >
                         {row.id}
@@ -180,7 +182,7 @@ export default function CustomersTable({
                           <div className="absolute right-4 top-10 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
                             <button
                               onClick={() => {
-                                navigate(`/customers/${encodeURIComponent(row.id.replace("#", ""))}`);
+                                navigate(`/customers/${encodeURIComponent(row.id)}`);
                                 setActiveMenuId(null);
                               }}
                               className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
@@ -190,13 +192,18 @@ export default function CustomersTable({
                             </button>
                             <button
                               onClick={() => {
-                                alert(`Toggle active/blocked for ${row.name}`);
+                                onToggleStatus?.(row);
                                 setActiveMenuId(null);
                               }}
+                              disabled={isUpdatingStatusId === row.id}
                               className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
                               type="button"
                             >
-                              Toggle Status
+                              {isUpdatingStatusId === row.id
+                                ? "Updating..."
+                                : row.status === "Blocked"
+                                  ? "Unblock Account"
+                                  : "Block Account"}
                             </button>
                           </div>
                         </>
@@ -208,16 +215,6 @@ export default function CustomersTable({
             )}
           </tbody>
         </table>
-      </div>
-
-      <div className="flex items-center justify-center border-t border-[#eee4dd] px-4 py-3 bg-[#fcfbfa]">
-        <button
-          onClick={() => alert("Viewing all customer lists")}
-          className="inline-flex cursor-pointer items-center justify-center text-[13px] font-bold text-[#cf6e38] transition hover:underline outline-none"
-          type="button"
-        >
-          View all
-        </button>
       </div>
 
       {/* Pagination controls */}

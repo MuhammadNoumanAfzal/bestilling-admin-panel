@@ -1,5 +1,5 @@
-export const ADMIN_REPORTS_CORE_SNAPSHOT_QUERY = `
-  query AdminReportsCoreSnapshot(
+export const ADMIN_REPORTS_SNAPSHOT_QUERY = `
+  query AdminReportsSnapshot(
     $dateFrom: DateTime
     $dateTo: DateTime
     $preset: String
@@ -75,25 +75,6 @@ export const ADMIN_REPORTS_CORE_SNAPSHOT_QUERY = `
         label
         value
       }
-    }
-  }
-`;
-
-export const ADMIN_REPORTS_VENDOR_PERFORMANCE_QUERY = `
-  query AdminReportsVendorPerformance(
-    $dateFrom: DateTime
-    $dateTo: DateTime
-    $preset: String
-    $timezone: String
-  ) {
-    adminReportsSnapshot(
-      filters: {
-        dateFrom: $dateFrom
-        dateTo: $dateTo
-        preset: $preset
-        timezone: $timezone
-      }
-    ) {
       vendorPerformance {
         registration {
           count

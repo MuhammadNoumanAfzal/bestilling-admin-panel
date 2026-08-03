@@ -3,7 +3,6 @@ import Swal from "sweetalert2";
 import {
   exportAdminReportRequest,
   getAdminReportsSnapshotRequest,
-  getAdminReportsVendorPerformanceRequest,
 } from "../api/reportsApi.js";
 import CategoryPerformanceCard from "../components/CategoryPerformanceCard.jsx";
 import CustomerAnalyticsCard from "../components/CustomerAnalyticsCard.jsx";
@@ -48,7 +47,6 @@ export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [loadError, setLoadError] = useState("");
-  const [vendorLoadWarning, setVendorLoadWarning] = useState("");
 
   const snapshotFilters = useMemo(
     () => buildReportsFilters(selectedFilter, customStartDate, customEndDate),
@@ -61,37 +59,12 @@ export default function ReportsPage() {
     async function loadReportsSnapshot() {
       setIsLoading(true);
       setLoadError("");
-      setVendorLoadWarning("");
 
       try {
-        const [coreSnapshotResult, vendorSnapshotResult] = await Promise.allSettled([
-          getAdminReportsSnapshotRequest(snapshotFilters),
-          getAdminReportsVendorPerformanceRequest(snapshotFilters),
-        ]);
-
-        if (coreSnapshotResult.status !== "fulfilled") {
-          throw coreSnapshotResult.reason;
-        }
+        const snapshot = await getAdminReportsSnapshotRequest(snapshotFilters);
 
         if (isMounted) {
-          setReportSnapshot({
-            ...coreSnapshotResult.value,
-            vendorPerformance:
-              vendorSnapshotResult.status === "fulfilled"
-                ? vendorSnapshotResult.value
-                : {
-                    registration: { count: 0, note: "Vendor performance is temporarily unavailable." },
-                    vendors: [],
-                  },
-          });
-
-          if (vendorSnapshotResult.status === "rejected") {
-            setVendorLoadWarning(
-              vendorSnapshotResult.reason instanceof Error
-                ? vendorSnapshotResult.reason.message
-                : "Vendor performance is temporarily unavailable.",
-            );
-          }
+          setReportSnapshot(snapshot);
         }
       } catch (error) {
         if (isMounted) {
@@ -112,25 +85,61 @@ export default function ReportsPage() {
   }, [snapshotFilters]);
 
   async function handleExport() {
-    const { value: format } = await Swal.fire({
+    const { value: exportConfig } = await Swal.fire({
       title: "Export admin report",
-      text: "Choose the file format for this report export.",
-      input: "select",
-      inputOptions: {
-        PDF: "PDF",
-        CSV: "CSV",
-        XLSX: "XLSX",
-      },
-      inputValue: "PDF",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <label style="display:flex;flex-direction:column;gap:6px;">
+            <span style="font-size:12px;font-weight:700;color:#4a352b;">Format</span>
+            <select id="report-export-format" class="swal2-select" style="display:flex;width:100%;margin:0;">
+              <option value="PDF" selected>PDF</option>
+              <option value="CSV">CSV</option>
+              <option value="XLSX">XLSX</option>
+            </select>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:6px;">
+            <span style="font-size:12px;font-weight:700;color:#4a352b;">Sections</span>
+            <select id="report-export-sections" class="swal2-select" multiple style="display:flex;width:100%;min-height:180px;margin:0;">
+              <option value="SUMMARY" selected>Summary</option>
+              <option value="REVENUE" selected>Revenue</option>
+              <option value="ORDERS" selected>Orders</option>
+              <option value="VENDORS" selected>Vendors</option>
+              <option value="CUSTOMERS" selected>Customers</option>
+              <option value="CATEGORY" selected>Category</option>
+              <option value="OPERATIONS" selected>Operations</option>
+            </select>
+          </label>
+        </div>
+      `,
       showCancelButton: true,
       confirmButtonText: "Export",
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
-      inputValidator: (value) => (!value ? "Please choose an export format." : undefined),
+      focusConfirm: false,
+      preConfirm: () => {
+        const formatElement = document.getElementById("report-export-format");
+        const sectionsElement = document.getElementById("report-export-sections");
+        const format = formatElement?.value || "";
+        const sections = Array.from(sectionsElement?.selectedOptions || []).map(
+          (option) => option.value,
+        );
+
+        if (!format) {
+          Swal.showValidationMessage("Please choose an export format.");
+          return null;
+        }
+
+        if (!sections.length) {
+          Swal.showValidationMessage("Please select at least one report section.");
+          return null;
+        }
+
+        return { format, sections };
+      },
     });
 
-    if (!format) {
+    if (!exportConfig) {
       return;
     }
 
@@ -141,7 +150,8 @@ export default function ReportsPage() {
         dateFrom: snapshotFilters.dateFrom,
         dateTo: snapshotFilters.dateTo,
         preset: snapshotFilters.preset,
-        format,
+        format: exportConfig.format,
+        sections: exportConfig.sections,
       });
 
       window.open(result.exportUrl, "_blank", "noopener,noreferrer");
@@ -208,7 +218,6 @@ export default function ReportsPage() {
             <VendorPerformanceCard
               registration={reportSnapshot.vendorPerformance.registration}
               vendors={reportSnapshot.vendorPerformance.vendors}
-              warning={vendorLoadWarning}
             />
             <CustomerAnalyticsCard
               satisfaction={reportSnapshot.customerAnalytics.satisfaction}

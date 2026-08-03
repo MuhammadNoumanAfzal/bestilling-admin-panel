@@ -1,12 +1,10 @@
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
 import {
   buildReportsSnapshotViewModel,
-  buildVendorPerformanceViewModel,
   exportSectionOptions,
 } from "../reportsUtils.js";
 import {
-  ADMIN_REPORTS_CORE_SNAPSHOT_QUERY,
-  ADMIN_REPORTS_VENDOR_PERFORMANCE_QUERY,
+  ADMIN_REPORTS_SNAPSHOT_QUERY,
   EXPORT_ADMIN_REPORT_MUTATION,
 } from "./reportsQueries.js";
 
@@ -15,7 +13,7 @@ function getReportsErrorMessage(result, fallbackMessage) {
 }
 
 export async function getAdminReportsSnapshotRequest(filters) {
-  const data = await executeProtectedGraphqlRequest(ADMIN_REPORTS_CORE_SNAPSHOT_QUERY, filters);
+  const data = await executeProtectedGraphqlRequest(ADMIN_REPORTS_SNAPSHOT_QUERY, filters);
   const snapshot = data?.adminReportsSnapshot;
 
   if (!snapshot) {
@@ -23,11 +21,6 @@ export async function getAdminReportsSnapshotRequest(filters) {
   }
 
   return buildReportsSnapshotViewModel(snapshot, filters?.filterLabel || "Last 7 days");
-}
-
-export async function getAdminReportsVendorPerformanceRequest(filters) {
-  const data = await executeProtectedGraphqlRequest(ADMIN_REPORTS_VENDOR_PERFORMANCE_QUERY, filters);
-  return buildVendorPerformanceViewModel(data?.adminReportsSnapshot?.vendorPerformance);
 }
 
 export async function exportAdminReportRequest(input) {

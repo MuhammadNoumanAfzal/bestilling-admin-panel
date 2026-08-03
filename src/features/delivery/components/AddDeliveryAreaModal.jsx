@@ -3,26 +3,22 @@ import { useState } from "react";
 import AddDeliveryAreaField from "./add-area/AddDeliveryAreaField.jsx";
 import AddDeliveryPostalCodesTable from "./add-area/AddDeliveryPostalCodesTable.jsx";
 
-const regionOptions = [
-  { value: "ostlandet", label: "Ostlandet" },
-  { value: "vestlandet", label: "Vestlandet" },
-  { value: "trondelag", label: "Trondelag" },
-  { value: "nord-norge", label: "Nord-Norge" },
+const coverageTypeOptions = [
+  { value: "ALL_CITY_COVERAGE", label: "All City Coverage" },
+  { value: "SELECTED_POSTAL_CODES_ONLY", label: "Selected Postal Codes Only" },
 ];
 
-const coverageOptions = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+const postalStatusOptions = [
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
 ];
 
-const postalModeOptions = [
-  { value: "city", label: "All City Coverage" },
-  { value: "selected", label: "Selected Postal Codes Only" },
-];
-
-const initialPostalRows = [
-  { id: "0590", postalCode: "0590", areaName: "Oslo Sentrum", status: "Active", vendors: 42 },
-];
+const initialPostalForm = {
+  id: "",
+  postalCode: "",
+  areaName: "",
+  status: "ACTIVE",
+};
 
 function SectionTitle({ children }) {
   return (
@@ -35,77 +31,68 @@ function SectionTitle({ children }) {
   );
 }
 
-export default function AddDeliveryAreaModal({ onClose }) {
+export default function AddDeliveryAreaModal({
+  isSubmitting = false,
+  onClose,
+  onSubmit,
+  regionOptions = [],
+}) {
   const [form, setForm] = useState({
     country: "Norway",
-    region: "ostlandet",
-    cityName: "",
-    coverageStatus: "active",
-    deliveryRadius: "",
-    leadTime: "",
-    postalMode: "city",
+    region: regionOptions[0] || "",
+    city: "",
+    coverageType: "SELECTED_POSTAL_CODES_ONLY",
+    maxDeliveryRadius: "",
+    leadTimeDays: "",
   });
-  const [postalRows, setPostalRows] = useState(initialPostalRows);
-  const [postalForm, setPostalForm] = useState({
-    id: "",
-    postalCode: "",
-    areaName: "",
-    status: "Active",
-    vendors: "",
-  });
+  const [postalRows, setPostalRows] = useState([]);
+  const [postalForm, setPostalForm] = useState(initialPostalForm);
+
+  function updateField(key, value) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
 
   function updatePostalField(key, value) {
     setPostalForm((current) => ({ ...current, [key]: value }));
   }
 
   function resetPostalForm() {
-    setPostalForm({
-      id: "",
-      postalCode: "",
-      areaName: "",
-      status: "Active",
-      vendors: "",
-    });
-  }
-
-  function updateField(key, value) {
-    setForm((current) => ({ ...current, [key]: value }));
+    setPostalForm(initialPostalForm);
   }
 
   function handleAddPostalCode() {
-    if (!postalForm.postalCode.trim() || !postalForm.areaName.trim()) {
+    const trimmedPostalCode = postalForm.postalCode.trim();
+    const trimmedAreaName = postalForm.areaName.trim();
+
+    if (!trimmedPostalCode || !trimmedAreaName) {
       return;
     }
+
+    const nextRow = {
+      id: postalForm.id || `postal-${Date.now()}`,
+      postalCode: trimmedPostalCode,
+      areaName: trimmedAreaName,
+      status: postalForm.status,
+    };
 
     if (postalForm.id) {
       setPostalRows((current) =>
-        current.map((row) =>
-          row.id === postalForm.id
-            ? {
-                ...row,
-                postalCode: postalForm.postalCode,
-                areaName: postalForm.areaName,
-                status: postalForm.status,
-                vendors: Number(postalForm.vendors || 0),
-              }
-            : row,
-        ),
+        current.map((row) => (row.id === postalForm.id ? nextRow : row)),
       );
-      resetPostalForm();
-      return;
+    } else {
+      setPostalRows((current) => [...current, nextRow]);
     }
 
-    setPostalRows((current) => [
-      ...current,
-      {
-        id: `code-${current.length + 1}`,
-        postalCode: postalForm.postalCode,
-        areaName: postalForm.areaName,
-        status: postalForm.status,
-        vendors: Number(postalForm.vendors || 0),
-      },
-    ]);
     resetPostalForm();
+  }
+
+  function handleEditPostalCode(row) {
+    setPostalForm({
+      id: row.id,
+      postalCode: row.postalCode,
+      areaName: row.areaName,
+      status: row.status,
+    });
   }
 
   function handleDeletePostalCode(id) {
@@ -116,13 +103,15 @@ export default function AddDeliveryAreaModal({ onClose }) {
     }
   }
 
-  function handleEditPostalCode(row) {
-    setPostalForm({
-      id: row.id,
-      postalCode: row.postalCode,
-      areaName: row.areaName,
-      status: row.status,
-      vendors: String(row.vendors),
+  async function handleSave() {
+    await onSubmit({
+      city: form.city,
+      region: form.region,
+      country: form.country,
+      coverageType: form.coverageType,
+      maxDeliveryRadius: form.maxDeliveryRadius,
+      leadTimeDays: form.leadTimeDays,
+      postalAreas: postalRows,
     });
   }
 
@@ -149,147 +138,121 @@ export default function AddDeliveryAreaModal({ onClose }) {
 
         <div className="overflow-y-auto px-5 py-4">
           <div className="space-y-4">
-          <section className="rounded-[14px] border border-[#eee3db] bg-white p-3.5">
-            <SectionTitle>Basic Information</SectionTitle>
-            <div className="grid gap-2.5 sm:grid-cols-2">
-              <AddDeliveryAreaField
-                label="Country"
-                onChange={(event) => updateField("country", event.target.value)}
-                value={form.country}
-              />
-              <AddDeliveryAreaField
-                as="select"
-                label="Region"
-                onChange={(event) => updateField("region", event.target.value)}
-                options={regionOptions}
-                value={form.region}
-              />
-              <AddDeliveryAreaField
-                label="City Name"
-                onChange={(event) => updateField("cityName", event.target.value)}
-                placeholder="Enter city"
-                value={form.cityName}
-              />
-              <AddDeliveryAreaField
-                as="select"
-                label="Coverage Status"
-                onChange={(event) => updateField("coverageStatus", event.target.value)}
-                options={coverageOptions}
-                value={form.coverageStatus}
-              />
-            </div>
-          </section>
-
-          <section className="rounded-[14px] border border-[#eee3db] bg-white p-3.5">
-            <SectionTitle>Delivery Coverage</SectionTitle>
-            <div className="grid gap-2.5 sm:grid-cols-2">
-              <AddDeliveryAreaField
-                label="Max Delivery Radius (km)"
-                onChange={(event) => updateField("deliveryRadius", event.target.value)}
-                placeholder="0"
-                type="number"
-                value={form.deliveryRadius}
-              />
-              <AddDeliveryAreaField
-                label="Default Lead Time (days)"
-                onChange={(event) => updateField("leadTime", event.target.value)}
-                placeholder="1"
-                type="number"
-                value={form.leadTime}
-              />
-            </div>
-
-            <div className="mt-3">
-              <p className="text-[12px] font-bold text-[#2f241d]">Coverage Type</p>
-              <div className="mt-2 flex flex-wrap gap-3">
-                {postalModeOptions.map((option) => (
-                  <label
-                    key={option.value}
-                    className="inline-flex cursor-pointer items-center gap-2 text-[12px] font-medium text-[#574c45]"
-                  >
-                    <input
-                      checked={form.postalMode === option.value}
-                      className="accent-[#cf6e38]"
-                      name="postalMode"
-                      onChange={() => updateField("postalMode", option.value)}
-                      type="radio"
-                    />
-                    <span>{option.label}</span>
-                  </label>
-                ))}
+            <section className="rounded-[14px] border border-[#eee3db] bg-white p-3.5">
+              <SectionTitle>Basic Information</SectionTitle>
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                <AddDeliveryAreaField
+                  label="Country"
+                  onChange={(event) => updateField("country", event.target.value)}
+                  value={form.country}
+                />
+                <AddDeliveryAreaField
+                  as="select"
+                  label="Region"
+                  onChange={(event) => updateField("region", event.target.value)}
+                  options={regionOptions.map((item) => ({ value: item, label: item }))}
+                  value={form.region}
+                />
+                <AddDeliveryAreaField
+                  label="City Name"
+                  onChange={(event) => updateField("city", event.target.value)}
+                  placeholder="Enter city"
+                  value={form.city}
+                />
+                <AddDeliveryAreaField
+                  as="select"
+                  label="Coverage Type"
+                  onChange={(event) => updateField("coverageType", event.target.value)}
+                  options={coverageTypeOptions}
+                  value={form.coverageType}
+                />
               </div>
-            </div>
-          </section>
+            </section>
 
-          <section className="rounded-[14px] border border-[#eee3db] bg-white p-3.5">
-            <SectionTitle>Postal Codes</SectionTitle>
-            <div className="mb-3 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-              <AddDeliveryAreaField
-                label="Postal Code"
-                onChange={(event) => updatePostalField("postalCode", event.target.value)}
-                placeholder="0590"
-                value={postalForm.postalCode}
-              />
-              <AddDeliveryAreaField
-                label="Area Name"
-                onChange={(event) => updatePostalField("areaName", event.target.value)}
-                placeholder="Oslo Sentrum"
-                value={postalForm.areaName}
-              />
-              <AddDeliveryAreaField
-                as="select"
-                label="Status"
-                onChange={(event) => updatePostalField("status", event.target.value)}
-                options={[
-                  { value: "Active", label: "Active" },
-                  { value: "Inactive", label: "Inactive" },
-                ]}
-                value={postalForm.status}
-              />
-              <AddDeliveryAreaField
-                label="Vendors"
-                onChange={(event) => updatePostalField("vendors", event.target.value)}
-                placeholder="42"
-                type="number"
-                value={postalForm.vendors}
-              />
-            </div>
+            <section className="rounded-[14px] border border-[#eee3db] bg-white p-3.5">
+              <SectionTitle>Delivery Coverage</SectionTitle>
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                <AddDeliveryAreaField
+                  label="Max Delivery Radius (km)"
+                  onChange={(event) => updateField("maxDeliveryRadius", event.target.value)}
+                  placeholder="15"
+                  type="number"
+                  value={form.maxDeliveryRadius}
+                />
+                <AddDeliveryAreaField
+                  label="Default Lead Time (days)"
+                  onChange={(event) => updateField("leadTimeDays", event.target.value)}
+                  placeholder="2"
+                  type="number"
+                  value={form.leadTimeDays}
+                />
+              </div>
+            </section>
 
-            <div className="mb-3 flex justify-end">
+            <section className="rounded-[14px] border border-[#eee3db] bg-white p-3.5">
+              <SectionTitle>Postal Codes</SectionTitle>
+              <div className="mb-3 grid gap-2.5 sm:grid-cols-3">
+                <AddDeliveryAreaField
+                  label="Postal Code"
+                  onChange={(event) => updatePostalField("postalCode", event.target.value)}
+                  placeholder="5003"
+                  value={postalForm.postalCode}
+                />
+                <AddDeliveryAreaField
+                  label="Area Name"
+                  onChange={(event) => updatePostalField("areaName", event.target.value)}
+                  placeholder="Bergen Sentrum"
+                  value={postalForm.areaName}
+                />
+                <AddDeliveryAreaField
+                  as="select"
+                  label="Status"
+                  onChange={(event) => updatePostalField("status", event.target.value)}
+                  options={postalStatusOptions}
+                  value={postalForm.status}
+                />
+              </div>
+
+              <div className="mb-3 flex justify-end">
+                <button
+                  className="inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-[8px] bg-[#cf6e38] px-3 text-[12px] font-bold text-white transition hover:bg-[#bc6030]"
+                  onClick={handleAddPostalCode}
+                  type="button"
+                >
+                  <Plus size={12} />
+                  <span>{postalForm.id ? "Update Code" : "Add Code"}</span>
+                </button>
+              </div>
+
+              <AddDeliveryPostalCodesTable
+                onAdd={handleAddPostalCode}
+                onDelete={handleDeletePostalCode}
+                onEdit={handleEditPostalCode}
+                rows={postalRows.map((row) => ({
+                  ...row,
+                  status: row.status === "ACTIVE" ? "Active" : "Inactive",
+                  vendors: 0,
+                }))}
+              />
+            </section>
+
+            <div className="flex flex-wrap items-center justify-end gap-2.5">
               <button
-                className="inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-[8px] bg-[#cf6e38] px-3 text-[12px] font-bold text-white transition hover:bg-[#bc6030]"
-                onClick={handleAddPostalCode}
+                className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[8px] border border-[#d5ccc5] bg-white px-4 text-[12px] font-bold text-[#332822] transition hover:bg-[#faf6f2]"
+                onClick={onClose}
                 type="button"
               >
-                <Plus size={12} />
-                <span>{postalForm.id ? "Update Code" : "Add Code"}</span>
+                Cancel
+              </button>
+              <button
+                className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[8px] bg-[#cf6e38] px-4 text-[12px] font-bold text-white transition hover:bg-[#bc6030] disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isSubmitting}
+                onClick={handleSave}
+                type="button"
+              >
+                {isSubmitting ? "Saving..." : "Save Delivery Area"}
               </button>
             </div>
-
-            <AddDeliveryPostalCodesTable
-              onAdd={handleAddPostalCode}
-              onDelete={handleDeletePostalCode}
-              onEdit={handleEditPostalCode}
-              rows={postalRows}
-            />
-          </section>
-
-          <div className="flex flex-wrap items-center justify-end gap-2.5">
-            <button
-              className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[8px] border border-[#d5ccc5] bg-white px-4 text-[12px] font-bold text-[#332822] transition hover:bg-[#faf6f2]"
-              onClick={onClose}
-              type="button"
-            >
-              Cancel
-            </button>
-            <button
-              className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[8px] bg-[#cf6e38] px-4 text-[12px] font-bold text-white transition hover:bg-[#bc6030]"
-              onClick={onClose}
-              type="button"
-            >
-              Save Delivery Area
-            </button>
-          </div>
           </div>
         </div>
       </div>

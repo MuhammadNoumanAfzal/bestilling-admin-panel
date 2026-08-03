@@ -1,5 +1,5 @@
 import { Search, SlidersHorizontal, SquarePen, Trash2, UsersRound } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import DeliveryStatusPill from "./DeliveryStatusPill.jsx";
 import DeliveryPostalCodeModal from "./DeliveryPostalCodeModal.jsx";
 
@@ -10,7 +10,8 @@ const initialFormState = {
   postalCode: "",
   areaName: "",
   status: "Active",
-  vendors: "",
+  lat: "",
+  lng: "",
 };
 
 function PostalCodeTableAction({ children, tone = "default", onClick }) {
@@ -30,27 +31,25 @@ function PostalCodeTableAction({ children, tone = "default", onClick }) {
   );
 }
 
-export default function DeliveryPostalAreasCard({ area }) {
-  const [rows, setRows] = useState(area.postalAreas ?? []);
+export default function DeliveryPostalAreasCard({
+  areaId,
+  areaName,
+  rows,
+  isSubmitting = false,
+  onCreate,
+  onDelete,
+  onUpdate,
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create");
   const [form, setForm] = useState(initialFormState);
 
-  useEffect(() => {
-    setRows(area.postalAreas ?? []);
-    setSearchTerm("");
-    setStatusFilter("All");
-    setModalOpen(false);
-    setModalMode("create");
-    setForm(initialFormState);
-  }, [area.id, area.postalAreas]);
-
   const filteredRows = useMemo(() => {
     const normalizedTerm = searchTerm.trim().toLowerCase();
 
-    return rows.filter((row) => {
+    return (rows || []).filter((row) => {
       const matchesSearch =
         !normalizedTerm ||
         row.postalCode.toLowerCase().includes(normalizedTerm) ||
@@ -84,7 +83,8 @@ export default function DeliveryPostalAreasCard({ area }) {
       postalCode: row.postalCode,
       areaName: row.areaName,
       status: row.status,
-      vendors: String(row.vendors),
+      lat: row.lat,
+      lng: row.lng,
     });
     setModalMode("edit");
     setModalOpen(true);
@@ -95,7 +95,7 @@ export default function DeliveryPostalAreasCard({ area }) {
     resetForm();
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const trimmedPostalCode = form.postalCode.trim();
     const trimmedAreaName = form.areaName.trim();
 
@@ -103,31 +103,13 @@ export default function DeliveryPostalAreasCard({ area }) {
       return;
     }
 
-    const nextRow = {
-      id: form.id || `postal-${Date.now()}`,
-      postalCode: trimmedPostalCode,
-      areaName: trimmedAreaName,
-      status: form.status,
-      vendors: Number(form.vendors || 0),
-    };
-
     if (modalMode === "edit") {
-      setRows((current) => current.map((row) => (row.id === form.id ? nextRow : row)));
+      await onUpdate(form.id, form);
     } else {
-      setRows((current) => [nextRow, ...current]);
+      await onCreate(areaId, form);
     }
 
     handleCloseModal();
-  }
-
-  function handleDelete(id) {
-    const confirmed = window.confirm("Remove this postal code from the delivery area?");
-
-    if (!confirmed) {
-      return;
-    }
-
-    setRows((current) => current.filter((row) => row.id !== id));
   }
 
   return (
@@ -138,7 +120,7 @@ export default function DeliveryPostalAreasCard({ area }) {
             <div>
               <h2 className="text-[28px] font-bold tracking-[-0.03em] text-[#18120f]">Postal Codes</h2>
               <p className="mt-2 text-[16px] leading-7 text-[#6f645d]">
-                Manage the zones available inside this delivery area with the same coverage structure used across the
+                Manage the zones available inside {areaName} with the same coverage structure used across the
                 admin panel.
               </p>
             </div>
@@ -188,19 +170,20 @@ export default function DeliveryPostalAreasCard({ area }) {
             </div>
 
             <p className="text-[14px] font-medium text-[#7c7068]">
-              {filteredRows.length} of {rows.length} postal zones visible
+              {filteredRows.length} of {(rows || []).length} postal zones visible
             </p>
           </div>
         </div>
 
         <div className="w-full overflow-x-auto">
-          <table className="min-w-[760px] w-full border-collapse">
+          <table className="min-w-[860px] w-full border-collapse">
             <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
               <tr className="text-left">
                 <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">Postal Code</th>
                 <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Area Name</th>
                 <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
                 <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendors</th>
+                <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Coordinates</th>
                 <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
               </tr>
             </thead>
@@ -208,7 +191,7 @@ export default function DeliveryPostalAreasCard({ area }) {
             <tbody>
               {filteredRows.length === 0 ? (
                 <tr className="border-t border-[#f1e9e2]">
-                  <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={5}>
+                  <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={6}>
                     No postal codes match the current search or filter.
                   </td>
                 </tr>
@@ -226,12 +209,15 @@ export default function DeliveryPostalAreasCard({ area }) {
                         <span>{row.vendors}</span>
                       </span>
                     </td>
+                    <td className="px-3 py-4 text-[14px] font-medium text-[#18120f]">
+                      {row.lat && row.lng ? `${row.lat}, ${row.lng}` : "Not set"}
+                    </td>
                     <td className="px-4 py-4 text-right">
                       <div className="inline-flex items-center gap-1">
                         <PostalCodeTableAction onClick={() => handleOpenEdit(row)}>
                           <SquarePen size={15} />
                         </PostalCodeTableAction>
-                        <PostalCodeTableAction onClick={() => handleDelete(row.id)} tone="danger">
+                        <PostalCodeTableAction onClick={() => onDelete(row.id)} tone="danger">
                           <Trash2 size={15} />
                         </PostalCodeTableAction>
                       </div>
@@ -247,7 +233,7 @@ export default function DeliveryPostalAreasCard({ area }) {
       <DeliveryPostalCodeModal
         form={form}
         isOpen={modalOpen}
-        isSubmitting={false}
+        isSubmitting={isSubmitting}
         mode={modalMode}
         onChange={updateFormField}
         onClose={handleCloseModal}

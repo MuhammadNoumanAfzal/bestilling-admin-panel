@@ -20,6 +20,14 @@ function CoverageChip({ label }) {
 }
 
 export default function DeliveryMapCard({ area }) {
+  const polygons = Array.isArray(area.map?.polygons) ? area.map.polygons : [];
+  const markers = Array.isArray(area.map?.markers) ? area.map.markers : [];
+  const center = area.map?.center || {};
+  const polygonPoints = polygons.reduce(
+    (total, polygon) => total + (Array.isArray(polygon?.points) ? polygon.points.length : 0),
+    0,
+  );
+
   return (
     <section className="overflow-hidden rounded-[18px] border border-[#ddd4cd] bg-white shadow-[0_10px_24px_rgba(55,31,13,0.05)]">
       <div className="flex flex-col gap-4 px-5 py-4">
@@ -38,29 +46,51 @@ export default function DeliveryMapCard({ area }) {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-[16px] border border-[#e8ddd5]">
-          <img
-            alt={`${area.city} coverage map`}
-            className="h-[270px] w-full object-cover"
-            src="https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1400&q=80"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,rgba(38,24,16,0.12)_100%)]" />
-          <div className="absolute left-1/2 top-1/2 flex h-36 w-36 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/70 bg-white/24 shadow-[0_18px_40px_rgba(47,28,18,0.16)] backdrop-blur-md">
-            <div className="absolute h-24 w-24 rounded-full border border-white/50" />
-            <div className="absolute h-14 w-14 rounded-full border border-white/50" />
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#cf6e38] shadow-[0_10px_24px_rgba(255,255,255,0.45)]">
-              <MapPin size={18} fill="currentColor" />
+        <div className="relative overflow-hidden rounded-[16px] border border-[#e8ddd5] bg-[linear-gradient(180deg,#fffaf6_0%,#fff3ea_100%)] p-5">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-[16px] border border-[#eadfd6] bg-white px-4 py-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Map Center</p>
+              <p className="mt-2 text-[15px] font-semibold text-[#18120f]">
+                {center.lat != null && center.lng != null ? `${center.lat}, ${center.lng}` : "Not configured"}
+              </p>
+              <p className="mt-1 text-[12px] text-[#7a6d66]">Zoom level: {area.map?.zoom ?? 10}</p>
+            </div>
+
+            <div className="rounded-[16px] border border-[#eadfd6] bg-white px-4 py-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Coverage Shapes</p>
+              <p className="mt-2 text-[28px] font-extrabold tracking-[-0.04em] text-[#18120f]">{polygons.length}</p>
+              <p className="mt-1 text-[12px] text-[#7a6d66]">{polygonPoints} polygon points loaded</p>
+            </div>
+
+            <div className="rounded-[16px] border border-[#eadfd6] bg-white px-4 py-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Coverage Markers</p>
+              <p className="mt-2 text-[28px] font-extrabold tracking-[-0.04em] text-[#18120f]">{markers.length}</p>
+              <p className="mt-1 text-[12px] text-[#7a6d66]">Active map reference points</p>
             </div>
           </div>
 
-          <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/92 px-3 py-1.5 shadow-[0_10px_24px_rgba(39,22,14,0.1)] backdrop-blur-sm">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#fff1e7] text-[#cf6e38]">
-              <MapPinned size={14} />
-            </span>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Coverage</p>
-              <p className="text-[13px] font-semibold text-[#18120f]">{area.coveragePercent} of area enabled</p>
+          <div className="mt-4 rounded-[16px] border border-dashed border-[#eadfd6] bg-white/80 px-4 py-5">
+            <div className="flex items-center gap-2 text-[#cf6e38]">
+              <MapPinned size={16} />
+              <p className="text-[13px] font-bold text-[#2b211b]">Map data connected</p>
             </div>
+            <p className="mt-2 text-[13px] leading-6 text-[#786d66]">
+              The backend is returning polygon and marker coordinates for this delivery area. A visual GIS renderer can
+              be added on top of this payload without changing the GraphQL integration.
+            </p>
+            {markers.length ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {markers.slice(0, 6).map((marker) => (
+                  <span
+                    key={marker.id}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[#ead2c3] bg-white px-3 py-1.5 text-[12px] font-medium text-[#4f4036]"
+                  >
+                    <MapPin size={13} className="text-[#cf6e38]" />
+                    <span>{marker.label || marker.type || "Marker"}</span>
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

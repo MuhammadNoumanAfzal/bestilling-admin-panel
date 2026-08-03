@@ -1,4 +1,4 @@
-import { MapPinned, Save, UsersRound, X } from "lucide-react";
+import { MapPinned, Save, X } from "lucide-react";
 import AddDeliveryAreaField from "../add-area/AddDeliveryAreaField.jsx";
 
 const statusOptions = [
@@ -29,7 +29,7 @@ export default function DeliveryPostalCodeModal({
               {mode === "edit" ? "Edit Postal Code" : "Add Postal Code"}
             </h2>
             <p className="mt-2 text-[14px] leading-6 text-[#6f645d]">
-              Keep this delivery zone complete with clear area naming, vendor count, and coverage status.
+              Keep this delivery zone complete with clear area naming and coverage coordinates.
             </p>
           </div>
 
@@ -50,12 +50,13 @@ export default function DeliveryPostalCodeModal({
               </span>
               <div>
                 <p className="text-[16px] font-bold text-[#18120f]">Coverage Details</p>
-                <p className="text-[13px] text-[#7b6f68]">Set the postal code, local area, and vendor availability.</p>
+                <p className="text-[13px] text-[#7b6f68]">Set the postal code, local area, and map coordinates.</p>
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <AddDeliveryAreaField
+                disabled={mode === "edit"}
                 label="Postal Code"
                 onChange={(event) => onChange("postalCode", event.target.value)}
                 placeholder="0590"
@@ -74,23 +75,21 @@ export default function DeliveryPostalCodeModal({
                 options={statusOptions}
                 value={form.status}
               />
+              <div />
               <AddDeliveryAreaField
-                label="Registered Vendors"
-                onChange={(event) => onChange("vendors", event.target.value)}
-                placeholder="21"
+                label="Latitude"
+                onChange={(event) => onChange("lat", event.target.value)}
+                placeholder="59.9139"
                 type="number"
-                value={form.vendors}
+                value={form.lat}
               />
-            </div>
-
-            <div className="mt-4 rounded-[16px] border border-[#f0e0d6] bg-[#fff8f3] px-4 py-3">
-              <div className="flex items-center gap-2 text-[14px] font-semibold text-[#2b211b]">
-                <UsersRound size={16} className="text-[#cf6e38]" />
-                <span>Tip</span>
-              </div>
-              <p className="mt-1 text-[13px] leading-6 text-[#786d66]">
-                Use vendor count to reflect how many active partners can currently deliver within this postal zone.
-              </p>
+              <AddDeliveryAreaField
+                label="Longitude"
+                onChange={(event) => onChange("lng", event.target.value)}
+                placeholder="10.7522"
+                type="number"
+                value={form.lng}
+              />
             </div>
           </div>
         </div>
@@ -104,7 +103,7 @@ export default function DeliveryPostalCodeModal({
             Cancel
           </button>
           <button
-            className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-[#cf6e38] px-4 text-[13px] font-semibold text-white transition hover:bg-[#bc6030]"
+            className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-[#cf6e38] px-4 text-[13px] font-semibold text-white transition hover:bg-[#bc6030] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSubmitting}
             onClick={onSubmit}
             type="button"

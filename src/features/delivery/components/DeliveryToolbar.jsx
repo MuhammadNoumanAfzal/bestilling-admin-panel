@@ -31,6 +31,7 @@ export default function DeliveryToolbar({
   onAddDeliveryArea,
   cityOptions,
   regionOptions,
+  statusOptions,
 }) {
   const isAllActive = !searchTerm && !statusFilter && !regionFilter && !cityFilter;
 
@@ -78,8 +79,7 @@ export default function DeliveryToolbar({
           onChange={onStatusFilterChange}
           options={[
             { label: "All Status", value: "" },
-            { label: "Active", value: "Active" },
-            { label: "Inactive", value: "Inactive" },
+            ...(statusOptions || []).map((item) => ({ label: item, value: item })),
           ]}
           value={statusFilter}
         />

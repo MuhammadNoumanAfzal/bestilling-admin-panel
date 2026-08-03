@@ -1,67 +1,128 @@
 import { useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
+import { createDeliveryAreaRequest, getAdminDeliveryAreasRequest, getAdminDeliverySummaryRequest } from "../api/deliveryApi.js";
 import AddDeliveryAreaModal from "../components/AddDeliveryAreaModal.jsx";
 import DeliveryAreasTable from "../components/DeliveryAreasTable.jsx";
 import DeliveryOverviewCard from "../components/DeliveryOverviewCard.jsx";
 import DeliveryToolbar from "../components/DeliveryToolbar.jsx";
-import { deliveryAreaRows, deliveryPagination, deliverySummary } from "../data/deliveryData.js";
+
+const PAGE_SIZE = 10;
 
 export default function DeliveryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddAreaOpen, setIsAddAreaOpen] = useState(false);
+  const [isSubmittingArea, setIsSubmittingArea] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
-  const pageSize = deliveryPagination.pageSize;
+  const [summaryCards, setSummaryCards] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [pageInfo, setPageInfo] = useState({
+    page: 1,
+    pageSize: PAGE_SIZE,
+    totalItems: 0,
+    totalPages: 1,
+  });
+  const [filterOptions, setFilterOptions] = useState({
+    cities: [],
+    regions: [],
+    statuses: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  const cityOptions = useMemo(
-    () => [...new Set(deliveryAreaRows.map((row) => row.city))].sort((a, b) => a.localeCompare(b)),
-    [],
+  const normalizedFilters = useMemo(
+    () => ({
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+      search: searchTerm,
+      status: statusFilter ? statusFilter.toUpperCase() : null,
+      region: regionFilter || null,
+      city: cityFilter || null,
+      sortBy: "city",
+      sortOrder: "ASC",
+    }),
+    [cityFilter, currentPage, regionFilter, searchTerm, statusFilter],
   );
-  const regionOptions = useMemo(
-    () => [...new Set(deliveryAreaRows.map((row) => row.region))].sort((a, b) => a.localeCompare(b)),
-    [],
-  );
 
-  const filteredRows = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
+  useEffect(() => {
+    let isMounted = true;
 
-    return deliveryAreaRows.filter((row) => {
-      const matchesSearch =
-        normalizedSearch.length === 0 ||
-        row.city.toLowerCase().includes(normalizedSearch) ||
-        row.region.toLowerCase().includes(normalizedSearch) ||
-        row.postalAreas.some(
-          (area) =>
-            area.postalCode.toLowerCase().includes(normalizedSearch) ||
-            area.areaName.toLowerCase().includes(normalizedSearch),
-        );
+    async function loadDeliveryPage() {
+      setIsLoading(true);
+      setLoadError("");
 
-      const matchesStatus = !statusFilter || row.status === statusFilter;
-      const matchesRegion = !regionFilter || row.region === regionFilter;
-      const matchesCity = !cityFilter || row.city === cityFilter;
+      try {
+        const [summaryResult, areasResult] = await Promise.all([
+          getAdminDeliverySummaryRequest(),
+          getAdminDeliveryAreasRequest(normalizedFilters),
+        ]);
 
-      return matchesSearch && matchesStatus && matchesRegion && matchesCity;
-    });
-  }, [cityFilter, regionFilter, searchTerm, statusFilter]);
+        if (!isMounted) {
+          return;
+        }
 
-  const totalItems = filteredRows.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+        setSummaryCards(summaryResult);
+        setRows(areasResult.rows);
+        setPageInfo(areasResult.pageInfo);
+        setFilterOptions(areasResult.filterOptions);
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(error instanceof Error ? error.message : "Unable to load delivery areas.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadDeliveryPage();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [normalizedFilters]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, regionFilter, cityFilter]);
 
-  const paginatedRows = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
+  async function handleCreateDeliveryArea(input) {
+    try {
+      setIsSubmittingArea(true);
+      const result = await createDeliveryAreaRequest(input);
+      setIsAddAreaOpen(false);
+      setCurrentPage(1);
+      const [summaryResult, areasResult] = await Promise.all([
+        getAdminDeliverySummaryRequest(),
+        getAdminDeliveryAreasRequest({
+          ...normalizedFilters,
+          page: 1,
+        }),
+      ]);
+      setSummaryCards(summaryResult);
+      setRows(areasResult.rows);
+      setPageInfo(areasResult.pageInfo);
+      setFilterOptions(areasResult.filterOptions);
 
-    return filteredRows.slice(startIndex, endIndex);
-  }, [currentPage, filteredRows, pageSize]);
-
-  function handlePageChange(nextPage) {
-    const safePage = Math.min(Math.max(nextPage, 1), totalPages);
-    setCurrentPage(safePage);
+      await Swal.fire({
+        icon: "success",
+        title: "Delivery area created",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to create delivery area",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsSubmittingArea(false);
+    }
   }
 
   return (
@@ -74,8 +135,14 @@ export default function DeliveryPage() {
           </p>
         </section>
 
+        {loadError ? (
+          <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
+            {loadError}
+          </div>
+        ) : null}
+
         <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-          {deliverySummary.map((item) => (
+          {summaryCards.map((item) => (
             <DeliveryOverviewCard key={item.id} {...item} />
           ))}
         </section>
@@ -83,7 +150,7 @@ export default function DeliveryPage() {
         <section className="overflow-hidden rounded-[16px] border border-[#d8ccc2] bg-white">
           <DeliveryToolbar
             cityFilter={cityFilter}
-            cityOptions={cityOptions}
+            cityOptions={filterOptions.cities}
             onAddDeliveryArea={() => setIsAddAreaOpen(true)}
             onCityFilterChange={setCityFilter}
             onRegionFilterChange={setRegionFilter}
@@ -97,21 +164,37 @@ export default function DeliveryPage() {
             onSearchChange={setSearchTerm}
             onStatusFilterChange={setStatusFilter}
             regionFilter={regionFilter}
-            regionOptions={regionOptions}
+            regionOptions={filterOptions.regions}
             searchTerm={searchTerm}
             statusFilter={statusFilter}
+            statusOptions={filterOptions.statuses.map((item) =>
+              item === "ACTIVE" ? "Active" : item === "INACTIVE" ? "Inactive" : item,
+            )}
           />
-          <DeliveryAreasTable
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-            pageSize={pageSize}
-            rows={paginatedRows}
-            totalItems={totalItems}
-          />
+          {isLoading ? (
+            <div className="px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
+              Loading delivery areas...
+            </div>
+          ) : (
+            <DeliveryAreasTable
+              currentPage={pageInfo.page}
+              onPageChange={setCurrentPage}
+              pageSize={pageInfo.pageSize}
+              rows={rows}
+              totalItems={pageInfo.totalItems}
+            />
+          )}
         </section>
       </div>
 
-      {isAddAreaOpen ? <AddDeliveryAreaModal onClose={() => setIsAddAreaOpen(false)} /> : null}
+      {isAddAreaOpen ? (
+        <AddDeliveryAreaModal
+          isSubmitting={isSubmittingArea}
+          onClose={() => setIsAddAreaOpen(false)}
+          onSubmit={handleCreateDeliveryArea}
+          regionOptions={filterOptions.regions}
+        />
+      ) : null}
     </>
   );
 }

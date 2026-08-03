@@ -27,7 +27,7 @@ export default function PaymentLifecycleCard({ payout }) {
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center">
-        <FlowNode icon={CircleDollarSign} label="Customer Pays" tone="blue" value={payout.orderAmount} />
+        <FlowNode icon={CircleDollarSign} label="Customer Pays" tone="blue" value={payout.financials.orderAmount} />
         <div className="hidden justify-center lg:flex">
           <ArrowRight className="text-[#c9b7ab]" size={20} />
         </div>
@@ -35,12 +35,12 @@ export default function PaymentLifecycleCard({ payout }) {
           icon={Banknote}
           label="Commission"
           tone="orange"
-          value={`(-${payout.platformCommission.replace("-", "")})`}
+          value={payout.financials.platformCommission}
         />
         <div className="hidden justify-center lg:flex">
           <ArrowRight className="text-[#c9b7ab]" size={20} />
         </div>
-        <FlowNode icon={Landmark} label="Vendor Receives" value={payout.vendorAmount} />
+        <FlowNode icon={Landmark} label="Vendor Receives" value={payout.financials.vendorAmount} />
       </div>
     </section>
   );

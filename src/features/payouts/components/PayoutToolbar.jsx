@@ -37,14 +37,14 @@ function AllButton({ isActive, onClick }) {
 }
 
 export default function PayoutToolbar({
-  dateFilter,
-  onDateFilterChange,
   onResetFilters,
   onSearchChange,
   onStatusFilterChange,
   onVendorFilterChange,
   searchTerm,
   statusFilter,
+  statusOptions = [],
+  vendorOptions = [],
   vendorFilter,
 }) {
   return (
@@ -74,16 +74,17 @@ export default function PayoutToolbar({
 
       <div className="flex flex-wrap items-center gap-2">
         <AllButton
-          isActive={statusFilter === "all" && vendorFilter === "all" && dateFilter === "all" && searchTerm === ""}
+          isActive={statusFilter === "all" && vendorFilter === "all" && searchTerm === ""}
           onClick={onResetFilters}
         />
         <FilterSelect
           onChange={(event) => onStatusFilterChange(event.target.value)}
           options={[
             { value: "all", label: "Status" },
-            { value: "Delivered", label: "Delivered" },
-            { value: "Canceled", label: "Canceled" },
-            { value: "Pending", label: "Pending" },
+            ...statusOptions.map((option) => ({
+              value: option.value,
+              label: option.label,
+            })),
           ]}
           value={statusFilter}
         />
@@ -91,23 +92,12 @@ export default function PayoutToolbar({
           onChange={(event) => onVendorFilterChange(event.target.value)}
           options={[
             { value: "all", label: "Vendor" },
-            { value: "Grill Bar", label: "Grill Bar" },
-            { value: "Chop Chop", label: "Chop Chop" },
-            { value: "Flavor Hunt", label: "Flavor Hunt" },
-            { value: "12 AM Hunger", label: "12 AM Hunger" },
-            { value: "BBQ Taste", label: "BBQ Taste" },
+            ...vendorOptions.map((option) => ({
+              value: option.value,
+              label: option.label,
+            })),
           ]}
           value={vendorFilter}
-        />
-        <FilterSelect
-          onChange={(event) => onDateFilterChange(event.target.value)}
-          options={[
-            { value: "all", label: "Date Range" },
-            { value: "7", label: "Last 7 days" },
-            { value: "30", label: "Last 30 days" },
-            { value: "90", label: "Last 90 days" },
-          ]}
-          value={dateFilter}
         />
       </div>
     </div>

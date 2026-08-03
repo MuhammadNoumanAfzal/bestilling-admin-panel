@@ -1,23 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
+import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
+import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
+import { getAdminCommissionSettingsRequest } from "../api/commissionApi.js";
+import { getAdminPaymentsRequest } from "../api/paymentsApi.js";
 import CommissionBreakdownCard from "../components/CommissionBreakdownCard.jsx";
 import PayoutOverviewCard from "../components/PayoutOverviewCard.jsx";
 import PayoutsTable from "../components/PayoutsTable.jsx";
 import PayoutToolbar from "../components/PayoutToolbar.jsx";
-import {
-  payoutsCommissionByRegion,
-  payoutsPagination,
-  payoutsRows,
-  payoutsSummary,
-  payoutsTopVendors,
-} from "../data/payoutsData.js";
 
-function isWithinDays(dateString, days) {
-  const currentDate = new Date("2026-07-21T00:00:00");
-  const targetDate = new Date(`${dateString}T00:00:00`);
-  const diffInMs = currentDate - targetDate;
-  const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+const PAGE_SIZE = 10;
 
-  return diffInDays <= days;
+function mapPaymentStatusFilter(value) {
+  switch (`${value ?? ""}`.trim().toUpperCase()) {
+    case "PAID":
+      return { value: "PAID", label: "Paid" };
+    case "SCHEDULED":
+      return { value: "SCHEDULED", label: "Scheduled" };
+    case "RELEASED":
+      return { value: "RELEASED", label: "Released" };
+    case "CANCELLED":
+    case "CANCELED":
+      return { value: "CANCELED", label: "Canceled" };
+    default:
+      return { value: "PENDING", label: "Pending" };
+  }
 }
 
 export default function PayoutsPage() {
@@ -25,70 +31,149 @@ export default function PayoutsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [vendorFilter, setVendorFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("all");
+  const [timeframe, setTimeframe] = useState("Last 7 days");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const [summaryCards, setSummaryCards] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [pageInfo, setPageInfo] = useState({
+    page: 1,
+    pageSize: PAGE_SIZE,
+    totalItems: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
+  const [filterOptions, setFilterOptions] = useState({
+    statuses: [],
+    vendors: [],
+  });
+  const [commissionBreakdown, setCommissionBreakdown] = useState({
+    regions: [],
+    vendors: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  const pageSize = payoutsPagination.pageSize;
+  const dateRange = useMemo(
+    () => getDateRangeForFilter(timeframe, customStart, customEnd),
+    [customEnd, customStart, timeframe],
+  );
 
-  const filteredRows = useMemo(() => {
-    const normalizedTerm = searchTerm.trim().toLowerCase();
+  const normalizedFilters = useMemo(
+    () => ({
+      search: searchTerm,
+      status: statusFilter === "all" ? "ALL" : statusFilter,
+      vendorId: vendorFilter === "all" ? null : vendorFilter,
+      dateFrom: dateRange?.start || null,
+      dateTo: dateRange?.end || null,
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+      sortBy: "CREATED_AT",
+      sortOrder: "DESC",
+    }),
+    [currentPage, dateRange, searchTerm, statusFilter, vendorFilter],
+  );
 
-    return payoutsRows.filter((row) => {
-      const matchesSearch =
-        !normalizedTerm ||
-        row.id.toLowerCase().includes(normalizedTerm) ||
-        row.customer.toLowerCase().includes(normalizedTerm) ||
-        row.vendor.toLowerCase().includes(normalizedTerm);
+  useEffect(() => {
+    let isMounted = true;
 
-      const matchesStatus =
-        statusFilter === "all" ||
-        row.orderStatus === statusFilter ||
-        row.orderPayment === statusFilter ||
-        row.payoutStatus === statusFilter;
+    async function loadPaymentsPage() {
+      setIsLoading(true);
+      setLoadError("");
 
-      const matchesVendor = vendorFilter === "all" || row.vendor === vendorFilter;
-      const matchesDate = dateFilter === "all" || isWithinDays(row.createdAt, Number(dateFilter));
+      try {
+        const [paymentsResponse, commissionResponse] = await Promise.all([
+          getAdminPaymentsRequest(normalizedFilters),
+          getAdminCommissionSettingsRequest(),
+        ]);
 
-      return matchesSearch && matchesStatus && matchesVendor && matchesDate;
-    });
-  }, [dateFilter, searchTerm, statusFilter, vendorFilter]);
+        if (!isMounted) {
+          return;
+        }
 
-  const totalItems = filteredRows.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+        setRows(paymentsResponse.rows);
+        setSummaryCards(paymentsResponse.summaryCards);
+        setPageInfo(paymentsResponse.pageInfo);
+        setFilterOptions({
+          statuses: paymentsResponse.filterOptions.statuses.map(mapPaymentStatusFilter),
+          vendors: paymentsResponse.filterOptions.vendors.map((vendor) => ({
+            value: vendor.id,
+            label: vendor.name,
+          })),
+        });
+        setCommissionBreakdown({
+          regions: commissionResponse.areaRows.map((row) => ({
+            id: row.id,
+            label: row.area,
+            value: row.commissionRate,
+          })),
+          vendors: commissionResponse.vendorRows.map((row) => ({
+            id: row.id,
+            name: row.vendor,
+            share: row.currentCommission,
+            avatar: row.avatar,
+            avatarUrl: row.avatarUrl,
+          })),
+        });
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(error instanceof Error ? error.message : "Unable to load payments.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
 
-  const paginatedRows = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
+    loadPaymentsPage();
 
-    return filteredRows.slice(startIndex, endIndex);
-  }, [currentPage, filteredRows, pageSize]);
+    return () => {
+      isMounted = false;
+    };
+  }, [normalizedFilters]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, vendorFilter, dateFilter]);
-
-  function handlePageChange(nextPage) {
-    const safePage = Math.min(Math.max(nextPage, 1), totalPages);
-    setCurrentPage(safePage);
-  }
+  }, [searchTerm, statusFilter, vendorFilter, timeframe, customStart, customEnd]);
 
   function handleResetFilters() {
     setSearchTerm("");
     setStatusFilter("all");
     setVendorFilter("all");
-    setDateFilter("all");
+    setTimeframe("Last 7 days");
+    setCustomStart("");
+    setCustomEnd("");
+    setCurrentPage(1);
+  }
+
+  function handleCustomDateChange(start, end) {
+    setCustomStart(start);
+    setCustomEnd(end);
+    setCurrentPage(1);
   }
 
   return (
     <div className="space-y-5">
-      <section className="space-y-1">
-        <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">Payments</h1>
-        <p className="text-[18px] leading-7">
-          Monitor vendor payouts, track platform commission, and manage financial lifecycle.
-        </p>
+      <section className="flex justify-end">
+        <DateFilterDropdown
+          selectedFilter={timeframe}
+          onChangeFilter={setTimeframe}
+          startDate={customStart}
+          endDate={customEnd}
+          onCustomDateChange={handleCustomDateChange}
+        />
       </section>
 
+      {loadError ? (
+        <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
+          {loadError}
+        </div>
+      ) : null}
+
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {payoutsSummary.map((item) => (
+        {summaryCards.map((item) => (
           <PayoutOverviewCard key={item.id} {...item} />
         ))}
       </section>
@@ -96,26 +181,32 @@ export default function PayoutsPage() {
       <section className="space-y-4">
         <div className="overflow-hidden rounded-[16px] border border-[#d8ccc2] bg-white">
           <PayoutToolbar
-            dateFilter={dateFilter}
-            onDateFilterChange={setDateFilter}
             onResetFilters={handleResetFilters}
             onSearchChange={setSearchTerm}
             onStatusFilterChange={setStatusFilter}
             onVendorFilterChange={setVendorFilter}
             searchTerm={searchTerm}
             statusFilter={statusFilter}
+            statusOptions={filterOptions.statuses}
             vendorFilter={vendorFilter}
+            vendorOptions={filterOptions.vendors}
           />
-          <PayoutsTable
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-            pageSize={pageSize}
-            rows={paginatedRows}
-            totalItems={totalItems}
-          />
+          {isLoading ? (
+            <div className="px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
+              Loading payments...
+            </div>
+          ) : (
+            <PayoutsTable
+              currentPage={pageInfo.page}
+              onPageChange={setCurrentPage}
+              pageSize={pageInfo.pageSize}
+              rows={rows}
+              totalItems={pageInfo.totalItems}
+            />
+          )}
         </div>
 
-        <CommissionBreakdownCard regions={payoutsCommissionByRegion} vendors={payoutsTopVendors} />
+        <CommissionBreakdownCard regions={commissionBreakdown.regions} vendors={commissionBreakdown.vendors} />
       </section>
     </div>
   );

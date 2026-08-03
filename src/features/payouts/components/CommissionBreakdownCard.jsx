@@ -45,6 +45,8 @@ function VendorShareRow({ avatar, avatarUrl, name, share }) {
 
 export default function CommissionBreakdownCard({ regions, vendors }) {
   const navigate = useNavigate();
+  const hasRegions = regions.length > 0;
+  const hasVendors = vendors.length > 0;
 
   return (
     <section className="overflow-hidden rounded-[18px] border border-[#d8ccc2] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]">
@@ -58,7 +60,9 @@ export default function CommissionBreakdownCard({ regions, vendors }) {
 
         <div className="rounded-[16px] border border-[#f2d7c7] bg-white px-4 py-2.5 shadow-[0_8px_20px_rgba(59,33,18,0.05)]">
           <p className="text-[13px] font-bold text-[#cf6e38]">Platform Default Commission</p>
-          <span className="mt-1 block text-[26px] font-bold tracking-[-0.03em] text-[#18120f]">15%</span>
+          <span className="mt-1 block text-[26px] font-bold tracking-[-0.03em] text-[#18120f]">
+            {regions[0]?.value || "0%"}
+          </span>
         </div>
       </div>
 
@@ -66,18 +70,26 @@ export default function CommissionBreakdownCard({ regions, vendors }) {
         <div className="border-b border-[#e9dfd8] px-5 py-3.5 lg:border-b-0 lg:border-r">
           <p className="text-[13px] font-bold uppercase tracking-[0.08em] text-[#8b7d75]">Region</p>
           <div className="mt-2.5 space-y-2">
-            {regions.map((region) => (
-              <RegionRow key={region.id} label={region.label} value={region.value} />
-            ))}
+            {hasRegions ? (
+              regions.map((region) => <RegionRow key={region.id} label={region.label} value={region.value} />)
+            ) : (
+              <p className="rounded-[14px] border border-dashed border-[#eadfd6] px-4 py-6 text-[14px] text-[#8b7d75]">
+                No area commission overrides are configured yet.
+              </p>
+            )}
           </div>
         </div>
 
         <div className="px-5 py-3.5">
           <p className="text-[13px] font-bold uppercase tracking-[0.08em] text-[#8b7d75]">Vendors</p>
           <div className="mt-2.5 grid gap-2 sm:grid-cols-2">
-            {vendors.map((vendor) => (
-              <VendorShareRow key={vendor.id} {...vendor} />
-            ))}
+            {hasVendors ? (
+              vendors.map((vendor) => <VendorShareRow key={vendor.id} {...vendor} />)
+            ) : (
+              <p className="rounded-[14px] border border-dashed border-[#eadfd6] px-4 py-6 text-[14px] text-[#8b7d75] sm:col-span-2">
+                No vendor commission overrides are configured yet.
+              </p>
+            )}
           </div>
         </div>
       </div>

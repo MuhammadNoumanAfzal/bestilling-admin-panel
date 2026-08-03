@@ -11,6 +11,8 @@ const paymentStatusClasses = {
   Paid: "bg-[#17b84a] text-white",
   Canceled: "bg-[#d80f0f] text-white",
   Pending: "bg-[#ffe8a6] text-[#b78600]",
+  Scheduled: "bg-[#eef4ff] text-[#4b74c6]",
+  Released: "bg-[#e9fff0] text-[#219653]",
 };
 
 function buildPaginationItems(currentPage, totalPages) {
@@ -145,7 +147,7 @@ export default function PayoutsTable({ currentPage, onPageChange, pageSize, rows
             ) : (
               rows.map((row) => (
                 <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.id}</td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.invoiceNumber}</td>
                   <td className="px-3 py-4">
                     <PersonCell
                       avatar={row.customerAvatar}
@@ -168,11 +170,11 @@ export default function PayoutsTable({ currentPage, onPageChange, pageSize, rows
                   </td>
                   <td className="px-3 py-4 text-[15px] font-semibold text-[#ff2c23]">{row.platformCommission}</td>
                   <td className="px-3 py-4">
-                    <StatusBadge status={row.orderPayment} variant="payment" />
+                    <StatusBadge status={row.customerPaymentStatus} variant="payment" />
                   </td>
                   <td className="px-3 py-4 text-[15px] font-semibold text-[#cf6e38]">{row.vendorAmount}</td>
                   <td className="px-3 py-4">
-                    <StatusBadge status={row.payoutStatus} variant="payment" />
+                    <StatusBadge status={row.vendorPayoutStatus} variant="payment" />
                   </td>
                   <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.date}</td>
                   <td className="px-4 py-4 text-right">

@@ -1,82 +1,165 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
+import Swal from "sweetalert2";
+import {
+  getAdminPaymentDetailRequest,
+  markCustomerPaymentReceivedRequest,
+  markVendorPayoutPaidRequest,
+} from "../api/paymentsApi.js";
 import PaymentActivityCard from "../components/details/PaymentActivityCard.jsx";
 import PaymentDetailsInfoCard from "../components/details/PaymentDetailsInfoCard.jsx";
 import PaymentDetailsOverviewCard from "../components/details/PaymentDetailsOverviewCard.jsx";
 import PaymentLifecycleCard from "../components/details/PaymentLifecycleCard.jsx";
 import PaymentStatusCards from "../components/details/PaymentStatusCards.jsx";
-import { getPayoutById } from "../data/payoutsData.js";
+
+function LoadingState() {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="h-24 animate-pulse rounded-[16px] border border-[#e8ddd5] bg-white" />
+        ))}
+      </div>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
+        <div className="space-y-4">
+          <div className="h-56 animate-pulse rounded-[18px] border border-[#ddd4cd] bg-white" />
+          <div className="h-52 animate-pulse rounded-[18px] border border-[#ddd4cd] bg-white" />
+          <div className="h-72 animate-pulse rounded-[18px] border border-[#ddd4cd] bg-white" />
+        </div>
+        <div className="h-80 animate-pulse rounded-[18px] border border-[#ddd4cd] bg-white" />
+      </div>
+    </div>
+  );
+}
 
 export default function PaymentDetailsPage() {
   const { payoutId } = useParams();
-  const payout = getPayoutById(decodeURIComponent(payoutId || ""));
-  const [orderPaymentStatus, setOrderPaymentStatus] = useState(payout?.orderPayment ?? "Paid");
-  const [payoutStatus, setPayoutStatus] = useState(payout?.payoutStatus ?? "Pending");
-  const [activityLog, setActivityLog] = useState(payout?.activity ?? []);
+  const [paymentDetail, setPaymentDetail] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [isUpdatingCustomerPayment, setIsUpdatingCustomerPayment] = useState(false);
+  const [isUpdatingVendorPayout, setIsUpdatingVendorPayout] = useState(false);
 
-  if (!payout) {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadPaymentDetail() {
+      setIsLoading(true);
+      setLoadError("");
+
+      try {
+        const detail = await getAdminPaymentDetailRequest(decodeURIComponent(payoutId || ""));
+
+        if (isMounted) {
+          setPaymentDetail(detail);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(error instanceof Error ? error.message : "Unable to load this payment.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadPaymentDetail();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [payoutId]);
+
+  async function refreshPaymentDetail() {
+    const detail = await getAdminPaymentDetailRequest(decodeURIComponent(payoutId || ""));
+    setPaymentDetail(detail);
+    return detail;
+  }
+
+  async function handleMarkReceived() {
+    if (!paymentDetail?.id || paymentDetail.statuses.customerPaymentStatus === "Paid") {
+      return;
+    }
+
+    try {
+      setIsUpdatingCustomerPayment(true);
+      const result = await markCustomerPaymentReceivedRequest(paymentDetail.id);
+      await refreshPaymentDetail();
+      await Swal.fire({
+        icon: "success",
+        title: "Customer payment updated",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to mark payment received",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsUpdatingCustomerPayment(false);
+    }
+  }
+
+  async function handleMarkPaid() {
+    if (!paymentDetail?.id || paymentDetail.statuses.vendorPayoutStatus === "Paid") {
+      return;
+    }
+
+    try {
+      setIsUpdatingVendorPayout(true);
+      const result = await markVendorPayoutPaidRequest(paymentDetail.id);
+      await refreshPaymentDetail();
+      await Swal.fire({
+        icon: "success",
+        title: "Vendor payout updated",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to mark vendor payout paid",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsUpdatingVendorPayout(false);
+    }
+  }
+
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
+  if (!paymentDetail) {
+    if (loadError) {
+      return (
+        <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-10 text-center text-[15px] font-medium text-[#9f4d33]">
+          {loadError}
+        </div>
+      );
+    }
+
     return <Navigate replace to="/payouts" />;
-  }
-
-  const paymentDetail = useMemo(
-    () => ({
-      ...payout,
-      orderPayment: orderPaymentStatus,
-      payoutStatus,
-    }),
-    [orderPaymentStatus, payout, payoutStatus],
-  );
-
-  const timelineItems = useMemo(
-    () =>
-      activityLog.map((item, index) => {
-        const [title, ...rest] = item.split(".");
-        const helperText = rest.join(".").trim();
-
-        return {
-          id: `${index}-${title}`,
-          title: title.trim(),
-          helperText: helperText || (index === 0 ? "Recorded in the payment system." : "Waiting for the next update."),
-          timestamp: index === 0 ? "Mar 10, 2026 - 10:00 AM" : "Pending update",
-          isComplete: item.toLowerCase().includes("completed") || item.toLowerCase().includes("confirmed"),
-        };
-      }),
-    [activityLog],
-  );
-
-  function handleMarkReceived() {
-    setOrderPaymentStatus("Paid");
-    setActivityLog((current) => [
-      "Customer payment confirmed. Awaiting vendor payout release.",
-      ...current,
-    ]);
-  }
-
-  function handleMarkPaid() {
-    setPayoutStatus("Paid");
-    setActivityLog((current) => [
-      "Vendor payout completed. Funds released to the vendor account.",
-      ...current,
-    ]);
   }
 
   return (
     <div className="space-y-6">
-      <section className="space-y-1">
-        <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">Payment Details</h1>
-        <p className="text-[18px] leading-7">
-          Track customer payment and vendor payout for this order.
-        </p>
-      </section>
+      {loadError ? (
+        <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
+          {loadError}
+        </div>
+      ) : null}
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <PaymentDetailsOverviewCard label="Total Order Amount" value={paymentDetail.orderAmount} />
-        <PaymentDetailsOverviewCard
-          label="Platform Commission"
-          value={paymentDetail.platformCommission.replace("-", "")}
-        />
-        <PaymentDetailsOverviewCard label="Vendor Receives" value={paymentDetail.vendorAmount} />
-        <PaymentDetailsOverviewCard label="Payment Status" value={paymentDetail.orderPayment} />
+        <PaymentDetailsOverviewCard label="Total Order Amount" value={paymentDetail.financials.orderAmount} />
+        <PaymentDetailsOverviewCard label="Platform Commission" value={paymentDetail.financials.platformCommission} />
+        <PaymentDetailsOverviewCard label="Vendor Receives" value={paymentDetail.financials.vendorAmount} />
+        <PaymentDetailsOverviewCard label="Customer Payment" value={paymentDetail.statuses.customerPaymentStatus} />
       </section>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
@@ -84,13 +167,15 @@ export default function PaymentDetailsPage() {
           <PaymentDetailsInfoCard payout={paymentDetail} />
           <PaymentLifecycleCard payout={paymentDetail} />
           <PaymentStatusCards
+            isUpdatingCustomerPayment={isUpdatingCustomerPayment}
+            isUpdatingVendorPayout={isUpdatingVendorPayout}
             onMarkPaid={handleMarkPaid}
             onMarkReceived={handleMarkReceived}
             payout={paymentDetail}
           />
         </div>
 
-        <PaymentActivityCard activity={timelineItems} />
+        <PaymentActivityCard activity={paymentDetail.activityItems} />
       </div>
     </div>
   );

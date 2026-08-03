@@ -22,6 +22,7 @@ function PaymentActionCard({
   buttonLabel,
   description,
   details,
+  disabled = false,
   icon: Icon,
   onClick,
   status,
@@ -52,7 +53,8 @@ function PaymentActionCard({
       </div>
 
       <button
-        className="mt-4 inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[12px] border border-[#ef9f7f] bg-white px-3 text-[13px] font-semibold text-[#cf6e38] transition hover:bg-[#fff5ef]"
+        className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[12px] border border-[#ef9f7f] bg-white px-3 text-[13px] font-semibold text-[#cf6e38] transition hover:bg-[#fff5ef] disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={disabled}
         onClick={onClick}
         type="button"
       >
@@ -63,31 +65,55 @@ function PaymentActionCard({
   );
 }
 
-export default function PaymentStatusCards({ onMarkPaid, onMarkReceived, payout }) {
+export default function PaymentStatusCards({
+  isUpdatingCustomerPayment = false,
+  isUpdatingVendorPayout = false,
+  onMarkPaid,
+  onMarkReceived,
+  payout,
+}) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <PaymentActionCard
-        buttonLabel="Mark as Received"
+        buttonLabel={
+          payout.statuses.customerPaymentStatus === "Paid"
+            ? "Already Received"
+            : isUpdatingCustomerPayment
+              ? "Updating..."
+              : "Mark as Received"
+        }
         description="Customer pays manually via invoice."
         details={[
           { label: "Invoice", value: payout.invoiceNumber },
-          { label: "Customer", value: payout.customer },
+          { label: "Customer", value: payout.customer.fullName },
         ]}
+        disabled={isUpdatingCustomerPayment || payout.statuses.customerPaymentStatus === "Paid"}
         icon={FileText}
         onClick={onMarkReceived}
-        status={payout.orderPayment}
+        status={payout.statuses.customerPaymentStatus}
         title="Customer Payment"
       />
       <PaymentActionCard
-        buttonLabel="Mark as Paid"
+        buttonLabel={
+          payout.statuses.vendorPayoutStatus === "Paid"
+            ? "Already Paid"
+            : isUpdatingVendorPayout
+              ? "Updating..."
+              : "Mark as Paid"
+        }
         description="Processed manually after customer payment."
         details={[
-          { label: "Vendor", value: payout.vendorName },
-          { label: "Payout", value: payout.vendorAmount },
+          { label: "Vendor", value: payout.vendor.name },
+          { label: "Payout", value: payout.financials.vendorAmount },
         ]}
+        disabled={
+          isUpdatingVendorPayout ||
+          payout.statuses.vendorPayoutStatus === "Paid" ||
+          payout.statuses.customerPaymentStatus !== "Paid"
+        }
         icon={CreditCard}
         onClick={onMarkPaid}
-        status={payout.payoutStatus}
+        status={payout.statuses.vendorPayoutStatus}
         title="Vendor Payout"
       />
     </div>

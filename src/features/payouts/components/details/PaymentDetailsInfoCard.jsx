@@ -19,17 +19,18 @@ export default function PaymentDetailsInfoCard({ payout }) {
         </div>
 
         <span className="inline-flex items-center self-start rounded-full border border-[#ead8cc] bg-[#fcf8f5] px-3 py-1 text-[12px] font-bold text-[#3b2f29] sm:self-auto">
-          {payout.id.replace("GCO", "ORD-")}
+          {payout.order.id || payout.id}
         </span>
       </div>
 
       <div className="grid gap-6 px-5 py-5 sm:grid-cols-2 xl:grid-cols-3">
         <InfoCell label="Invoice Number" value={payout.invoiceNumber} />
-        <InfoCell label="Customer Name" value={payout.customer} />
-        <InfoCell accent label="Vendor Name" value={payout.vendorName} />
-        <InfoCell label="Event Type" value="Corporate Gala" />
-        <InfoCell label="Order Date" value="Mar 10, 2024" />
-        <InfoCell label="Event Date" value="Mar 15, 2024" />
+        <InfoCell label="Customer Name" value={payout.customer.fullName} />
+        <InfoCell accent label="Vendor Name" value={payout.vendor.name} />
+        <InfoCell label="Vendor Contact" value={payout.vendor.contactName || "Not available"} />
+        <InfoCell label="Order Created" value={payout.order.createdAtLabel} />
+        <InfoCell label="Last Updated" value={payout.updatedAtLabel} />
+        <InfoCell label="Notes" value={payout.notes || "No payment notes added."} />
       </div>
     </section>
   );

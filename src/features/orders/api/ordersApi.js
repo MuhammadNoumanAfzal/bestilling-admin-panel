@@ -143,7 +143,6 @@ function buildAddressLabel(address) {
     address.line2,
     address.city,
     address.postalCode,
-    address.country,
   ]
     .filter(Boolean)
     .join(", ") || "Not provided";
@@ -159,19 +158,37 @@ function toIsoOrNull(value) {
 }
 
 function buildOrdersInput(filters = {}) {
+  const startDate = toIsoOrNull(filters.dateFrom);
+  const endDate = toIsoOrNull(filters.dateTo);
+
   return {
     search: filters.search || null,
     vendorId: filters.vendorId || null,
     status: filters.status || null,
     paymentStatus: filters.paymentStatus || null,
     eventType: filters.eventType || null,
-    dateFrom: toIsoOrNull(filters.dateFrom),
-    dateTo: toIsoOrNull(filters.dateTo),
+    dateRange: {
+      startDate,
+      endDate,
+    },
     page: Number(filters.page ?? 1),
     limit: Number(filters.limit ?? 10),
     sort: {
       field: filters.sortField || "PLACED_AT",
       direction: filters.sortDirection || "DESC",
+    },
+  };
+}
+
+function buildCategoryBreakdownInput(filters = {}) {
+  const startDate = toIsoOrNull(filters.dateFrom);
+  const endDate = toIsoOrNull(filters.dateTo);
+
+  return {
+    vendorId: filters.vendorId || null,
+    dateRange: {
+      startDate,
+      endDate,
     },
   };
 }
@@ -435,11 +452,7 @@ export async function getAdminOrdersRequest(filters) {
 
 export async function getAdminOrderCategoryBreakdownRequest(filters) {
   const data = await executeProtectedGraphqlRequest(ADMIN_ORDER_CATEGORY_BREAKDOWN_QUERY, {
-    input: buildOrdersInput({
-      ...filters,
-      page: 1,
-      limit: 50,
-    }),
+    input: buildCategoryBreakdownInput(filters),
   });
 
   return normalizeCategoryBreakdown(data?.adminOrderCategoryBreakdown?.items);

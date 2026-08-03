@@ -117,7 +117,6 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
           line2
           city
           postalCode
-          country
         }
       }
       vendor {
@@ -132,7 +131,6 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
           line2
           city
           postalCode
-          country
         }
         totalOrders
         rating
@@ -149,7 +147,6 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
           line2
           city
           postalCode
-          country
         }
         rider {
           id
@@ -342,7 +339,7 @@ export const ADMIN_EXPORT_ORDERS_MUTATION = `
 `;
 
 export const ADMIN_ORDER_CATEGORY_BREAKDOWN_QUERY = `
-  query AdminOrderCategoryBreakdown($input: AdminOrdersInput!) {
+  query AdminOrderCategoryBreakdown($input: AdminOrderCategoryBreakdownInput!) {
     adminOrderCategoryBreakdown(input: $input) {
       items {
         label

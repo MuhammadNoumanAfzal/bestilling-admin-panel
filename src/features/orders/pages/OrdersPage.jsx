@@ -1,84 +1,44 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
 import {
   ShoppingBag,
-  PlusCircle,
-  Clock,
-  Truck,
-  CheckCircle,
-  XCircle,
+  CircleDollarSign,
+  Clock3,
+  AlertCircle,
+  CheckCircle2,
+  Download,
 } from "lucide-react";
 
 import StatCard from "../../dashboard/components/StatCard.jsx";
+import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
+import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 import OrdersToolbar from "../components/OrdersToolbar.jsx";
 import OrdersTable from "../components/OrdersTable.jsx";
 import TopCateringCategoriesChart from "../components/TopCateringCategoriesChart.jsx";
-import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
-
 import {
-  initialOrders,
-} from "../data/ordersData.js";
+  exportAdminOrdersRequest,
+  getAdminOrderCategoryBreakdownRequest,
+  getAdminOrdersRequest,
+} from "../api/ordersApi.js";
+
+const PAGE_SIZE = 10;
 
 const iconMap = {
   total: ShoppingBag,
-  new: PlusCircle,
-  pending: Clock,
-  delivery: Truck,
-  delivered: CheckCircle,
-  canceled: XCircle,
+  paid: CircleDollarSign,
+  pending: Clock3,
+  review: AlertCircle,
+  delivered: CheckCircle2,
+  revenue: CircleDollarSign,
 };
 
-function parseOrderDate(dateTime) {
-  const [day, month, year] = String(dateTime || "").split(" ");
-  if (!day || !month || !year) {
-    return new Date(Number.NaN);
-  }
-
-  return new Date(`${month} ${day}, ${year}`);
-}
-
-function getDateRange(timeframe, customStart, customEnd) {
-  const today = new Date("2026-07-21T12:00:00");
-  const end = new Date(today);
-  end.setHours(23, 59, 59, 999);
-
-  if (timeframe === "Custom Date" && customStart && customEnd) {
-    const start = new Date(`${customStart}T00:00:00`);
-    const customEndDate = new Date(`${customEnd}T23:59:59`);
-
-    if (
-      !Number.isNaN(start.getTime()) &&
-      !Number.isNaN(customEndDate.getTime()) &&
-      start <= customEndDate
-    ) {
-      return { start, end: customEndDate };
-    }
-  }
-
-  const start = new Date(today);
-
-  switch (timeframe) {
-    case "Last Month":
-      start.setDate(start.getDate() - 30);
-      break;
-    case "Last 3 Months":
-      start.setDate(start.getDate() - 90);
-      break;
-    case "Last 6 Months":
-      start.setDate(start.getDate() - 180);
-      break;
-    case "This Year":
-      start.setMonth(0, 1);
-      break;
-    case "Last 7 days":
-    default:
-      start.setDate(start.getDate() - 7);
-      break;
-  }
-
-  start.setHours(0, 0, 0, 0);
-
-  return { start, end };
-}
+const presetByFilter = {
+  "Last 7 days": "LAST_7_DAYS",
+  "Last Month": "LAST_MONTH",
+  "Last 3 Months": "LAST_3_MONTHS",
+  "Last 6 Months": "LAST_6_MONTHS",
+  "This Year": "THIS_YEAR",
+};
 
 export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,9 +49,106 @@ export default function OrdersPage() {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
+  const [summaryCards, setSummaryCards] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [categoryItems, setCategoryItems] = useState([]);
+  const [pageInfo, setPageInfo] = useState({
+    page: 1,
+    pageSize: PAGE_SIZE,
+    totalItems: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
+  const [filterOptions, setFilterOptions] = useState({
+    vendors: [],
+    statuses: [],
+    paymentStatuses: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
-  const handleResetFilters = () => {
+  const dateRange = useMemo(
+    () => getDateRangeForFilter(timeframe, customStart, customEnd),
+    [customEnd, customStart, timeframe],
+  );
+
+  const normalizedFilters = useMemo(
+    () => ({
+      search: searchTerm,
+      vendorId: vendorFilter || null,
+      status: statusFilter
+        ? statusFilter.replace(/\s+/g, "_").toUpperCase()
+        : null,
+      paymentStatus: paymentFilter
+        ? paymentFilter.replace(/\s+/g, "_").toUpperCase()
+        : null,
+      dateFrom: dateRange?.start || null,
+      dateTo: dateRange?.end || null,
+      page: currentPage,
+      limit: PAGE_SIZE,
+      sortField: "PLACED_AT",
+      sortDirection: "DESC",
+    }),
+    [currentPage, dateRange, paymentFilter, searchTerm, statusFilter, vendorFilter],
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadOrders() {
+      setIsLoading(true);
+      setLoadError("");
+
+      try {
+        const [ordersResponse, categoryResponse] = await Promise.all([
+          getAdminOrdersRequest(normalizedFilters),
+          getAdminOrderCategoryBreakdownRequest(normalizedFilters),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setRows(ordersResponse.rows);
+        setSummaryCards(ordersResponse.summaryCards);
+        setPageInfo(ordersResponse.pageInfo);
+        setFilterOptions({
+          vendors: ordersResponse.filterOptions.vendors,
+          statuses: ordersResponse.filterOptions.statuses,
+          paymentStatuses: ordersResponse.filterOptions.paymentStatuses,
+        });
+        setCategoryItems(categoryResponse);
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(error instanceof Error ? error.message : "Unable to load orders.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadOrders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [normalizedFilters]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, vendorFilter, statusFilter, paymentFilter, timeframe, customStart, customEnd]);
+
+  function handleCustomDateChange(start, end) {
+    setCustomStart(start);
+    setCustomEnd(end);
+    setCurrentPage(1);
+  }
+
+  function handleResetFilters() {
     setSearchTerm("");
     setVendorFilter("");
     setStatusFilter("");
@@ -100,210 +157,106 @@ export default function OrdersPage() {
     setCustomStart("");
     setCustomEnd("");
     setCurrentPage(1);
-  };
+  }
 
-  const handleSearchChange = (val) => {
-    setSearchTerm(val);
-    setCurrentPage(1);
-  };
+  async function handleExport() {
+    try {
+      setIsExporting(true);
+      const result = await exportAdminOrdersRequest({
+        dateFrom: dateRange?.start?.toISOString() || null,
+        dateTo: dateRange?.end?.toISOString() || null,
+        preset: presetByFilter[timeframe] || null,
+        format: "CSV",
+        sections: ["SUMMARY", "ORDERS", "PAYMENTS"],
+      });
 
-  const handleVendorFilterChange = (val) => {
-    setVendorFilter(val);
-    setCurrentPage(1);
-  };
-
-  const handleStatusFilterChange = (val) => {
-    setStatusFilter(val);
-    setCurrentPage(1);
-  };
-
-  const handlePaymentFilterChange = (val) => {
-    setPaymentFilter(val);
-    setCurrentPage(1);
-  };
-
-  const handleTimeframeChange = (val) => {
-    setTimeframe(val);
-    setCurrentPage(1);
-  };
-
-  const handleCustomDateChange = (start, end) => {
-    setCustomStart(start);
-    setCustomEnd(end);
-    setCurrentPage(1);
-  };
-
-  const vendors = useMemo(() => {
-    const set = new Set(initialOrders.map((o) => o.vendor));
-    return Array.from(set);
-  }, []);
-
-  const paymentStatuses = useMemo(() => {
-    const set = new Set(initialOrders.map((o) => o.paymentStatus));
-    return Array.from(set);
-  }, []);
-
-  const filteredOrders = useMemo(() => {
-    const { start, end } = getDateRange(timeframe, customStart, customEnd);
-
-    return initialOrders.filter((order) => {
-      if (searchTerm) {
-        const s = searchTerm.toLowerCase();
-        const matches =
-          order.id.toLowerCase().includes(s) ||
-          order.customer.toLowerCase().includes(s) ||
-          order.customerEmail.toLowerCase().includes(s) ||
-          order.vendor.toLowerCase().includes(s);
-        if (!matches) return false;
-      }
-
-      if (vendorFilter && order.vendor !== vendorFilter) return false;
-
-      if (statusFilter && order.status !== statusFilter) return false;
-
-      if (paymentFilter && order.paymentStatus !== paymentFilter) return false;
-
-      const orderDate = parseOrderDate(order.dateTime);
-      if (Number.isNaN(orderDate.getTime()) || orderDate < start || orderDate > end) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [
-    searchTerm,
-    vendorFilter,
-    statusFilter,
-    paymentFilter,
-    timeframe,
-    customStart,
-    customEnd,
-  ]);
-
-  const paginatedOrders = useMemo(() => {
-    const startIdx = (currentPage - 1) * pageSize;
-    return filteredOrders.slice(startIdx, startIdx + pageSize);
-  }, [filteredOrders, currentPage]);
-
-  const orderStats = useMemo(() => {
-    const totalRevenue = filteredOrders.reduce(
-      (sum, order) => sum + Number(order.amountValue || 0),
-      0,
-    );
-
-    return [
-      {
-        id: "total",
-        title: "Total Orders",
-        value: filteredOrders.length.toLocaleString(),
-      },
-      {
-        id: "new",
-        title: "Paid Orders",
-        value: filteredOrders
-          .filter((order) => order.paymentStatus === "Paid")
-          .length.toLocaleString(),
-      },
-      {
-        id: "pending",
-        title: "Pending",
-        value: filteredOrders
-          .filter((order) => order.status === "Pending")
-          .length.toLocaleString(),
-      },
-      {
-        id: "delivery",
-        title: "Refund / Review",
-        value: filteredOrders
-          .filter((order) => order.paymentStatus !== "Paid")
-          .length.toLocaleString(),
-      },
-      {
-        id: "delivered",
-        title: "Delivered",
-        value: filteredOrders
-          .filter((order) => order.status === "Delivered")
-          .length.toLocaleString(),
-      },
-      {
-        id: "canceled",
-        title: "Revenue",
-        value: `NOK ${totalRevenue.toLocaleString()}`,
-      },
-    ];
-  }, [filteredOrders]);
+      window.open(result.fileUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Export failed",
+        text: error instanceof Error ? error.message : "Unable to export orders.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  }
 
   return (
-    <div className="space-y-5 sm:space-y-6">
-      <section className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div className="space-y-1">
-          <h1 className="text-[28px] font-bold tracking-[-0.04em] text-[#18120f] sm:text-[40px]">
-            Orders Management
-          </h1>
-          <p className="text-[15px] leading-6 text-[#6f645d] sm:text-[18px] sm:leading-7">
-            Manage and track all orders status.
-          </p>
-        </div>
+    <div className="space-y-6">
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+        <button
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] bg-[#cf6e38] px-4 text-[14px] font-semibold text-white transition hover:bg-[#b95c29] disabled:cursor-not-allowed disabled:opacity-70"
+          disabled={isExporting}
+          onClick={handleExport}
+          type="button"
+        >
+          <Download size={16} />
+          {isExporting ? "Exporting..." : "Export Orders"}
+        </button>
 
-        <div className="w-full md:w-auto md:max-w-full [&>*]:w-full md:[&>*]:w-auto">
-          <DateFilterDropdown
-            selectedFilter={timeframe}
-            onChangeFilter={handleTimeframeChange}
-            startDate={customStart}
-            endDate={customEnd}
-            onCustomDateChange={handleCustomDateChange}
-          />
-        </div>
+        <DateFilterDropdown
+          selectedFilter={timeframe}
+          onChangeFilter={setTimeframe}
+          startDate={customStart}
+          endDate={customEnd}
+          onCustomDateChange={handleCustomDateChange}
+        />
       </section>
 
+      {loadError ? (
+        <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
+          {loadError}
+        </div>
+      ) : null}
+
       <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
-        {orderStats.map((stat) => (
+        {summaryCards.map((stat) => (
           <StatCard
             key={stat.id}
             title={stat.title}
             value={stat.value}
-            accent={stat.accent}
-            icon={iconMap[stat.id]}
+            icon={iconMap[stat.id] || ShoppingBag}
           />
         ))}
       </section>
 
-      <section className="rounded-[14px] border border-[#ddd6cf] bg-white shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
+      <section className="overflow-hidden rounded-[16px] border border-[#ddd6cf] bg-white shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
         <OrdersToolbar
           searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
+          onSearchChange={setSearchTerm}
           vendorFilter={vendorFilter}
-          onVendorFilterChange={handleVendorFilterChange}
+          onVendorFilterChange={setVendorFilter}
           statusFilter={statusFilter}
-          onStatusFilterChange={handleStatusFilterChange}
+          onStatusFilterChange={setStatusFilter}
           paymentFilter={paymentFilter}
-          onPaymentFilterChange={handlePaymentFilterChange}
-          timeframe={timeframe}
-          onTimeframeChange={handleTimeframeChange}
-          customStart={customStart}
-          customEnd={customEnd}
-          onCustomDateChange={handleCustomDateChange}
+          onPaymentFilterChange={setPaymentFilter}
           onResetFilters={handleResetFilters}
-          vendors={vendors}
-          statuses={["Delivered", "Pending", "Canceled"]}
-          paymentStatuses={paymentStatuses}
+          vendors={filterOptions.vendors}
+          statuses={filterOptions.statuses}
+          paymentStatuses={filterOptions.paymentStatuses}
         />
 
-        <div className="p-3 sm:p-4">
-          <OrdersTable
-            orders={paginatedOrders}
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalItems={filteredOrders.length}
-            onPageChange={setCurrentPage}
-          />
-        </div>
+        {isLoading ? (
+          <div className="px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
+            Loading orders...
+          </div>
+        ) : (
+          <div className="p-3 sm:p-4">
+            <OrdersTable
+              orders={rows}
+              currentPage={pageInfo.page}
+              pageSize={pageInfo.pageSize}
+              totalItems={pageInfo.totalItems}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
       </section>
 
-      <section className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-2">
-          <TopCateringCategoriesChart />
-        </div>
+      <section className="grid gap-6">
+        <TopCateringCategoriesChart items={categoryItems} isLoading={isLoading} />
       </section>
     </div>
   );

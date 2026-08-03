@@ -3,15 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
 
 const statusClasses = {
-  Delivered: "bg-[#2b9e62] text-white",
-  Pending: "bg-[#ffb300] text-[#1d1713]",
-  Canceled: "bg-[#d83f3f] text-white",
+  Accepted: "bg-[#fff3d9] text-[#9c6a00]",
+  Preparing: "bg-[#fff0e7] text-[#cf6e38]",
+  "Out for delivery": "bg-[#edf5ff] text-[#296db8]",
+  Delivered: "bg-[#edf8f1] text-[#2b9e62]",
+  Canceled: "bg-[#feecec] text-[#d83f3f]",
+  Refunded: "bg-[#f3eefb] text-[#7a51b3]",
+  Pending: "bg-[#f4efe9] text-[#7a6d66]",
 };
 
 const paymentClasses = {
-  Paid: "text-[#2b9e62] font-bold text-[13px]",
-  Pending: "text-[#c8881b] font-bold text-[13px]",
-  Refund: "text-[#8d8178] font-bold text-[13px]",
+  Paid: "text-[#2b9e62]",
+  Failed: "text-[#d83f3f]",
+  Refunded: "text-[#7a51b3]",
+  "Partially refunded": "text-[#b5751a]",
+  Pending: "text-[#8c8077]",
 };
 
 function buildPaginationItems(currentPage, totalPages) {
@@ -34,7 +40,7 @@ function PaginationButton({ children, isActive = false, onClick }) {
   return (
     <button
       className={[
-        "inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-[8px] border px-2.5 text-[13px] font-semibold transition",
+        "inline-flex h-8 min-w-8 items-center justify-center rounded-[8px] border px-2.5 text-[13px] font-semibold transition",
         isActive
           ? "border-[#cf6e38] bg-[#cf6e38] text-white"
           : "border-transparent bg-transparent text-[#635751] hover:border-[#e5d8cf] hover:bg-[#faf6f2]",
@@ -54,7 +60,7 @@ function PaginationIconButton({ children, disabled = false, onClick }) {
         "inline-flex h-8 w-8 items-center justify-center rounded-[8px] border text-[#83766f] transition",
         disabled
           ? "cursor-not-allowed border-[#ebe1d9] bg-[#f7f3f0] text-[#c4b8b0]"
-          : "cursor-pointer border-[#e6dad1] hover:bg-[#faf5f1]",
+          : "border-[#e6dad1] hover:bg-[#faf5f1]",
       ].join(" ")}
       disabled={disabled}
       onClick={onClick}
@@ -69,14 +75,15 @@ function PersonCell({ name, src, subtitle, avatar }) {
   return (
     <div className="flex items-center gap-2.5">
       {src ? (
-        <img alt={name} className="h-9 w-9 shrink-0 rounded-full object-cover border border-[#eee4dd]" src={src} />
+        <img alt={name} className="h-9 w-9 rounded-full border border-[#eee4dd] object-cover" src={src} />
       ) : (
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f6eee8] text-[10px] font-bold text-[#2f241d]">
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#f6eee8] text-[10px] font-bold text-[#2f241d]">
           {avatar}
         </span>
       )}
+
       <div className="min-w-0">
-        <p className="truncate text-[15px] font-bold leading-5 text-[#18120f]">{name}</p>
+        <p className="truncate text-[14px] font-bold leading-5 text-[#18120f]">{name}</p>
         <p className="truncate text-[11px] text-[#5a4d46]">{subtitle}</p>
       </div>
     </div>
@@ -91,90 +98,66 @@ export default function OrdersTable({
   onPageChange,
 }) {
   const navigate = useNavigate();
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [activeMenuId, setActiveMenuId] = useState(null);
+  const [activeMenuId, setActiveMenuId] = useState("");
 
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const totalPages = Math.max(1, Math.ceil(totalItems / Math.max(1, pageSize)));
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, totalItems);
   const paginationItems = buildPaginationItems(currentPage, totalPages);
 
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedIds(orders.map((o) => o.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleSelectRow = (id) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
+  function openOrder(orderId) {
+    navigate(`/orders/${encodeURIComponent(orderId)}`);
+  }
 
   return (
-    <div className="mt-4 overflow-visible rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] md:overflow-hidden">
+    <div className="overflow-visible rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] md:overflow-hidden">
       <div className="hidden w-full overflow-x-auto md:block">
-        <table className="w-full min-w-[900px] border-collapse">
+        <table className="w-full min-w-[980px] border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="w-10 px-2 py-4 text-center">
-                <input
-                  type="checkbox"
-                  checked={orders.length > 0 && selectedIds.length === orders.length}
-                  onChange={handleSelectAll}
-                  className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
-                />
-              </th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Order ID</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Customer</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Event Type</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Date & Time</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Amount</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Payment</th>
-              <th className="w-16 px-2 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Customer</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Event</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Placed</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Amount</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Payment</th>
+              <th className="w-16 px-3 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
             </tr>
           </thead>
 
           <tbody>
             {orders.length === 0 ? (
               <tr>
-                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={10}>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={9}>
                   No orders match the current filters.
                 </td>
               </tr>
             ) : (
               orders.map((row) => {
-                const isSelected = selectedIds.includes(row.id);
                 const isMenuOpen = activeMenuId === row.id;
 
                 return (
                   <tr
                     key={row.id}
-                    className={`border-b border-[#f1e9e2] last:border-b-0 transition hover:bg-[#faf9f8] ${
-                      isSelected ? "bg-[#fffcf8]" : ""
-                    }`}
+                    className="border-b border-[#f1e9e2] transition hover:bg-[#faf9f8] last:border-b-0"
                   >
-                    <td className="px-2 py-4 text-center align-middle">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleSelectRow(row.id)}
-                        className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
-                      />
-                    </td>
-                    <td className="px-2 py-4 text-[15px] font-semibold text-[#18120f] align-middle">
+                    <td className="px-3 py-4 align-middle">
                       <button
-                        onClick={() => navigate(`/orders/${encodeURIComponent(row.id.replace("#", ""))}`)}
-                        className="text-[#d96834] hover:underline cursor-pointer font-bold outline-none text-left"
+                        className="text-left"
+                        onClick={() => openOrder(row.id)}
+                        type="button"
                       >
-                        {row.id}
+                        <span className="block text-[14px] font-bold text-[#d96834] hover:underline">
+                          {row.orderNumber}
+                        </span>
+                        <span className="block text-[11px] text-[#7a6d66]">
+                          {row.guestCount} guests
+                        </span>
                       </button>
                     </td>
-                    <td className="px-2 py-4 align-middle">
+                    <td className="px-3 py-4 align-middle">
                       <PersonCell
                         avatar={row.customerAvatar}
                         name={row.customer}
@@ -182,7 +165,7 @@ export default function OrdersTable({
                         subtitle={row.customerEmail}
                       />
                     </td>
-                    <td className="px-2 py-4 align-middle">
+                    <td className="px-3 py-4 align-middle">
                       <PersonCell
                         avatar={row.vendorAvatar}
                         name={row.vendor}
@@ -190,55 +173,55 @@ export default function OrdersTable({
                         subtitle={row.vendorCity}
                       />
                     </td>
-                    <td className="px-2 py-4 text-[15px] font-medium text-[#18120f] align-middle">
+                    <td className="px-3 py-4 align-middle text-[14px] text-[#18120f]">
                       {row.eventType}
                     </td>
-                    <td className="px-2 py-4 text-[15px] text-[#18120f] align-middle">
+                    <td className="px-3 py-4 align-middle text-[14px] text-[#18120f]">
                       {row.dateTime}
                     </td>
-                    <td className="px-2 py-4 text-[15px] font-bold text-[#18120f] align-middle">
+                    <td className="px-3 py-4 align-middle text-[14px] font-bold text-[#18120f]">
                       {row.amount}
                     </td>
-                    <td className="px-2 py-4 align-middle">
+                    <td className="px-3 py-4 align-middle">
                       <span
-                        className={`inline-flex min-w-[76px] justify-center rounded-full px-2.5 py-1 text-[11px] font-bold leading-none ${
-                          statusClasses[row.status] || "bg-[#fcfbfa] text-[#6f655e]"
+                        className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                          statusClasses[row.status] || statusClasses.Pending
                         }`}
                       >
                         {row.status}
                       </span>
                     </td>
-                    <td className="px-2 py-4 align-middle">
-                      <span className={paymentClasses[row.paymentStatus] || "text-[#18120f] font-medium"}>
+                    <td className="px-3 py-4 align-middle text-[13px] font-bold">
+                      <span className={paymentClasses[row.paymentStatus] || paymentClasses.Pending}>
                         {row.paymentStatus}
                       </span>
                     </td>
-                    <td className="relative px-2 py-4 text-right align-middle">
+                    <td className="relative px-3 py-4 text-right align-middle">
                       <button
-                        onClick={() => setActiveMenuId(activeMenuId === row.id ? null : row.id)}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[#6f655e] transition hover:bg-[#f1e9e2] hover:text-[#1f1711] cursor-pointer"
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[#6f655e] transition hover:bg-[#f1e9e2] hover:text-[#1f1711]"
+                        onClick={() => setActiveMenuId((current) => (current === row.id ? "" : row.id))}
                         type="button"
                       >
                         <MoreVertical size={14} />
                       </button>
 
-                      {isMenuOpen && (
+                      {isMenuOpen ? (
                         <>
-                          <div className="fixed inset-0 z-20" onClick={() => setActiveMenuId(null)} />
-                          <div className="absolute right-4 top-10 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
+                          <div className="fixed inset-0 z-20" onClick={() => setActiveMenuId("")} />
+                          <div className="absolute right-4 top-10 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)]">
                             <button
+                              className="block w-full px-3 py-1.5 text-left text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
                               onClick={() => {
-                                navigate(`/orders/${encodeURIComponent(row.id.replace("#", ""))}`);
-                                setActiveMenuId(null);
+                                openOrder(row.id);
+                                setActiveMenuId("");
                               }}
-                              className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
                               type="button"
                             >
                               View Details
                             </button>
                           </div>
                         </>
-                      )}
+                      ) : null}
                     </td>
                   </tr>
                 );
@@ -254,154 +237,89 @@ export default function OrdersTable({
             No orders match the current filters.
           </div>
         ) : (
-          orders.map((row) => {
-            const isSelected = selectedIds.includes(row.id);
-            const isMenuOpen = activeMenuId === row.id;
-
-            return (
-              <article
-                key={row.id}
-                className={`rounded-[18px] border border-[#e8ddd5] bg-[#fcfbfa] p-4 shadow-[0_8px_20px_rgba(56,33,17,0.05)] ${
-                  isSelected ? "ring-2 ring-[#cf6e38]/20" : ""
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleSelectRow(row.id)}
-                      className="mt-1 h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
-                    />
-                    <div>
-                      <button
-                        onClick={() =>
-                          navigate(`/orders/${encodeURIComponent(row.id.replace("#", ""))}`)
-                        }
-                        className="text-left text-[15px] font-bold text-[#d96834] hover:underline"
-                      >
-                        {row.id}
-                      </button>
-                      <p className="mt-1 text-[12px] text-[#7a6d66]">{row.dateTime}</p>
-                    </div>
-                  </div>
-
-                  <div className="relative">
-                    <button
-                      onClick={() => setActiveMenuId(activeMenuId === row.id ? null : row.id)}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#6f655e] transition hover:bg-[#f1e9e2] hover:text-[#1f1711] cursor-pointer"
-                      type="button"
-                    >
-                      <MoreVertical size={15} />
-                    </button>
-
-                    {isMenuOpen ? (
-                      <>
-                        <div className="fixed inset-0 z-20" onClick={() => setActiveMenuId(null)} />
-                        <div className="absolute right-0 top-10 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
-                          <button
-                            onClick={() => {
-                              navigate(`/orders/${encodeURIComponent(row.id.replace("#", ""))}`);
-                              setActiveMenuId(null);
-                            }}
-                            className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
-                            type="button"
-                          >
-                            View Details
-                          </button>
-                        </div>
-                      </>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <div className="rounded-[14px] bg-white px-3 py-2.5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#998d82]">
-                      Customer
-                    </p>
-                    <div className="mt-2">
-                      <PersonCell
-                        avatar={row.customerAvatar}
-                        name={row.customer}
-                        src={row.customerAvatarUrl}
-                        subtitle={row.customerEmail}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="rounded-[14px] bg-white px-3 py-2.5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#998d82]">
-                      Vendor
-                    </p>
-                    <div className="mt-2">
-                      <PersonCell
-                        avatar={row.vendorAvatar}
-                        name={row.vendor}
-                        src={row.vendorAvatarUrl}
-                        subtitle={row.vendorCity}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="rounded-[14px] bg-white px-3 py-2.5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#998d82]">
-                      Event
-                    </p>
-                    <p className="mt-2 text-[14px] font-medium text-[#242424]">{row.eventType}</p>
-                  </div>
-
-                  <div className="rounded-[14px] bg-white px-3 py-2.5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#998d82]">
-                      Amount
-                    </p>
-                    <p className="mt-2 text-[14px] font-bold text-[#242424]">{row.amount}</p>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <span
-                    className={`inline-flex min-w-[82px] justify-center rounded-full px-3 py-1.5 text-[11px] font-bold leading-none ${
-                      statusClasses[row.status] || "bg-[#fcfbfa] text-[#6f655e]"
-                    }`}
+          orders.map((row) => (
+            <article
+              key={row.id}
+              className="rounded-[18px] border border-[#e8ddd5] bg-[#fcfbfa] p-4 shadow-[0_8px_20px_rgba(56,33,17,0.05)]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <button
+                    className="text-left text-[15px] font-bold text-[#d96834] hover:underline"
+                    onClick={() => openOrder(row.id)}
+                    type="button"
                   >
-                    {row.status}
-                  </span>
+                    {row.orderNumber}
+                  </button>
+                  <p className="mt-1 text-[12px] text-[#7a6d66]">{row.dateTime}</p>
+                </div>
 
-                  <span className={paymentClasses[row.paymentStatus] || "text-[#18120f] font-medium"}>
+                <span
+                  className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                    statusClasses[row.status] || statusClasses.Pending
+                  }`}
+                >
+                  {row.status}
+                </span>
+              </div>
+
+              <div className="mt-4 space-y-3 text-[13px] text-[#4d423b]">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold text-[#8c8077]">Customer</span>
+                  <span className="text-right font-bold text-[#18120f]">{row.customer}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold text-[#8c8077]">Vendor</span>
+                  <span className="text-right font-bold text-[#18120f]">{row.vendor}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold text-[#8c8077]">Amount</span>
+                  <span className="font-bold text-[#18120f]">{row.amount}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold text-[#8c8077]">Payment</span>
+                  <span className={`font-bold ${paymentClasses[row.paymentStatus] || paymentClasses.Pending}`}>
                     {row.paymentStatus}
                   </span>
                 </div>
-              </article>
-            );
-          })
+              </div>
+            </article>
+          ))
         )}
       </div>
 
-      {/* Pagination Footer */}
-      <div className="flex flex-col gap-4 border-t border-[#eee4dd] px-4 py-4 text-[13px] text-[#6c6058] sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[14px] text-[#5b4f47]">
-          Showing {start} - {end} of {totalItems} Orders
+      <div className="flex flex-col gap-3 border-t border-[#eee4dd] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-[13px] text-[#7a6d66]">
+          Showing <span className="font-semibold text-[#18120f]">{start}</span> -{" "}
+          <span className="font-semibold text-[#18120f]">{end}</span> of{" "}
+          <span className="font-semibold text-[#18120f]">{totalItems}</span> orders
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-2 self-center sm:self-auto">
-          <PaginationIconButton disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)}>
+        <div className="flex items-center gap-1.5">
+          <PaginationIconButton disabled={currentPage <= 1} onClick={() => onPageChange(currentPage - 1)}>
             <ChevronLeft size={15} />
           </PaginationIconButton>
 
           {paginationItems.map((item) =>
-            String(item).startsWith("ellipsis") ? (
-              <span key={item} className="px-1 text-[13px] font-semibold text-[#7a6d66]">
+            String(item).includes("ellipsis") ? (
+              <span key={item} className="px-1 text-[#998d82]">
                 ...
               </span>
             ) : (
-              <PaginationButton key={item} isActive={item === currentPage} onClick={() => onPageChange(item)}>
+              <PaginationButton
+                key={item}
+                isActive={currentPage === item}
+                onClick={() => onPageChange(item)}
+              >
                 {item}
               </PaginationButton>
             ),
           )}
 
-          <PaginationIconButton disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)}>
+          <PaginationIconButton
+            disabled={currentPage >= totalPages}
+            onClick={() => onPageChange(currentPage + 1)}
+          >
             <ChevronRight size={15} />
           </PaginationIconButton>
         </div>

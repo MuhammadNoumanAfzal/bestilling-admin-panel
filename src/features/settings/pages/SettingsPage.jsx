@@ -23,6 +23,18 @@ const CURRENCY_OPTIONS = [
   { value: "USD", label: "USD - US Dollar" },
 ];
 
+const TIMEZONE_OPTIONS = [
+  { value: "Europe/Oslo", label: "Europe/Oslo" },
+  { value: "Europe/Berlin", label: "Europe/Berlin" },
+  { value: "America/New_York", label: "America/New_York" },
+];
+
+const LOCALE_OPTIONS = [
+  { value: "no", label: "Norwegian (no)" },
+  { value: "en", label: "English (en)" },
+  { value: "de", label: "German (de)" },
+];
+
 function SaveButton({ children, className = "", disabled = false, type = "button", onClick }) {
   return (
     <button
@@ -206,34 +218,66 @@ function ProfileInformationCard({
   );
 }
 
-function PreferencesCard({ preferences, onCurrencyChange, onSave, isSaving }) {
+function PreferencesCard({
+  preferences,
+  onFieldChange,
+  onSave,
+  isSaving,
+}) {
   return (
     <SettingsShellCard>
       <SettingsSectionHeader icon={BadgeCent} title="Platform Preferences" />
 
       <div className="max-w-[420px]">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[12px] font-bold text-[#2f241d]">Default Currency</span>
-          <select
-            className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
-            onChange={onCurrencyChange}
-            value={preferences.defaultCurrency}
-          >
-            {CURRENCY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex flex-col gap-1.5 sm:col-span-2">
+            <span className="text-[12px] font-bold text-[#2f241d]">Default Currency</span>
+            <select
+              className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
+              onChange={onFieldChange("defaultCurrency")}
+              value={preferences.defaultCurrency}
+            >
+              {CURRENCY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <SettingsField label="Timezone" readOnly value={preferences.timezone || "Not configured"} />
-          <SettingsField label="Locale" readOnly value={preferences.locale || "Not configured"} />
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[12px] font-bold text-[#2f241d]">Timezone</span>
+            <select
+              className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
+              onChange={onFieldChange("timezone")}
+              value={preferences.timezone}
+            >
+              {TIMEZONE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[12px] font-bold text-[#2f241d]">Locale</span>
+            <select
+              className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
+              onChange={onFieldChange("locale")}
+              value={preferences.locale}
+            >
+              {LOCALE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <p className="mt-2 text-[11px] leading-5 text-[#9c9087]">
-          This currency will be used across the platform for orders, invoices, commissions, reports, and payments.
+          These preferences are saved per administrator and apply to platform defaults like currency, timezone, and locale.
         </p>
 
         <SaveButton className="mt-6 h-10 px-6" disabled={isSaving} onClick={onSave}>
@@ -489,6 +533,8 @@ export default function SettingsPage() {
       setIsSavingPreferences(true);
       const result = await updatePlatformPreferencesRequest({
         defaultCurrency: preferencesForm.defaultCurrency,
+        timezone: preferencesForm.timezone,
+        locale: preferencesForm.locale,
       });
       setSettingsUser((current) => ({
         ...current,
@@ -648,10 +694,10 @@ export default function SettingsPage() {
         ) : (
           <PreferencesCard
             isSaving={isSavingPreferences}
-            onCurrencyChange={(event) =>
+            onFieldChange={(field) => (event) =>
               setPreferencesForm((current) => ({
                 ...current,
-                defaultCurrency: event.target.value,
+                [field]: event.target.value,
               }))
             }
             onSave={handleSavePreferences}

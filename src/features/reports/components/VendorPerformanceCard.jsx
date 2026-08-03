@@ -37,7 +37,7 @@ function VendorRow({ name, region, revenue, orders, avatar, avatarUrl }) {
   );
 }
 
-export default function VendorPerformanceCard({ vendors, registration }) {
+export default function VendorPerformanceCard({ vendors, registration, warning = "" }) {
   return (
     <ReportsSectionCard className="h-full">
       <div className="space-y-4">
@@ -50,10 +50,20 @@ export default function VendorPerformanceCard({ vendors, registration }) {
           </p>
         </div>
 
+        {warning ? (
+          <div className="rounded-[12px] border border-[#f1d8cd] bg-[#fff6f1] px-3 py-2 text-[12px] font-medium text-[#a35a39]">
+            {warning}
+          </div>
+        ) : null}
+
         <div className="space-y-2.5">
-          {vendors.map((vendor) => (
-            <VendorRow key={vendor.id} {...vendor} />
-          ))}
+          {vendors.length ? (
+            vendors.map((vendor) => <VendorRow key={vendor.id} {...vendor} />)
+          ) : (
+            <div className="rounded-[14px] border border-dashed border-[#e1d7d0] bg-[#fbf8f5] px-4 py-10 text-center text-[14px] font-medium text-[#7a6e67]">
+              No vendor performance data is available for the selected period.
+            </div>
+          )}
         </div>
 
         <div className="flex items-end justify-between rounded-[16px] border border-[#f1c7b6] bg-[#fff1ea] px-4 py-3">

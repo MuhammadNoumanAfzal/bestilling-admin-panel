@@ -12,6 +12,22 @@ function buildDonutGradient(categories) {
 }
 
 export default function CategoryPerformanceCard({ categories }) {
+  if (!categories.length) {
+    return (
+      <ReportsSectionCard className="h-full p-6">
+        <div className="space-y-3">
+          <h2 className="text-[18px] font-extrabold tracking-[-0.04em] text-[#18120f] sm:text-[20px]">
+            Category Performance
+          </h2>
+          <p className="text-[12px] font-medium text-[#8a7d74]">Market share by event type</p>
+          <div className="rounded-[14px] border border-dashed border-[#e1d7d0] bg-[#fbf8f5] px-4 py-10 text-center text-[14px] font-medium text-[#7a6e67]">
+            No category performance data is available for the selected period.
+          </div>
+        </div>
+      </ReportsSectionCard>
+    );
+  }
+
   const donutBackground = buildDonutGradient(categories);
   const [primaryCategory, ...secondaryCategories] = categories;
 

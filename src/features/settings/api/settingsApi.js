@@ -105,6 +105,8 @@ export async function updatePlatformPreferencesRequest(input) {
   const data = await executeProtectedGraphqlRequest(UPDATE_PLATFORM_PREFERENCES_MUTATION, {
     input: {
       defaultCurrency: String(input?.defaultCurrency || "").trim(),
+      timezone: String(input?.timezone || "").trim(),
+      locale: String(input?.locale || "").trim(),
     },
   });
 

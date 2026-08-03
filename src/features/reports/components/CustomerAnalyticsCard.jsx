@@ -13,6 +13,9 @@ function MetricTile({ label, value, note }) {
 }
 
 export default function CustomerAnalyticsCard({ stats, satisfaction }) {
+  const numericScore = Number.parseFloat(String(satisfaction.score || "0").replace("%", ""));
+  const scoreWidth = Number.isFinite(numericScore) ? `${Math.min(Math.max(numericScore, 0), 100)}%` : "0%";
+
   return (
     <ReportsSectionCard className="h-full">
       <div className="space-y-4">
@@ -26,23 +29,27 @@ export default function CustomerAnalyticsCard({ stats, satisfaction }) {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          {stats.map((item) => (
-            <MetricTile key={item.id} {...item} />
-          ))}
+          {stats.length ? (
+            stats.map((item) => <MetricTile key={item.id} {...item} />)
+          ) : (
+            <div className="rounded-[14px] border border-dashed border-[#e1d7d0] bg-[#fbf8f5] px-4 py-10 text-center text-[14px] font-medium text-[#7a6e67] sm:col-span-2">
+              No customer analytics data is available for the selected period.
+            </div>
+          )}
         </div>
 
         <div className="rounded-[16px] border border-[#84b6ff] bg-[#edf5ff] px-4 py-3.5">
           <div className="mb-3 flex items-center justify-between gap-3">
             <p className="text-[12px] font-bold text-[#2570dd]">Customer Satisfaction Score</p>
             <span className="rounded-full bg-[#2f80ff] px-2 py-0.5 text-[10px] font-bold text-white">
-              4.8/5
+              {satisfaction.score}
             </span>
           </div>
 
           <div className="h-2.5 overflow-hidden rounded-full bg-white/90">
             <div
               className="h-full rounded-full bg-[#2f80ff]"
-              style={{ width: satisfaction.score }}
+              style={{ width: scoreWidth }}
             />
           </div>
 

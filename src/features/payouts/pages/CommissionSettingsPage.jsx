@@ -565,12 +565,12 @@ export default function CommissionSettingsPage() {
 
   return (
     <div className="space-y-5">
-      <section className="space-y-1">
-        <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">Commission Settings</h1>
-        <p className="text-[18px] leading-7">Manage platform commission rates for all vendors.</p>
-        {loadError ? <p className="text-[14px] font-medium text-[#c65736]">{loadError}</p> : null}
-        {isRefreshing ? <p className="text-[13px] text-[#8d8077]">Refreshing latest commission data...</p> : null}
-      </section>
+      {(loadError || isRefreshing) ? (
+        <section className="space-y-1">
+          {loadError ? <p className="text-[14px] font-medium text-[#c65736]">{loadError}</p> : null}
+          {isRefreshing ? <p className="text-[13px] text-[#8d8077]">Refreshing latest commission data...</p> : null}
+        </section>
+      ) : null}
 
       <CommissionSettingsHeroCard onEdit={openGlobalModal} settings={commissionState.globalSettings} />
 

@@ -128,13 +128,6 @@ export default function DeliveryPage() {
   return (
     <>
       <div className="space-y-5">
-        <section className="space-y-1">
-          <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">Delivery Areas</h1>
-          <p className="text-[18px] leading-7 text-[#6f645d]">
-            Manage delivery coverage, postal codes, and regional restrictions across Norway.
-          </p>
-        </section>
-
         {loadError ? (
           <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
             {loadError}

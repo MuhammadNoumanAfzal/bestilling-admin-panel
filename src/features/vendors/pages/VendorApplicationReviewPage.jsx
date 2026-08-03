@@ -5,7 +5,6 @@ import {
   Eye,
   MapPin,
   MessageSquare,
-  Save,
   Share2,
   Star,
   Clock3,
@@ -13,9 +12,17 @@ import {
   UserRound,
   XCircle,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getVendorApplicationReview } from "../data/vendorDetailData.js";
+import Swal from "sweetalert2";
+import {
+  approveVendorApplicationRequest,
+  getAdminVendorApplicationReviewRequest,
+  getVendorDocumentAccessRequest,
+  rejectVendorApplicationRequest,
+  requestVendorApplicationChangesRequest,
+  reviewVendorDocumentRequest,
+} from "../api/vendorsApi.js";
 
 function SectionTitle({ title }) {
   return (
@@ -59,7 +66,7 @@ function OperatingDayPill({ day, active }) {
   );
 }
 
-function DocumentCard({ document }) {
+function DocumentCard({ document, onDownload, onPreview, onReview }) {
   return (
     <article className="rounded-[16px] border border-[#d8d0c8] bg-white p-4 shadow-[0_6px_14px_rgba(53,34,20,0.05)]">
       <div className="flex items-start justify-between gap-2">
@@ -72,7 +79,9 @@ function DocumentCard({ document }) {
             "rounded-full border px-2.5 py-1 text-[10px] font-bold",
             document.status === "Verified"
               ? "border-[#d9ddd8] bg-[#ffffff] text-[#1d1510]"
-              : "border-[#ead9c9] bg-[#fff8f1] text-[#8f5a2e]",
+              : document.status === "Rejected"
+                ? "border-[#f3c7c7] bg-[#fff5f5] text-[#b83a3a]"
+                : "border-[#ead9c9] bg-[#fff8f1] text-[#8f5a2e]",
           ].join(" ")}
         >
           {document.status}
@@ -82,6 +91,7 @@ function DocumentCard({ document }) {
       <div className="mt-3 flex gap-2">
         <button
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#f3f0ed] px-3 py-2.5 text-[12px] font-bold text-[#1c1510] transition hover:bg-[#ebe6e1]"
+          onClick={() => onPreview(document)}
           type="button"
         >
           <Eye size={12} />
@@ -89,12 +99,21 @@ function DocumentCard({ document }) {
         </button>
         <button
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#f3f0ed] px-3 py-2.5 text-[12px] font-bold text-[#1c1510] transition hover:bg-[#ebe6e1]"
+          onClick={() => onDownload(document)}
           type="button"
         >
           <Upload size={12} />
           Download
         </button>
       </div>
+
+      <button
+        className="mt-2 inline-flex w-full items-center justify-center rounded-full border border-[#d8ccc2] px-3 py-2 text-[12px] font-bold text-[#cf6e38] transition hover:bg-[#fff2ea]"
+        onClick={() => onReview(document)}
+        type="button"
+      >
+        Review Status
+      </button>
     </article>
   );
 }
@@ -113,32 +132,33 @@ function MenuCard({ menu }) {
           <h3 className="text-[15px] font-bold text-[#1c1510]">{menu.title}</h3>
           <p className="mt-1 text-[11px] leading-5 text-[#8a7d76]">{menu.description}</p>
         </div>
-        <div className="flex items-center justify-between text-[11px] text-[#8a7d76]">
-          <span>{menu.servings}</span>
-          <span>{menu.notice}</span>
-        </div>
         <p className="text-[15px] font-extrabold text-[#1c1510]">{menu.price}</p>
-        <button className="w-full text-center text-[12px] font-medium text-[#5d5149]" type="button">
-          View
-        </button>
       </div>
     </article>
   );
 }
 
 function ChecklistItem({ item }) {
-  const complete = item.complete;
-
   return (
     <div className="flex items-start gap-2.5">
       <span className="pt-0.5">
-        {complete ? (
+        {item.complete ? (
           <CheckCircle2 size={14} className="text-[#de6b34]" />
         ) : (
           <Circle size={14} className="text-[#b8aaa0]" />
         )}
       </span>
-      <p className={`text-[13px] leading-6 ${complete ? "text-[#6c5d54]" : "text-[#8d8078]"}`}>{item.label}</p>
+      <p className={`text-[13px] leading-6 ${item.complete ? "text-[#6c5d54]" : "text-[#8d8078]"}`}>{item.label}</p>
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="mx-auto max-w-[1120px] space-y-6">
+      <div className="h-40 animate-pulse rounded-[18px] border border-[#ddd2c9] bg-white" />
+      <div className="h-28 animate-pulse rounded-[16px] border border-[#ddd2c9] bg-white" />
+      <div className="h-72 animate-pulse rounded-[16px] border border-[#ddd2c9] bg-white" />
     </div>
   );
 }
@@ -146,11 +166,327 @@ function ChecklistItem({ item }) {
 export default function VendorApplicationReviewPage() {
   const { vendorId } = useParams();
   const navigate = useNavigate();
+  const [vendor, setVendor] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  const vendor = useMemo(() => getVendorApplicationReview(vendorId), [vendorId]);
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadReview() {
+      setIsLoading(true);
+      setLoadError("");
+
+      try {
+        const detail = await getAdminVendorApplicationReviewRequest(decodeURIComponent(vendorId || ""));
+
+        if (isMounted) {
+          setVendor(detail);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(error instanceof Error ? error.message : "Unable to load this application.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadReview();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [vendorId]);
+
+  async function handleDocumentAccess(document, kind) {
+    try {
+      const access = await getVendorDocumentAccessRequest(document.id);
+      window.open(
+        kind === "preview" ? access.previewUrl || access.downloadUrl : access.downloadUrl || access.previewUrl,
+        "_blank",
+        "noopener,noreferrer",
+      );
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: `Unable to ${kind} document`,
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    }
+  }
+
+  async function handleReviewDocument(document) {
+    const { value } = await Swal.fire({
+      title: "Review vendor document",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <select id="vendor-document-status" class="swal2-select" style="display:flex;width:100%;margin:0;">
+            <option value="VERIFIED">Verified</option>
+            <option value="PENDING">Pending</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+          <textarea id="vendor-document-note" class="swal2-textarea" placeholder="Optional review note"></textarea>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Save review",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d96834",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => ({
+        status: document.getElementById ? "" : "", // noop placeholder for lint-free template execution
+      }),
+      didOpen: () => {
+        const statusElement = window.document.getElementById("vendor-document-status");
+        if (statusElement) {
+          statusElement.value =
+            document.status === "Verified" ? "VERIFIED" : document.status === "Rejected" ? "REJECTED" : "PENDING";
+        }
+      },
+    });
+
+    const status = window.document.getElementById("vendor-document-status")?.value || "";
+    const note = window.document.getElementById("vendor-document-note")?.value || "";
+
+    if (!value && !status) {
+      return;
+    }
+
+    try {
+      const response = await reviewVendorDocumentRequest(document.id, { status, note });
+      setVendor((current) =>
+        current
+          ? {
+              ...current,
+              documents: current.documents.map((item) =>
+                item.id === document.id
+                  ? {
+                      ...item,
+                      status: response.status,
+                      reviewedAt: response.reviewedAt,
+                    }
+                  : item,
+              ),
+            }
+          : current,
+      );
+
+      await Swal.fire({
+        icon: "success",
+        title: "Document reviewed",
+        text: response.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to review document",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    }
+  }
+
+  async function handleApprove() {
+    if (!vendor) {
+      return;
+    }
+
+    const { isConfirmed } = await Swal.fire({
+      title: "Approve vendor application?",
+      text: `This will approve ${vendor.name} and activate the vendor.`,
+      showCancelButton: true,
+      confirmButtonText: "Approve vendor",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d76833",
+      cancelButtonColor: "#c8b9aa",
+    });
+
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      const response = await approveVendorApplicationRequest(vendor.id, {
+        note: "Approved by admin",
+        activateImmediately: true,
+      });
+
+      await Swal.fire({
+        icon: "success",
+        title: "Vendor approved",
+        text: response.message,
+        confirmButtonColor: "#cf6e38",
+      });
+
+      navigate(`/vendors/${encodeURIComponent(vendor.vendorId || vendor.id)}`);
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to approve vendor",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    }
+  }
+
+  async function handleReject() {
+    if (!vendor) {
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Reject vendor application",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <input id="vendor-reject-reason" class="swal2-input" placeholder="Reason" />
+          <textarea id="vendor-reject-note" class="swal2-textarea" placeholder="Optional note"></textarea>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Reject application",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#c53a2f",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => {
+        const reason = window.document.getElementById("vendor-reject-reason")?.value?.trim() || "";
+        const note = window.document.getElementById("vendor-reject-note")?.value?.trim() || "";
+
+        if (!reason) {
+          Swal.showValidationMessage("Reason is required.");
+          return null;
+        }
+
+        return { reason, note };
+      },
+    });
+
+    if (!result.value) {
+      return;
+    }
+
+    try {
+      const response = await rejectVendorApplicationRequest(vendor.id, result.value);
+      setVendor((current) =>
+        current
+          ? {
+              ...current,
+              applicationStatus: response.applicationStatus,
+              reviewedAt: response.reviewedAt,
+              reviewedDate: response.reviewedAt || current.reviewedDate,
+            }
+          : current,
+      );
+
+      await Swal.fire({
+        icon: "success",
+        title: "Application rejected",
+        text: response.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to reject application",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    }
+  }
+
+  async function handleRequestChanges() {
+    if (!vendor) {
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Request application changes",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <textarea id="vendor-change-message" class="swal2-textarea" placeholder="Message for vendor"></textarea>
+          <input id="vendor-change-fields" class="swal2-input" placeholder="Fields (comma separated)" />
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Request changes",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d96834",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => {
+        const message = window.document.getElementById("vendor-change-message")?.value?.trim() || "";
+        const fieldsValue = window.document.getElementById("vendor-change-fields")?.value?.trim() || "";
+
+        if (!message) {
+          Swal.showValidationMessage("A message is required.");
+          return null;
+        }
+
+        return {
+          message,
+          fields: fieldsValue
+            ? fieldsValue.split(",").map((item) => item.trim()).filter(Boolean)
+            : [],
+        };
+      },
+    });
+
+    if (!result.value) {
+      return;
+    }
+
+    try {
+      const response = await requestVendorApplicationChangesRequest(vendor.id, result.value);
+      setVendor((current) =>
+        current
+          ? {
+              ...current,
+              applicationStatus: response.applicationStatus,
+              reviewedAt: response.reviewedAt,
+              reviewedDate: response.reviewedAt || current.reviewedDate,
+            }
+          : current,
+      );
+
+      await Swal.fire({
+        icon: "success",
+        title: "Changes requested",
+        text: response.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to request changes",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    }
+  }
+
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
+  if (!vendor) {
+    return (
+      <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-10 text-center text-[15px] font-medium text-[#9f4d33]">
+        {loadError || "Unable to load this vendor application."}
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-[1120px] space-y-6">
+      {loadError ? (
+        <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
+          {loadError}
+        </div>
+      ) : null}
+
       <section className="rounded-[18px] border border-[#ddd2c9] bg-[#f6ede4] shadow-[0_8px_24px_rgba(53,34,20,0.05)]">
         <div className="flex flex-col gap-6 px-5 py-5 sm:px-6 sm:py-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -191,15 +527,15 @@ export default function VendorApplicationReviewPage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <button className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#d8ccc2] bg-white px-4 py-2.5 text-[14px] font-bold text-[#6a5c53]" type="button">
+              <button className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#d8ccc2] bg-white px-4 py-2.5 text-[14px] font-bold text-[#6a5c53]" onClick={handleRequestChanges} type="button">
                 <MessageSquare size={13} />
                 Request Changes
               </button>
-              <button className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#efbbb3] bg-white px-4 py-2.5 text-[14px] font-bold text-[#c53a2f]" type="button">
+              <button className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#efbbb3] bg-white px-4 py-2.5 text-[14px] font-bold text-[#c53a2f]" onClick={handleReject} type="button">
                 <XCircle size={13} />
                 Reject
               </button>
-              <button className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#d76833] px-4 py-2.5 text-[14px] font-bold text-white shadow-[0_8px_20px_rgba(215,104,51,0.24)]" type="button">
+              <button className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#d76833] px-4 py-2.5 text-[14px] font-bold text-white shadow-[0_8px_20px_rgba(215,104,51,0.24)]" onClick={handleApprove} type="button">
                 <CheckCircle2 size={13} />
                 Approve Vendor
               </button>
@@ -211,7 +547,7 @@ export default function VendorApplicationReviewPage() {
       <section className="rounded-[16px] border border-[#ddd2c9] bg-white px-5 py-5 shadow-[0_6px_16px_rgba(53,34,20,0.04)] sm:px-6">
         <h2 className="text-[28px] font-extrabold italic tracking-[-0.02em] text-[#df6b34]">Administrative Verification Required</h2>
         <p className="mt-2 text-[15px] leading-7 text-[#6f6259]">
-          This application currently in the final stage of review. Admin must verify all legal documentation and operational
+          This application is in the final stage of review. Admin must verify all legal documentation and operational
           parameters before the vendor becomes active on the consumer marketplace.
         </p>
       </section>
@@ -255,7 +591,7 @@ export default function VendorApplicationReviewPage() {
               <p className="text-[15px] font-bold text-[#18120f]">Operating Days</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {vendor.operatingDays.map((day) => (
-                  <OperatingDayPill key={day.label} {...day} />
+                  <OperatingDayPill key={day.label} active={day.active} day={day.day} />
                 ))}
               </div>
               <p className="mt-2 text-[12px] text-[#8d8078]">{vendor.operatingHours}</p>
@@ -268,7 +604,13 @@ export default function VendorApplicationReviewPage() {
         <SectionTitle title="Document Verification" />
         <div className="grid gap-4 md:grid-cols-2">
           {vendor.documents.map((document) => (
-            <DocumentCard key={document.id} document={document} />
+            <DocumentCard
+              key={document.id}
+              document={document}
+              onDownload={(item) => handleDocumentAccess(item, "download")}
+              onPreview={(item) => handleDocumentAccess(item, "preview")}
+              onReview={handleReviewDocument}
+            />
           ))}
         </div>
       </section>
@@ -295,10 +637,6 @@ export default function VendorApplicationReviewPage() {
               <button className="inline-flex items-center gap-1 rounded-full border border-[#d8ccc2] px-3.5 py-2 text-[12px] font-bold text-[#53463f]" type="button">
                 <Share2 size={11} />
                 Share
-              </button>
-              <button className="inline-flex items-center gap-1 rounded-full border border-[#d8ccc2] px-3.5 py-2 text-[12px] font-bold text-[#53463f]" type="button">
-                <Save size={11} />
-                Save
               </button>
             </div>
           </div>

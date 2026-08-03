@@ -1,4 +1,4 @@
-function DocumentCard({ document }) {
+function DocumentCard({ document, onDownload, onPreview }) {
   return (
     <article className="rounded-[16px] border border-[#ddd6cf] bg-white p-5 shadow-[0_8px_20px_rgba(53,34,20,0.05)]">
       <div className="flex items-start justify-between gap-3">
@@ -19,10 +19,18 @@ function DocumentCard({ document }) {
       </div>
 
       <div className="mt-4 flex gap-2">
-        <button className="flex-1 rounded-[8px] border border-[#ddd4cb] bg-white px-3 py-2.5 text-[12px] font-semibold text-[#4d423b]" type="button">
+        <button
+          className="flex-1 rounded-[8px] border border-[#ddd4cb] bg-white px-3 py-2.5 text-[12px] font-semibold text-[#4d423b]"
+          onClick={() => onPreview?.(document)}
+          type="button"
+        >
           Preview
         </button>
-        <button className="flex-1 rounded-[8px] border border-[#ddd4cb] bg-white px-3 py-2.5 text-[12px] font-semibold text-[#4d423b]" type="button">
+        <button
+          className="flex-1 rounded-[8px] border border-[#ddd4cb] bg-white px-3 py-2.5 text-[12px] font-semibold text-[#4d423b]"
+          onClick={() => onDownload?.(document)}
+          type="button"
+        >
           Download
         </button>
       </div>
@@ -30,7 +38,7 @@ function DocumentCard({ document }) {
   );
 }
 
-export default function VendorVerificationSection({ documents }) {
+export default function VendorVerificationSection({ documents, onDownload, onPreview }) {
   return (
     <section className="space-y-4">
       <div className="flex items-center gap-2 px-1">
@@ -42,7 +50,12 @@ export default function VendorVerificationSection({ documents }) {
 
       <div className="grid gap-4 md:grid-cols-2">
         {documents.map((document) => (
-          <DocumentCard key={document.id} document={document} />
+          <DocumentCard
+            key={document.id}
+            document={document}
+            onDownload={onDownload}
+            onPreview={onPreview}
+          />
         ))}
       </div>
     </section>

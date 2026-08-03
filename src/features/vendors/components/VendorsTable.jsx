@@ -7,6 +7,7 @@ const statusClasses = {
   "Pending Approval": "bg-[#ffb300] text-[#1d1713]",
   Suspended: "bg-[#d83f3f] text-white",
   Rejected: "bg-[#8c8077] text-white",
+  Deactivated: "bg-[#d7dde5] text-[#24303d]",
 };
 
 function PersonCell({ name, src, subtitle, avatar }) {
@@ -28,7 +29,7 @@ function PersonCell({ name, src, subtitle, avatar }) {
 }
 
 function getVendorNavigationPath(row) {
-  const cleanId = encodeURIComponent(row.id.replace("#", ""));
+  const cleanId = encodeURIComponent(row.id);
   return row.status === "Pending Approval" ? `/vendors/${cleanId}/review` : `/vendors/${cleanId}`;
 }
 
@@ -38,6 +39,8 @@ export default function VendorsTable({
   pageSize,
   totalItems,
   onPageChange,
+  onToggleStatus,
+  isUpdatingStatusId = "",
 }) {
   const navigate = useNavigate();
   const [selectedIds, setSelectedIds] = useState([]);
@@ -227,13 +230,18 @@ export default function VendorsTable({
                           </button>
                           <button
                             onClick={() => {
-                              alert(`Toggle active/suspended for ${row.name}`);
+                              onToggleStatus?.(row);
                               setActiveMenuId(null);
                             }}
+                            disabled={isUpdatingStatusId === row.id}
                             className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
                             type="button"
                           >
-                            Toggle Status
+                            {isUpdatingStatusId === row.id
+                              ? "Updating..."
+                              : row.status === "Suspended" || row.status === "Deactivated"
+                                ? "Activate Vendor"
+                                : "Suspend Vendor"}
                           </button>
                         </div>
                       )}

@@ -3,6 +3,7 @@ const statusConfig = [
   { key: "Pending Approval", label: "Pending", color: "#f3b433" },
   { key: "Suspended", label: "Suspended", color: "#d81616" },
   { key: "Rejected", label: "Rejected", color: "#d7dde5" },
+  { key: "Deactivated", label: "Deactivated", color: "#a9b1bb" },
 ];
 
 function buildDonutGradient(items) {
@@ -22,10 +23,17 @@ function buildDonutGradient(items) {
   return `conic-gradient(${stops.join(", ")})`;
 }
 
-export default function VendorStatusOverviewCard({ vendors = [] }) {
-  const totalVendors = vendors.length;
+export default function VendorStatusOverviewCard({ breakdown = [], vendors = [] }) {
+  const breakdownMap = new Map(
+    (breakdown || []).map((item) => [item.status, Number(item.count ?? 0)]),
+  );
+  const totalVendors = breakdown.length
+    ? breakdown.reduce((sum, item) => sum + Number(item.count ?? 0), 0)
+    : vendors.length;
   const overviewItems = statusConfig.map((status) => {
-    const count = vendors.filter((vendor) => vendor.status === status.key).length;
+    const count = breakdown.length
+      ? Number(breakdownMap.get(status.key) ?? 0)
+      : vendors.filter((vendor) => vendor.status === status.key).length;
     const percentage = totalVendors > 0 ? ((count / totalVendors) * 100).toFixed(1) : "0.0";
 
     return {

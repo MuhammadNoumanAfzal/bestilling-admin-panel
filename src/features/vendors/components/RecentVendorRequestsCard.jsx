@@ -46,7 +46,7 @@ export default function RecentVendorRequestsCard({ vendors = [] }) {
               <button
                 key={req.id}
                 className="flex w-full items-center justify-between gap-3 text-left"
-                onClick={() => navigate(`/vendors/${encodeURIComponent(req.id.replace("#", ""))}/review`)}
+                onClick={() => navigate(`/vendors/${encodeURIComponent(req.id)}/review`)}
                 type="button"
               >
                 <div className="flex items-center gap-3 min-w-0">

@@ -1,31 +1,16 @@
 import Swal from "sweetalert2";
 import VendorSectionHeading from "./VendorSectionHeading.jsx";
 
-export default function VendorDangerZoneSection({ vendorName, dangerZone }) {
-  function handleSuspend() {
-    Swal.fire({
-      title: "Suspend vendor account?",
-      text: `${vendorName} will be hidden from listings and will stop receiving new orders.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d83f3f",
-      cancelButtonColor: "#c8b9aa",
-      confirmButtonText: "Suspend account",
-    });
-  }
-
-  function handleDelete() {
-    Swal.fire({
-      title: "Delete vendor permanently?",
-      text: `This action will permanently remove ${vendorName} and cannot be undone.`,
-      icon: "error",
-      showCancelButton: true,
-      confirmButtonColor: "#d83f3f",
-      cancelButtonColor: "#c8b9aa",
-      confirmButtonText: "Delete permanently",
-    });
-  }
-
+export default function VendorDangerZoneSection({
+  vendorName,
+  dangerZone,
+  deleteLabel = "Delete Permanently",
+  isDeleting = false,
+  isSuspending = false,
+  onDelete,
+  onSuspend,
+  suspendLabel = "Suspend Account",
+}) {
   return (
     <section className="space-y-4">
       <VendorSectionHeading danger title="Administrative Danger Zone" />
@@ -36,10 +21,11 @@ export default function VendorDangerZoneSection({ vendorName, dangerZone }) {
           <p className="mt-2 text-[14px] leading-6 text-[#5a4d46]">{dangerZone.suspendDescription}</p>
           <button
             className="mt-4 w-full rounded-[10px] border border-[#d83f3f] bg-white px-4 py-3 text-[13px] font-bold text-[#d83f3f] transition hover:bg-[#fff5f5]"
-            onClick={handleSuspend}
+            disabled={isSuspending}
+            onClick={onSuspend}
             type="button"
           >
-            Suspend Account
+            {isSuspending ? "Updating..." : suspendLabel}
           </button>
         </article>
 
@@ -48,10 +34,11 @@ export default function VendorDangerZoneSection({ vendorName, dangerZone }) {
           <p className="mt-2 text-[14px] leading-6 text-[#5a4d46]">{dangerZone.deleteDescription}</p>
           <button
             className="mt-4 w-full rounded-[10px] bg-[#d83f3f] px-4 py-3 text-[13px] font-bold text-white transition hover:bg-[#b03030]"
-            onClick={handleDelete}
+            disabled={isDeleting}
+            onClick={onDelete}
             type="button"
           >
-            Delete Permanently
+            {isDeleting ? "Deleting..." : deleteLabel}
           </button>
         </article>
       </div>

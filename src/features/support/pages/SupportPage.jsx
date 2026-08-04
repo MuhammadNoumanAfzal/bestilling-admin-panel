@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
-import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 import {
   getAdminSupportSummaryRequest,
   getAdminSupportTicketsRequest,
@@ -12,8 +11,47 @@ import SupportToolbar from "../components/SupportToolbar.jsx";
 
 const DEFAULT_PAGE_SIZE = 10;
 
+function getDynamicDateRangeForFilter(selectedFilter, customStart, customEnd) {
+  if (selectedFilter === "Custom Date" && customStart && customEnd) {
+    const start = new Date(`${customStart}T00:00:00`);
+    const end = new Date(`${customEnd}T23:59:59`);
+
+    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime()) && start <= end) {
+      return { start, end };
+    }
+  }
+
+  const end = new Date();
+  const start = new Date();
+
+  switch (selectedFilter) {
+    case "Last Month":
+      start.setDate(start.getDate() - 30);
+      break;
+    case "Last 3 Months":
+      start.setDate(start.getDate() - 90);
+      break;
+    case "Last 6 Months":
+      start.setDate(start.getDate() - 180);
+      break;
+    case "This Year":
+      start.setMonth(0, 1);
+      start.setHours(0, 0, 0, 0);
+      break;
+    case "Last 7 days":
+    default:
+      start.setDate(start.getDate() - 7);
+      break;
+  }
+
+  start.setHours(0, 0, 0, 0);
+  end.setHours(23, 59, 59, 999);
+
+  return { start, end };
+}
+
 function buildDateFilters(timeframe, customStart, customEnd) {
-  const { start, end } = getDateRangeForFilter(timeframe, customStart, customEnd);
+  const { start, end } = getDynamicDateRangeForFilter(timeframe, customStart, customEnd);
 
   return {
     dateFrom: start.toISOString(),

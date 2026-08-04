@@ -90,7 +90,7 @@ function DocumentCard({ document, onDownload, onPreview, onReview }) {
 
       <div className="mt-3 flex gap-2">
         <button
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#f3f0ed] px-3 py-2.5 text-[12px] font-bold text-[#1c1510] transition hover:bg-[#ebe6e1]"
+          className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-[#f3f0ed] px-3 py-2.5 text-[12px] font-bold text-[#1c1510] transition hover:bg-[#ebe6e1]"
           onClick={() => onPreview(document)}
           type="button"
         >
@@ -98,7 +98,7 @@ function DocumentCard({ document, onDownload, onPreview, onReview }) {
           Preview
         </button>
         <button
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#f3f0ed] px-3 py-2.5 text-[12px] font-bold text-[#1c1510] transition hover:bg-[#ebe6e1]"
+          className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-[#f3f0ed] px-3 py-2.5 text-[12px] font-bold text-[#1c1510] transition hover:bg-[#ebe6e1]"
           onClick={() => onDownload(document)}
           type="button"
         >
@@ -108,12 +108,24 @@ function DocumentCard({ document, onDownload, onPreview, onReview }) {
       </div>
 
       <button
-        className="mt-2 inline-flex w-full items-center justify-center rounded-full border border-[#d8ccc2] px-3 py-2 text-[12px] font-bold text-[#cf6e38] transition hover:bg-[#fff2ea]"
+        className={[
+          "mt-2 inline-flex w-full items-center justify-center rounded-full border px-3 py-2 text-[12px] font-bold transition",
+          document.isReviewable
+            ? "cursor-pointer border-[#d8ccc2] text-[#cf6e38] hover:bg-[#fff2ea]"
+            : "cursor-not-allowed border-[#e7ddd6] bg-[#faf7f4] text-[#b4a79f]",
+        ].join(" ")}
+        disabled={!document.isReviewable}
         onClick={() => onReview(document)}
         type="button"
       >
-        Review Status
+        {document.isReviewable ? "Review Status" : "Preview Only"}
       </button>
+
+      <p className="mt-2 text-[11px] leading-5 text-[#9b8d84]">
+        {document.isReviewable
+          ? "This compliance document can be previewed, downloaded, and reviewed."
+          : "This is a storefront asset image. It can be previewed or downloaded, but it is not a reviewable legal document."}
+      </p>
     </article>
   );
 }
@@ -201,13 +213,24 @@ export default function VendorApplicationReviewPage() {
     };
   }, [vendorId]);
 
+  function openDocumentUrl(url) {
+    if (!url) {
+      throw new Error("This file is not available right now.");
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   async function handleDocumentAccess(document, kind) {
     try {
+      if (!document.isReviewable) {
+        openDocumentUrl(document.fileUrl);
+        return;
+      }
+
       const access = await getVendorDocumentAccessRequest(document.id);
-      window.open(
+      openDocumentUrl(
         kind === "preview" ? access.previewUrl || access.downloadUrl : access.downloadUrl || access.previewUrl,
-        "_blank",
-        "noopener,noreferrer",
       );
     } catch (error) {
       await Swal.fire({
@@ -220,6 +243,16 @@ export default function VendorApplicationReviewPage() {
   }
 
   async function handleReviewDocument(document) {
+    if (!document.isReviewable) {
+      await Swal.fire({
+        icon: "info",
+        title: "Asset preview only",
+        text: "Store logos and cover photos are visual assets. They can be previewed or downloaded, but they cannot be reviewed through the document verification mutation.",
+        confirmButtonColor: "#cf6e38",
+      });
+      return;
+    }
+
     const { value } = await Swal.fire({
       title: "Review vendor document",
       html: `
@@ -602,17 +635,23 @@ export default function VendorApplicationReviewPage() {
 
       <section>
         <SectionTitle title="Document Verification" />
-        <div className="grid gap-4 md:grid-cols-2">
-          {vendor.documents.map((document) => (
-            <DocumentCard
-              key={document.id}
-              document={document}
-              onDownload={(item) => handleDocumentAccess(item, "download")}
-              onPreview={(item) => handleDocumentAccess(item, "preview")}
-              onReview={handleReviewDocument}
-            />
-          ))}
-        </div>
+        {vendor.documents.length ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            {vendor.documents.map((document) => (
+              <DocumentCard
+                key={document.id}
+                document={document}
+                onDownload={(item) => handleDocumentAccess(item, "download")}
+                onPreview={(item) => handleDocumentAccess(item, "preview")}
+                onReview={handleReviewDocument}
+              />
+            ))}
+          </div>
+        ) : (
+          <article className="rounded-[16px] border border-dashed border-[#ddd2c9] bg-white px-5 py-8 text-center text-[14px] text-[#7d7068]">
+            No review documents were returned for this application yet.
+          </article>
+        )}
       </section>
 
       <section>

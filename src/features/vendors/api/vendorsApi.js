@@ -219,8 +219,11 @@ function normalizeVendorListResponse(response) {
 }
 
 function normalizeVendorDocument(document) {
+  const id = document?.id || "";
+  const isReviewable = /^\d+$/.test(`${id}`);
+
   return {
-    id: document?.id || "",
+    id,
     title: document?.title || "Untitled document",
     subtitle: document?.subtitle || "",
     status: normalizeDocumentStatus(document?.status),
@@ -229,6 +232,7 @@ function normalizeVendorDocument(document) {
     mimeType: document?.mimeType || "",
     uploadedAt: document?.uploadedAt || "",
     reviewedAt: document?.reviewedAt || "",
+    isReviewable,
   };
 }
 

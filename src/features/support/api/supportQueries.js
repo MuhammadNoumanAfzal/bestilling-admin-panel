@@ -89,6 +89,9 @@ export const ADMIN_SUPPORT_TICKET_QUERY = `
     adminSupportTicket(id: $id) {
       id
       subject
+      description
+      attachmentUrl
+      attachmentFileId
       category
       priority
       status

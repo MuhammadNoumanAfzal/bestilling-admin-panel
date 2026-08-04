@@ -81,6 +81,48 @@ function MessageBubble({ message, requesterAvatarUrl }) {
   );
 }
 
+function InitialRequestCard({ ticket }) {
+  if (!ticket?.initialRequest?.message) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-[16px] border border-[#f0dfd4] bg-[linear-gradient(180deg,#fff9f4_0%,#fffdfb_100%)] p-4 shadow-[0_10px_20px_rgba(56,33,17,0.04)]">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#cf6e38]">Original Request</p>
+          <p className="mt-1 text-[13px] font-medium text-[#8a7d75]">
+            Submitted by {ticket.requester?.fullName || "Requester"} on {formatReadableDate(ticket.createdAt)}
+          </p>
+        </div>
+        <span className="inline-flex rounded-full bg-[#fff1e6] px-3 py-1 text-[11px] font-bold text-[#cf6e38]">
+          {ticket.requester?.type || "Requester"}
+        </span>
+      </div>
+
+      <div className="rounded-[14px] border border-[#eadfd7] bg-white px-4 py-3 text-[14px] leading-7 text-[#392d27]">
+        {ticket.initialRequest.message}
+      </div>
+
+      {ticket.initialRequest.attachments?.length ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {ticket.initialRequest.attachments.map((attachment) => (
+            <a
+              key={attachment.id}
+              className="inline-flex cursor-pointer items-center rounded-full border border-[#eaded6] bg-[#f6f1ed] px-3 py-1 text-[11px] font-medium text-[#7c6f67] transition hover:border-[#cf6e38]/35 hover:bg-[#fff5ef]"
+              href={attachment.url}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {attachment.fileName}
+            </a>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function SupportConversationPanel({
   attachments,
   draftReply,
@@ -108,6 +150,8 @@ export default function SupportConversationPanel({
       </div>
 
       <div className="space-y-6 px-5 py-5">
+        <InitialRequestCard ticket={ticket} />
+
         {ticket.conversation?.length ? (
           ticket.conversation.map((message) => (
             <MessageBubble
@@ -116,11 +160,11 @@ export default function SupportConversationPanel({
               requesterAvatarUrl={ticket.requester?.avatarUrl}
             />
           ))
-        ) : (
+        ) : !ticket.initialRequest?.message ? (
           <div className="rounded-[14px] border border-dashed border-[#e2d6ce] bg-[#fbf8f6] px-4 py-10 text-center text-[15px] text-[#8d8077]">
             No conversation messages available for this ticket yet.
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="border-t border-[#ece2da] bg-[#fcfaf8] px-5 py-5">

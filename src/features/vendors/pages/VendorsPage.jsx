@@ -5,6 +5,7 @@ import { Users, Wifi, Clock, AlertTriangle, CircleAlert, DollarSign } from "luci
 import StatCard from "../../dashboard/components/StatCard.jsx";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
+import { getAdminDashboardOverviewRequest } from "../../dashboard/api/dashboardApi.js";
 import {
   getAdminVendorsRequest,
   updateVendorStatusRequest,
@@ -61,6 +62,32 @@ function buildClientSidePageInfo(items, page, pageSize) {
     hasNextPage: page < totalPages,
     hasPreviousPage: page > 1,
   };
+}
+
+function applyApprovalOverrides(rows, approvals) {
+  const pendingVendorIds = new Set(
+    (approvals || [])
+      .filter((approval) => {
+        const rawStatus = `${approval?.rawStatus ?? ""}`.trim().toUpperCase();
+        return rawStatus === "PENDING" || rawStatus === "REVIEWING";
+      })
+      .map((approval) => `${approval?.vendorId || approval?.id || ""}`.trim())
+      .filter(Boolean),
+  );
+
+  if (!pendingVendorIds.size) {
+    return rows;
+  }
+
+  return rows.map((row) =>
+    pendingVendorIds.has(`${row.id}`.trim())
+      ? {
+          ...row,
+          status: "Pending Approval",
+          rawStatus: "PENDING_APPROVAL",
+        }
+      : row,
+  );
 }
 
 export default function VendorsPage() {
@@ -135,28 +162,36 @@ export default function VendorsPage() {
 
       try {
         const shouldUseClientSideStatusFilter = isStatusTab(activeTab);
-        const response = shouldUseClientSideStatusFilter
-          ? await getAdminVendorsRequest({
-              ...normalizedFilters,
-              status: null,
-              page: 1,
-              pageSize: STATUS_FALLBACK_PAGE_SIZE,
-            })
-          : await getAdminVendorsRequest(normalizedFilters);
+        const [response, dashboardOverview] = await Promise.all([
+          shouldUseClientSideStatusFilter
+            ? getAdminVendorsRequest({
+                ...normalizedFilters,
+                status: null,
+                page: 1,
+                pageSize: STATUS_FALLBACK_PAGE_SIZE,
+              })
+            : getAdminVendorsRequest(normalizedFilters),
+          getAdminDashboardOverviewRequest({}),
+        ]);
 
         if (!isMounted) {
           return;
         }
 
+        const rowsWithApprovalOverrides = applyApprovalOverrides(
+          response.rows,
+          dashboardOverview?.approvals,
+        );
+
         if (shouldUseClientSideStatusFilter) {
-          const filteredRows = response.rows.filter((row) => row.status === activeTab);
+          const filteredRows = rowsWithApprovalOverrides.filter((row) => row.status === activeTab);
           const startIndex = (currentPage - 1) * PAGE_SIZE;
           const paginatedRows = filteredRows.slice(startIndex, startIndex + PAGE_SIZE);
 
           setRows(paginatedRows);
           setPageInfo(buildClientSidePageInfo(filteredRows, currentPage, PAGE_SIZE));
         } else {
-          setRows(response.rows);
+          setRows(rowsWithApprovalOverrides);
           setPageInfo(response.pageInfo);
         }
 

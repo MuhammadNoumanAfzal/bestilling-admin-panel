@@ -21,7 +21,10 @@ import {
   X,
 } from "lucide-react";
 import { getAdminDisplayName, getAdminRoleLabel } from "../../features/auth/authConfig.js";
-import { getMyNotificationUnreadCountRequest } from "../../features/notifications/api/notificationsApi.js";
+import {
+  getMyNotificationsRequest,
+  getMyNotificationUnreadCountRequest,
+} from "../../features/notifications/api/notificationsApi.js";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
 
 const navigation = [
@@ -305,6 +308,10 @@ export default function AdminLayout() {
   const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
   const profileMenuRef = useRef(null);
   const searchRef = useRef(null);
+  const knownUnreadNotificationIdsRef = useRef(new Set());
+  const hasPrimedNotificationsRef = useRef(false);
+  const previousUnreadCountRef = useRef(0);
+  const lastToastNotificationIdRef = useRef("");
 
   const meta = useMemo(() => getCurrentMeta(location.pathname), [location.pathname]);
   const initials = useMemo(() => {
@@ -334,6 +341,36 @@ export default function AdminLayout() {
 
   const shouldShowSearchResults = isSearchFocused && searchQuery.trim().length > 0;
 
+  async function showNotificationToast(notification) {
+    if (!notification?.id || lastToastNotificationIdRef.current === notification.id) {
+      return;
+    }
+
+    lastToastNotificationIdRef.current = notification.id;
+
+    await Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: notification.type === "SUPPORT_REPLY" ? "info" : "success",
+      title: notification.title || "New notification",
+      text: notification.message || "You have a new unread notification.",
+      showConfirmButton: true,
+      confirmButtonText: "Open",
+      timer: 6000,
+      timerProgressBar: true,
+      showCloseButton: true,
+      didOpen: (toast) => {
+        toast.addEventListener("click", () => {
+          navigate("/notifications");
+        });
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        navigate("/notifications");
+      }
+    });
+  }
+
   useEffect(() => {
     document.title = `${meta.title} | Bestilling Admin`;
   }, [meta.title]);
@@ -341,12 +378,48 @@ export default function AdminLayout() {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadUnreadCount() {
+    async function syncNotifications({ allowToast = false } = {}) {
       try {
-        const count = await getMyNotificationUnreadCountRequest();
-        if (isMounted) {
-          setNotificationUnreadCount(count);
+        const [count, unreadResult] = await Promise.all([
+          getMyNotificationUnreadCountRequest(),
+          getMyNotificationsRequest({
+            page: 1,
+            pageSize: 5,
+            status: "UNREAD",
+            type: null,
+          }),
+        ]);
+
+        if (!isMounted) {
+          return;
         }
+
+        setNotificationUnreadCount(count);
+
+        const unreadItems = unreadResult.items || [];
+        const latestIds = new Set(unreadItems.map((item) => item.id));
+        const newUnreadItems = unreadItems.filter(
+          (item) => !knownUnreadNotificationIdsRef.current.has(item.id),
+        );
+        const hasUnreadIncrease = count > previousUnreadCountRef.current;
+        const latestNotification = newUnreadItems[0] || unreadItems[0] || null;
+
+        if (allowToast && latestNotification) {
+          const shouldShowPrimedToast =
+            !hasPrimedNotificationsRef.current &&
+            count > 0 &&
+            location.pathname !== "/notifications";
+          const shouldShowUpdateToast =
+            hasPrimedNotificationsRef.current && (newUnreadItems.length > 0 || hasUnreadIncrease);
+
+          if (shouldShowPrimedToast || shouldShowUpdateToast) {
+            await showNotificationToast(latestNotification);
+          }
+        }
+
+        knownUnreadNotificationIdsRef.current = latestIds;
+        hasPrimedNotificationsRef.current = true;
+        previousUnreadCountRef.current = count;
       } catch {
         if (isMounted) {
           setNotificationUnreadCount(0);
@@ -355,15 +428,19 @@ export default function AdminLayout() {
     }
 
     function handleNotificationsUpdated() {
-      loadUnreadCount();
+      syncNotifications();
     }
 
-    loadUnreadCount();
+    syncNotifications();
     window.addEventListener("admin-notifications-updated", handleNotificationsUpdated);
+    const intervalId = window.setInterval(() => {
+      syncNotifications({ allowToast: location.pathname !== "/notifications" });
+    }, 15000);
 
     return () => {
       isMounted = false;
       window.removeEventListener("admin-notifications-updated", handleNotificationsUpdated);
+      window.clearInterval(intervalId);
     };
   }, [location.pathname]);
 

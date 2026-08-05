@@ -97,6 +97,7 @@ function deriveChannels(metadata) {
 
 function normalizeNotification(item) {
   const metadata = parseMetadata(item?.metadata);
+  const prettyMetadata = Object.keys(metadata).length ? JSON.stringify(metadata, null, 2) : "";
 
   return {
     id: item?.id ?? "",
@@ -114,12 +115,15 @@ function normalizeNotification(item) {
     scheduledAt: formatDisplayDate(item?.createdAt),
     audience: formatAudienceLabel(metadata.audience),
     channels: deriveChannels(metadata),
+    sendEmail: Boolean(metadata.sendEmail),
+    sendPush: Boolean(metadata.sendPush),
+    sendInApp: Boolean(metadata.sendInApp),
     sentBy: "System",
     actionUrl: item?.actionUrl ?? "",
     entityId: item?.entityId ?? "",
     entityType: item?.entityType ?? "",
     metadata,
-    rawMetadata: item?.metadata ?? "",
+    rawMetadata: prettyMetadata,
   };
 }
 

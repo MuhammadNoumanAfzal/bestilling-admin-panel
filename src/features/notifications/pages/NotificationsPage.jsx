@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   archiveNotificationRequest,
@@ -12,6 +13,47 @@ import NotificationsTable from "../components/NotificationsTable.jsx";
 import NotificationsToolbar from "../components/NotificationsToolbar.jsx";
 
 const PAGE_SIZE = 10;
+
+function resolveNotificationTarget(notification) {
+  const actionUrl = String(notification?.actionUrl || "").trim();
+  const entityId = String(notification?.entityId || "").trim();
+  const entityType = String(notification?.entityType || "").trim().toUpperCase();
+  const type = String(notification?.type || "").trim().toUpperCase();
+
+  if (/^https?:\/\//i.test(actionUrl)) {
+    return actionUrl;
+  }
+
+  if (actionUrl) {
+    let normalizedPath = actionUrl.replace(/^\/admin\b/i, "");
+
+    if (entityId && normalizedPath.includes(":id")) {
+      normalizedPath = normalizedPath.replace(":id", entityId);
+    }
+
+    if (normalizedPath && normalizedPath !== "/" && !normalizedPath.includes(":")) {
+      return normalizedPath;
+    }
+  }
+
+  if (entityType === "SUPPORT_TICKET" || type === "SUPPORT_REPLY" || type === "SUPPORT_TICKET_UPDATED") {
+    return entityId ? `/support/${entityId}` : "/support";
+  }
+
+  if (entityType === "ORDER" || type === "ORDER_UPDATED" || type === "ORDER_CANCELLED") {
+    return entityId ? `/orders/${entityId}` : "/orders";
+  }
+
+  if (entityType === "PAYOUT" || type === "PAYOUT_UPDATED") {
+    return entityId ? `/payouts/${entityId}` : "/payouts";
+  }
+
+  if (entityType === "VENDOR" || type === "VENDOR_APPROVED") {
+    return entityId ? `/vendors/${entityId}` : "/vendors";
+  }
+
+  return "/notifications";
+}
 
 function buildSummary(pageInfo, visibleCount) {
   return [
@@ -43,6 +85,7 @@ function buildSummary(pageInfo, visibleCount) {
 }
 
 export default function NotificationsPage() {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -267,11 +310,14 @@ export default function NotificationsPage() {
   }
 
   function handleOpenAction(notification) {
-    if (!notification?.actionUrl) {
+    const target = resolveNotificationTarget(notification);
+
+    if (/^https?:\/\//i.test(target)) {
+      window.location.assign(target);
       return;
     }
 
-    window.location.assign(notification.actionUrl);
+    navigate(target);
   }
 
   return (

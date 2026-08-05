@@ -16,6 +16,7 @@ import VendorsToolbar from "../components/VendorsToolbar.jsx";
 import VendorStatusOverviewCard from "../components/VendorStatusOverviewCard.jsx";
 
 const PAGE_SIZE = 10;
+const STATUS_FALLBACK_PAGE_SIZE = 1000;
 
 const iconMap = {
   total: Users,
@@ -42,6 +43,24 @@ function getTabStatusFilter(tab) {
     default:
       return null;
   }
+}
+
+function isStatusTab(tab) {
+  return tab !== "All" && tab !== "Top Performing";
+}
+
+function buildClientSidePageInfo(items, page, pageSize) {
+  const totalItems = items.length;
+  const totalPages = totalItems === 0 ? 1 : Math.ceil(totalItems / pageSize);
+
+  return {
+    page,
+    pageSize,
+    totalItems,
+    totalPages,
+    hasNextPage: page < totalPages,
+    hasPreviousPage: page > 1,
+  };
 }
 
 export default function VendorsPage() {
@@ -88,9 +107,7 @@ export default function VendorsPage() {
       vendorId: vendorFilter || null,
       city: cityFilter || null,
       minRating: ratingFilter ? Number(ratingFilter) : null,
-      status: activeTab !== "All" && activeTab !== "Top Performing"
-        ? getTabStatusFilter(activeTab)
-        : null,
+      status: isStatusTab(activeTab) ? getTabStatusFilter(activeTab) : null,
       joinedFrom: dateRange?.start || null,
       joinedTo: dateRange?.end || null,
       page: currentPage,
@@ -117,15 +134,33 @@ export default function VendorsPage() {
       setLoadError("");
 
       try {
-        const response = await getAdminVendorsRequest(normalizedFilters);
+        const shouldUseClientSideStatusFilter = isStatusTab(activeTab);
+        const response = shouldUseClientSideStatusFilter
+          ? await getAdminVendorsRequest({
+              ...normalizedFilters,
+              status: null,
+              page: 1,
+              pageSize: STATUS_FALLBACK_PAGE_SIZE,
+            })
+          : await getAdminVendorsRequest(normalizedFilters);
 
         if (!isMounted) {
           return;
         }
 
-        setRows(response.rows);
+        if (shouldUseClientSideStatusFilter) {
+          const filteredRows = response.rows.filter((row) => row.status === activeTab);
+          const startIndex = (currentPage - 1) * PAGE_SIZE;
+          const paginatedRows = filteredRows.slice(startIndex, startIndex + PAGE_SIZE);
+
+          setRows(paginatedRows);
+          setPageInfo(buildClientSidePageInfo(filteredRows, currentPage, PAGE_SIZE));
+        } else {
+          setRows(response.rows);
+          setPageInfo(response.pageInfo);
+        }
+
         setStats(response.stats);
-        setPageInfo(response.pageInfo);
         setFilterOptions(response.filterOptions);
         setSidePanels(response.sidePanels);
       } catch (error) {

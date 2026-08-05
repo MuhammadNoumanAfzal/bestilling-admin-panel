@@ -371,6 +371,7 @@ function normalizeOrderDetail(order) {
       deliveredAt: formatDateTimeLabel(order?.delivery?.deliveredAt),
       recipientName: order?.delivery?.recipientName || customerName,
       recipientPhone: order?.delivery?.recipientPhone || order?.customer?.phone || "Not provided",
+      city: order?.delivery?.city || order?.delivery?.address?.city || "",
       address: buildAddressLabel(order?.delivery?.address),
       riderName: order?.delivery?.rider?.name || "Not assigned",
       riderPhone: order?.delivery?.rider?.phone || "Not provided",

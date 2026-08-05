@@ -152,6 +152,7 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
         deliveredAt
         recipientName
         recipientPhone
+        city
         address {
           line1
           line2

@@ -57,6 +57,10 @@ export const ADMIN_DELIVERY_SUMMARY_QUERY = `
       restrictedAreas
       platformCoveragePercent
       platformCoverageSubtitle
+      coveredMunicipalities
+      totalMunicipalities
+      calculationMethod
+      lastCalculatedAt
     }
   }
 `;

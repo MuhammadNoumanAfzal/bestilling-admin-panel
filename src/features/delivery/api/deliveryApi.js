@@ -59,6 +59,35 @@ function formatDisplayDate(value) {
   }).format(date);
 }
 
+function formatDisplayDateTime(value) {
+  if (!value) {
+    return "Not available";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return `${value}`;
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatCoveragePercent(value) {
+  const numericValue = Number(value ?? 0);
+
+  if (!Number.isFinite(numericValue)) {
+    return "0.0%";
+  }
+
+  return `${numericValue.toFixed(1)}%`;
+}
+
 function normalizePostalArea(postalArea) {
   return {
     id: postalArea?.id || "",
@@ -189,8 +218,12 @@ export async function getAdminDeliverySummaryRequest() {
     {
       id: "coverage",
       label: "Platform Coverage",
-      value: `${Number(summary.platformCoveragePercent ?? 0)}%`,
+      value: formatCoveragePercent(summary.platformCoveragePercent),
       subtitle: summary.platformCoverageSubtitle || "",
+      detail:
+        summary.calculationMethod ||
+        "Calculated from active delivery areas vs registered municipalities",
+      meta: `Last calculated: ${formatDisplayDateTime(summary.lastCalculatedAt)}`,
       accent: "strong",
     },
   ];

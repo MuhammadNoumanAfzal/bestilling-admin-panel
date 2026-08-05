@@ -14,7 +14,15 @@ const summaryIcons = {
   coverage: Globe2,
 };
 
-export default function DeliveryOverviewCard({ id, label, value, subtitle, accent = "soft" }) {
+export default function DeliveryOverviewCard({
+  id,
+  label,
+  value,
+  subtitle,
+  detail,
+  meta,
+  accent = "soft",
+}) {
   const Icon = summaryIcons[id] || MapPinned;
 
   return (
@@ -35,6 +43,8 @@ export default function DeliveryOverviewCard({ id, label, value, subtitle, accen
         <div>
           <p className="text-[28px] font-extrabold leading-[1.05] tracking-[-0.035em] text-[#221914]">{value}</p>
           {subtitle ? <p className="mt-1.5 text-[12px] font-medium text-[#8a7d74]">{subtitle}</p> : null}
+          {detail ? <p className="mt-1.5 text-[11px] leading-5 text-[#6f645d]">{detail}</p> : null}
+          {meta ? <p className="mt-2 text-[11px] font-medium text-[#aa8f81]">{meta}</p> : null}
         </div>
       </div>
     </article>

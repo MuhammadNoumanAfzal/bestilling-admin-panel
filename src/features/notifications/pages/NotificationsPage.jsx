@@ -1,59 +1,277 @@
 import { useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
+import {
+  archiveNotificationRequest,
+  getMyNotificationsRequest,
+  markAllNotificationsReadRequest,
+  markNotificationReadRequest,
+} from "../api/notificationsApi.js";
 import NotificationDetailsModal from "../components/NotificationDetailsModal.jsx";
 import NotificationOverviewCard from "../components/NotificationOverviewCard.jsx";
 import NotificationsTable from "../components/NotificationsTable.jsx";
 import NotificationsToolbar from "../components/NotificationsToolbar.jsx";
-import {
-  notificationPagination,
-  notificationRows,
-  notificationSummary,
-} from "../data/notificationData.js";
+
+const PAGE_SIZE = 10;
+
+function buildSummary(pageInfo, visibleCount) {
+  return [
+    {
+      id: "total",
+      label: "Total Notifications",
+      value: String(pageInfo.totalItems || 0),
+      accent: "soft",
+    },
+    {
+      id: "sent",
+      label: "Unread Notifications",
+      value: String(pageInfo.unreadCount || 0),
+      accent: "warm",
+    },
+    {
+      id: "scheduled",
+      label: "Visible On Page",
+      value: String(visibleCount || 0),
+      accent: "neutral",
+    },
+    {
+      id: "drafts",
+      label: "Current Page",
+      value: `${pageInfo.page || 1}/${pageInfo.totalPages || 1}`,
+      accent: "strong",
+    },
+  ];
+}
 
 export default function NotificationsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [audienceFilter, setAudienceFilter] = useState("");
-  const [methodFilter, setMethodFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const pageSize = notificationPagination.pageSize;
+  const [rows, setRows] = useState([]);
+  const [pageInfo, setPageInfo] = useState({
+    page: 1,
+    pageSize: PAGE_SIZE,
+    totalItems: 0,
+    totalPages: 1,
+    unreadCount: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   const filteredRows = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    return notificationRows.filter((row) => {
+    return rows.filter((row) => {
       const matchesSearch =
         normalizedSearch.length === 0 ||
         row.title.toLowerCase().includes(normalizedSearch) ||
+        row.message.toLowerCase().includes(normalizedSearch) ||
         row.audience.toLowerCase().includes(normalizedSearch) ||
         row.sentBy.toLowerCase().includes(normalizedSearch) ||
-        row.status.toLowerCase().includes(normalizedSearch);
+        row.statusLabel.toLowerCase().includes(normalizedSearch) ||
+        row.typeLabel.toLowerCase().includes(normalizedSearch);
 
       const matchesAudience = !audienceFilter || row.audience === audienceFilter;
-      const matchesMethod = !methodFilter || row.channels.includes(methodFilter);
-      const matchesStatus = !statusFilter || row.status === statusFilter;
 
-      return matchesSearch && matchesAudience && matchesMethod && matchesStatus;
+      return matchesSearch && matchesAudience;
     });
-  }, [audienceFilter, methodFilter, searchTerm, statusFilter]);
+  }, [audienceFilter, rows, searchTerm]);
 
-  const totalItems = filteredRows.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const notificationSummary = useMemo(
+    () => buildSummary(pageInfo, filteredRows.length),
+    [filteredRows.length, pageInfo],
+  );
+  const hasLocalFilters = Boolean(searchTerm.trim() || audienceFilter);
+  const visibleTotalItems = hasLocalFilters ? filteredRows.length : pageInfo.totalItems;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, audienceFilter, methodFilter, statusFilter]);
+  }, [searchTerm, audienceFilter, typeFilter, statusFilter]);
 
-  const paginatedRows = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
+  useEffect(() => {
+    let isMounted = true;
 
-    return filteredRows.slice(startIndex, endIndex);
-  }, [currentPage, filteredRows, pageSize]);
+    async function loadNotifications() {
+      setIsLoading(true);
+      setLoadError("");
+
+      try {
+        const result = await getMyNotificationsRequest({
+          page: currentPage,
+          pageSize: PAGE_SIZE,
+          status: statusFilter || null,
+          type: typeFilter || null,
+        });
+
+        if (!isMounted) {
+          return;
+        }
+
+        setRows(result.items);
+        setPageInfo(result.pageInfo);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        setRows([]);
+        setPageInfo({
+          page: 1,
+          pageSize: PAGE_SIZE,
+          totalItems: 0,
+          totalPages: 1,
+          unreadCount: 0,
+        });
+        setLoadError(error instanceof Error ? error.message : "Unable to load notifications.");
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadNotifications();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentPage, statusFilter, typeFilter]);
 
   function handlePageChange(nextPage) {
-    const safePage = Math.min(Math.max(nextPage, 1), totalPages);
+    const safePage = Math.min(Math.max(nextPage, 1), pageInfo.totalPages || 1);
     setCurrentPage(safePage);
+  }
+
+  async function handleViewDetails(notification) {
+    let nextNotification = notification;
+
+    if (notification.status === "UNREAD") {
+      try {
+        const result = await markNotificationReadRequest(notification.id);
+
+        nextNotification = {
+          ...notification,
+          ...result,
+        };
+
+        setRows((currentRows) =>
+          currentRows.map((row) => (row.id === notification.id ? { ...row, ...result } : row)),
+        );
+        setPageInfo((currentInfo) => ({
+          ...currentInfo,
+          unreadCount: Math.max(0, (currentInfo.unreadCount || 0) - 1),
+        }));
+        window.dispatchEvent(new Event("admin-notifications-updated"));
+      } catch (error) {
+        await Swal.fire({
+          icon: "error",
+          title: "Unable to update notification",
+          text: error instanceof Error ? error.message : "Please try again.",
+          confirmButtonColor: "#d96834",
+        });
+      }
+    }
+
+    setSelectedNotification(nextNotification);
+  }
+
+  async function handleArchive(notification) {
+    const result = await Swal.fire({
+      title: "Archive notification?",
+      text: "This notification will be removed from the active list.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Archive",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d96834",
+      cancelButtonColor: "#c8b9aa",
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    try {
+      await archiveNotificationRequest(notification.id);
+
+      setRows((currentRows) => currentRows.filter((row) => row.id !== notification.id));
+      setPageInfo((currentInfo) => ({
+        ...currentInfo,
+        totalItems: Math.max(0, (currentInfo.totalItems || 0) - 1),
+        unreadCount:
+          notification.status === "UNREAD"
+            ? Math.max(0, (currentInfo.unreadCount || 0) - 1)
+            : currentInfo.unreadCount || 0,
+      }));
+
+      if (selectedNotification?.id === notification.id) {
+        setSelectedNotification(null);
+      }
+
+      window.dispatchEvent(new Event("admin-notifications-updated"));
+
+      await Swal.fire({
+        icon: "success",
+        title: "Archived",
+        text: "The notification has been archived.",
+        confirmButtonColor: "#d96834",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Archive failed",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#d96834",
+      });
+    }
+  }
+
+  async function handleMarkAllRead() {
+    try {
+      await markAllNotificationsReadRequest();
+
+      setRows((currentRows) =>
+        currentRows.map((row) =>
+          row.status === "UNREAD"
+            ? {
+                ...row,
+                status: "READ",
+                statusLabel: "Read",
+                readAtDisplay: "Just now",
+              }
+            : row,
+        ),
+      );
+      setPageInfo((currentInfo) => ({
+        ...currentInfo,
+        unreadCount: 0,
+      }));
+      window.dispatchEvent(new Event("admin-notifications-updated"));
+
+      await Swal.fire({
+        icon: "success",
+        title: "Notifications updated",
+        text: "All notifications have been marked as read.",
+        confirmButtonColor: "#d96834",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Update failed",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#d96834",
+      });
+    }
+  }
+
+  function handleOpenAction(notification) {
+    if (!notification?.actionUrl) {
+      return;
+    }
+
+    window.location.assign(notification.actionUrl);
   }
 
   return (
@@ -62,7 +280,7 @@ export default function NotificationsPage() {
         <section className="space-y-1">
           <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">Notifications</h1>
           <p className="text-[18px] leading-7 text-[#6f645d]">
-            Create, manage and monitor platform-wide notifications for users and vendors.
+            Review platform alerts, unread updates, and linked actions for admin follow-up.
           </p>
         </section>
 
@@ -75,34 +293,51 @@ export default function NotificationsPage() {
         <section className="overflow-hidden rounded-[16px] border border-[#d8ccc2] bg-white">
           <NotificationsToolbar
             audienceFilter={audienceFilter}
-            methodFilter={methodFilter}
             onAudienceFilterChange={setAudienceFilter}
-            onMethodFilterChange={setMethodFilter}
+            onMarkAllRead={handleMarkAllRead}
             onResetFilters={() => {
               setSearchTerm("");
               setAudienceFilter("");
-              setMethodFilter("");
+              setTypeFilter("");
               setStatusFilter("");
             }}
             onSearchChange={setSearchTerm}
             onStatusFilterChange={setStatusFilter}
+            onTypeFilterChange={setTypeFilter}
             searchTerm={searchTerm}
             statusFilter={statusFilter}
+            typeFilter={typeFilter}
+            unreadCount={pageInfo.unreadCount}
           />
-          <NotificationsTable
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-            onViewDetails={setSelectedNotification}
-            pageSize={pageSize}
-            rows={paginatedRows}
-            totalItems={totalItems}
-          />
+
+          {loadError ? (
+            <div className="border-t border-[#eee4dd] px-4 py-10 text-center text-[15px] font-medium text-[#9f4d33]">
+              {loadError}
+            </div>
+          ) : null}
+
+          {isLoading ? (
+            <div className="border-t border-[#eee4dd] px-4 py-12 text-center text-[15px] font-medium text-[#6f645d]">
+              Loading notifications...
+            </div>
+          ) : (
+            <NotificationsTable
+              currentPage={currentPage}
+              onArchive={handleArchive}
+              onPageChange={handlePageChange}
+              onViewDetails={handleViewDetails}
+              pageSize={pageInfo.pageSize || PAGE_SIZE}
+              rows={filteredRows}
+              totalItems={visibleTotalItems}
+            />
+          )}
         </section>
       </div>
 
       <NotificationDetailsModal
         notification={selectedNotification}
         onClose={() => setSelectedNotification(null)}
+        onOpenAction={handleOpenAction}
       />
     </>
   );

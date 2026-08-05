@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Eye, Mail, MessageSquareText, Smartphone } from "lucide-react";
+import { Archive, ChevronLeft, ChevronRight, Eye, Mail, MessageSquareText, Smartphone } from "lucide-react";
 
 const audienceClasses = {
   Customers: "bg-[#fff1e8] text-[#d46b36]",
@@ -7,10 +7,9 @@ const audienceClasses = {
 };
 
 const statusClasses = {
-  Sent: "bg-[#f6f2ef] text-[#4d433d]",
-  Scheduled: "bg-[#fff2ea] text-[#d06734]",
-  Draft: "bg-[#f4f1ef] text-[#8d8178]",
-  Failed: "bg-[#ffe7e1] text-[#d94d3f]",
+  Unread: "bg-[#fff2ea] text-[#d06734]",
+  Read: "bg-[#f6f2ef] text-[#4d433d]",
+  Archived: "bg-[#f4f1ef] text-[#8d8178]",
 };
 
 const channelMeta = {
@@ -22,9 +21,9 @@ const channelMeta = {
     icon: MessageSquareText,
     label: "Push",
   },
-  sms: {
+  "in-app": {
     icon: Smartphone,
-    label: "SMS",
+    label: "In-App",
   },
 };
 
@@ -46,7 +45,7 @@ function StatusBadge({ status }) {
     <span
       className={[
         "inline-flex rounded-full px-3 py-1.5 text-[11px] font-bold leading-none",
-        statusClasses[status] || statusClasses.Draft,
+        statusClasses[status] || statusClasses.Read,
       ].join(" ")}
     >
       {status}
@@ -111,6 +110,7 @@ function PaginationIconButton({ children, disabled = false, onClick }) {
 
 export default function NotificationsTable({
   currentPage,
+  onArchive,
   onPageChange,
   onViewDetails,
   pageSize,
@@ -169,20 +169,33 @@ export default function NotificationsTable({
                     <ChannelDots channels={row.channels} />
                   </td>
                   <td className="px-3 py-4 align-middle">
-                    <StatusBadge status={row.status} />
+                    <StatusBadge status={row.statusLabel || row.status} />
                   </td>
                   <td className="px-3 py-4 align-middle text-[15px] font-medium text-[#18120f]">
-                    {row.scheduledAt}
+                    {row.createdAtDisplay || row.scheduledAt}
                   </td>
                   <td className="px-4 py-4 align-middle text-right">
-                    <button
-                      className="inline-flex cursor-pointer items-center gap-1.5 text-[15px] font-semibold text-[#18120f] transition hover:text-[#cf6e38]"
-                      onClick={() => onViewDetails(row)}
-                      type="button"
-                    >
-                      <Eye size={15} />
-                      <span>View Details</span>
-                    </button>
+                    <div className="flex justify-end gap-4">
+                      <button
+                        className="inline-flex cursor-pointer items-center gap-1.5 text-[15px] font-semibold text-[#18120f] transition hover:text-[#cf6e38]"
+                        onClick={() => onViewDetails(row)}
+                        type="button"
+                      >
+                        <Eye size={15} />
+                        <span>View Details</span>
+                      </button>
+
+                      {row.status !== "ARCHIVED" ? (
+                        <button
+                          className="inline-flex cursor-pointer items-center gap-1.5 text-[15px] font-semibold text-[#8f4f36] transition hover:text-[#cf6e38]"
+                          onClick={() => onArchive(row)}
+                          type="button"
+                        >
+                          <Archive size={15} />
+                          <span>Archive</span>
+                        </button>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))

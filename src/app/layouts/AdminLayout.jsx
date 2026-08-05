@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { getAdminDisplayName, getAdminRoleLabel } from "../../features/auth/authConfig.js";
+import { getMyNotificationUnreadCountRequest } from "../../features/notifications/api/notificationsApi.js";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
 
 const navigation = [
@@ -301,6 +302,7 @@ export default function AdminLayout() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
   const profileMenuRef = useRef(null);
   const searchRef = useRef(null);
 
@@ -335,6 +337,35 @@ export default function AdminLayout() {
   useEffect(() => {
     document.title = `${meta.title} | Bestilling Admin`;
   }, [meta.title]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadUnreadCount() {
+      try {
+        const count = await getMyNotificationUnreadCountRequest();
+        if (isMounted) {
+          setNotificationUnreadCount(count);
+        }
+      } catch {
+        if (isMounted) {
+          setNotificationUnreadCount(0);
+        }
+      }
+    }
+
+    function handleNotificationsUpdated() {
+      loadUnreadCount();
+    }
+
+    loadUnreadCount();
+    window.addEventListener("admin-notifications-updated", handleNotificationsUpdated);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener("admin-notifications-updated", handleNotificationsUpdated);
+    };
+  }, [location.pathname]);
 
   useEffect(() => {
     setIsMobileNavOpen(false);
@@ -511,11 +542,16 @@ export default function AdminLayout() {
               <div className="flex items-center gap-2 border-l border-[#ebe4de] pl-3">
                 <button
                   aria-label="Open notifications"
-                  className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#2f241c] transition hover:bg-[#f5f1ed]"
+                  className="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#2f241c] transition hover:bg-[#f5f1ed]"
                   onClick={() => navigate("/notifications")}
                   type="button"
                 >
                   <Bell size={16} />
+                  {notificationUnreadCount > 0 ? (
+                    <span className="absolute right-1.5 top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-[#cf6e38] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                      {notificationUnreadCount > 99 ? "99+" : notificationUnreadCount}
+                    </span>
+                  ) : null}
                 </button>
               </div>
 

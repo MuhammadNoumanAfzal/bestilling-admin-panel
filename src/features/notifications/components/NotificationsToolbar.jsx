@@ -21,14 +21,16 @@ function FilterSelect({ value, onChange, options }) {
 
 export default function NotificationsToolbar({
   audienceFilter,
-  methodFilter,
+  typeFilter,
   onAudienceFilterChange,
-  onMethodFilterChange,
+  onMarkAllRead,
   onResetFilters,
   onSearchChange,
   onStatusFilterChange,
+  onTypeFilterChange,
   searchTerm,
   statusFilter,
+  unreadCount = 0,
 }) {
   const navigate = useNavigate();
 
@@ -48,21 +50,34 @@ export default function NotificationsToolbar({
           </span>
         </label>
 
-        <button
-          className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 self-start rounded-[8px] bg-[#cf6e38] px-3.5 text-[13px] font-bold text-white transition hover:bg-[#bc6030]"
-          onClick={() => navigate("/notifications/create")}
-          type="button"
-        >
-          <Plus size={12} strokeWidth={2.8} />
-          <span>Create Notification</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-[#ddd2ca] bg-white px-3.5 text-[13px] font-semibold text-[#3f3530] transition hover:border-[#cf6e38]/50 hover:bg-[#fff9f5]"
+            onClick={onMarkAllRead}
+            type="button"
+          >
+            <span>Mark All Read</span>
+            <span className="rounded-full bg-[#fff1e8] px-2 py-0.5 text-[11px] font-bold text-[#cf6e38]">
+              {unreadCount}
+            </span>
+          </button>
+
+          <button
+            className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-[8px] bg-[#cf6e38] px-3.5 text-[13px] font-bold text-white transition hover:bg-[#bc6030]"
+            onClick={() => navigate("/notifications/create")}
+            type="button"
+          >
+            <Plus size={12} strokeWidth={2.8} />
+            <span>Create Notification</span>
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <button
           className={[
             "inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold transition",
-            !audienceFilter && !methodFilter && !statusFilter
+            !audienceFilter && !typeFilter && !statusFilter
               ? "border-[#cf6e38] bg-[#cf6e38] text-white"
               : "border-[#ddd2ca] bg-white text-[#3f3530] hover:border-[#cf6e38]/50 hover:bg-[#fff9f5]",
           ].join(" ")}
@@ -84,24 +99,27 @@ export default function NotificationsToolbar({
         />
 
         <FilterSelect
-          onChange={onMethodFilterChange}
+          onChange={onTypeFilterChange}
           options={[
-            { label: "All Method", value: "" },
-            { label: "Email", value: "email" },
-            { label: "Push", value: "push" },
-            { label: "SMS", value: "sms" },
+            { label: "All Type", value: "" },
+            { label: "Support Reply", value: "SUPPORT_REPLY" },
+            { label: "Support Updated", value: "SUPPORT_TICKET_UPDATED" },
+            { label: "Order Updated", value: "ORDER_UPDATED" },
+            { label: "Order Cancelled", value: "ORDER_CANCELLED" },
+            { label: "Payout Updated", value: "PAYOUT_UPDATED" },
+            { label: "Vendor Approved", value: "VENDOR_APPROVED" },
+            { label: "System Alert", value: "SYSTEM_ALERT" },
           ]}
-          value={methodFilter}
+          value={typeFilter}
         />
 
         <FilterSelect
           onChange={onStatusFilterChange}
           options={[
             { label: "All Status", value: "" },
-            { label: "Sent", value: "Sent" },
-            { label: "Scheduled", value: "Scheduled" },
-            { label: "Draft", value: "Draft" },
-            { label: "Failed", value: "Failed" },
+            { label: "Unread", value: "UNREAD" },
+            { label: "Read", value: "READ" },
+            { label: "Archived", value: "ARCHIVED" },
           ]}
           value={statusFilter}
         />

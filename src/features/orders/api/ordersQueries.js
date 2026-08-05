@@ -209,6 +209,14 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
           name
         }
       }
+      actions {
+        canCancel
+        canRefund
+        canMarkPaid
+        canMarkDelivered
+        canAssignVendor
+        canDownloadInvoice
+      }
       updatedAt
     }
   }

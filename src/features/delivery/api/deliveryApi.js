@@ -86,10 +86,10 @@ function formatCoveragePercent(value) {
   const numericValue = Number(value ?? 0);
 
   if (!Number.isFinite(numericValue)) {
-    return "0.0%";
+    return "0%";
   }
 
-  return `${numericValue.toFixed(1)}%`;
+  return Number.isInteger(numericValue) ? `${numericValue}%` : `${numericValue.toFixed(1)}%`;
 }
 
 function normalizePostalArea(postalArea) {
@@ -110,6 +110,7 @@ function normalizePostalArea(postalArea) {
 function normalizeAreaListItem(item) {
   return {
     id: item?.id || "",
+    name: item?.name || [item?.city, item?.region].filter(Boolean).join(" ") || "",
     city: item?.city || "",
     region: item?.region || "",
     country: item?.country || "",
@@ -132,6 +133,7 @@ function normalizeAreaDetail(area) {
 
   return {
     id: area.id,
+    name: area.name || [area.city, area.region].filter(Boolean).join(" ") || "",
     city: area.city || "",
     region: area.region || "",
     country: area.country || "",

@@ -224,14 +224,21 @@ function normalizeVendorDocument(document) {
 
   return {
     id,
+    type: document?.type || "",
     title: document?.title || "Untitled document",
     subtitle: document?.subtitle || "",
     status: normalizeDocumentStatus(document?.status),
+    rawStatus: `${document?.status ?? ""}`.trim().toUpperCase() || "PENDING",
     fileUrl: document?.fileUrl || "",
     fileName: document?.fileName || "",
     mimeType: document?.mimeType || "",
     uploadedAt: document?.uploadedAt || "",
     reviewedAt: document?.reviewedAt || "",
+    uploadedAtLabel: formatDateTimeLabel(document?.uploadedAt),
+    reviewedAtLabel: formatDateTimeLabel(document?.reviewedAt),
+    reviewNote: document?.reviewNote || "",
+    rejectionReason: document?.rejectionReason || "",
+    isRequired: Boolean(document?.isRequired),
     isReviewable,
   };
 }
@@ -353,6 +360,10 @@ function normalizeVendorApplicationReview(review) {
     vendorId: review.vendorId || review.id,
     name: review.name || "Unknown vendor",
     logoUrl: review.logoUrl || "",
+    assets: {
+      logoUrl: review.assets?.logoUrl || review.logoUrl || "",
+      coverImageUrl: review.assets?.coverImageUrl || "",
+    },
     owner: review.owner || "Unknown",
     submittedDate: formatDateLabel(review.submittedAt),
     reviewedDate: formatDateLabel(review.reviewedAt),
@@ -360,46 +371,29 @@ function normalizeVendorApplicationReview(review) {
     reviewedAt: review.reviewedAt || "",
     location: review.location || "",
     applicationStatus: normalizeVendorStatus(review.applicationStatus),
-    businessSummary: Array.isArray(review.businessSummary?.columns)
-      ? review.businessSummary.columns.map((column) =>
-          Array.isArray(column?.items) ? column.items : [],
-        )
-      : [],
-    description: review.description || "",
-    tags: Array.isArray(review.tags) ? review.tags : [],
-    operations: Array.isArray(review.operations) ? review.operations : [],
-    operatingDays: Array.isArray(review.operatingDays)
-      ? review.operatingDays.map((day) => ({
-          label: day?.day || "",
-          day: day?.day || "",
-          active: Boolean(day?.active),
-        }))
-      : [],
-    operatingHours: review.operatingHours || "",
     documents: Array.isArray(review.documents) ? review.documents.map(normalizeVendorDocument) : [],
-    preview: {
-      name: review.preview?.name || review.name || "",
-      coverImage: review.preview?.coverImage || "",
-      logoImage: review.preview?.logoImage || review.logoUrl || "",
-      rating: review.preview?.rating ?? 0,
-      reviews: Number(review.preview?.reviewsCount ?? 0),
-      address: review.preview?.address || review.location || "",
-    },
-    submittedMenus: Array.isArray(review.submittedMenus)
-      ? review.submittedMenus.map((menu) => ({
-          id: menu?.id || "",
-          title: menu?.title || "",
-          description: menu?.description || "",
-          price: menu?.price?.formatted || "NOK 0.00",
-          badge: menu?.badge || "",
-          imageUrl: menu?.imageUrl || "",
-          servings: "",
-          notice: "",
+    checklist: Array.isArray(review.checklist)
+      ? review.checklist.map((item) => ({
+          code: item?.code || "",
+          label: item?.label || "",
+          complete: Boolean(item?.complete),
+          blocking: Boolean(item?.blocking),
         }))
       : [],
-    checklist: Array.isArray(review.checklist) ? review.checklist : [],
     checklistCompleted: Number(review.checklistCompleted ?? 0),
+    checklistTotal: Number(review.checklistTotal ?? review.checklist?.length ?? 0),
     progressPercent: Number(review.progressPercent ?? 0),
+    canApprove: Boolean(review.canApprove),
+    missingRequirements: Array.isArray(review.missingRequirements) ? review.missingRequirements : [],
+    documentReviewHistory: Array.isArray(review.documentReviewHistory)
+      ? review.documentReviewHistory.map((item) => ({
+          id: item?.id || "",
+          action: item?.action || "",
+          actorName: item?.actor?.fullName || "System",
+          createdAt: item?.createdAt || "",
+          createdAtLabel: formatDateTimeLabel(item?.createdAt),
+        }))
+      : [],
   };
 }
 
@@ -478,9 +472,8 @@ export async function approveVendorApplicationRequest(id, input) {
 
   return {
     message: result.message || "Vendor application approved successfully.",
-    status: normalizeVendorStatus(result.vendor?.status),
     applicationStatus: normalizeVendorStatus(result.application?.applicationStatus),
-    reviewedAt: result.application?.reviewedAt || "",
+    canApprove: Boolean(result.application?.canApprove),
   };
 }
 
@@ -588,7 +581,8 @@ export async function reviewVendorDocumentRequest(id, input) {
     id,
     input: {
       status: `${input?.status ?? ""}`.trim().toUpperCase(),
-      note: `${input?.note ?? ""}`.trim() || null,
+      reviewNote: `${input?.reviewNote ?? ""}`.trim() || null,
+      rejectionReason: `${input?.rejectionReason ?? ""}`.trim() || null,
     },
   });
 
@@ -601,6 +595,9 @@ export async function reviewVendorDocumentRequest(id, input) {
     message: result.message || "Document reviewed successfully.",
     status: normalizeDocumentStatus(result.document.status),
     reviewedAt: result.document.reviewedAt || "",
+    reviewNote: result.document.reviewNote || "",
+    rejectionReason: result.document.rejectionReason || "",
+    isRequired: Boolean(result.document.isRequired),
   };
 }
 

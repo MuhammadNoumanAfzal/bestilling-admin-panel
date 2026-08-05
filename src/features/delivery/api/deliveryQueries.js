@@ -21,6 +21,7 @@ export const ADMIN_DELIVERY_AREAS_QUERY = `
     ) {
       items {
         id
+        name
         city
         region
         country
@@ -75,6 +76,7 @@ export const ADMIN_DELIVERY_AREA_QUERY = `
   query AdminDeliveryArea($id: ID!) {
     adminDeliveryArea(id: $id) {
       id
+      name
       city
       region
       country

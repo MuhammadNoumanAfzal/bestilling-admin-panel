@@ -1,14 +1,14 @@
 import {
+  AlertTriangle,
   ArrowLeft,
   CheckCircle2,
   Circle,
-  Eye,
-  MapPin,
-  MessageSquare,
-  Share2,
-  Star,
   Clock3,
-  Upload,
+  Download,
+  Eye,
+  Image as ImageIcon,
+  MapPin,
+  ShieldCheck,
   UserRound,
   XCircle,
 } from "lucide-react";
@@ -24,45 +24,69 @@ import {
   reviewVendorDocumentRequest,
 } from "../api/vendorsApi.js";
 
-function SectionTitle({ title }) {
+function SectionTitle({ title, subtitle = "" }) {
   return (
-    <div className="mb-4 flex items-center gap-2.5">
-      <span className="h-6 w-[4px] rounded-full bg-[#dc6a34]" />
-      <h2 className="text-[22px] font-extrabold tracking-[-0.02em] text-[#1d1510]">{title}</h2>
+    <div className="mb-4">
+      <div className="flex items-center gap-2.5">
+        <span className="h-6 w-[4px] rounded-full bg-[#dc6a34]" />
+        <h2 className="text-[22px] font-extrabold tracking-[-0.02em] text-[#1d1510]">{title}</h2>
+      </div>
+      {subtitle ? <p className="mt-2 text-[14px] leading-6 text-[#7a6d66]">{subtitle}</p> : null}
     </div>
   );
 }
 
-function InfoGrid({ items }) {
+function LoadingState() {
   return (
-    <div className="grid gap-0 md:grid-cols-2">
-      {items.map((column, index) => (
-        <div
-          key={index}
-          className={`space-y-5 px-5 py-5 sm:px-6 ${index === 0 ? "border-b border-[#e5ddd6] md:border-b-0 md:border-r" : ""}`}
-        >
-          {column.map((item) => (
-            <div key={item.label}>
-              <p className="text-[13px] font-medium text-[#8d8078]">{item.label}</p>
-              <p className="mt-1.5 text-[18px] font-bold leading-7 text-[#1d1510]">{item.value}</p>
-            </div>
-          ))}
-        </div>
-      ))}
+    <div className="mx-auto max-w-[1120px] space-y-6">
+      <div className="h-40 animate-pulse rounded-[18px] border border-[#ddd2c9] bg-white" />
+      <div className="h-28 animate-pulse rounded-[16px] border border-[#ddd2c9] bg-white" />
+      <div className="h-72 animate-pulse rounded-[16px] border border-[#ddd2c9] bg-white" />
     </div>
   );
 }
 
-function OperatingDayPill({ day, active }) {
+function ChecklistItem({ item }) {
   return (
-    <span
-      className={[
-        "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2.5 text-[11px] font-bold",
-        active ? "bg-[#f7b28c] text-[#8d3f16]" : "bg-[#f1ece7] text-[#b0a39a]",
-      ].join(" ")}
-    >
-      {day}
-    </span>
+    <div className="flex items-start gap-2.5 rounded-[12px] border border-[#eee3db] bg-[#fffdfa] px-4 py-3">
+      <span className="pt-0.5">
+        {item.complete ? (
+          <CheckCircle2 size={14} className="text-[#de6b34]" />
+        ) : item.blocking ? (
+          <AlertTriangle size={14} className="text-[#c53a2f]" />
+        ) : (
+          <Circle size={14} className="text-[#b8aaa0]" />
+        )}
+      </span>
+      <div>
+        <p className={`text-[13px] leading-6 ${item.complete ? "text-[#6c5d54]" : "text-[#8d8078]"}`}>
+          {item.label}
+        </p>
+        {item.blocking && !item.complete ? (
+          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#c53a2f]">Blocking</p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function AssetCard({ imageUrl, label }) {
+  return (
+    <article className="overflow-hidden rounded-[16px] border border-[#d8d0c8] bg-white shadow-[0_6px_14px_rgba(53,34,20,0.05)]">
+      <div className="flex h-[220px] items-center justify-center bg-[#f5f1ed]">
+        {imageUrl ? (
+          <img alt={label} className="h-full w-full object-cover" src={imageUrl} />
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-[#9f9188]">
+            <ImageIcon size={22} />
+            <p className="text-[13px] font-medium">Not uploaded</p>
+          </div>
+        )}
+      </div>
+      <div className="border-t border-[#eee4dd] px-4 py-3">
+        <p className="text-[14px] font-bold text-[#18120f]">{label}</p>
+      </div>
+    </article>
   );
 }
 
@@ -72,7 +96,7 @@ function DocumentCard({ document, onDownload, onPreview, onReview }) {
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="text-[16px] font-bold text-[#1c1510]">{document.title}</h3>
-          <p className="mt-1 text-[12px] text-[#8d8078]">{document.subtitle}</p>
+          <p className="mt-1 text-[12px] text-[#8d8078]">{document.subtitle || document.type}</p>
         </div>
         <span
           className={[
@@ -88,6 +112,24 @@ function DocumentCard({ document, onDownload, onPreview, onReview }) {
         </span>
       </div>
 
+      <div className="mt-3 grid gap-2 text-[12px] text-[#8d8078]">
+        <p>Uploaded: {document.uploadedAtLabel}</p>
+        <p>Reviewed: {document.reviewedAt ? document.reviewedAtLabel : "Not reviewed yet"}</p>
+        <p>{document.isRequired ? "Required compliance document" : "Optional document"}</p>
+      </div>
+
+      {document.reviewNote ? (
+        <div className="mt-3 rounded-[12px] bg-[#f7f3f0] px-3 py-2 text-[12px] leading-5 text-[#6f6259]">
+          <span className="font-bold text-[#433630]">Review note:</span> {document.reviewNote}
+        </div>
+      ) : null}
+
+      {document.rejectionReason ? (
+        <div className="mt-2 rounded-[12px] bg-[#fff5f5] px-3 py-2 text-[12px] leading-5 text-[#b83a3a]">
+          <span className="font-bold">Reason:</span> {document.rejectionReason}
+        </div>
+      ) : null}
+
       <div className="mt-3 flex gap-2">
         <button
           className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-[#f3f0ed] px-3 py-2.5 text-[12px] font-bold text-[#1c1510] transition hover:bg-[#ebe6e1]"
@@ -102,75 +144,30 @@ function DocumentCard({ document, onDownload, onPreview, onReview }) {
           onClick={() => onDownload(document)}
           type="button"
         >
-          <Upload size={12} />
+          <Download size={12} />
           Download
         </button>
       </div>
 
       <button
-        className={[
-          "mt-2 inline-flex w-full items-center justify-center rounded-full border px-3 py-2 text-[12px] font-bold transition",
-          document.isReviewable
-            ? "cursor-pointer border-[#d8ccc2] text-[#cf6e38] hover:bg-[#fff2ea]"
-            : "cursor-not-allowed border-[#e7ddd6] bg-[#faf7f4] text-[#b4a79f]",
-        ].join(" ")}
-        disabled={!document.isReviewable}
+        className="mt-2 inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-[#d8ccc2] px-3 py-2 text-[12px] font-bold text-[#cf6e38] transition hover:bg-[#fff2ea]"
         onClick={() => onReview(document)}
         type="button"
       >
-        {document.isReviewable ? "Review Status" : "Preview Only"}
+        Review Status
       </button>
-
-      <p className="mt-2 text-[11px] leading-5 text-[#9b8d84]">
-        {document.isReviewable
-          ? "This compliance document can be previewed, downloaded, and reviewed."
-          : "This is a storefront asset image. It can be previewed or downloaded, but it is not a reviewable legal document."}
-      </p>
     </article>
   );
 }
 
-function MenuCard({ menu }) {
+function HistoryItem({ item }) {
   return (
-    <article className="overflow-hidden rounded-[16px] border border-[#d9d0c8] bg-white shadow-[0_8px_18px_rgba(53,34,20,0.05)]">
-      <div className="relative">
-        <img alt={menu.title} className="h-32 w-full object-cover" src={menu.imageUrl} />
-        <span className="absolute right-2 top-2 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold text-[#6a5b51]">
-          {menu.badge}
-        </span>
+    <div className="rounded-[14px] border border-[#ece2da] bg-[#fffdfa] px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[13px] font-bold text-[#231913]">{item.action}</p>
+        <p className="text-[12px] text-[#8d8078]">{item.createdAtLabel}</p>
       </div>
-      <div className="space-y-2.5 p-4">
-        <div>
-          <h3 className="text-[15px] font-bold text-[#1c1510]">{menu.title}</h3>
-          <p className="mt-1 text-[11px] leading-5 text-[#8a7d76]">{menu.description}</p>
-        </div>
-        <p className="text-[15px] font-extrabold text-[#1c1510]">{menu.price}</p>
-      </div>
-    </article>
-  );
-}
-
-function ChecklistItem({ item }) {
-  return (
-    <div className="flex items-start gap-2.5">
-      <span className="pt-0.5">
-        {item.complete ? (
-          <CheckCircle2 size={14} className="text-[#de6b34]" />
-        ) : (
-          <Circle size={14} className="text-[#b8aaa0]" />
-        )}
-      </span>
-      <p className={`text-[13px] leading-6 ${item.complete ? "text-[#6c5d54]" : "text-[#8d8078]"}`}>{item.label}</p>
-    </div>
-  );
-}
-
-function LoadingState() {
-  return (
-    <div className="mx-auto max-w-[1120px] space-y-6">
-      <div className="h-40 animate-pulse rounded-[18px] border border-[#ddd2c9] bg-white" />
-      <div className="h-28 animate-pulse rounded-[16px] border border-[#ddd2c9] bg-white" />
-      <div className="h-72 animate-pulse rounded-[16px] border border-[#ddd2c9] bg-white" />
+      <p className="mt-1 text-[12px] font-medium text-[#7a6d66]">By {item.actorName}</p>
     </div>
   );
 }
@@ -223,11 +220,6 @@ export default function VendorApplicationReviewPage() {
 
   async function handleDocumentAccess(document, kind) {
     try {
-      if (!document.isReviewable) {
-        openDocumentUrl(document.fileUrl);
-        return;
-      }
-
       const access = await getVendorDocumentAccessRequest(document.id);
       openDocumentUrl(
         kind === "preview" ? access.previewUrl || access.downloadUrl : access.downloadUrl || access.previewUrl,
@@ -243,17 +235,7 @@ export default function VendorApplicationReviewPage() {
   }
 
   async function handleReviewDocument(document) {
-    if (!document.isReviewable) {
-      await Swal.fire({
-        icon: "info",
-        title: "Asset preview only",
-        text: "Store logos and cover photos are visual assets. They can be previewed or downloaded, but they cannot be reviewed through the document verification mutation.",
-        confirmButtonColor: "#cf6e38",
-      });
-      return;
-    }
-
-    const { value } = await Swal.fire({
+    const result = await Swal.fire({
       title: "Review vendor document",
       html: `
         <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
@@ -262,7 +244,8 @@ export default function VendorApplicationReviewPage() {
             <option value="PENDING">Pending</option>
             <option value="REJECTED">Rejected</option>
           </select>
-          <textarea id="vendor-document-note" class="swal2-textarea" placeholder="Optional review note"></textarea>
+          <textarea id="vendor-document-note" class="swal2-textarea" placeholder="Review note"></textarea>
+          <input id="vendor-document-reason" class="swal2-input" placeholder="Rejection reason (required for rejected)" />
         </div>
       `,
       showCancelButton: true,
@@ -270,43 +253,48 @@ export default function VendorApplicationReviewPage() {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
-      preConfirm: () => ({
-        status: document.getElementById ? "" : "", // noop placeholder for lint-free template execution
-      }),
+      preConfirm: () => {
+        const status = window.document.getElementById("vendor-document-status")?.value || "";
+        const reviewNote = window.document.getElementById("vendor-document-note")?.value?.trim() || "";
+        const rejectionReason = window.document.getElementById("vendor-document-reason")?.value?.trim() || "";
+
+        if (!status) {
+          Swal.showValidationMessage("Status is required.");
+          return null;
+        }
+
+        if (status === "REJECTED" && !rejectionReason) {
+          Swal.showValidationMessage("Rejection reason is required for rejected documents.");
+          return null;
+        }
+
+        return { status, reviewNote, rejectionReason };
+      },
       didOpen: () => {
         const statusElement = window.document.getElementById("vendor-document-status");
+        const noteElement = window.document.getElementById("vendor-document-note");
+        const reasonElement = window.document.getElementById("vendor-document-reason");
+
         if (statusElement) {
-          statusElement.value =
-            document.status === "Verified" ? "VERIFIED" : document.status === "Rejected" ? "REJECTED" : "PENDING";
+          statusElement.value = document.rawStatus || "PENDING";
+        }
+        if (noteElement) {
+          noteElement.value = document.reviewNote || "";
+        }
+        if (reasonElement) {
+          reasonElement.value = document.rejectionReason || "";
         }
       },
     });
 
-    const status = window.document.getElementById("vendor-document-status")?.value || "";
-    const note = window.document.getElementById("vendor-document-note")?.value || "";
-
-    if (!value && !status) {
+    if (!result.value) {
       return;
     }
 
     try {
-      const response = await reviewVendorDocumentRequest(document.id, { status, note });
-      setVendor((current) =>
-        current
-          ? {
-              ...current,
-              documents: current.documents.map((item) =>
-                item.id === document.id
-                  ? {
-                      ...item,
-                      status: response.status,
-                      reviewedAt: response.reviewedAt,
-                    }
-                  : item,
-              ),
-            }
-          : current,
-      );
+      const response = await reviewVendorDocumentRequest(document.id, result.value);
+      const refreshed = await getAdminVendorApplicationReviewRequest(vendor.id);
+      setVendor(refreshed);
 
       await Swal.fire({
         icon: "success",
@@ -329,9 +317,19 @@ export default function VendorApplicationReviewPage() {
       return;
     }
 
+    if (!vendor.canApprove) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Approval blocked",
+        text: "Required compliance documents or checklist items are still incomplete.",
+        confirmButtonColor: "#cf6e38",
+      });
+      return;
+    }
+
     const { isConfirmed } = await Swal.fire({
       title: "Approve vendor application?",
-      text: `This will approve ${vendor.name} and activate the vendor.`,
+      text: `This will approve ${vendor.name} if all readiness requirements are satisfied.`,
       showCancelButton: true,
       confirmButtonText: "Approve vendor",
       cancelButtonText: "Cancel",
@@ -344,10 +342,7 @@ export default function VendorApplicationReviewPage() {
     }
 
     try {
-      const response = await approveVendorApplicationRequest(vendor.id, {
-        note: "Approved by admin",
-        activateImmediately: true,
-      });
+      const response = await approveVendorApplicationRequest(vendor.id, {});
 
       await Swal.fire({
         icon: "success",
@@ -441,7 +436,7 @@ export default function VendorApplicationReviewPage() {
       html: `
         <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
           <textarea id="vendor-change-message" class="swal2-textarea" placeholder="Message for vendor"></textarea>
-          <input id="vendor-change-fields" class="swal2-input" placeholder="Fields (comma separated)" />
+          <input id="vendor-change-fields" class="swal2-input" placeholder="Checklist codes (comma separated)" />
         </div>
       `,
       showCancelButton: true,
@@ -538,7 +533,7 @@ export default function VendorApplicationReviewPage() {
               <img
                 alt={vendor.name}
                 className="h-20 w-20 rounded-[16px] object-cover shadow-[0_8px_18px_rgba(53,34,20,0.14)]"
-                src={vendor.logoUrl}
+                src={vendor.assets.logoUrl || vendor.logoUrl}
               />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -548,6 +543,15 @@ export default function VendorApplicationReviewPage() {
                   <span className="rounded-full bg-[#f2c49d] px-3 py-1.5 text-[11px] font-bold text-[#6f3a16]">
                     {vendor.applicationStatus}
                   </span>
+                  {!vendor.canApprove ? (
+                    <span className="rounded-full bg-[#fff3f0] px-3 py-1.5 text-[11px] font-bold text-[#c53a2f]">
+                      Approval Blocked
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-[#eef9f1] px-3 py-1.5 text-[11px] font-bold text-[#287d46]">
+                      Ready to Approve
+                    </span>
+                  )}
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[15px] font-medium text-[#6f6259]">
@@ -560,15 +564,30 @@ export default function VendorApplicationReviewPage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <button className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#d8ccc2] bg-white px-4 py-2.5 text-[14px] font-bold text-[#6a5c53]" onClick={handleRequestChanges} type="button">
-                <MessageSquare size={13} />
+              <button
+                className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#d8ccc2] bg-white px-4 py-2.5 text-[14px] font-bold text-[#6a5c53]"
+                onClick={handleRequestChanges}
+                type="button"
+              >
                 Request Changes
               </button>
-              <button className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#efbbb3] bg-white px-4 py-2.5 text-[14px] font-bold text-[#c53a2f]" onClick={handleReject} type="button">
+              <button
+                className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#efbbb3] bg-white px-4 py-2.5 text-[14px] font-bold text-[#c53a2f]"
+                onClick={handleReject}
+                type="button"
+              >
                 <XCircle size={13} />
                 Reject
               </button>
-              <button className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#d76833] px-4 py-2.5 text-[14px] font-bold text-white shadow-[0_8px_20px_rgba(215,104,51,0.24)]" onClick={handleApprove} type="button">
+              <button
+                className={[
+                  "inline-flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 text-[14px] font-bold text-white shadow-[0_8px_20px_rgba(215,104,51,0.24)]",
+                  vendor.canApprove ? "bg-[#d76833]" : "cursor-not-allowed bg-[#d9c7be]",
+                ].join(" ")}
+                disabled={!vendor.canApprove}
+                onClick={handleApprove}
+                type="button"
+              >
                 <CheckCircle2 size={13} />
                 Approve Vendor
               </button>
@@ -577,64 +596,37 @@ export default function VendorApplicationReviewPage() {
         </div>
       </section>
 
-      <section className="rounded-[16px] border border-[#ddd2c9] bg-white px-5 py-5 shadow-[0_6px_16px_rgba(53,34,20,0.04)] sm:px-6">
-        <h2 className="text-[28px] font-extrabold italic tracking-[-0.02em] text-[#df6b34]">Administrative Verification Required</h2>
-        <p className="mt-2 text-[15px] leading-7 text-[#6f6259]">
-          This application is in the final stage of review. Admin must verify all legal documentation and operational
-          parameters before the vendor becomes active on the consumer marketplace.
-        </p>
-      </section>
-
-      <section>
-        <SectionTitle title="Business Summary" />
-        <div className="overflow-hidden rounded-[16px] border border-[#ddd2c9] bg-white shadow-[0_6px_16px_rgba(53,34,20,0.04)]">
-          <InfoGrid items={vendor.businessSummary} />
-        </div>
-      </section>
-
-      <section>
-        <SectionTitle title="Business Profile" />
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_320px]">
-          <article className="rounded-[16px] border border-[#ddd2c9] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.04)] sm:p-6">
-            <h3 className="text-[22px] font-bold text-[#18120f]">Store Description</h3>
-            <p className="mt-4 rounded-[10px] bg-[#f3f1ef] p-4 text-[15px] leading-7 text-[#65574f]">
-              {vendor.description}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {vendor.tags.map((tag) => (
-                <span key={tag} className="rounded-full border border-[#d9d0c8] bg-white px-3.5 py-1.5 text-[12px] font-medium text-[#7b6e65]">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </article>
-
-          <article className="rounded-[16px] border border-[#ddd2c9] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.04)] sm:p-6">
-            <h3 className="text-[22px] font-bold text-[#18120f]">Operations</h3>
-            <div className="mt-3 space-y-3">
-              {vendor.operations.map((item) => (
-                <div key={item.label} className="flex items-center justify-between gap-3 text-[15px]">
-                  <span className="text-[#8a7d76]">{item.label}</span>
-                  <span className="font-bold text-[#18120f]">{item.value}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4">
-              <p className="text-[15px] font-bold text-[#18120f]">Operating Days</p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {vendor.operatingDays.map((day) => (
-                  <OperatingDayPill key={day.label} active={day.active} day={day.day} />
+      {!vendor.canApprove && vendor.missingRequirements.length ? (
+        <section className="rounded-[16px] border border-[#f2c7b9] bg-[#fff7f3] px-5 py-5 shadow-[0_6px_16px_rgba(53,34,20,0.04)] sm:px-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-1 text-[#c53a2f]" size={18} />
+            <div>
+              <h2 className="text-[18px] font-bold text-[#7b251b]">Missing requirements</h2>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {vendor.missingRequirements.map((item) => (
+                  <span
+                    key={item.code}
+                    className="rounded-full border border-[#f0bcae] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#8d3f16]"
+                  >
+                    {item.label}
+                  </span>
                 ))}
               </div>
-              <p className="mt-2 text-[12px] text-[#8d8078]">{vendor.operatingHours}</p>
             </div>
-          </article>
+          </div>
+        </section>
+      ) : null}
+
+      <section>
+        <SectionTitle title="Storefront Assets" subtitle="Logo and cover photo are returned separately from legal compliance documents." />
+        <div className="grid gap-4 md:grid-cols-2">
+          <AssetCard imageUrl={vendor.assets.logoUrl || vendor.logoUrl} label="Logo" />
+          <AssetCard imageUrl={vendor.assets.coverImageUrl} label="Cover Image" />
         </div>
       </section>
 
       <section>
-        <SectionTitle title="Document Verification" />
+        <SectionTitle title="Compliance Documents" subtitle="Only real legal or compliance documents can be reviewed here." />
         {vendor.documents.length ? (
           <div className="grid gap-4 md:grid-cols-2">
             {vendor.documents.map((document) => (
@@ -649,50 +641,13 @@ export default function VendorApplicationReviewPage() {
           </div>
         ) : (
           <article className="rounded-[16px] border border-dashed border-[#ddd2c9] bg-white px-5 py-8 text-center text-[14px] text-[#7d7068]">
-            No review documents were returned for this application yet.
+            No compliance documents were returned for this application yet.
           </article>
         )}
       </section>
 
       <section>
-        <SectionTitle title="Marketplace Store Preview" />
-        <article className="overflow-hidden rounded-[18px] border border-[#ddd2c9] bg-white shadow-[0_8px_18px_rgba(53,34,20,0.04)]">
-          <img alt={vendor.preview.name} className="h-[220px] w-full object-cover" src={vendor.preview.coverImage} />
-          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex gap-3">
-              <img alt={vendor.preview.name} className="h-24 w-24 rounded-[14px] object-cover" src={vendor.preview.logoImage} />
-              <div>
-                <h3 className="text-[28px] font-extrabold text-[#18120f]">{vendor.preview.name}</h3>
-                <div className="mt-2 flex items-center gap-1 text-[15px] text-[#6e6058]">
-                  <Star size={12} className="fill-[#f5ad2b] text-[#f5ad2b]" />
-                  <span>{vendor.preview.rating}</span>
-                  <span className="text-[#5f9ad5]">({vendor.preview.reviews} reviews)</span>
-                </div>
-                <p className="mt-1 text-[15px] text-[#6e6058]">{vendor.preview.address}</p>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button className="inline-flex items-center gap-1 rounded-full border border-[#d8ccc2] px-3.5 py-2 text-[12px] font-bold text-[#53463f]" type="button">
-                <Share2 size={11} />
-                Share
-              </button>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <section>
-        <SectionTitle title="Submitted Menus" />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {vendor.submittedMenus.map((menu) => (
-            <MenuCard key={menu.id} menu={menu} />
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <SectionTitle title="Verification Checklist" />
+        <SectionTitle title="Readiness Checklist" subtitle="Approval is only allowed when all blocking checklist items are complete." />
         <article className="rounded-[16px] border border-[#ddd2c9] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.04)] sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -700,7 +655,9 @@ export default function VendorApplicationReviewPage() {
               <p className="mt-1 text-[13px] text-[#8d8078]">Complete all mandatory checks before approval</p>
             </div>
             <div className="text-left sm:text-right">
-              <p className="text-[22px] font-extrabold text-[#dd6b34]">{vendor.checklistCompleted}/{vendor.checklist.length}</p>
+              <p className="text-[22px] font-extrabold text-[#dd6b34]">
+                {vendor.checklistCompleted}/{vendor.checklistTotal}
+              </p>
               <p className="text-[13px] text-[#8d8078]">Tasks Completed</p>
             </div>
           </div>
@@ -711,10 +668,37 @@ export default function VendorApplicationReviewPage() {
 
           <div className="mt-4 space-y-3">
             {vendor.checklist.map((item) => (
-              <ChecklistItem key={item.label} item={item} />
+              <ChecklistItem key={item.code || item.label} item={item} />
             ))}
           </div>
         </article>
+      </section>
+
+      <section>
+        <SectionTitle title="Review History" subtitle="Audit trail of document review activity and admin actions." />
+        {vendor.documentReviewHistory.length ? (
+          <div className="space-y-3">
+            {vendor.documentReviewHistory.map((item) => (
+              <HistoryItem key={item.id} item={item} />
+            ))}
+          </div>
+        ) : (
+          <article className="rounded-[16px] border border-dashed border-[#ddd2c9] bg-white px-5 py-8 text-center text-[14px] text-[#7d7068]">
+            No review history has been recorded yet.
+          </article>
+        )}
+      </section>
+
+      <section className="rounded-[16px] border border-[#ddd2c9] bg-white px-5 py-5 shadow-[0_6px_16px_rgba(53,34,20,0.04)] sm:px-6">
+        <div className="flex items-start gap-3">
+          <ShieldCheck className="mt-1 text-[#cf6e38]" size={18} />
+          <div>
+            <h2 className="text-[18px] font-bold text-[#18120f]">Approval Safety</h2>
+            <p className="mt-2 text-[14px] leading-7 text-[#6f6259]">
+              Approval is blocked until required compliance documents are verified and all blocking checklist items are complete.
+            </p>
+          </div>
+        </div>
       </section>
     </div>
   );

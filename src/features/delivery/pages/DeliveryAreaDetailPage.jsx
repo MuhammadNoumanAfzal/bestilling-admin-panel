@@ -298,14 +298,14 @@ export default function DeliveryAreaDetailPage() {
         <div className="flex flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-2 rounded-full bg-[#fff4ea] px-3 py-1.5 text-[12px] font-bold text-[#cf6e38]">
             <MapPin size={14} />
-            {area.city}
+            {area.name || area.city}
           </span>
           <DeliveryStatusPill status={area.status} />
         </div>
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-[38px] font-bold tracking-[-0.04em] text-[#18120f]">{area.city}</h1>
+            <h1 className="text-[38px] font-bold tracking-[-0.04em] text-[#18120f]">{area.name || area.city}</h1>
             <p className="text-[18px] leading-7 ">
               View postal code coverage, service controls, and local delivery configuration.
             </p>

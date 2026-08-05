@@ -245,27 +245,13 @@ export const ADMIN_VENDOR_APPLICATION_REVIEW_QUERY = `
       reviewedAt
       location
       applicationStatus
-      businessSummary {
-        columns {
-          items {
-            label
-            value
-          }
-        }
+      assets {
+        logoUrl
+        coverImageUrl
       }
-      description
-      tags
-      operations {
-        label
-        value
-      }
-      operatingDays {
-        day
-        active
-      }
-      operatingHours
       documents {
         id
+        type
         title
         subtitle
         status
@@ -274,34 +260,33 @@ export const ADMIN_VENDOR_APPLICATION_REVIEW_QUERY = `
         mimeType
         uploadedAt
         reviewedAt
-      }
-      preview {
-        name
-        coverImage
-        logoImage
-        rating
-        reviewsCount
-        address
-      }
-      submittedMenus {
-        id
-        title
-        description
-        price {
-          amount
-          currency
-          formatted
-        }
-        badge
-        imageUrl
+        reviewNote
+        rejectionReason
+        isRequired
       }
       checklist {
+        code
         label
         complete
-        code
+        blocking
       }
       checklistCompleted
+      checklistTotal
       progressPercent
+      canApprove
+      missingRequirements {
+        code
+        label
+      }
+      documentReviewHistory {
+        id
+        action
+        actor {
+          id
+          fullName
+        }
+        createdAt
+      }
     }
   }
 `;
@@ -316,15 +301,10 @@ export const APPROVE_VENDOR_APPLICATION_MUTATION = `
         message
         code
       }
-      vendor {
-        id
-        status
-        approvedAt
-      }
       application {
         id
         applicationStatus
-        reviewedAt
+        canApprove
       }
     }
   }
@@ -448,8 +428,13 @@ export const REVIEW_VENDOR_DOCUMENT_MUTATION = `
       }
       document {
         id
+        type
+        title
         status
         reviewedAt
+        reviewNote
+        rejectionReason
+        isRequired
       }
     }
   }

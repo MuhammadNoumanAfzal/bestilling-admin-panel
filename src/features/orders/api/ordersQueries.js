@@ -32,17 +32,27 @@ export const ADMIN_ORDERS_QUERY = `
           city
           avatarUrl
         }
-        delivery {
-          type
-          scheduledAt
-          city
-        }
-        flags {
-          hasRefund
-          needsReview
-          hasDispute
-        }
+      delivery {
+        type
+        status
+        scheduledAt
+        deliveredAt
+        city
       }
+      flags {
+        hasRefund
+        needsReview
+        hasDispute
+      }
+      actions {
+        canCancel
+        canRefund
+        canMarkPaid
+        canMarkDelivered
+        canAssignVendor
+        canDownloadInvoice
+      }
+    }
       pageInfo {
         page
         limit
@@ -198,14 +208,6 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
           id
           name
         }
-      }
-      actions {
-        canCancel
-        canRefund
-        canMarkPaid
-        canMarkDelivered
-        canAssignVendor
-        canDownloadInvoice
       }
       updatedAt
     }

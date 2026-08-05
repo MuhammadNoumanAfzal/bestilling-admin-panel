@@ -133,6 +133,36 @@ function normalizeTimelineStatus(value) {
   }
 }
 
+function buildOrderActions(order) {
+  const rawStatus = `${order?.status ?? ""}`.trim().toUpperCase();
+  const rawPaymentStatus = `${order?.paymentStatus ?? ""}`.trim().toUpperCase();
+  const rawFulfillmentStatus = `${order?.fulfillmentStatus ?? ""}`.trim().toUpperCase();
+  const isClosedOrder =
+    rawStatus === "DELIVERED" ||
+    rawStatus === "CANCELLED" ||
+    rawStatus === "CANCELED" ||
+    rawStatus === "REFUNDED";
+  const isPaid = rawPaymentStatus === "PAID";
+  const isRefunded =
+    rawPaymentStatus === "REFUNDED" || rawPaymentStatus === "PARTIALLY_REFUNDED";
+  const canDownloadInvoice = Boolean(
+    order?.payment?.invoiceUrl || order?.payment?.receiptUrl || order?.orderNumber,
+  );
+
+  return {
+    canCancel: !isClosedOrder,
+    canRefund: isPaid && rawPaymentStatus !== "REFUNDED",
+    canMarkPaid: rawPaymentStatus === "PENDING" || rawPaymentStatus === "FAILED",
+    canMarkDelivered:
+      !isClosedOrder &&
+      rawFulfillmentStatus !== "DELIVERED" &&
+      rawFulfillmentStatus !== "CANCELLED" &&
+      rawFulfillmentStatus !== "CANCELED",
+    canAssignVendor: false,
+    canDownloadInvoice: canDownloadInvoice && (isPaid || isRefunded),
+  };
+}
+
 function buildAddressLabel(address) {
   if (!address) {
     return "Not provided";
@@ -220,12 +250,24 @@ function normalizeOrderRow(item) {
     paymentStatus: normalizePaymentStatus(item?.paymentStatus),
     rawPaymentStatus: `${item?.paymentStatus ?? ""}`.trim().toUpperCase(),
     fulfillmentStatus: normalizeStatus(item?.fulfillmentStatus),
+    rawFulfillmentStatus: `${item?.fulfillmentStatus ?? ""}`.trim().toUpperCase(),
     deliveryType: item?.delivery?.type || "",
+    deliveryStatus: normalizeStatus(item?.delivery?.status),
+    rawDeliveryStatus: `${item?.delivery?.status ?? ""}`.trim().toUpperCase(),
     scheduledAt: item?.delivery?.scheduledAt || "",
+    deliveredAt: item?.delivery?.deliveredAt || "",
     flags: {
       hasRefund: Boolean(item?.flags?.hasRefund),
       needsReview: Boolean(item?.flags?.needsReview),
       hasDispute: Boolean(item?.flags?.hasDispute),
+    },
+    actions: {
+      canCancel: Boolean(item?.actions?.canCancel),
+      canRefund: Boolean(item?.actions?.canRefund),
+      canMarkPaid: Boolean(item?.actions?.canMarkPaid),
+      canMarkDelivered: Boolean(item?.actions?.canMarkDelivered),
+      canAssignVendor: Boolean(item?.actions?.canAssignVendor),
+      canDownloadInvoice: Boolean(item?.actions?.canDownloadInvoice),
     },
   };
 }
@@ -402,14 +444,16 @@ function normalizeOrderDetail(order) {
       receiptUrl: order?.payment?.receiptUrl || "",
     },
     notes,
-    actions: {
-      canCancel: Boolean(order?.actions?.canCancel),
-      canRefund: Boolean(order?.actions?.canRefund),
-      canMarkPaid: Boolean(order?.actions?.canMarkPaid),
-      canMarkDelivered: Boolean(order?.actions?.canMarkDelivered),
-      canAssignVendor: Boolean(order?.actions?.canAssignVendor),
-      canDownloadInvoice: Boolean(order?.actions?.canDownloadInvoice),
-    },
+    actions: order?.actions
+      ? {
+          canCancel: Boolean(order?.actions?.canCancel),
+          canRefund: Boolean(order?.actions?.canRefund),
+          canMarkPaid: Boolean(order?.actions?.canMarkPaid),
+          canMarkDelivered: Boolean(order?.actions?.canMarkDelivered),
+          canAssignVendor: Boolean(order?.actions?.canAssignVendor),
+          canDownloadInvoice: Boolean(order?.actions?.canDownloadInvoice),
+        }
+      : buildOrderActions(order),
     updatedAtLabel: formatDateTimeLabel(order?.updatedAt),
   };
 }

@@ -16,9 +16,14 @@ import OrdersToolbar from "../components/OrdersToolbar.jsx";
 import OrdersTable from "../components/OrdersTable.jsx";
 import TopCateringCategoriesChart from "../components/TopCateringCategoriesChart.jsx";
 import {
+  cancelOrderRequest,
   exportAdminOrdersRequest,
+  getAdminOrderInvoiceRequest,
   getAdminOrderCategoryBreakdownRequest,
   getAdminOrdersRequest,
+  refundOrderRequest,
+  updateOrderPaymentStatusRequest,
+  updateOrderStatusRequest,
 } from "../api/ordersApi.js";
 
 const PAGE_SIZE = 10;
@@ -68,6 +73,8 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [activeActionOrderId, setActiveActionOrderId] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   const dateRange = useMemo(
     () => getDateRangeForFilter(timeframe, customStart, customEnd),
@@ -136,7 +143,7 @@ export default function OrdersPage() {
     return () => {
       isMounted = false;
     };
-  }, [normalizedFilters]);
+  }, [normalizedFilters, reloadKey]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -180,6 +187,167 @@ export default function OrdersPage() {
       });
     } finally {
       setIsExporting(false);
+    }
+  }
+
+  function refreshOrders() {
+    setReloadKey((current) => current + 1);
+  }
+
+  async function handleOrderRowAction(row, action) {
+    try {
+      setActiveActionOrderId(row.id);
+
+      if (action === "markPaid") {
+        const result = await updateOrderPaymentStatusRequest({
+          orderId: row.id,
+          paymentStatus: "PAID",
+        });
+        await Swal.fire({
+          icon: "success",
+          title: "Payment updated",
+          text: result.message || "Order payment marked as paid.",
+          confirmButtonColor: "#cf6e38",
+        });
+        refreshOrders();
+        return;
+      }
+
+      if (action === "markDelivered") {
+        const result = await updateOrderStatusRequest({
+          orderId: row.id,
+          status: "DELIVERED",
+        });
+        await Swal.fire({
+          icon: "success",
+          title: "Order updated",
+          text: result.message || "Order marked as delivered.",
+          confirmButtonColor: "#cf6e38",
+        });
+        refreshOrders();
+        return;
+      }
+
+      if (action === "cancel") {
+        const confirmation = await Swal.fire({
+          title: "Cancel this order?",
+          input: "text",
+          inputLabel: "Cancellation reason",
+          inputPlaceholder: "Add a reason for the cancellation",
+          showCancelButton: true,
+          confirmButtonText: "Cancel order",
+          confirmButtonColor: "#d83f3f",
+          cancelButtonColor: "#c8b9aa",
+        });
+
+        if (!confirmation.isConfirmed) {
+          return;
+        }
+
+        const result = await cancelOrderRequest({
+          orderId: row.id,
+          reason: confirmation.value || "",
+        });
+        await Swal.fire({
+          icon: "success",
+          title: "Order canceled",
+          text: result.message || "Order canceled successfully.",
+          confirmButtonColor: "#cf6e38",
+        });
+        refreshOrders();
+        return;
+      }
+
+      if (action === "refund") {
+        const refundModePrompt = await Swal.fire({
+          title: "Refund order",
+          input: "select",
+          inputOptions: {
+            FULL: "Full refund",
+            PARTIAL: "Partial refund",
+          },
+          inputValue: "FULL",
+          showCancelButton: true,
+          confirmButtonText: "Continue",
+          confirmButtonColor: "#cf6e38",
+          cancelButtonColor: "#c8b9aa",
+        });
+
+        if (!refundModePrompt.isConfirmed) {
+          return;
+        }
+
+        let partialAmount = "";
+        if (refundModePrompt.value === "PARTIAL") {
+          const amountPrompt = await Swal.fire({
+            title: "Partial refund amount",
+            input: "number",
+            inputAttributes: {
+              min: "0",
+              step: "0.01",
+            },
+            showCancelButton: true,
+            confirmButtonText: "Continue",
+            confirmButtonColor: "#cf6e38",
+            cancelButtonColor: "#c8b9aa",
+          });
+
+          if (!amountPrompt.isConfirmed) {
+            return;
+          }
+
+          partialAmount = amountPrompt.value || "";
+        }
+
+        const reasonPrompt = await Swal.fire({
+          title: "Refund reason",
+          input: "text",
+          inputPlaceholder: "Optional note for finance and support teams",
+          showCancelButton: true,
+          confirmButtonText: "Process refund",
+          confirmButtonColor: "#cf6e38",
+          cancelButtonColor: "#c8b9aa",
+        });
+
+        if (!reasonPrompt.isConfirmed) {
+          return;
+        }
+
+        const result = await refundOrderRequest({
+          orderId: row.id,
+          mode: refundModePrompt.value,
+          amount: partialAmount ? Number(partialAmount) : null,
+          reason: reasonPrompt.value || "",
+        });
+        await Swal.fire({
+          icon: "success",
+          title: "Refund processed",
+          text: result.message || "Order refunded successfully.",
+          confirmButtonColor: "#cf6e38",
+        });
+        refreshOrders();
+        return;
+      }
+
+      if (action === "downloadInvoice") {
+        const invoice = await getAdminOrderInvoiceRequest(row.id);
+        const targetUrl = invoice.pdfUrl || invoice.invoiceUrl;
+
+        if (!targetUrl) {
+          throw new Error("No invoice file is available for this order yet.");
+        }
+
+        window.open(targetUrl, "_blank", "noopener,noreferrer");
+      }
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Action failed",
+        text: error instanceof Error ? error.message : "Unable to update order.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setActiveActionOrderId("");
     }
   }
 
@@ -245,8 +413,10 @@ export default function OrdersPage() {
         ) : (
           <div className="p-3 sm:p-4">
             <OrdersTable
+              activeActionOrderId={activeActionOrderId}
               orders={rows}
               currentPage={pageInfo.page}
+              onOrderAction={handleOrderRowAction}
               pageSize={pageInfo.pageSize}
               totalItems={pageInfo.totalItems}
               onPageChange={setCurrentPage}

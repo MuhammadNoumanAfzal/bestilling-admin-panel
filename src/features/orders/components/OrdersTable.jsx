@@ -91,10 +91,12 @@ function PersonCell({ name, src, subtitle, avatar }) {
 }
 
 export default function OrdersTable({
+  activeActionOrderId = "",
   orders,
   currentPage,
   pageSize,
   totalItems,
+  onOrderAction,
   onPageChange,
 }) {
   const navigate = useNavigate();
@@ -107,6 +109,11 @@ export default function OrdersTable({
 
   function openOrder(orderId) {
     navigate(`/orders/${encodeURIComponent(orderId)}`);
+  }
+
+  function handleOrderAction(row, action) {
+    onOrderAction?.(row, action);
+    setActiveMenuId("");
   }
 
   return (
@@ -219,6 +226,56 @@ export default function OrdersTable({
                             >
                               View Details
                             </button>
+                            {row.actions?.canMarkPaid ? (
+                              <button
+                                className="block w-full px-3 py-1.5 text-left text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
+                                disabled={activeActionOrderId === row.id}
+                                onClick={() => handleOrderAction(row, "markPaid")}
+                                type="button"
+                              >
+                                {activeActionOrderId === row.id ? "Updating..." : "Mark Paid"}
+                              </button>
+                            ) : null}
+                            {row.actions?.canMarkDelivered ? (
+                              <button
+                                className="block w-full px-3 py-1.5 text-left text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
+                                disabled={activeActionOrderId === row.id}
+                                onClick={() => handleOrderAction(row, "markDelivered")}
+                                type="button"
+                              >
+                                {activeActionOrderId === row.id ? "Updating..." : "Mark Delivered"}
+                              </button>
+                            ) : null}
+                            {row.actions?.canRefund ? (
+                              <button
+                                className="block w-full px-3 py-1.5 text-left text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
+                                disabled={activeActionOrderId === row.id}
+                                onClick={() => handleOrderAction(row, "refund")}
+                                type="button"
+                              >
+                                {activeActionOrderId === row.id ? "Updating..." : "Refund"}
+                              </button>
+                            ) : null}
+                            {row.actions?.canCancel ? (
+                              <button
+                                className="block w-full px-3 py-1.5 text-left text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
+                                disabled={activeActionOrderId === row.id}
+                                onClick={() => handleOrderAction(row, "cancel")}
+                                type="button"
+                              >
+                                {activeActionOrderId === row.id ? "Updating..." : "Cancel Order"}
+                              </button>
+                            ) : null}
+                            {row.actions?.canDownloadInvoice ? (
+                              <button
+                                className="block w-full px-3 py-1.5 text-left text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
+                                disabled={activeActionOrderId === row.id}
+                                onClick={() => handleOrderAction(row, "downloadInvoice")}
+                                type="button"
+                              >
+                                {activeActionOrderId === row.id ? "Opening..." : "Download Invoice"}
+                              </button>
+                            ) : null}
                           </div>
                         </>
                       ) : null}

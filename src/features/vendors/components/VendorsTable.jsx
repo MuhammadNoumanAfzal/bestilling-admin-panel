@@ -33,6 +33,14 @@ function getVendorNavigationPath(row) {
   return row.status === "Pending Approval" ? `/vendors/${cleanId}/review` : `/vendors/${cleanId}`;
 }
 
+function getReviewActionLabel(row) {
+  if (row.status !== "Pending Approval") {
+    return "View Details";
+  }
+
+  return row.canApprove ? "Review & Approve" : "Review Requirements";
+}
+
 export default function VendorsTable({
   vendors,
   currentPage,
@@ -226,23 +234,25 @@ export default function VendorsTable({
                             className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
                             type="button"
                           >
-                            {row.status === "Pending Approval" ? "Review Application" : "View Details"}
+                            {getReviewActionLabel(row)}
                           </button>
-                          <button
-                            onClick={() => {
-                              onToggleStatus?.(row);
-                              setActiveMenuId(null);
-                            }}
-                            disabled={isUpdatingStatusId === row.id}
-                            className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
-                            type="button"
-                          >
-                            {isUpdatingStatusId === row.id
-                              ? "Updating..."
-                              : row.status === "Suspended" || row.status === "Deactivated"
-                                ? "Activate Vendor"
-                                : "Suspend Vendor"}
-                          </button>
+                          {row.status !== "Pending Approval" ? (
+                            <button
+                              onClick={() => {
+                                onToggleStatus?.(row);
+                                setActiveMenuId(null);
+                              }}
+                              disabled={isUpdatingStatusId === row.id}
+                              className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
+                              type="button"
+                            >
+                              {isUpdatingStatusId === row.id
+                                ? "Updating..."
+                                : row.status === "Suspended" || row.status === "Deactivated"
+                                  ? "Activate Vendor"
+                                  : "Suspend Vendor"}
+                            </button>
+                          ) : null}
                         </div>
                       )}
                     </td>

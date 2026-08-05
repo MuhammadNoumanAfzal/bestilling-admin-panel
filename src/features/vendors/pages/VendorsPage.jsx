@@ -5,7 +5,6 @@ import { Users, Wifi, Clock, AlertTriangle, CircleAlert, DollarSign } from "luci
 import StatCard from "../../dashboard/components/StatCard.jsx";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
-import { getAdminDashboardOverviewRequest } from "../../dashboard/api/dashboardApi.js";
 import {
   getAdminVendorsRequest,
   updateVendorStatusRequest,
@@ -17,7 +16,6 @@ import VendorsToolbar from "../components/VendorsToolbar.jsx";
 import VendorStatusOverviewCard from "../components/VendorStatusOverviewCard.jsx";
 
 const PAGE_SIZE = 10;
-const STATUS_FALLBACK_PAGE_SIZE = 1000;
 
 const iconMap = {
   total: Users,
@@ -48,46 +46,6 @@ function getTabStatusFilter(tab) {
 
 function isStatusTab(tab) {
   return tab !== "All" && tab !== "Top Performing";
-}
-
-function buildClientSidePageInfo(items, page, pageSize) {
-  const totalItems = items.length;
-  const totalPages = totalItems === 0 ? 1 : Math.ceil(totalItems / pageSize);
-
-  return {
-    page,
-    pageSize,
-    totalItems,
-    totalPages,
-    hasNextPage: page < totalPages,
-    hasPreviousPage: page > 1,
-  };
-}
-
-function applyApprovalOverrides(rows, approvals) {
-  const pendingVendorIds = new Set(
-    (approvals || [])
-      .filter((approval) => {
-        const rawStatus = `${approval?.rawStatus ?? ""}`.trim().toUpperCase();
-        return rawStatus === "PENDING" || rawStatus === "REVIEWING";
-      })
-      .map((approval) => `${approval?.vendorId || approval?.id || ""}`.trim())
-      .filter(Boolean),
-  );
-
-  if (!pendingVendorIds.size) {
-    return rows;
-  }
-
-  return rows.map((row) =>
-    pendingVendorIds.has(`${row.id}`.trim())
-      ? {
-          ...row,
-          status: "Pending Approval",
-          rawStatus: "PENDING_APPROVAL",
-        }
-      : row,
-  );
 }
 
 export default function VendorsPage() {
@@ -161,40 +119,13 @@ export default function VendorsPage() {
       setLoadError("");
 
       try {
-        const shouldUseClientSideStatusFilter = isStatusTab(activeTab);
-        const [response, dashboardOverview] = await Promise.all([
-          shouldUseClientSideStatusFilter
-            ? getAdminVendorsRequest({
-                ...normalizedFilters,
-                status: null,
-                page: 1,
-                pageSize: STATUS_FALLBACK_PAGE_SIZE,
-              })
-            : getAdminVendorsRequest(normalizedFilters),
-          getAdminDashboardOverviewRequest({}),
-        ]);
+        const response = await getAdminVendorsRequest(normalizedFilters);
 
         if (!isMounted) {
           return;
         }
-
-        const rowsWithApprovalOverrides = applyApprovalOverrides(
-          response.rows,
-          dashboardOverview?.approvals,
-        );
-
-        if (shouldUseClientSideStatusFilter) {
-          const filteredRows = rowsWithApprovalOverrides.filter((row) => row.status === activeTab);
-          const startIndex = (currentPage - 1) * PAGE_SIZE;
-          const paginatedRows = filteredRows.slice(startIndex, startIndex + PAGE_SIZE);
-
-          setRows(paginatedRows);
-          setPageInfo(buildClientSidePageInfo(filteredRows, currentPage, PAGE_SIZE));
-        } else {
-          setRows(rowsWithApprovalOverrides);
-          setPageInfo(response.pageInfo);
-        }
-
+        setRows(response.rows);
+        setPageInfo(response.pageInfo);
         setStats(response.stats);
         setFilterOptions(response.filterOptions);
         setSidePanels(response.sidePanels);

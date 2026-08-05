@@ -40,6 +40,12 @@ export const ADMIN_VENDORS_QUERY = `
         joinedAt
         status
         avatarUrl
+        applicationStatus
+        canApprove
+        missingRequirements {
+          code
+          label
+        }
       }
       pageInfo {
         page

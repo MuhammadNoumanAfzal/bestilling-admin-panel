@@ -111,6 +111,21 @@ function normalizeVendorStatus(value) {
   }
 }
 
+function normalizeVendorApprovalState(item) {
+  const applicationStatus = `${item?.applicationStatus ?? ""}`.trim().toUpperCase();
+  const operationalStatus = `${item?.status ?? ""}`.trim().toUpperCase();
+
+  if (applicationStatus === "PENDING_APPROVAL" || applicationStatus === "REVIEWING") {
+    return "Pending Approval";
+  }
+
+  if (applicationStatus) {
+    return normalizeVendorStatus(applicationStatus);
+  }
+
+  return normalizeVendorStatus(operationalStatus);
+}
+
 function normalizeDocumentStatus(value) {
   const normalized = `${value ?? ""}`.trim().toUpperCase();
 
@@ -126,6 +141,9 @@ function normalizeDocumentStatus(value) {
 
 function normalizeVendorRow(item) {
   const name = item?.name || "Unknown vendor";
+  const applicationStatus = `${item?.applicationStatus ?? ""}`.trim().toUpperCase();
+  const operationalStatus = `${item?.status ?? ""}`.trim().toUpperCase() || "ACTIVE";
+  const displayStatus = normalizeVendorApprovalState(item);
 
   return {
     id: item?.id || "",
@@ -139,8 +157,16 @@ function normalizeVendorRow(item) {
     ratingValue: Number(item?.rating ?? 0),
     joinDate: formatDateLabel(item?.joinedAt),
     joinDateValue: item?.joinedAt || "",
-    status: normalizeVendorStatus(item?.status),
-    rawStatus: `${item?.status ?? ""}`.trim().toUpperCase() || "ACTIVE",
+    status: displayStatus,
+    rawStatus: displayStatus === "Pending Approval" ? "PENDING_APPROVAL" : operationalStatus,
+    applicationStatus: applicationStatus || operationalStatus,
+    canApprove: Boolean(item?.canApprove),
+    missingRequirements: Array.isArray(item?.missingRequirements)
+      ? item.missingRequirements.map((requirement) => ({
+          code: requirement?.code || "",
+          label: requirement?.label || "",
+        }))
+      : [],
     avatar: toInitials(name),
     avatarUrl: item?.avatarUrl || "",
   };

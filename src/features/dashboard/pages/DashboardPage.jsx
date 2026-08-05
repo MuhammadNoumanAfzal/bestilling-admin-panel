@@ -21,6 +21,10 @@ import {
   getAdminDashboardOverviewRequest,
   updateVendorApprovalStatusRequest,
 } from "../api/dashboardApi.js";
+import {
+  approveVendorApplicationRequest,
+  rejectVendorApplicationRequest,
+} from "../../vendors/api/vendorsApi.js";
 
 const statIcons = {
   REVENUE: DollarSign,
@@ -104,10 +108,7 @@ export default function DashboardPage() {
   }
 
   async function handleUpdateStatus(approval, nextStatus) {
-    const mutationInput = {
-      approvalId: approval.id,
-      status: nextStatus,
-    };
+    let rejectionReason = "";
 
     if (nextStatus === "REJECTED") {
       const rejectionPrompt = await Swal.fire({
@@ -126,23 +127,26 @@ export default function DashboardPage() {
         return;
       }
 
-      mutationInput.reason = rejectionPrompt.value;
-      mutationInput.note = rejectionPrompt.value;
-      mutationInput.notifyVendor = true;
-    }
-
-    if (nextStatus === "APPROVED") {
-      mutationInput.note = "Approved from dashboard";
-      mutationInput.notifyVendor = true;
-    }
-
-    if (nextStatus === "REVIEWING") {
-      mutationInput.note = "Application is under review";
+      rejectionReason = rejectionPrompt.value || "";
     }
 
     try {
       setApprovalActionId(approval.id);
-      const response = await updateVendorApprovalStatusRequest(mutationInput);
+
+      let response;
+      if (nextStatus === "APPROVED") {
+        response = await approveVendorApplicationRequest(approval.id, {});
+      } else if (nextStatus === "REJECTED") {
+        response = await rejectVendorApplicationRequest(approval.id, {
+          reason: rejectionReason,
+          note: rejectionReason,
+        });
+      } else {
+        response = await updateVendorApprovalStatusRequest({
+          approvalId: approval.id,
+          status: String(nextStatus || "").trim().toUpperCase(),
+        });
+      }
 
       setDashboardData((current) => ({
         ...current,
@@ -150,12 +154,34 @@ export default function DashboardPage() {
           item.id === approval.id
             ? {
                 ...item,
-                status: response.approval.status,
-                rawStatus: response.approval.rawStatus,
-                canApprove: response.approval.rawStatus === "PENDING" || response.approval.rawStatus === "REVIEWING",
-                canReject: response.approval.rawStatus === "PENDING" || response.approval.rawStatus === "REVIEWING",
-                canMarkReviewing: response.approval.rawStatus === "PENDING",
-                canMarkPending: response.approval.rawStatus === "REVIEWING",
+                status:
+                  nextStatus === "APPROVED"
+                    ? "Approved"
+                    : nextStatus === "REJECTED"
+                      ? "Rejected"
+                      : response.approval.status,
+                rawStatus:
+                  nextStatus === "APPROVED"
+                    ? "APPROVED"
+                    : nextStatus === "REJECTED"
+                      ? "REJECTED"
+                      : response.approval.rawStatus,
+                canApprove:
+                  nextStatus === "APPROVED" || nextStatus === "REJECTED"
+                    ? false
+                    : response.approval.rawStatus === "PENDING" || response.approval.rawStatus === "REVIEWING",
+                canReject:
+                  nextStatus === "APPROVED" || nextStatus === "REJECTED"
+                    ? false
+                    : response.approval.rawStatus === "PENDING" || response.approval.rawStatus === "REVIEWING",
+                canMarkReviewing:
+                  nextStatus === "APPROVED" || nextStatus === "REJECTED"
+                    ? false
+                    : response.approval.rawStatus === "PENDING",
+                canMarkPending:
+                  nextStatus === "APPROVED" || nextStatus === "REJECTED"
+                    ? false
+                    : response.approval.rawStatus === "REVIEWING",
               }
             : item,
         ),

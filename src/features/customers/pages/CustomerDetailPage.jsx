@@ -15,6 +15,42 @@ import CustomerProfileInfoCard from "../components/details/CustomerProfileInfoCa
 import CustomerReviewsCard from "../components/details/CustomerReviewsCard.jsx";
 import CustomerSupportInteractionsCard from "../components/details/CustomerSupportInteractionsCard.jsx";
 
+const customerSwalClasses = {
+  popup: "rounded-[22px] border border-[#eaded6] bg-[#fffdfa] shadow-[0_24px_60px_rgba(56,33,17,0.18)]",
+  title: "text-[22px] font-extrabold tracking-[-0.03em] text-[#201814]",
+  htmlContainer: "!mx-0 !w-full !overflow-visible !px-0 text-left text-[#6c5f57]",
+  confirmButton:
+    "inline-flex h-10 items-center justify-center rounded-[12px] bg-[#cf6e38] px-4 text-[13px] font-bold text-white transition hover:bg-[#bc6030]",
+  cancelButton:
+    "inline-flex h-10 items-center justify-center rounded-[12px] border border-[#ddd2ca] bg-white px-4 text-[13px] font-bold text-[#2f241d] transition hover:bg-[#faf6f2]",
+  input:
+    "swal2-input !mt-0 !mb-0 !h-11 !w-full !rounded-[12px] !border !border-[#ddd4cd] !bg-white !px-4 !text-[14px] !text-[#2f241d] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_3px_rgba(206,105,56,0.12)]",
+  textarea:
+    "swal2-textarea !mt-0 !mb-0 !min-h-[104px] !w-full !rounded-[12px] !border !border-[#ddd4cd] !bg-white !px-4 !py-3 !text-[14px] !text-[#2f241d] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_3px_rgba(206,105,56,0.12)]",
+  validationMessage: "!mt-3 !rounded-[12px] !bg-[#fff2ea] !px-4 !py-3 !text-left !text-[13px] !font-medium !text-[#b44d22]",
+};
+
+function openAdminModal(config) {
+  return Swal.fire({
+    ...config,
+    customClass: {
+      ...customerSwalClasses,
+      ...(config.customClass || {}),
+    },
+    buttonsStyling: false,
+    reverseButtons: true,
+  });
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function LoadingCard() {
   return (
     <div className="mx-auto max-w-6xl space-y-5 px-0 sm:space-y-6">
@@ -69,14 +105,32 @@ export default function CustomerDetailPage() {
       return;
     }
 
-    await Swal.fire({
+    await openAdminModal({
       title: "Customer contact details",
       html: `
-        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;background:#faf9f8;border:1px solid #eee4dd;border-radius:16px;padding:16px;">
-          <p><strong>Name:</strong> ${customer.name}</p>
-          <p><strong>Email:</strong> ${customer.email || "Not available"}</p>
-          <p><strong>Phone:</strong> ${customer.phone || "Not available"}</p>
-          <p><strong>City:</strong> ${customer.city || "Not available"}</p>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="border:1px solid #ece2da;border-radius:18px;background:linear-gradient(180deg,#fff8f3 0%,#ffffff 100%);padding:18px;">
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div>
+                <p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#a0938b;">Customer</p>
+                <p style="margin:0;font-size:24px;font-weight:800;color:#201814;">${escapeHtml(customer.name)}</p>
+              </div>
+              <div style="display:grid;gap:12px;">
+                <div style="border:1px solid #eee4dd;border-radius:14px;background:#fff;padding:12px 14px;">
+                  <p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#a0938b;">Email</p>
+                  <p style="margin:0;font-size:15px;font-weight:600;color:#2f241d;">${escapeHtml(customer.email || "Not available")}</p>
+                </div>
+                <div style="border:1px solid #eee4dd;border-radius:14px;background:#fff;padding:12px 14px;">
+                  <p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#a0938b;">Phone</p>
+                  <p style="margin:0;font-size:15px;font-weight:600;color:#2f241d;">${escapeHtml(customer.phone || "Not available")}</p>
+                </div>
+                <div style="border:1px solid #eee4dd;border-radius:14px;background:#fff;padding:12px 14px;">
+                  <p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#a0938b;">City</p>
+                  <p style="margin:0;font-size:15px;font-weight:600;color:#2f241d;">${escapeHtml(customer.city || "Not available")}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       `,
       confirmButtonText: "Close",
@@ -89,15 +143,42 @@ export default function CustomerDetailPage() {
       return;
     }
 
-    const { value } = await Swal.fire({
+    const { value } = await openAdminModal({
       title: "Edit customer profile",
+      width: 520,
       html: `
-        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
-          <input id="customer-first-name" class="swal2-input" placeholder="First name" value="${customer.firstName || ""}">
-          <input id="customer-last-name" class="swal2-input" placeholder="Last name" value="${customer.lastName || ""}">
-          <input id="customer-email" class="swal2-input" placeholder="Email" value="${customer.email || ""}">
-          <input id="customer-phone" class="swal2-input" placeholder="Phone" value="${customer.phone || ""}">
-          <textarea id="customer-notes" class="swal2-textarea" placeholder="Admin notes">${customer.profile?.notes || ""}</textarea>
+        <div style="display:flex;flex-direction:column;gap:14px;width:100%;max-width:100%;overflow:hidden;text-align:left;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border:1px solid #ece2da;border-radius:16px;background:#fff8f3;padding:14px 16px;">
+            <div>
+              <p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#cf6e38;">Quick edit</p>
+              <p style="margin:0;font-size:13px;line-height:1.6;color:#7d7068;">Update contact details and internal notes.</p>
+            </div>
+            <div style="min-width:42px;height:42px;border-radius:12px;background:#ffffff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#cf6e38;border:1px solid #f0dfd4;">
+              ${escapeHtml((customer.firstName || customer.name || "CU").slice(0, 2).toUpperCase())}
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;width:100%;">
+            <div>
+              <label for="customer-first-name" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">First name</label>
+              <input id="customer-first-name" class="swal2-input" placeholder="First name" value="${escapeHtml(customer.firstName || "")}">
+            </div>
+            <div>
+              <label for="customer-last-name" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Last name</label>
+              <input id="customer-last-name" class="swal2-input" placeholder="Last name" value="${escapeHtml(customer.lastName || "")}">
+            </div>
+          </div>
+          <div>
+            <label for="customer-email" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Email address</label>
+            <input id="customer-email" class="swal2-input" placeholder="Email" value="${escapeHtml(customer.email || "")}">
+          </div>
+          <div>
+            <label for="customer-phone" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Phone number</label>
+            <input id="customer-phone" class="swal2-input" placeholder="Phone" value="${escapeHtml(customer.phone || "")}">
+          </div>
+          <div>
+            <label for="customer-notes" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Admin notes</label>
+            <textarea id="customer-notes" class="swal2-textarea" placeholder="Add a private admin note">${escapeHtml(customer.profile?.notes || "")}</textarea>
+          </div>
         </div>
       `,
       showCancelButton: true,
@@ -106,6 +187,22 @@ export default function CustomerDetailPage() {
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
       focusConfirm: false,
+      didOpen: () => {
+        const popup = Swal.getPopup();
+        if (popup) {
+          popup.style.overflow = "hidden";
+        }
+
+        const container = Swal.getHtmlContainer();
+        if (container) {
+          container.style.overflow = "visible";
+        }
+
+        const firstNameInput = window.document.getElementById("customer-first-name");
+        if (firstNameInput) {
+          firstNameInput.focus();
+        }
+      },
       preConfirm: () => {
         const firstName = document.getElementById("customer-first-name")?.value?.trim() || "";
         const lastName = document.getElementById("customer-last-name")?.value?.trim() || "";
@@ -149,14 +246,14 @@ export default function CustomerDetailPage() {
           : current,
       );
 
-      await Swal.fire({
+      await openAdminModal({
         icon: "success",
         title: "Profile updated",
         text: result.message,
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
-      await Swal.fire({
+      await openAdminModal({
         icon: "error",
         title: "Unable to update profile",
         text: error instanceof Error ? error.message : "Please try again.",
@@ -171,7 +268,7 @@ export default function CustomerDetailPage() {
     }
 
     const isBlocked = customer.status === "Blocked";
-    const confirmation = await Swal.fire({
+    const confirmation = await openAdminModal({
       icon: "warning",
       title: isBlocked ? "Unblock customer?" : "Block customer?",
       text: isBlocked
@@ -190,16 +287,26 @@ export default function CustomerDetailPage() {
 
     let reason = "";
     if (!isBlocked) {
-      const reasonResult = await Swal.fire({
-        title: "Block reason",
-        input: "text",
-        inputLabel: "Optional reason",
-        inputPlaceholder: "Add a note for this action",
+      const reasonResult = await openAdminModal({
+        title: "Add block reason",
+        html: `
+          <div style="display:flex;flex-direction:column;gap:14px;text-align:left;">
+            <div style="border:1px solid #f3d8d8;border-radius:18px;background:linear-gradient(180deg,#fff6f6 0%,#ffffff 100%);padding:16px;">
+              <p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#c53a2f;">Restricted access</p>
+              <p style="margin:0;font-size:14px;line-height:1.7;color:#7d7068;">This customer will be prevented from logging in and placing new orders until the account is unblocked.</p>
+            </div>
+            <div>
+              <label for="customer-block-reason" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Reason</label>
+              <textarea id="customer-block-reason" class="swal2-textarea" placeholder="Add an internal note for this block action"></textarea>
+            </div>
+          </div>
+        `,
         showCancelButton: true,
         confirmButtonText: "Continue",
         cancelButtonText: "Cancel",
         confirmButtonColor: "#d83f3f",
         cancelButtonColor: "#c8b9aa",
+        preConfirm: () => window.document.getElementById("customer-block-reason")?.value?.trim() || "",
       });
 
       if (reasonResult.isDismissed) {
@@ -225,14 +332,14 @@ export default function CustomerDetailPage() {
           : current,
       );
 
-      await Swal.fire({
+      await openAdminModal({
         icon: "success",
         title: isBlocked ? "Customer unblocked" : "Customer blocked",
         text: result.message,
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
-      await Swal.fire({
+      await openAdminModal({
         icon: "error",
         title: isBlocked ? "Unable to unblock customer" : "Unable to block customer",
         text: error instanceof Error ? error.message : "Please try again.",
@@ -248,17 +355,26 @@ export default function CustomerDetailPage() {
       return;
     }
 
-    const reasonResult = await Swal.fire({
+    const reasonResult = await openAdminModal({
       title: "Deactivate customer?",
-      text: `This will disable ${customer.name}'s access while preserving historical records.`,
-      input: "text",
-      inputLabel: "Reason for deactivation",
-      inputPlaceholder: "Optional reason",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:14px;text-align:left;">
+          <div style="border:1px solid #f3d8d8;border-radius:18px;background:linear-gradient(180deg,#fff6f6 0%,#ffffff 100%);padding:16px;">
+            <p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#c53a2f;">Account deactivation</p>
+            <p style="margin:0;font-size:14px;line-height:1.7;color:#7d7068;">This will disable ${escapeHtml(customer.name)}'s access while preserving historical order and billing records.</p>
+          </div>
+          <div>
+            <label for="customer-deactivate-reason" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Reason for deactivation</label>
+            <textarea id="customer-deactivate-reason" class="swal2-textarea" placeholder="Add an optional internal reason"></textarea>
+          </div>
+        </div>
+      `,
       showCancelButton: true,
       confirmButtonText: "Deactivate account",
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d83f3f",
       cancelButtonColor: "#c8b9aa",
+      preConfirm: () => window.document.getElementById("customer-deactivate-reason")?.value?.trim() || "",
     });
 
     if (!reasonResult.isConfirmed) {
@@ -279,14 +395,14 @@ export default function CustomerDetailPage() {
           : current,
       );
 
-      await Swal.fire({
+      await openAdminModal({
         icon: "success",
         title: "Customer deactivated",
         text: result.message,
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
-      await Swal.fire({
+      await openAdminModal({
         icon: "error",
         title: "Unable to deactivate customer",
         text: error instanceof Error ? error.message : "Please try again.",

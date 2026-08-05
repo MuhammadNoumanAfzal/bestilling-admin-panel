@@ -143,27 +143,6 @@ function normalizeConversationItem(message) {
   };
 }
 
-function normalizeTopLevelAttachment(ticket) {
-  if (!ticket?.attachmentUrl) {
-    return [];
-  }
-
-  const fileNameFromUrl = String(ticket.attachmentUrl)
-    .split("/")
-    .pop()
-    ?.split("?")[0];
-
-  return [
-    {
-      id: ticket?.attachmentFileId ?? ticket?.attachmentUrl ?? "ticket-attachment",
-      fileName: fileNameFromUrl || "Attachment",
-      url: ticket.attachmentUrl,
-      mimeType: "",
-      size: 0,
-    },
-  ];
-}
-
 function normalizeActivityItem(item) {
   return {
     id: item?.id ?? "",
@@ -180,13 +159,11 @@ function normalizeActivityItem(item) {
 
 function normalizeSupportTicketDetail(ticket) {
   const requester = normalizeRequester(ticket?.requester);
-  const initialRequestMessage = String(ticket?.description ?? "").trim();
-  const initialRequestAttachments = normalizeTopLevelAttachment(ticket);
 
   return {
     id: ticket?.id ?? "",
     subject: ticket?.subject ?? "",
-    description: initialRequestMessage,
+    description: String(ticket?.description ?? "").trim(),
     attachmentUrl: ticket?.attachmentUrl ?? "",
     attachmentFileId: ticket?.attachmentFileId ?? "",
     category: ticket?.category ?? "",
@@ -220,21 +197,6 @@ function normalizeSupportTicketDetail(ticket) {
     avatarInitials: getInitials(requester.fullName),
     orderCount: requester.totalOrders,
     joinedDate: formatDisplayDate(requester.joinedAt, { includeTime: false }),
-    initialRequest: initialRequestMessage
-      ? {
-          id: `initial-${ticket?.id ?? "ticket"}`,
-          author: {
-            id: requester.id,
-            fullName: requester.fullName,
-            role: requester.type || "Requester",
-          },
-          side: String(requester.type || "").toLowerCase() === "vendor" ? "vendor" : "client",
-          message: initialRequestMessage,
-          createdAt: ticket?.createdAt ?? "",
-          time: formatDisplayDate(ticket?.createdAt),
-          attachments: initialRequestAttachments,
-        }
-      : null,
     conversation: (ticket?.conversation || []).map(normalizeConversationItem),
     activityLog: (ticket?.activityLog || []).map(normalizeActivityItem),
   };

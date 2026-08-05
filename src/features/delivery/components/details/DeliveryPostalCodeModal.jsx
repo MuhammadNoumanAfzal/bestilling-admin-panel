@@ -4,6 +4,7 @@ import AddDeliveryAreaField from "../add-area/AddDeliveryAreaField.jsx";
 const statusOptions = [
   { value: "Active", label: "Active" },
   { value: "Inactive", label: "Inactive" },
+  { value: "Limited", label: "Restricted" },
 ];
 
 export default function DeliveryPostalCodeModal({
@@ -89,6 +90,25 @@ export default function DeliveryPostalCodeModal({
                 placeholder="10.7522"
                 type="number"
                 value={form.lng}
+              />
+              <AddDeliveryAreaField
+                label="Delivery Fee Override"
+                onChange={(event) => onChange("deliveryFeeOverride", event.target.value)}
+                placeholder="49.00"
+                value={form.deliveryFeeOverride}
+              />
+              <AddDeliveryAreaField
+                label="Minimum Order Override"
+                onChange={(event) => onChange("minimumOrderAmountOverride", event.target.value)}
+                placeholder="199.00"
+                value={form.minimumOrderAmountOverride}
+              />
+              <AddDeliveryAreaField
+                label="Estimated Delivery Minutes"
+                onChange={(event) => onChange("estimatedDeliveryMinutes", event.target.value)}
+                placeholder="45"
+                type="number"
+                value={form.estimatedDeliveryMinutes}
               />
             </div>
           </div>

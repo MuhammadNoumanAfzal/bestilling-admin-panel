@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { Link, Navigate, useParams } from "react-router-dom";
 import {
   addDeliveryPostalAreaRequest,
+  deleteDeliveryAreaRequest,
   deleteDeliveryPostalAreaRequest,
   getAdminDeliveryAreaRequest,
   updateDeliveryAreaRequest,
@@ -14,6 +15,7 @@ import DeliveryMapCard from "../components/details/DeliveryMapCard.jsx";
 import DeliveryPostalAreasCard from "../components/details/DeliveryPostalAreasCard.jsx";
 import DeliverySettingsCard from "../components/details/DeliverySettingsCard.jsx";
 import DeliveryStatusPill from "../components/details/DeliveryStatusPill.jsx";
+import { useNavigate } from "react-router-dom";
 
 function createInitialSettingsForm(area) {
   return {
@@ -30,6 +32,7 @@ function createInitialSettingsForm(area) {
 
 export default function DeliveryAreaDetailPage() {
   const { areaId } = useParams();
+  const navigate = useNavigate();
   const [area, setArea] = useState(null);
   const [settingsForm, setSettingsForm] = useState(createInitialSettingsForm(null));
   const [isLoading, setIsLoading] = useState(true);
@@ -231,6 +234,44 @@ export default function DeliveryAreaDetailPage() {
     }
   }
 
+  async function handleDeleteArea() {
+    if (!area?.id) {
+      return;
+    }
+
+    const confirmation = await Swal.fire({
+      icon: "warning",
+      title: "Delete delivery area?",
+      text: `This will permanently remove ${area.city} and its linked delivery coverage.`,
+      showCancelButton: true,
+      confirmButtonColor: "#d15b42",
+      cancelButtonColor: "#c8b9aa",
+      confirmButtonText: "Delete Area",
+    });
+
+    if (!confirmation.isConfirmed) {
+      return;
+    }
+
+    try {
+      const result = await deleteDeliveryAreaRequest(area.id);
+      await Swal.fire({
+        icon: "success",
+        title: "Delivery area deleted",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+      navigate("/delivery");
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to delete delivery area",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    }
+  }
+
   if (!isLoading && loadError && !area) {
     return <Navigate replace to="/delivery" />;
   }
@@ -272,6 +313,13 @@ export default function DeliveryAreaDetailPage() {
 
           <div className="flex items-center gap-2">
             <button
+              className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[8px] border border-[#f0b8ab] bg-white px-3.5 text-[12px] font-bold text-[#d15b42] transition hover:bg-[#fff4f1]"
+              onClick={handleDeleteArea}
+              type="button"
+            >
+              Delete Area
+            </button>
+            <button
               className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[8px] border border-[#f0b8ab] bg-white px-3.5 text-[12px] font-bold text-[#d15b42] transition hover:bg-[#fff4f1] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isUpdatingStatus}
               onClick={handleToggleStatus}
@@ -299,6 +347,38 @@ export default function DeliveryAreaDetailPage() {
         <DeliverySettingsCard area={area} form={settingsForm} onChange={updateSettingsField} />
         <DeliveryMapCard area={area} />
       </div>
+
+      <section className="rounded-[18px] border border-[#ddd4cd] bg-white p-5 shadow-[0_10px_24px_rgba(55,31,13,0.05)]">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-[24px] font-bold tracking-[-0.03em] text-[#18120f]">Linked Vendors</h2>
+            <p className="mt-2 text-[15px] leading-6 text-[#6f645d]">
+              Vendors currently associated with this delivery area.
+            </p>
+          </div>
+          <span className="inline-flex rounded-full bg-[#fff4ea] px-3 py-1.5 text-[12px] font-bold text-[#cf6e38]">
+            {area.linkedVendors.length} linked
+          </span>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-3">
+          {area.linkedVendors.length ? (
+            area.linkedVendors.map((vendor) => (
+              <div
+                key={vendor.id}
+                className="rounded-[14px] border border-[#eadfd6] bg-[#fffdfa] px-4 py-3 text-[14px] text-[#18120f]"
+              >
+                <p className="font-semibold">{vendor.businessName}</p>
+                <p className="mt-1 text-[12px] text-[#7a6d66]">
+                  {vendor.isActive ? "Active vendor" : "Inactive vendor"}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p className="text-[14px] text-[#7a6d66]">No vendors are linked to this delivery area yet.</p>
+          )}
+        </div>
+      </section>
 
       <DeliveryPostalAreasCard
         areaId={area.id}

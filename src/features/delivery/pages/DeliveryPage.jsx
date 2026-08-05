@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
-import { createDeliveryAreaRequest, getAdminDeliveryAreasRequest, getAdminDeliverySummaryRequest } from "../api/deliveryApi.js";
+import {
+  createDeliveryAreaRequest,
+  getAdminDeliveryAreasRequest,
+  getAdminDeliverySummaryRequest,
+} from "../api/deliveryApi.js";
 import AddDeliveryAreaModal from "../components/AddDeliveryAreaModal.jsx";
 import DeliveryAreasTable from "../components/DeliveryAreasTable.jsx";
 import DeliveryOverviewCard from "../components/DeliveryOverviewCard.jsx";

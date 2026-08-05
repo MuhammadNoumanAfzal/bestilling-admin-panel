@@ -5,6 +5,7 @@ import {
   ADMIN_DELIVERY_AREAS_QUERY,
   ADMIN_DELIVERY_SUMMARY_QUERY,
   CREATE_DELIVERY_AREA_MUTATION,
+  DELETE_DELIVERY_AREA_MUTATION,
   DELETE_DELIVERY_POSTAL_AREA_MUTATION,
   UPDATE_DELIVERY_AREA_MUTATION,
   UPDATE_DELIVERY_AREA_STATUS_MUTATION,
@@ -22,6 +23,7 @@ function normalizeStatus(value) {
   switch (normalized) {
     case "INACTIVE":
       return "Inactive";
+    case "RESTRICTED":
     case "LIMITED":
       return "Limited";
     default:
@@ -37,6 +39,8 @@ function normalizeCoverageType(value) {
       return "Selected Postal Codes Only";
     case "ALL_CITY_COVERAGE":
       return "All City Coverage";
+    case "POLYGON_COVERAGE":
+      return "Polygon Coverage";
     default:
       return normalized.replace(/_/g, " ") || "Not configured";
   }
@@ -97,6 +101,9 @@ function normalizePostalArea(postalArea) {
     vendors: Number(postalArea?.vendors ?? 0),
     lat: postalArea?.lat == null ? "" : `${postalArea.lat}`,
     lng: postalArea?.lng == null ? "" : `${postalArea.lng}`,
+    deliveryFeeOverride: `${postalArea?.deliveryFeeOverride ?? ""}`,
+    minimumOrderAmountOverride: `${postalArea?.minimumOrderAmountOverride ?? ""}`,
+    estimatedDeliveryMinutes: `${postalArea?.estimatedDeliveryMinutes ?? ""}`,
   };
 }
 
@@ -110,6 +117,8 @@ function normalizeAreaListItem(item) {
     activePostalCodes: Number(item?.activePostalCodes ?? 0),
     vendors: Number(item?.vendors ?? 0),
     updatedAt: formatDisplayDate(item?.updatedAt),
+    createdAt: formatDisplayDate(item?.createdAt),
+    country: item?.country || "",
     maxDeliveryRadius: Number(item?.maxDeliveryRadius ?? 0),
     leadTimeDays: Number(item?.leadTimeDays ?? 0),
     coverageType: normalizeCoverageType(item?.coverageType),
@@ -131,6 +140,7 @@ function normalizeAreaDetail(area) {
     activePostalCodes: Number(area.activePostalCodes ?? 0),
     vendors: Number(area.vendors ?? 0),
     updatedAt: formatDisplayDate(area.updatedAt),
+    createdAt: formatDisplayDate(area.createdAt),
     maxDeliveryRadius: Number(area.maxDeliveryRadius ?? 0),
     leadTimeDays: Number(area.leadTimeDays ?? 0),
     coverageType: normalizeCoverageType(area.coverageType),
@@ -155,11 +165,24 @@ function normalizeAreaDetail(area) {
         lng: area.map?.center?.lng ?? null,
       },
       zoom: Number(area.map?.zoom ?? 10),
+      bounds: {
+        north: area.map?.bounds?.north ?? null,
+        south: area.map?.bounds?.south ?? null,
+        east: area.map?.bounds?.east ?? null,
+        west: area.map?.bounds?.west ?? null,
+      },
       polygons: Array.isArray(area.map?.polygons) ? area.map.polygons : [],
       markers: Array.isArray(area.map?.markers) ? area.map.markers : [],
     },
     postalAreas: Array.isArray(area.postalAreas)
       ? area.postalAreas.map(normalizePostalArea)
+      : [],
+    linkedVendors: Array.isArray(area.linkedVendors)
+      ? area.linkedVendors.map((vendor) => ({
+          id: vendor?.id || "",
+          businessName: vendor?.businessName || "Vendor",
+          isActive: Boolean(vendor?.isActive),
+        }))
       : [],
   };
 }
@@ -201,18 +224,27 @@ export async function getAdminDeliverySummaryRequest() {
       id: "cities",
       label: "Active Cities",
       value: String(summary.activeCities ?? 0),
+      subtitle:
+        summary.coveredCities != null && summary.totalCities != null
+          ? `${summary.coveredCities}/${summary.totalCities} cities covered`
+          : "",
       accent: "soft",
     },
     {
       id: "postalCodes",
       label: "Active Postal Codes",
       value: String(summary.activePostalCodes ?? 0),
+      subtitle:
+        summary.coveredPostalCodes != null && summary.totalPostalCodes != null
+          ? `${summary.coveredPostalCodes}/${summary.totalPostalCodes} postal codes covered`
+          : "",
       accent: "warm",
     },
     {
       id: "restricted",
       label: "Restricted Areas",
       value: String(summary.restrictedAreas ?? 0),
+      subtitle: "Areas with delivery restrictions enabled",
       accent: "neutral",
     },
     {
@@ -261,6 +293,9 @@ export async function getAdminDeliveryAreasRequest(filters) {
       regions: Array.isArray(response.filterOptions?.regions) ? response.filterOptions.regions : [],
       statuses: Array.isArray(response.filterOptions?.statuses)
         ? response.filterOptions.statuses
+        : [],
+      countries: Array.isArray(response.filterOptions?.countries)
+        ? response.filterOptions.countries
         : [],
     },
   };
@@ -338,6 +373,19 @@ export async function updateDeliveryAreaRequest(id, input) {
   };
 }
 
+export async function deleteDeliveryAreaRequest(id) {
+  const data = await executeProtectedGraphqlRequest(DELETE_DELIVERY_AREA_MUTATION, { id });
+  const result = data?.deleteDeliveryArea;
+
+  if (!result?.success) {
+    throw new Error(getErrorMessage(result, "Unable to delete delivery area."));
+  }
+
+  return {
+    message: result.message || "Delivery area deleted successfully.",
+  };
+}
+
 export async function updateDeliveryAreaStatusRequest(id, status) {
   const data = await executeProtectedGraphqlRequest(UPDATE_DELIVERY_AREA_STATUS_MUTATION, {
     id,
@@ -365,6 +413,9 @@ export async function addDeliveryPostalAreaRequest(deliveryAreaId, input) {
       status: normalizeStatusInput(input?.status),
       lat: parseNumberOrNull(input?.lat),
       lng: parseNumberOrNull(input?.lng),
+      deliveryFeeOverride: parseDecimalOrNull(input?.deliveryFeeOverride),
+      minimumOrderAmountOverride: parseDecimalOrNull(input?.minimumOrderAmountOverride),
+      estimatedDeliveryMinutes: parseNumberOrNull(input?.estimatedDeliveryMinutes),
     },
   });
 
@@ -388,6 +439,9 @@ export async function updateDeliveryPostalAreaRequest(id, input) {
       status: normalizeStatusInput(input?.status),
       lat: parseNumberOrNull(input?.lat),
       lng: parseNumberOrNull(input?.lng),
+      deliveryFeeOverride: parseDecimalOrNull(input?.deliveryFeeOverride),
+      minimumOrderAmountOverride: parseDecimalOrNull(input?.minimumOrderAmountOverride),
+      estimatedDeliveryMinutes: parseNumberOrNull(input?.estimatedDeliveryMinutes),
     },
   });
 

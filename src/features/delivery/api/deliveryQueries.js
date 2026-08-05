@@ -31,6 +31,7 @@ export const ADMIN_DELIVERY_AREAS_QUERY = `
         vendors
         activePostalCodes
         updatedAt
+        createdAt
       }
       pageInfo {
         page
@@ -44,6 +45,7 @@ export const ADMIN_DELIVERY_AREAS_QUERY = `
         cities
         regions
         statuses
+        countries
       }
     }
   }
@@ -57,6 +59,10 @@ export const ADMIN_DELIVERY_SUMMARY_QUERY = `
       restrictedAreas
       platformCoveragePercent
       platformCoverageSubtitle
+      coveredCities
+      totalCities
+      coveredPostalCodes
+      totalPostalCodes
       coveredMunicipalities
       totalMunicipalities
       calculationMethod
@@ -79,6 +85,7 @@ export const ADMIN_DELIVERY_AREA_QUERY = `
       vendors
       activePostalCodes
       updatedAt
+      createdAt
       settings {
         maxDeliveryRadius
         leadTimeDays
@@ -95,8 +102,15 @@ export const ADMIN_DELIVERY_AREA_QUERY = `
           lng
         }
         zoom
+        bounds {
+          north
+          south
+          east
+          west
+        }
         polygons {
           id
+          label
           points {
             lat
             lng
@@ -118,6 +132,14 @@ export const ADMIN_DELIVERY_AREA_QUERY = `
         vendors
         lat
         lng
+        deliveryFeeOverride
+        minimumOrderAmountOverride
+        estimatedDeliveryMinutes
+      }
+      linkedVendors {
+        id
+        businessName
+        isActive
       }
     }
   }
@@ -137,7 +159,9 @@ export const CREATE_DELIVERY_AREA_MUTATION = `
         id
         city
         region
+        country
         status
+        coverageType
       }
     }
   }
@@ -155,6 +179,10 @@ export const UPDATE_DELIVERY_AREA_MUTATION = `
       }
       deliveryArea {
         id
+        city
+        region
+        country
+        status
         settings {
           maxDeliveryRadius
           leadTimeDays
@@ -165,6 +193,21 @@ export const UPDATE_DELIVERY_AREA_MUTATION = `
           isExpressEnabled
           notes
         }
+        updatedAt
+      }
+    }
+  }
+`;
+
+export const DELETE_DELIVERY_AREA_MUTATION = `
+  mutation DeleteDeliveryArea($id: ID!) {
+    deleteDeliveryArea(id: $id) {
+      success
+      message
+      errors {
+        field
+        message
+        code
       }
     }
   }
@@ -201,6 +244,9 @@ export const ADD_DELIVERY_POSTAL_AREA_MUTATION = `
         vendors
         lat
         lng
+        deliveryFeeOverride
+        minimumOrderAmountOverride
+        estimatedDeliveryMinutes
       }
     }
   }
@@ -219,6 +265,9 @@ export const UPDATE_DELIVERY_POSTAL_AREA_MUTATION = `
         vendors
         lat
         lng
+        deliveryFeeOverride
+        minimumOrderAmountOverride
+        estimatedDeliveryMinutes
       }
     }
   }

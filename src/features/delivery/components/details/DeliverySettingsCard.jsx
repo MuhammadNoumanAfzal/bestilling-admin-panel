@@ -57,6 +57,7 @@ function TextField({
 const coverageOptions = [
   { value: "ALL_CITY_COVERAGE", label: "All City Coverage" },
   { value: "SELECTED_POSTAL_CODES_ONLY", label: "Selected Postal Codes Only" },
+  { value: "POLYGON_COVERAGE", label: "Polygon Coverage" },
 ];
 
 export default function DeliverySettingsCard({ area, form, onChange }) {
@@ -73,6 +74,8 @@ export default function DeliverySettingsCard({ area, form, onChange }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField label="City Name" onChange={() => {}} readOnly value={area.city} />
         <TextField label="Region" onChange={() => {}} readOnly value={area.region} />
+        <TextField label="Country" onChange={() => {}} readOnly value={area.country} />
+        <TextField label="Created At" onChange={() => {}} readOnly value={area.createdAt} />
         <TextField
           label="Maximum Delivery Radius (km)"
           onChange={(event) => onChange("maxDeliveryRadius", event.target.value)}

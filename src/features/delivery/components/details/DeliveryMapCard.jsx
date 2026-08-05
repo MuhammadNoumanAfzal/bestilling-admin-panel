@@ -23,6 +23,7 @@ export default function DeliveryMapCard({ area }) {
   const polygons = Array.isArray(area.map?.polygons) ? area.map.polygons : [];
   const markers = Array.isArray(area.map?.markers) ? area.map.markers : [];
   const center = area.map?.center || {};
+  const bounds = area.map?.bounds || {};
   const polygonPoints = polygons.reduce(
     (total, polygon) => total + (Array.isArray(polygon?.points) ? polygon.points.length : 0),
     0,
@@ -69,6 +70,15 @@ export default function DeliveryMapCard({ area }) {
             </div>
           </div>
 
+          <div className="mt-4 rounded-[16px] border border-[#eadfd6] bg-white px-4 py-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Map Bounds</p>
+            <p className="mt-2 text-[14px] font-medium text-[#18120f]">
+              {bounds.north != null && bounds.south != null && bounds.east != null && bounds.west != null
+                ? `N ${bounds.north} / S ${bounds.south} / E ${bounds.east} / W ${bounds.west}`
+                : "Not configured"}
+            </p>
+          </div>
+
           <div className="mt-4 rounded-[16px] border border-dashed border-[#eadfd6] bg-white/80 px-4 py-5">
             <div className="flex items-center gap-2 text-[#cf6e38]">
               <MapPinned size={16} />
@@ -87,6 +97,19 @@ export default function DeliveryMapCard({ area }) {
                   >
                     <MapPin size={13} className="text-[#cf6e38]" />
                     <span>{marker.label || marker.type || "Marker"}</span>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
+            {polygons.length ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {polygons.slice(0, 6).map((polygon) => (
+                  <span
+                    key={polygon.id}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[#ead2c3] bg-white px-3 py-1.5 text-[12px] font-medium text-[#4f4036]"
+                  >
+                    <span>{polygon.label || `Polygon ${polygon.id}`}</span>
                   </span>
                 ))}
               </div>

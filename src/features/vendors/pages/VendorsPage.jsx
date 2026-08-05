@@ -25,6 +25,8 @@ const iconMap = {
   revenue: DollarSign,
 };
 
+const ALL_DATES_FILTER = "All Dates";
+
 function getTabStatusFilter(tab) {
   switch (tab) {
     case "Pending Approval":
@@ -42,21 +44,6 @@ function getTabStatusFilter(tab) {
   }
 }
 
-function getDisplayStatusFilter(value) {
-  switch (`${value ?? ""}`.trim().toUpperCase()) {
-    case "PENDING APPROVAL":
-      return "PENDING_APPROVAL";
-    case "SUSPENDED":
-      return "SUSPENDED";
-    case "REJECTED":
-      return "REJECTED";
-    case "DEACTIVATED":
-      return "DEACTIVATED";
-    default:
-      return "ACTIVE";
-  }
-}
-
 export default function VendorsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
@@ -65,7 +52,7 @@ export default function VendorsPage() {
   const [ratingFilter, setRatingFilter] = useState("");
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "All");
   const [currentPage, setCurrentPage] = useState(1);
-  const [timeframe, setTimeframe] = useState("This Year");
+  const [timeframe, setTimeframe] = useState(ALL_DATES_FILTER);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [stats, setStats] = useState([]);
@@ -91,7 +78,7 @@ export default function VendorsPage() {
   const [isUpdatingStatusId, setIsUpdatingStatusId] = useState("");
 
   const dateRange = useMemo(
-    () => getDateRangeForFilter(timeframe, customStart, customEnd),
+    () => (timeframe === ALL_DATES_FILTER ? null : getDateRangeForFilter(timeframe, customStart, customEnd)),
     [customEnd, customStart, timeframe],
   );
 
@@ -194,7 +181,7 @@ export default function VendorsPage() {
       nextParams.delete("tab");
       return nextParams;
     });
-    setTimeframe("This Year");
+    setTimeframe(ALL_DATES_FILTER);
     setCustomStart("");
     setCustomEnd("");
     setCurrentPage(1);
@@ -296,12 +283,12 @@ export default function VendorsPage() {
           onCityFilterChange={setCityFilter}
           ratingFilter={ratingFilter}
           onRatingFilterChange={setRatingFilter}
-          timeframeFilter=""
-          onTimeframeFilterChange={() => {}}
+          timeframeFilter={timeframe}
+          onTimeframeFilterChange={setTimeframe}
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onResetFilters={handleResetFilters}
-          vendors={filterOptions.vendors.map((vendor) => vendor.name)}
+          vendors={filterOptions.vendors}
           cities={filterOptions.cities}
         />
 

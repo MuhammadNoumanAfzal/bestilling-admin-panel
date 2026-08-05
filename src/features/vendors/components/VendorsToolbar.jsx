@@ -61,10 +61,10 @@ export default function VendorsToolbar({
   ];
 
   const dateOptions = [
-    { label: "All Joined Dates", value: "" },
-    { label: "Last 7 days", value: "7days" },
-    { label: "Last Month", value: "month" },
-    { label: "This Year", value: "year" },
+    { label: "All Joined Dates", value: "All Dates" },
+    { label: "Last 7 days", value: "Last 7 days" },
+    { label: "Last Month", value: "Last Month" },
+    { label: "This Year", value: "This Year" },
   ];
 
   const tabs = [
@@ -103,7 +103,9 @@ export default function VendorsToolbar({
               className="inline-flex h-9 items-center justify-between gap-1.5 rounded-[8px] border border-[#d8ccc2] bg-white px-3 text-[12px] font-semibold text-[#4d423b] outline-none transition hover:bg-[#faf9f8] cursor-pointer"
               type="button"
             >
-              <span>{vendorFilter || "All Vendors"}</span>
+              <span>
+                {vendors.find((vendor) => vendor.id === vendorFilter)?.name || "All Vendors"}
+              </span>
               <ChevronDown size={13} className="text-[#8c8077]" />
             </button>
 
@@ -120,18 +122,18 @@ export default function VendorsToolbar({
                 >
                   All Vendors
                 </button>
-                {vendors.map((v) => (
+                {vendors.map((vendor) => (
                   <button
-                    key={v}
-                    onClick={() => handleSelectVendor(v)}
+                    key={vendor.id}
+                    onClick={() => handleSelectVendor(vendor.id)}
                     className={`block w-full px-3.5 py-1.5 text-left text-[12px] font-semibold transition cursor-pointer ${
-                      vendorFilter === v
+                      vendorFilter === vendor.id
                         ? "bg-[#fff3ec] text-[#d96834] font-bold"
                         : "text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
                     }`}
                     type="button"
                   >
-                    {v}
+                    {vendor.name}
                   </button>
                 ))}
               </div>

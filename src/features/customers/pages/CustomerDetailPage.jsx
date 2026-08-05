@@ -5,6 +5,7 @@ import {
   blockCustomerRequest,
   deactivateCustomerRequest,
   getAdminCustomerDetailRequest,
+  sendCustomerAdminMessageRequest,
   unblockCustomerRequest,
   updateCustomerProfileRequest,
 } from "../api/customersApi.js";
@@ -105,37 +106,78 @@ export default function CustomerDetailPage() {
       return;
     }
 
-    await openAdminModal({
-      title: "Customer contact details",
+    const result = await openAdminModal({
+      title: "Contact customer",
       html: `
-        <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;flex-direction:column;gap:14px;text-align:left;">
           <div style="border:1px solid #ece2da;border-radius:18px;background:linear-gradient(180deg,#fff8f3 0%,#ffffff 100%);padding:18px;">
             <div style="display:flex;flex-direction:column;gap:10px;">
               <div>
                 <p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#a0938b;">Customer</p>
                 <p style="margin:0;font-size:24px;font-weight:800;color:#201814;">${escapeHtml(customer.name)}</p>
               </div>
-              <div style="display:grid;gap:12px;">
-                <div style="border:1px solid #eee4dd;border-radius:14px;background:#fff;padding:12px 14px;">
-                  <p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#a0938b;">Email</p>
-                  <p style="margin:0;font-size:15px;font-weight:600;color:#2f241d;">${escapeHtml(customer.email || "Not available")}</p>
-                </div>
-                <div style="border:1px solid #eee4dd;border-radius:14px;background:#fff;padding:12px 14px;">
-                  <p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#a0938b;">Phone</p>
-                  <p style="margin:0;font-size:15px;font-weight:600;color:#2f241d;">${escapeHtml(customer.phone || "Not available")}</p>
-                </div>
-                <div style="border:1px solid #eee4dd;border-radius:14px;background:#fff;padding:12px 14px;">
-                  <p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#a0938b;">City</p>
-                  <p style="margin:0;font-size:15px;font-weight:600;color:#2f241d;">${escapeHtml(customer.city || "Not available")}</p>
-                </div>
-              </div>
+              <p style="margin:0;font-size:13px;line-height:1.7;color:#7d7068;">Send an admin message through email, SMS, system notification, or in-app delivery.</p>
             </div>
+          </div>
+          <div>
+            <label for="customer-message-channel" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Channel</label>
+            <select id="customer-message-channel" class="swal2-select" style="display:flex;width:100%;margin:0;">
+              <option value="EMAIL">Email</option>
+              <option value="SMS">SMS</option>
+              <option value="SYSTEM_NOTIFICATION">System Notification</option>
+              <option value="IN_APP">In-App</option>
+            </select>
+          </div>
+          <div>
+            <label for="customer-message-subject" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Subject</label>
+            <input id="customer-message-subject" class="swal2-input" placeholder="Important update regarding your account" />
+          </div>
+          <div>
+            <label for="customer-message-body" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Message</label>
+            <textarea id="customer-message-body" class="swal2-textarea" placeholder="Write your message to the customer"></textarea>
           </div>
         </div>
       `,
-      confirmButtonText: "Close",
+      showCancelButton: true,
+      confirmButtonText: "Send message",
+      cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => {
+        const channel = window.document.getElementById("customer-message-channel")?.value || "";
+        const subject = window.document.getElementById("customer-message-subject")?.value?.trim() || "";
+        const message = window.document.getElementById("customer-message-body")?.value?.trim() || "";
+
+        if (!subject || !message) {
+          Swal.showValidationMessage("Subject and message are required.");
+          return null;
+        }
+
+        return { channel, subject, message };
+      },
     });
+
+    if (!result.value) {
+      return;
+    }
+
+    try {
+      const response = await sendCustomerAdminMessageRequest(customer.id, result.value);
+
+      await openAdminModal({
+        icon: "success",
+        title: "Message sent",
+        text: response.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await openAdminModal({
+        icon: "error",
+        title: "Unable to send message",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    }
   }
 
   async function handleEditProfile() {
@@ -328,6 +370,8 @@ export default function CustomerDetailPage() {
               ...current,
               status: result.status,
               rawStatus: result.rawStatus,
+              isBlocked: !isBlocked,
+              blockedReason: !isBlocked ? reason : "",
             }
           : current,
       );
@@ -391,6 +435,8 @@ export default function CustomerDetailPage() {
               ...current,
               status: result.status,
               rawStatus: result.rawStatus,
+              isInactive: true,
+              deactivationReason: reasonResult.value || "",
             }
           : current,
       );

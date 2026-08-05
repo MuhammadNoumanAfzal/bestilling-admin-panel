@@ -87,6 +87,14 @@ export const ADMIN_CUSTOMER_DETAIL_QUERY = `
       status
       avatarUrl
       joinedAt
+      createdAt
+      updatedAt
+      isBlocked
+      isInactive
+      blockedAt
+      blockedReason
+      deactivatedAt
+      deactivationReason
       totalOrders
       totalSpend {
         amount
@@ -103,6 +111,7 @@ export const ADMIN_CUSTOMER_DETAIL_QUERY = `
         preferredContactMethod
         lastLoginAt
         isEmailVerified
+        isPhoneVerified
         notes
       }
       orderHistory {
@@ -118,13 +127,15 @@ export const ADMIN_CUSTOMER_DETAIL_QUERY = `
         }
         items {
           id
+          orderReference
+          createdAt
+          paymentStatus
+          deliveryStatus
           vendor {
             id
             name
+            avatarUrl
           }
-          eventType
-          guestCount
-          dateTime
           amount {
             amount
             currency
@@ -156,13 +167,41 @@ export const ADMIN_CUSTOMER_DETAIL_QUERY = `
           id
           subject
           status
+          priority
+          category
           createdAt
+          lastMessageAt
+          unreadAdminCount
         }
         summary {
           totalTickets
           openTickets
           resolvedTickets
         }
+      }
+    }
+  }
+`;
+
+export const SEND_CUSTOMER_ADMIN_MESSAGE_MUTATION = `
+  mutation SendCustomerAdminMessage(
+    $customerId: ID!
+    $subject: String!
+    $message: String!
+    $channel: String
+  ) {
+    sendCustomerAdminMessage(
+      customerId: $customerId
+      subject: $subject
+      message: $message
+      channel: $channel
+    ) {
+      success
+      message
+      errors {
+        field
+        message
+        code
       }
     }
   }

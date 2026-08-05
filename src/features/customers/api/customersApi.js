@@ -4,6 +4,7 @@ import {
   ADMIN_CUSTOMER_DETAIL_QUERY,
   BLOCK_CUSTOMER_MUTATION,
   DEACTIVATE_CUSTOMER_MUTATION,
+  SEND_CUSTOMER_ADMIN_MESSAGE_MUTATION,
   UNBLOCK_CUSTOMER_MUTATION,
   UPDATE_CUSTOMER_PROFILE_MUTATION,
 } from "./customersQueries.js";
@@ -46,8 +47,8 @@ function normalizeStatus(status) {
   switch (normalized) {
     case "BLOCKED":
       return "Blocked";
-    case "INACTIVE":
-      return "Inactive";
+    case "DEACTIVATED":
+      return "Deactivated";
     default:
       return "Active";
   }
@@ -71,6 +72,25 @@ function normalizeTicketStatus(status) {
   const normalized = `${status ?? ""}`.trim().toUpperCase();
 
   return normalized === "RESOLVED" ? "Resolved" : "Open";
+}
+
+function formatDateTimeLabel(value) {
+  if (!value) {
+    return "Not available";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return `${value}`;
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function normalizeCustomerRow(item) {
@@ -155,6 +175,14 @@ function normalizeCustomerDetail(customer) {
     city: customer.city || "",
     status: normalizeStatus(customer.status),
     rawStatus: `${customer.status ?? ""}`.trim().toUpperCase() || "ACTIVE",
+    createdAt: customer.createdAt || "",
+    updatedAt: customer.updatedAt || "",
+    blockedAt: customer.blockedAt || "",
+    blockedReason: customer.blockedReason || "",
+    deactivatedAt: customer.deactivatedAt || "",
+    deactivationReason: customer.deactivationReason || "",
+    isBlocked: Boolean(customer.isBlocked),
+    isInactive: Boolean(customer.isInactive),
     avatar: toInitials(fullName),
     avatarUrl: customer.avatarUrl || "",
     joinDate: formatDateLabel(customer.joinedAt),
@@ -165,11 +193,11 @@ function normalizeCustomerDetail(customer) {
     profile: {
       companyName: customer.profile?.companyName || "",
       preferredContactMethod: customer.profile?.preferredContactMethod || "Not specified",
-      lastLoginAt: customer.profile?.lastLoginAt ? formatDateLabel(customer.profile.lastLoginAt, {
-        hour: "2-digit",
-        minute: "2-digit",
-      }) : "Not available",
+      lastLoginAt: customer.profile?.lastLoginAt
+        ? formatDateTimeLabel(customer.profile.lastLoginAt)
+        : "Not available",
       isEmailVerified: Boolean(customer.profile?.isEmailVerified),
+      isPhoneVerified: Boolean(customer.profile?.isPhoneVerified),
       notes: customer.profile?.notes || "",
     },
     orderHistory: {
@@ -182,19 +210,13 @@ function normalizeCustomerDetail(customer) {
       items: Array.isArray(customer.orderHistory?.items)
         ? customer.orderHistory.items.map((item) => ({
             id: item?.id || "",
+            orderReference: item?.orderReference || item?.id || "",
             vendor: item?.vendor?.name || "Unknown vendor",
             vendorId: item?.vendor?.id || "",
-            eventType: item?.eventType || "Not specified",
-            guests: Number(item?.guestCount ?? 0),
-            dateTime: item?.dateTime
-              ? new Intl.DateTimeFormat("en-GB", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(item.dateTime))
-              : "Not scheduled",
+            vendorAvatarUrl: item?.vendor?.avatarUrl || "",
+            paymentStatus: item?.paymentStatus || "Not available",
+            deliveryStatus: item?.deliveryStatus || "Not available",
+            dateTime: item?.createdAt ? formatDateTimeLabel(item.createdAt) : "Not scheduled",
             amount: item?.amount?.formatted || "NOK 0.00",
             amountValue: Number(item?.amount?.amount ?? 0),
             status: normalizeOrderStatus(item?.status),
@@ -210,6 +232,7 @@ function normalizeCustomerDetail(customer) {
         ? customer.reviews.items.map((item) => ({
             id: item?.id || "",
             name: item?.vendor?.name || "Vendor review",
+            vendorId: item?.vendor?.id || "",
             rating: Number(item?.rating ?? 0),
             orderRef: item?.orderReference || "",
             content: item?.content || "",
@@ -229,6 +252,10 @@ function normalizeCustomerDetail(customer) {
             id: item?.id || "",
             subject: item?.subject || "",
             status: normalizeTicketStatus(item?.status),
+            priority: item?.priority || "",
+            category: item?.category || "",
+            unreadAdminCount: Number(item?.unreadAdminCount ?? 0),
+            lastMessageAt: item?.lastMessageAt ? formatDateTimeLabel(item.lastMessageAt) : "Not available",
             createdDate: item?.createdAt ? formatDateLabel(item.createdAt) : "Not available",
           }))
         : [],
@@ -374,6 +401,24 @@ export async function deactivateCustomerRequest(id, reason) {
   return {
     message: result.message || "Customer deactivated successfully.",
     status: normalizeStatus(result.customer.status),
-    rawStatus: `${result.customer.status ?? ""}`.trim().toUpperCase() || "INACTIVE",
+    rawStatus: `${result.customer.status ?? ""}`.trim().toUpperCase() || "DEACTIVATED",
+  };
+}
+
+export async function sendCustomerAdminMessageRequest(customerId, input) {
+  const data = await executeProtectedGraphqlRequest(SEND_CUSTOMER_ADMIN_MESSAGE_MUTATION, {
+    customerId,
+    subject: `${input?.subject ?? ""}`.trim(),
+    message: `${input?.message ?? ""}`.trim(),
+    channel: `${input?.channel ?? ""}`.trim() || null,
+  });
+
+  const result = data?.sendCustomerAdminMessage;
+  if (!result?.success) {
+    throw new Error(getErrorMessage(result, "Unable to send customer message."));
+  }
+
+  return {
+    message: result.message || "Customer message sent successfully.",
   };
 }

@@ -389,9 +389,12 @@ function normalizeVendorApplicationReview(review) {
       ? review.documentReviewHistory.map((item) => ({
           id: item?.id || "",
           action: item?.action || "",
+          status: item?.status || "",
+          note: item?.note || "",
           actorName: item?.actor?.fullName || "System",
           createdAt: item?.createdAt || "",
           createdAtLabel: formatDateTimeLabel(item?.createdAt),
+          metadata: item?.metadata || "",
         }))
       : [],
   };

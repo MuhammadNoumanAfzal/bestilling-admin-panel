@@ -164,10 +164,14 @@ function HistoryItem({ item }) {
   return (
     <div className="rounded-[14px] border border-[#ece2da] bg-[#fffdfa] px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[13px] font-bold text-[#231913]">{item.action}</p>
+        <p className="text-[13px] font-bold text-[#231913]">
+          {item.action}
+          {item.status ? ` · ${item.status}` : ""}
+        </p>
         <p className="text-[12px] text-[#8d8078]">{item.createdAtLabel}</p>
       </div>
       <p className="mt-1 text-[12px] font-medium text-[#7a6d66]">By {item.actorName}</p>
+      {item.note ? <p className="mt-2 text-[13px] leading-6 text-[#5d4f47]">{item.note}</p> : null}
     </div>
   );
 }

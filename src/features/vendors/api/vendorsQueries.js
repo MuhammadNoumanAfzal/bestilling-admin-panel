@@ -278,15 +278,18 @@ export const ADMIN_VENDOR_APPLICATION_REVIEW_QUERY = `
         code
         label
       }
-      documentReviewHistory {
-        id
-        action
-        actor {
+        documentReviewHistory {
           id
-          fullName
+          action
+          status
+          note
+          actor {
+            id
+            fullName
+          }
+          createdAt
+          metadata
         }
-        createdAt
-      }
     }
   }
 `;

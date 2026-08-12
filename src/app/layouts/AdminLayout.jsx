@@ -12,6 +12,7 @@ import {
   Menu,
   Search,
   Settings as SettingsIcon,
+  SlidersHorizontal,
   ShoppingBag,
   Store,
   Truck,
@@ -109,6 +110,14 @@ const navigation = [
     matchPaths: ["/notifications"],
   },
   {
+    label: "Vendor Settings",
+    to: "/vendors/settings",
+    icon: SlidersHorizontal,
+    description: "Control vendor-side categories, food types, occasions, and allergens.",
+    keywords: ["taxonomy", "menu settings", "vendor setup", "allergens", "occasions"],
+    matchPaths: ["/vendors/settings"],
+  },
+  {
     label: "Settings",
     to: "/settings",
     icon: SettingsIcon,
@@ -159,6 +168,10 @@ const pageMeta = {
     title: "Support",
     subtitle: "Handle tickets, escalations, and operational follow-up.",
   },
+  "/vendors/settings": {
+    title: "Vendor Settings",
+    subtitle: "Manage the shared taxonomies that appear in the vendor menu builder.",
+  },
   "/settings": {
     title: "Settings",
     subtitle: "Update platform defaults, permissions, and admin preferences.",
@@ -166,6 +179,10 @@ const pageMeta = {
 };
 
 function isNavItemActive(item, pathname) {
+  if (item.to === "/vendors" && pathname.startsWith("/vendors/settings")) {
+    return false;
+  }
+
   return item.matchPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 
@@ -203,6 +220,13 @@ function getCurrentMeta(pathname) {
       title: "Vendor Application Review",
       subtitle:
         "Review submitted documents, storefront details, and operational readiness before approval.",
+    };
+  }
+
+  if (pathname.startsWith("/vendors/settings")) {
+    return {
+      title: "Vendor Settings",
+      subtitle: "Manage categories, food types, occasions, and allergens for vendors.",
     };
   }
 

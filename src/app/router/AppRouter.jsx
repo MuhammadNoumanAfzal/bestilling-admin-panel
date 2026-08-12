@@ -26,6 +26,7 @@ import SupportPage from "../../features/support/pages/SupportPage.jsx";
 import SupportTicketDetailPage from "../../features/support/pages/SupportTicketDetailPage.jsx";
 import NotificationsPage from "../../features/notifications/pages/NotificationsPage.jsx";
 import CreateNotificationPage from "../../features/notifications/pages/CreateNotificationPage.jsx";
+import VendorSettingsPage from "../../features/vendor-settings/pages/VendorSettingsPage.jsx";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
 
 function RootRedirect() {
@@ -68,6 +69,7 @@ export default function AppRouter() {
             <Route path="/support/:ticketId" element={<SupportTicketDetailPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/notifications/create" element={<CreateNotificationPage />} />
+            <Route path="/vendors/settings" element={<VendorSettingsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Route>

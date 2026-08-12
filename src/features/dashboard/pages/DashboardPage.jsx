@@ -207,16 +207,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div className="space-y-1">
-          <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">
-            Dashboard Overview
-          </h1>
-          <p className="text-[18px] leading-7 text-[#6f645d]">
-            Monitor platform performance, financials, and daily catering operations.
-          </p>
-        </div>
-
+      <section className="flex justify-end">
         <DateFilterDropdown
           selectedFilter={timeframe}
           onChangeFilter={setTimeframe}

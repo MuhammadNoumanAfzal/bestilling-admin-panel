@@ -323,13 +323,6 @@ export default function NotificationsPage() {
   return (
     <>
       <div className="space-y-5">
-        <section className="space-y-1">
-          <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">Notifications</h1>
-          <p className="text-[18px] leading-7 text-[#6f645d]">
-            Review platform alerts, unread updates, and linked actions for admin follow-up.
-          </p>
-        </section>
-
         <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           {notificationSummary.map((item) => (
             <NotificationOverviewCard key={item.id} {...item} />

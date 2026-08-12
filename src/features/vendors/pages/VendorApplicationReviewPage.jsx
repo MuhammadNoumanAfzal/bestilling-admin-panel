@@ -176,6 +176,13 @@ function HistoryItem({ item }) {
   );
 }
 
+function isComplianceChecklistItem(item) {
+  const code = `${item?.code ?? ""}`.trim().toLowerCase();
+  const label = `${item?.label ?? ""}`.trim().toLowerCase();
+
+  return code.includes("compliance") || label.includes("compliance document");
+}
+
 export default function VendorApplicationReviewPage() {
   const { vendorId } = useParams();
   const navigate = useNavigate();
@@ -321,11 +328,11 @@ export default function VendorApplicationReviewPage() {
       return;
     }
 
-    if (!vendor.canApprove) {
+    if (!canApproveForUi) {
       await Swal.fire({
         icon: "warning",
         title: "Approval blocked",
-        text: "Required compliance documents or checklist items are still incomplete.",
+        text: "Visible blocking checklist items are still incomplete.",
         confirmButtonColor: "#cf6e38",
       });
       return;
@@ -511,6 +518,21 @@ export default function VendorApplicationReviewPage() {
     );
   }
 
+  const visibleChecklist = Array.isArray(vendor.checklist)
+    ? vendor.checklist.filter((item) => !isComplianceChecklistItem(item))
+    : [];
+  const visibleMissingRequirements = Array.isArray(vendor.missingRequirements)
+    ? vendor.missingRequirements.filter((item) => !isComplianceChecklistItem(item))
+    : [];
+  const visibleChecklistTotal = visibleChecklist.length;
+  const visibleChecklistCompleted = visibleChecklist.filter((item) => item.complete).length;
+  const visibleProgressPercent = visibleChecklistTotal
+    ? Math.round((visibleChecklistCompleted / visibleChecklistTotal) * 100)
+    : 100;
+  const canApproveForUi = visibleChecklist.every(
+    (item) => !item.blocking || item.complete,
+  );
+
   return (
     <div className="mx-auto max-w-[1120px] space-y-6">
       {loadError ? (
@@ -547,7 +569,7 @@ export default function VendorApplicationReviewPage() {
                   <span className="rounded-full bg-[#f2c49d] px-3 py-1.5 text-[11px] font-bold text-[#6f3a16]">
                     {vendor.applicationStatus}
                   </span>
-                  {!vendor.canApprove ? (
+                  {!canApproveForUi ? (
                     <span className="rounded-full bg-[#fff3f0] px-3 py-1.5 text-[11px] font-bold text-[#c53a2f]">
                       Approval Blocked
                     </span>
@@ -600,14 +622,14 @@ export default function VendorApplicationReviewPage() {
         </div>
       </section>
 
-      {!vendor.canApprove && vendor.missingRequirements.length ? (
+      {!canApproveForUi && visibleMissingRequirements.length ? (
         <section className="rounded-[16px] border border-[#f2c7b9] bg-[#fff7f3] px-5 py-5 shadow-[0_6px_16px_rgba(53,34,20,0.04)] sm:px-6">
           <div className="flex items-start gap-3">
             <AlertTriangle className="mt-1 text-[#c53a2f]" size={18} />
             <div>
               <h2 className="text-[18px] font-bold text-[#7b251b]">Missing requirements</h2>
               <div className="mt-2 flex flex-wrap gap-2">
-                {vendor.missingRequirements.map((item) => (
+                {visibleMissingRequirements.map((item) => (
                   <span
                     key={item.code}
                     className="rounded-full border border-[#f0bcae] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#8d3f16]"
@@ -630,28 +652,7 @@ export default function VendorApplicationReviewPage() {
       </section>
 
       <section>
-        <SectionTitle title="Compliance Documents" subtitle="Only real legal or compliance documents can be reviewed here." />
-        {vendor.documents.length ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {vendor.documents.map((document) => (
-              <DocumentCard
-                key={document.id}
-                document={document}
-                onDownload={(item) => handleDocumentAccess(item, "download")}
-                onPreview={(item) => handleDocumentAccess(item, "preview")}
-                onReview={handleReviewDocument}
-              />
-            ))}
-          </div>
-        ) : (
-          <article className="rounded-[16px] border border-dashed border-[#ddd2c9] bg-white px-5 py-8 text-center text-[14px] text-[#7d7068]">
-            No compliance documents were returned for this application yet.
-          </article>
-        )}
-      </section>
-
-      <section>
-        <SectionTitle title="Readiness Checklist" subtitle="Approval is only allowed when all blocking checklist items are complete." />
+        <SectionTitle title="Readiness Checklist" subtitle="Approval is only allowed when all visible blocking checklist items are complete." />
         <article className="rounded-[16px] border border-[#ddd2c9] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.04)] sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -660,18 +661,18 @@ export default function VendorApplicationReviewPage() {
             </div>
             <div className="text-left sm:text-right">
               <p className="text-[22px] font-extrabold text-[#dd6b34]">
-                {vendor.checklistCompleted}/{vendor.checklistTotal}
+                {visibleChecklistCompleted}/{visibleChecklistTotal}
               </p>
               <p className="text-[13px] text-[#8d8078]">Tasks Completed</p>
             </div>
           </div>
 
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#eee7e0]">
-            <div className="h-full rounded-full bg-[#dd6b34]" style={{ width: `${vendor.progressPercent}%` }} />
+            <div className="h-full rounded-full bg-[#dd6b34]" style={{ width: `${visibleProgressPercent}%` }} />
           </div>
 
           <div className="mt-4 space-y-3">
-            {vendor.checklist.map((item) => (
+            {visibleChecklist.map((item) => (
               <ChecklistItem key={item.code || item.label} item={item} />
             ))}
           </div>
@@ -699,7 +700,7 @@ export default function VendorApplicationReviewPage() {
           <div>
             <h2 className="text-[18px] font-bold text-[#18120f]">Approval Safety</h2>
             <p className="mt-2 text-[14px] leading-7 text-[#6f6259]">
-              Approval is blocked until required compliance documents are verified and all blocking checklist items are complete.
+              Approval is blocked until all visible blocking checklist items are complete.
             </p>
           </div>
         </div>

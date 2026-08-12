@@ -46,7 +46,7 @@ export default function RevenueAnalyticsChart({ timeframe, chart, isLoading = fa
   const chartHeight = svgHeight - paddingTop - paddingBottom;
 
   return (
-    <div className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
+    <div className="flex h-full flex-col rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="space-y-1">
           <h2 className="text-[18px] font-bold text-[#1f1711]">Revenue & Order Analytics</h2>
@@ -84,7 +84,7 @@ export default function RevenueAnalyticsChart({ timeframe, chart, isLoading = fa
           No analytics data available for this time range.
         </div>
       ) : (
-        <div className="relative w-full overflow-hidden">
+        <div className="relative w-full flex-1 overflow-hidden">
           <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="h-auto w-full select-none">
             {yTicks.map((tick, index) => {
               const y = paddingTop + chartHeight - (tick / maxValue) * chartHeight;

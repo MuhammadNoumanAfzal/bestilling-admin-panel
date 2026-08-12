@@ -245,7 +245,7 @@ export default function DashboardPage() {
         ))}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-12">
+      <section className="grid items-stretch gap-6 lg:grid-cols-12">
         <div className="lg:col-span-8">
           <RevenueAnalyticsChart
             chart={dashboardData.chart}
@@ -253,7 +253,7 @@ export default function DashboardPage() {
             timeframe={timeframe}
           />
         </div>
-        <div className="flex flex-col gap-4 lg:col-span-4">
+        <div className="flex h-full flex-col gap-4 lg:col-span-4">
           <VendorBreakdownCard breakdown={dashboardData.vendorBreakdown} />
           <TopPerformingVendors vendors={dashboardData.topPerformingVendors} />
         </div>

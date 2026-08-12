@@ -9,10 +9,10 @@ function formatRevenue(value) {
 
 export default function TopPerformingVendors({ vendors = [] }) {
   return (
-    <article className="mt-3 rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
+    <article className="flex flex-1 flex-col rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
       <h2 className="mb-4 text-[18px] font-bold text-[#18120f]">Top Performing Vendors</h2>
 
-      <div className="space-y-3">
+      <div className="flex-1 space-y-3">
         {vendors.length === 0 ? (
           <div className="rounded-[10px] border border-dashed border-[#e5dad2] px-4 py-8 text-center text-[14px] text-[#6f645d]">
             No vendor performance data available yet.

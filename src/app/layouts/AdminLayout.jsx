@@ -7,6 +7,7 @@ import {
   FileText,
   Grid2x2,
   HandCoins,
+  Home,
   LifeBuoy,
   LogOut,
   Menu,
@@ -110,6 +111,14 @@ const navigation = [
     matchPaths: ["/notifications"],
   },
   {
+    label: "Home Curation",
+    to: "/home-curation",
+    icon: Home,
+    description: "Curate homepage popular vendors, featured vendors, and products.",
+    keywords: ["homepage", "featured", "popular", "products", "vendors"],
+    matchPaths: ["/home-curation"],
+  },
+  {
     label: "Vendor Settings",
     to: "/vendors/settings",
     icon: SlidersHorizontal,
@@ -167,6 +176,10 @@ const pageMeta = {
   "/support": {
     title: "Support",
     subtitle: "Handle tickets, escalations, and operational follow-up.",
+  },
+  "/home-curation": {
+    title: "Home Curation",
+    subtitle: "Manage homepage featured shelves for the client experience.",
   },
   "/vendors/settings": {
     title: "Vendor Settings",
@@ -227,6 +240,13 @@ function getCurrentMeta(pathname) {
     return {
       title: "Vendor Settings",
       subtitle: "Manage categories, food types, occasions, and allergens for vendors.",
+    };
+  }
+
+  if (pathname.startsWith("/home-curation")) {
+    return {
+      title: "Home Curation",
+      subtitle: "Manage homepage featured shelves for popular vendors, featured vendors, and products.",
     };
   }
 

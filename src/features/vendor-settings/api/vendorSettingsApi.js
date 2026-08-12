@@ -1,9 +1,11 @@
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
 import {
   CREATE_ALLERGEN_MUTATION,
+  CREATE_DIETARY_TAG_MUTATION,
   CREATE_FOOD_TYPE_MUTATION,
   CREATE_OCCASION_MUTATION,
   CREATE_VENDOR_CATEGORY_MUTATION,
+  DELETE_DIETARY_TAG_MUTATION,
   DELETE_FOOD_TYPE_MUTATION,
   DELETE_OCCASION_MUTATION,
   DELETE_VENDOR_CATEGORY_MUTATION,
@@ -92,6 +94,29 @@ export async function saveAllergenRequest(input) {
   return unwrapSuccessfulResult(result, "allergenMutation", "Unable to save the allergen.");
 }
 
+export async function saveDietaryTagRequest(input) {
+  const variables =
+    typeof input === "string"
+      ? { name: input, isActive: true }
+      : {
+          id: input?.id || null,
+          name: input?.name || "",
+          slug: input?.slug || null,
+          isActive: typeof input?.isActive === "boolean" ? input.isActive : true,
+          sortOrder: Number.isInteger(input?.sortOrder) ? input.sortOrder : null,
+        };
+
+  const result = await executeProtectedGraphqlRequest(CREATE_DIETARY_TAG_MUTATION, {
+    input: variables,
+  });
+
+  return unwrapSuccessfulResult(
+    result,
+    "dietaryTagMutation",
+    "Unable to save the dietary tag.",
+  );
+}
+
 export async function deleteVendorCategoryRequest(id) {
   const result = await executeProtectedGraphqlRequest(DELETE_VENDOR_CATEGORY_MUTATION, { id });
   return unwrapSuccessfulResult(
@@ -109,4 +134,13 @@ export async function deleteFoodTypeRequest(id) {
 export async function deleteOccasionRequest(id) {
   const result = await executeProtectedGraphqlRequest(DELETE_OCCASION_MUTATION, { id });
   return unwrapSuccessfulResult(result, "occasionDelete", "Unable to delete the occasion.");
+}
+
+export async function deleteDietaryTagRequest(id) {
+  const result = await executeProtectedGraphqlRequest(DELETE_DIETARY_TAG_MUTATION, { id });
+  return unwrapSuccessfulResult(
+    result,
+    "dietaryTagDelete",
+    "Unable to delete the dietary tag.",
+  );
 }

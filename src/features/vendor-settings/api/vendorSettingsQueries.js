@@ -24,21 +24,12 @@ export const GET_VENDOR_SETTINGS_TAXONOMY_QUERY = `
       name
       slug
     }
-    vendorMenus(first: 100) {
-      edges {
-        node {
-          id
-          dietaryTags
-        }
-      }
-    }
-    vendorAddOns(first: 100) {
-      edges {
-        node {
-          id
-          dietaryTags
-        }
-      }
+    dietaryTags {
+      id
+      name
+      slug
+      isActive
+      sortOrder
     }
   }
 `;
@@ -117,6 +108,27 @@ export const CREATE_ALLERGEN_MUTATION = `
   }
 `;
 
+export const CREATE_DIETARY_TAG_MUTATION = `
+  mutation SaveDietaryTag($input: DietaryTagInput!) {
+    dietaryTagMutation(input: $input) {
+      success
+      message
+      instance {
+        id
+        name
+        slug
+        isActive
+        sortOrder
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }
+`;
+
 export const DELETE_VENDOR_CATEGORY_MUTATION = `
   mutation DeleteVendorCategory($id: ID!) {
     vendorCategoryDelete(id: $id) {
@@ -140,6 +152,20 @@ export const DELETE_OCCASION_MUTATION = `
     occasionDelete(id: $id) {
       success
       message
+    }
+  }
+`;
+
+export const DELETE_DIETARY_TAG_MUTATION = `
+  mutation DeleteDietaryTag($id: ID!) {
+    dietaryTagDelete(id: $id) {
+      success
+      message
+      errors {
+        field
+        message
+        code
+      }
     }
   }
 `;

@@ -2,20 +2,22 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AlarmClockPlus,
   ChefHat,
+  Leaf,
   LayoutList,
   RefreshCcw,
   ShieldAlert,
   Sparkles,
-  Tags,
   Trash2,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import {
+  deleteDietaryTagRequest,
   deleteFoodTypeRequest,
   deleteOccasionRequest,
   deleteVendorCategoryRequest,
   getVendorSettingsTaxonomyRequest,
   saveAllergenRequest,
+  saveDietaryTagRequest,
   saveFoodTypeRequest,
   saveOccasionRequest,
   saveVendorCategoryRequest,
@@ -78,6 +80,20 @@ const SECTION_CONFIG = [
     canDelete: false,
     color: "from-[#fff4f1] to-[#fffdfc]",
     accent: "bg-[#d8645d]",
+  },
+  {
+    key: "dietaryTags",
+    singularLabel: "dietary tag",
+    title: "Dietary Tags",
+    subtitle: "Controls the dietary tag choices vendors can assign to menus and add-ons.",
+    icon: Leaf,
+    emptyLabel: "No dietary tags yet.",
+    addLabel: "Add dietary tag",
+    save: saveDietaryTagRequest,
+    remove: deleteDietaryTagRequest,
+    canDelete: true,
+    color: "from-[#eefbf1] to-[#fbfffc]",
+    accent: "bg-[#49a56b]",
   },
 ];
 
@@ -263,6 +279,7 @@ export default function VendorSettingsPage() {
     foodTypes: "",
     occasions: "",
     allergens: "",
+    dietaryTags: "",
   });
   const [editingState, setEditingState] = useState({
     sectionKey: "",
@@ -333,6 +350,14 @@ export default function VendorSettingsPage() {
         value: taxonomy.allergens.length,
         hint: "Attached to vendor menu items for customer clarity",
         toneClasses: "bg-[#d8645d]",
+      },
+      {
+        id: "dietaryTags",
+        icon: Leaf,
+        label: "Dietary Tags",
+        value: taxonomy.dietaryTags.length,
+        hint: "Available in vendor dietary tag selectors",
+        toneClasses: "bg-[#49a56b]",
       },
     ],
     [taxonomy],
@@ -511,41 +536,6 @@ export default function VendorSettingsPage() {
           {stats.map((item) => (
             <StatCard key={item.id} {...item} />
           ))}
-        </div>
-      </section>
-
-      <section className="rounded-[24px] border border-[#e6dad0] bg-white p-5 shadow-[0_20px_55px_rgba(49,30,19,0.05)]">
-        <div className="flex items-start gap-4">
-          <span className="inline-flex h-12 w-12 items-center justify-center rounded-[16px] bg-[#f4f7fb] text-[#4f82d6]">
-            <Tags size={18} />
-          </span>
-          <div className="min-w-0">
-            <h2 className="text-[19px] font-black tracking-[-0.03em] text-[#201712]">
-              Dietary Tags In Use
-            </h2>
-            <p className="mt-1 text-[13px] leading-6 text-[#6f625b]">
-              The current backend exposes dietary tags as values stored on menus and add-ons, not
-              as a separate CRUD taxonomy. These are the dietary tags already present in vendor
-              content.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          {taxonomy.dietaryTags.length ? (
-            taxonomy.dietaryTags.map((tag) => (
-              <span
-                className="inline-flex items-center rounded-full border border-[#d8e4f7] bg-[#f3f8ff] px-3 py-1.5 text-[12px] font-semibold text-[#376ab4]"
-                key={tag}
-              >
-                {tag}
-              </span>
-            ))
-          ) : (
-            <p className="text-[13px] font-medium text-[#7a6d64]">
-              No dietary tags are currently present in saved vendor content.
-            </p>
-          )}
         </div>
       </section>
 

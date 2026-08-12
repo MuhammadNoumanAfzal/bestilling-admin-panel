@@ -36,22 +36,15 @@ export function mapVendorSettingsTaxonomy(data) {
     meta: item.slug ? `Slug: ${item.slug}` : "Shown on vendor menu item allergen pickers",
   }));
 
-  const dietaryTagSet = new Set();
-
-  [...getEdgeNodes(data?.vendorMenus), ...getEdgeNodes(data?.vendorAddOns)].forEach((item) => {
-    safeArray(item?.dietaryTags).forEach((tag) => {
-      const normalized = normalizeLabel(tag);
-      if (normalized) {
-        dietaryTagSet.add(normalized);
-      }
-    });
-  });
-
   return {
     categories,
     foodTypes,
     occasions,
     allergens,
-    dietaryTags: Array.from(dietaryTagSet).sort((left, right) => left.localeCompare(right)),
+    dietaryTags: safeArray(data?.dietaryTags).map((item) => ({
+      id: item.id || item.slug || item.name,
+      name: normalizeLabel(item.name) || normalizeLabel(item.slug),
+      meta: item.slug ? `Slug: ${item.slug}` : "Shown in vendor dietary tag selectors",
+    })),
   };
 }

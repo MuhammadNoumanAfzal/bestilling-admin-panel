@@ -165,6 +165,12 @@ export default function HomeCurationPage() {
           vendor.id === item.id ? { ...vendor, isPopular: true } : vendor,
         ),
       }));
+      await Swal.fire({
+        icon: "success",
+        title: "Added to Popular Vendors",
+        text: `${item.name} will now appear in the Popular Vendors homepage section.`,
+        confirmButtonColor: "#cf6e38",
+      });
     } catch (error) {
       await Swal.fire({
         icon: "error",
@@ -226,6 +232,12 @@ export default function HomeCurationPage() {
           vendor.id === item.id ? { ...vendor, isFeatured: true } : vendor,
         ),
       }));
+      await Swal.fire({
+        icon: "success",
+        title: "Added to Featured Vendors",
+        text: `${item.name} will now appear in the Featured Vendors homepage section.`,
+        confirmButtonColor: "#cf6e38",
+      });
     } catch (error) {
       await Swal.fire({
         icon: "error",
@@ -284,6 +296,12 @@ export default function HomeCurationPage() {
           product.id === item.id ? { ...product, isPopular: true } : product,
         ),
       }));
+      await Swal.fire({
+        icon: "success",
+        title: "Added to Popular Products",
+        text: `${item.name} will now appear in the Popular Products homepage section.`,
+        confirmButtonColor: "#cf6e38",
+      });
     } catch (error) {
       await Swal.fire({
         icon: "error",

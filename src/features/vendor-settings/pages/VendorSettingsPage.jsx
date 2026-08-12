@@ -1,28 +1,59 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   AlarmClockPlus,
+  Banknote,
   ChefHat,
-  Leaf,
+  Clock3,
+  Globe2,
+  Languages,
   LayoutList,
+  Leaf,
   RefreshCcw,
   ShieldAlert,
   Sparkles,
+  Store,
   Trash2,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import {
+  deleteBusinessTypeRequest,
+  deleteCuisineTypeRequest,
+  deleteCurrencyRequest,
   deleteDietaryTagRequest,
   deleteFoodTypeRequest,
+  deleteLanguageRequest,
   deleteOccasionRequest,
+  deleteTimeZoneRequest,
   deleteVendorCategoryRequest,
   getVendorSettingsTaxonomyRequest,
   saveAllergenRequest,
+  saveBusinessTypeRequest,
+  saveCuisineTypeRequest,
+  saveCurrencyRequest,
   saveDietaryTagRequest,
   saveFoodTypeRequest,
+  saveLanguageRequest,
   saveOccasionRequest,
+  saveTimeZoneRequest,
   saveVendorCategoryRequest,
 } from "../api/vendorSettingsApi.js";
 import { mapVendorSettingsTaxonomy } from "../api/vendorSettingsMappers.js";
+
+const SECTION_GROUPS = [
+  {
+    key: "menuTaxonomies",
+    title: "Menu Taxonomies",
+    subtitle: "Controls what vendors can pick while creating menus, add-ons, and menu items.",
+    sectionKeys: ["categories", "foodTypes", "occasions", "allergens", "dietaryTags"],
+  },
+  {
+    key: "vendorProfileMasterData",
+    title: "Vendor Profile Master Data",
+    subtitle:
+      "Controls the approved options vendors can select for operating information and regional preferences.",
+    sectionKeys: ["cuisineTypes", "businessTypes", "languages", "currencies", "timeZones"],
+  },
+];
 
 const SECTION_CONFIG = [
   {
@@ -35,9 +66,19 @@ const SECTION_CONFIG = [
     addLabel: "Add category",
     save: saveVendorCategoryRequest,
     remove: deleteVendorCategoryRequest,
+    deleteKey: "id",
     canDelete: true,
     color: "from-[#fff2e8] to-[#fffaf6]",
     accent: "bg-[#cf6e38]",
+    fields: [
+      {
+        key: "name",
+        label: "Category Name",
+        placeholder: "Buffet, Desserts, Drinks...",
+        required: true,
+        type: "text",
+      },
+    ],
   },
   {
     key: "foodTypes",
@@ -49,9 +90,19 @@ const SECTION_CONFIG = [
     addLabel: "Add food type",
     save: saveFoodTypeRequest,
     remove: deleteFoodTypeRequest,
+    deleteKey: "id",
     canDelete: true,
     color: "from-[#eef6ff] to-[#f9fcff]",
     accent: "bg-[#4d86d9]",
+    fields: [
+      {
+        key: "name",
+        label: "Food Type Name",
+        placeholder: "Italian, BBQ, Breakfast...",
+        required: true,
+        type: "text",
+      },
+    ],
   },
   {
     key: "occasions",
@@ -63,9 +114,19 @@ const SECTION_CONFIG = [
     addLabel: "Add occasion",
     save: saveOccasionRequest,
     remove: deleteOccasionRequest,
+    deleteKey: "id",
     canDelete: true,
     color: "from-[#eefbf3] to-[#fbfffd]",
     accent: "bg-[#3a9b63]",
+    fields: [
+      {
+        key: "name",
+        label: "Occasion Name",
+        placeholder: "Wedding, Conference, Birthday...",
+        required: true,
+        type: "text",
+      },
+    ],
   },
   {
     key: "allergens",
@@ -77,9 +138,19 @@ const SECTION_CONFIG = [
     addLabel: "Add allergen",
     save: saveAllergenRequest,
     remove: null,
+    deleteKey: "id",
     canDelete: false,
     color: "from-[#fff4f1] to-[#fffdfc]",
     accent: "bg-[#d8645d]",
+    fields: [
+      {
+        key: "name",
+        label: "Allergen Name",
+        placeholder: "Gluten, Milk, Soy...",
+        required: true,
+        type: "text",
+      },
+    ],
   },
   {
     key: "dietaryTags",
@@ -91,11 +162,362 @@ const SECTION_CONFIG = [
     addLabel: "Add dietary tag",
     save: saveDietaryTagRequest,
     remove: deleteDietaryTagRequest,
+    deleteKey: "id",
     canDelete: true,
     color: "from-[#eefbf1] to-[#fbfffc]",
     accent: "bg-[#49a56b]",
+    fields: [
+      {
+        key: "name",
+        label: "Dietary Tag Name",
+        placeholder: "Vegan, Halal, Gluten-Free...",
+        required: true,
+        type: "text",
+      },
+      {
+        key: "sortOrder",
+        label: "Sort Order",
+        placeholder: "0",
+        required: false,
+        type: "number",
+      },
+      {
+        key: "isActive",
+        label: "Active",
+        required: false,
+        type: "checkbox",
+      },
+    ],
+  },
+  {
+    key: "cuisineTypes",
+    singularLabel: "cuisine type",
+    title: "Cuisine Types",
+    subtitle: "Controls the approved cuisine options in the vendor operating information panel.",
+    icon: ChefHat,
+    emptyLabel: "No cuisine types yet.",
+    addLabel: "Add cuisine type",
+    save: saveCuisineTypeRequest,
+    remove: deleteCuisineTypeRequest,
+    deleteKey: "id",
+    canDelete: true,
+    color: "from-[#fff5e8] to-[#fffdf7]",
+    accent: "bg-[#d78938]",
+    fields: [
+      {
+        key: "name",
+        label: "Cuisine Type Name",
+        placeholder: "Italian, Asian Fusion, Nordic...",
+        required: true,
+        type: "text",
+      },
+      {
+        key: "sortOrder",
+        label: "Sort Order",
+        placeholder: "0",
+        required: false,
+        type: "number",
+      },
+      {
+        key: "isActive",
+        label: "Active",
+        required: false,
+        type: "checkbox",
+      },
+    ],
+  },
+  {
+    key: "businessTypes",
+    singularLabel: "business type",
+    title: "Business Types",
+    subtitle: "Controls the approved business type options vendors can choose from.",
+    icon: Store,
+    emptyLabel: "No business types yet.",
+    addLabel: "Add business type",
+    save: saveBusinessTypeRequest,
+    remove: deleteBusinessTypeRequest,
+    deleteKey: "id",
+    canDelete: true,
+    color: "from-[#eef5ff] to-[#fbfdff]",
+    accent: "bg-[#527ec9]",
+    fields: [
+      {
+        key: "name",
+        label: "Business Type Name",
+        placeholder: "Catering Company, Restaurant, Bakery...",
+        required: true,
+        type: "text",
+      },
+      {
+        key: "sortOrder",
+        label: "Sort Order",
+        placeholder: "0",
+        required: false,
+        type: "number",
+      },
+      {
+        key: "isActive",
+        label: "Active",
+        required: false,
+        type: "checkbox",
+      },
+    ],
+  },
+  {
+    key: "languages",
+    singularLabel: "language",
+    title: "Languages",
+    subtitle: "Controls which language options are available in vendor language settings.",
+    icon: Languages,
+    emptyLabel: "No languages yet.",
+    addLabel: "Add language",
+    save: saveLanguageRequest,
+    remove: deleteLanguageRequest,
+    deleteKey: "code",
+    canDelete: true,
+    color: "from-[#eefbf8] to-[#fcfffe]",
+    accent: "bg-[#33a08b]",
+    fields: [
+      {
+        key: "code",
+        label: "Language Code",
+        placeholder: "en, no, ur...",
+        required: true,
+        type: "text",
+      },
+      {
+        key: "label",
+        label: "Language Label",
+        placeholder: "English, Norwegian, Urdu...",
+        required: true,
+        type: "text",
+      },
+      {
+        key: "sortOrder",
+        label: "Sort Order",
+        placeholder: "0",
+        required: false,
+        type: "number",
+      },
+      {
+        key: "isActive",
+        label: "Active",
+        required: false,
+        type: "checkbox",
+      },
+    ],
+  },
+  {
+    key: "currencies",
+    singularLabel: "currency",
+    title: "Currencies",
+    subtitle: "Controls which currency options vendors can select for their region preferences.",
+    icon: Banknote,
+    emptyLabel: "No currencies yet.",
+    addLabel: "Add currency",
+    save: saveCurrencyRequest,
+    remove: deleteCurrencyRequest,
+    deleteKey: "code",
+    canDelete: true,
+    color: "from-[#fff4ea] to-[#fffdf8]",
+    accent: "bg-[#d67d43]",
+    fields: [
+      {
+        key: "code",
+        label: "Currency Code",
+        placeholder: "NOK, USD, EUR...",
+        required: true,
+        type: "text",
+      },
+      {
+        key: "label",
+        label: "Currency Label",
+        placeholder: "Norwegian Krone, US Dollar...",
+        required: true,
+        type: "text",
+      },
+      {
+        key: "symbol",
+        label: "Symbol",
+        placeholder: "kr, $, €...",
+        required: false,
+        type: "text",
+      },
+      {
+        key: "sortOrder",
+        label: "Sort Order",
+        placeholder: "0",
+        required: false,
+        type: "number",
+      },
+      {
+        key: "isActive",
+        label: "Active",
+        required: false,
+        type: "checkbox",
+      },
+    ],
+  },
+  {
+    key: "timeZones",
+    singularLabel: "time zone",
+    title: "Time Zones",
+    subtitle: "Controls the approved delivery and operating time-zone selections for vendors.",
+    icon: Clock3,
+    emptyLabel: "No time zones yet.",
+    addLabel: "Add time zone",
+    save: saveTimeZoneRequest,
+    remove: deleteTimeZoneRequest,
+    deleteKey: "value",
+    canDelete: true,
+    color: "from-[#f1f5ff] to-[#fbfcff]",
+    accent: "bg-[#5b72d6]",
+    fields: [
+      {
+        key: "value",
+        label: "Time Zone Value",
+        placeholder: "Europe/Oslo, UTC...",
+        required: true,
+        type: "text",
+      },
+      {
+        key: "label",
+        label: "Time Zone Label",
+        placeholder: "(GMT+01:00) Europe/Oslo",
+        required: true,
+        type: "text",
+      },
+      {
+        key: "utcOffset",
+        label: "UTC Offset",
+        placeholder: "+01:00",
+        required: false,
+        type: "text",
+      },
+      {
+        key: "sortOrder",
+        label: "Sort Order",
+        placeholder: "0",
+        required: false,
+        type: "number",
+      },
+      {
+        key: "isActive",
+        label: "Active",
+        required: false,
+        type: "checkbox",
+      },
+    ],
   },
 ];
+
+const SECTION_MAP = SECTION_CONFIG.reduce((accumulator, section) => {
+  accumulator[section.key] = section;
+  return accumulator;
+}, {});
+
+function normalizeString(value) {
+  return String(value || "").trim();
+}
+
+function createEmptyDraft(section) {
+  return section.fields.reduce((accumulator, field) => {
+    accumulator[field.key] = field.type === "checkbox" ? true : "";
+    return accumulator;
+  }, {});
+}
+
+function createDraftState() {
+  return SECTION_CONFIG.reduce((accumulator, section) => {
+    accumulator[section.key] = createEmptyDraft(section);
+    return accumulator;
+  }, {});
+}
+
+function getItemInitialValues(section, item) {
+  const raw = item?.raw || {};
+
+  return section.fields.reduce((accumulator, field) => {
+    if (field.type === "checkbox") {
+      accumulator[field.key] = Boolean(raw[field.key]);
+      return accumulator;
+    }
+
+    accumulator[field.key] = raw[field.key] == null ? "" : String(raw[field.key]);
+    return accumulator;
+  }, {});
+}
+
+function validateValues(section, values) {
+  const missingField = section.fields.find(
+    (field) =>
+      field.required &&
+      field.type !== "checkbox" &&
+      !normalizeString(values[field.key]),
+  );
+
+  return missingField ? missingField.label : "";
+}
+
+function buildPayload(section, values, item) {
+  const payload = {};
+
+  section.fields.forEach((field) => {
+    const rawValue = values[field.key];
+
+    if (field.type === "checkbox") {
+      payload[field.key] = Boolean(rawValue);
+      return;
+    }
+
+    if (field.type === "number") {
+      const normalized = normalizeString(rawValue);
+      payload[field.key] = normalized ? Number(normalized) : null;
+      return;
+    }
+
+    payload[field.key] = normalizeString(rawValue);
+  });
+
+  if (item?.raw?.id) {
+    payload.id = item.raw.id;
+  }
+
+  return payload;
+}
+
+function renderFieldInput({ field, value, onChange, autoFocus = false }) {
+  if (field.type === "checkbox") {
+    return (
+      <label className="flex h-11 items-center gap-3 rounded-[12px] border border-[#dfd2c8] bg-white px-3.5 text-[13px] font-semibold text-[#312721]">
+        <input
+          autoFocus={autoFocus}
+          checked={Boolean(value)}
+          className="h-4 w-4 accent-[#cf6e38]"
+          onChange={(event) => onChange(field.key, event.target.checked)}
+          type="checkbox"
+        />
+        <span>{field.label}</span>
+      </label>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8d7c70]">
+        {field.label}
+      </p>
+      <input
+        autoFocus={autoFocus}
+        className="h-11 w-full rounded-[12px] border border-[#dfd2c8] bg-white px-3.5 text-[14px] text-[#231913] outline-none transition placeholder:text-[#a28f82] focus:border-[#ce6938] focus:shadow-[0_0_0_4px_rgba(206,105,56,0.10)]"
+        onChange={(event) => onChange(field.key, event.target.value)}
+        placeholder={field.placeholder}
+        type={field.type === "number" ? "number" : "text"}
+        value={value}
+      />
+    </div>
+  );
+}
 
 function StatCard({ icon: Icon, label, value, hint, toneClasses }) {
   return (
@@ -124,10 +546,9 @@ function StatCard({ icon: Icon, label, value, hint, toneClasses }) {
 function SectionCard({
   section,
   items,
-  draftValue,
+  draftValues,
   savingKey,
-  editingItemId,
-  editingValue,
+  editingState,
   onDraftChange,
   onCreate,
   onStartEdit,
@@ -161,13 +582,20 @@ function SectionCard({
           </div>
         </div>
 
-        <div className="mt-5 flex flex-col gap-3 md:flex-row">
-          <input
-            className="h-12 flex-1 rounded-[14px] border border-white/70 bg-white/88 px-4 text-[14px] text-[#231913] outline-none transition placeholder:text-[#a28f82] focus:border-[#e8d5c6] focus:bg-white focus:shadow-[0_0_0_4px_rgba(206,105,56,0.10)]"
-            onChange={(event) => onDraftChange(section.key, event.target.value)}
-            placeholder={`Type a ${section.singularLabel} name`}
-            value={draftValue}
-          />
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {section.fields.map((field, index) => (
+            <div className={field.type === "checkbox" ? "md:self-end" : ""} key={field.key}>
+              {renderFieldInput({
+                field,
+                value: draftValues[field.key],
+                onChange: (fieldKey, value) => onDraftChange(section.key, fieldKey, value),
+                autoFocus: index === 0,
+              })}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 flex justify-end">
           <button
             className="inline-flex h-12 min-w-[156px] cursor-pointer items-center justify-center rounded-[14px] bg-[#1f1712] px-5 text-[13px] font-bold text-white transition hover:bg-[#34251d] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSavingCreate}
@@ -183,7 +611,8 @@ function SectionCard({
         {items.length ? (
           <div className="grid gap-3 md:grid-cols-2">
             {items.map((item) => {
-              const isEditing = editingItemId === item.id;
+              const isEditing =
+                editingState.sectionKey === section.key && editingState.itemId === item.id;
               const isSavingEdit = savingKey === `${section.key}:edit:${item.id}`;
               const isDeleting = savingKey === `${section.key}:delete:${item.id}`;
 
@@ -194,12 +623,18 @@ function SectionCard({
                 >
                   {isEditing ? (
                     <div className="space-y-3">
-                      <input
-                        autoFocus
-                        className="h-11 w-full rounded-[12px] border border-[#dfd2c8] bg-white px-3.5 text-[14px] text-[#231913] outline-none transition focus:border-[#ce6938] focus:shadow-[0_0_0_4px_rgba(206,105,56,0.10)]"
-                        onChange={(event) => onEditingValueChange(event.target.value)}
-                        value={editingValue}
-                      />
+                      <div className="grid gap-3 md:grid-cols-2">
+                        {section.fields.map((field, index) => (
+                          <div key={field.key}>
+                            {renderFieldInput({
+                              field,
+                              value: editingState.values[field.key],
+                              onChange: onEditingValueChange,
+                              autoFocus: index === 0,
+                            })}
+                          </div>
+                        ))}
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         <button
                           className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[11px] bg-[#d16737] px-4 text-[12px] font-bold text-white transition hover:bg-[#c05c2f] disabled:cursor-not-allowed disabled:opacity-60"
@@ -221,7 +656,16 @@ function SectionCard({
                   ) : (
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-[15px] font-bold text-[#251b15]">{item.name}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-[15px] font-bold text-[#251b15]">
+                            {item.name}
+                          </p>
+                          {item.raw?.isActive === false ? (
+                            <span className="rounded-full border border-[#ead1c5] bg-[#fff1ea] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#bf6b42]">
+                              Inactive
+                            </span>
+                          ) : null}
+                        </div>
                         <p className="mt-1 text-[12px] leading-5 text-[#86786f]">{item.meta}</p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
@@ -273,18 +717,17 @@ export default function VendorSettingsPage() {
     occasions: [],
     allergens: [],
     dietaryTags: [],
+    cuisineTypes: [],
+    businessTypes: [],
+    languages: [],
+    currencies: [],
+    timeZones: [],
   });
-  const [drafts, setDrafts] = useState({
-    categories: "",
-    foodTypes: "",
-    occasions: "",
-    allergens: "",
-    dietaryTags: "",
-  });
+  const [drafts, setDrafts] = useState(createDraftState);
   const [editingState, setEditingState] = useState({
     sectionKey: "",
     itemId: "",
-    value: "",
+    values: {},
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -324,7 +767,7 @@ export default function VendorSettingsPage() {
         icon: LayoutList,
         label: "Categories",
         value: taxonomy.categories.length,
-        hint: "Visible in vendor menu and add-on forms",
+        hint: "Menu and add-on grouping",
         toneClasses: "bg-[#d46f3d]",
       },
       {
@@ -332,49 +775,78 @@ export default function VendorSettingsPage() {
         icon: ChefHat,
         label: "Food Types",
         value: taxonomy.foodTypes.length,
-        hint: "Used for browse and vendor menu classification",
+        hint: "Browse and menu classification",
         toneClasses: "bg-[#5b8fe0]",
-      },
-      {
-        id: "occasions",
-        icon: AlarmClockPlus,
-        label: "Occasions",
-        value: taxonomy.occasions.length,
-        hint: "Shown in vendor occasion selectors",
-        toneClasses: "bg-[#43a26d]",
-      },
-      {
-        id: "allergens",
-        icon: ShieldAlert,
-        label: "Allergens",
-        value: taxonomy.allergens.length,
-        hint: "Attached to vendor menu items for customer clarity",
-        toneClasses: "bg-[#d8645d]",
       },
       {
         id: "dietaryTags",
         icon: Leaf,
         label: "Dietary Tags",
         value: taxonomy.dietaryTags.length,
-        hint: "Available in vendor dietary tag selectors",
+        hint: "Menu dietary tag selectors",
         toneClasses: "bg-[#49a56b]",
+      },
+      {
+        id: "cuisineTypes",
+        icon: Globe2,
+        label: "Cuisine Types",
+        value: taxonomy.cuisineTypes.length,
+        hint: "Vendor operating info options",
+        toneClasses: "bg-[#d78938]",
+      },
+      {
+        id: "languages",
+        icon: Languages,
+        label: "Languages",
+        value: taxonomy.languages.length,
+        hint: "Vendor language choices",
+        toneClasses: "bg-[#33a08b]",
+      },
+      {
+        id: "currencies",
+        icon: Banknote,
+        label: "Currencies",
+        value: taxonomy.currencies.length,
+        hint: "Region and pricing preferences",
+        toneClasses: "bg-[#d67d43]",
+      },
+      {
+        id: "timeZones",
+        icon: Clock3,
+        label: "Time Zones",
+        value: taxonomy.timeZones.length,
+        hint: "Operating and delivery timing",
+        toneClasses: "bg-[#5b72d6]",
+      },
+      {
+        id: "businessTypes",
+        icon: Store,
+        label: "Business Types",
+        value: taxonomy.businessTypes.length,
+        hint: "Approved vendor business models",
+        toneClasses: "bg-[#527ec9]",
       },
     ],
     [taxonomy],
   );
 
-  function updateDraft(sectionKey, value) {
+  function updateDraft(sectionKey, fieldKey, value) {
     setDrafts((current) => ({
       ...current,
-      [sectionKey]: value,
+      [sectionKey]: {
+        ...current[sectionKey],
+        [fieldKey]: value,
+      },
     }));
   }
 
   function startEditing(sectionKey, item) {
+    const section = SECTION_MAP[sectionKey];
+
     setEditingState({
       sectionKey,
       itemId: item.id,
-      value: item.name,
+      values: getItemInitialValues(section, item),
     });
   }
 
@@ -382,18 +854,19 @@ export default function VendorSettingsPage() {
     setEditingState({
       sectionKey: "",
       itemId: "",
-      value: "",
+      values: {},
     });
   }
 
   async function handleCreate(section) {
-    const nextValue = String(drafts[section.key] || "").trim();
+    const values = drafts[section.key];
+    const missingField = validateValues(section, values);
 
-    if (!nextValue) {
+    if (missingField) {
       await Swal.fire({
         icon: "warning",
         title: "Missing value",
-        text: `Please enter a name before adding a new ${section.singularLabel}.`,
+        text: `Please complete ${missingField} before adding a new ${section.singularLabel}.`,
         confirmButtonColor: "#cf6e38",
       });
       return;
@@ -401,13 +874,16 @@ export default function VendorSettingsPage() {
 
     try {
       setSavingKey(`${section.key}:create`);
-      await section.save(nextValue);
-      updateDraft(section.key, "");
+      await section.save(buildPayload(section, values));
+      setDrafts((current) => ({
+        ...current,
+        [section.key]: createEmptyDraft(section),
+      }));
       await loadVendorSettings({ silent: true });
       await Swal.fire({
         icon: "success",
         title: `${section.singularLabel} added`,
-        text: `${nextValue} is now available on the vendor side.`,
+        text: `${section.title} now includes the new option on the vendor side.`,
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
@@ -423,13 +899,14 @@ export default function VendorSettingsPage() {
   }
 
   async function handleSaveEdit(section, item) {
-    const nextValue = String(editingState.value || "").trim();
+    const values = editingState.values;
+    const missingField = validateValues(section, values);
 
-    if (!nextValue) {
+    if (missingField) {
       await Swal.fire({
         icon: "warning",
         title: "Missing value",
-        text: "Please enter a name before saving your changes.",
+        text: `Please complete ${missingField} before saving your changes.`,
         confirmButtonColor: "#cf6e38",
       });
       return;
@@ -437,7 +914,7 @@ export default function VendorSettingsPage() {
 
     try {
       setSavingKey(`${section.key}:edit:${item.id}`);
-      await section.save({ id: item.id, name: nextValue });
+      await section.save(buildPayload(section, values, item));
       cancelEditing();
       await loadVendorSettings({ silent: true });
       await Swal.fire({
@@ -465,7 +942,7 @@ export default function VendorSettingsPage() {
 
     const result = await Swal.fire({
       title: `Delete ${item.name}?`,
-      text: `This will remove it from future vendor selections.`,
+      text: "This will remove it from future vendor selections.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Delete",
@@ -480,7 +957,8 @@ export default function VendorSettingsPage() {
 
     try {
       setSavingKey(`${section.key}:delete:${item.id}`);
-      await section.remove(item.id);
+      const deleteValue = item?.raw?.[section.deleteKey] || item.id;
+      await section.remove(deleteValue);
       if (editingState.itemId === item.id) {
         cancelEditing();
       }
@@ -507,17 +985,18 @@ export default function VendorSettingsPage() {
     <div className="space-y-6">
       <section className="overflow-hidden rounded-[28px] border border-[#eaded3] bg-[linear-gradient(135deg,#fff6ef_0%,#fffdfa_50%,#f8fbff_100%)] p-6 shadow-[0_24px_60px_rgba(49,30,19,0.06)]">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-[760px]">
+          <div className="max-w-[820px]">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#eed7c8] bg-white/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#bf6739]">
               <Sparkles size={12} />
               Vendor panel data controls
             </div>
             <h1 className="mt-4 text-[34px] font-black tracking-[-0.05em] text-[#1b140f]">
-              Vendor Settings
+              Vendor Settings Master Data
             </h1>
             <p className="mt-2 text-[15px] leading-7 text-[#6f645d]">
-              Manage the shared menu taxonomies vendors see while creating menus and add-ons.
-              Changes saved here flow into the vendor panel through the same API-backed selectors.
+              Manage both vendor menu taxonomies and vendor profile master data from one place.
+              Changes saved here flow into the vendor panel through API-backed selectors for menus,
+              operating information, and language or region preferences.
             </p>
           </div>
 
@@ -532,7 +1011,7 @@ export default function VendorSettingsPage() {
           </button>
         </div>
 
-        <div className="mt-6 grid gap-3 xl:grid-cols-4">
+        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {stats.map((item) => (
             <StatCard key={item.id} {...item} />
           ))}
@@ -549,31 +1028,51 @@ export default function VendorSettingsPage() {
           ))}
         </div>
       ) : (
-        <div className="grid gap-5">
-          {SECTION_CONFIG.map((section) => (
-            <SectionCard
-              section={section}
-              items={taxonomy[section.key]}
-              draftValue={drafts[section.key]}
-              savingKey={savingKey}
-              editingItemId={editingState.sectionKey === section.key ? editingState.itemId : ""}
-              editingValue={editingState.sectionKey === section.key ? editingState.value : ""}
-              key={section.key}
-              onCancelEdit={cancelEditing}
-              onCreate={handleCreate}
-              onDelete={handleDelete}
-              onDraftChange={updateDraft}
-              onEditingValueChange={(value) =>
-                setEditingState((current) => ({
-                  ...current,
-                  value,
-                }))
-              }
-              onSaveEdit={handleSaveEdit}
-              onStartEdit={startEditing}
-            />
-          ))}
-        </div>
+        SECTION_GROUPS.map((group) => (
+          <section
+            className="rounded-[26px] border border-[#e7ddd4] bg-[#fffdfb] p-5 shadow-[0_20px_55px_rgba(49,30,19,0.05)]"
+            key={group.key}
+          >
+            <div className="mb-5">
+              <h2 className="text-[24px] font-black tracking-[-0.04em] text-[#1d1510]">
+                {group.title}
+              </h2>
+              <p className="mt-1 text-[14px] leading-6 text-[#72675f]">{group.subtitle}</p>
+            </div>
+
+            <div className="grid gap-5">
+              {group.sectionKeys.map((sectionKey) => {
+                const section = SECTION_MAP[sectionKey];
+
+                return (
+                  <SectionCard
+                    section={section}
+                    items={taxonomy[section.key]}
+                    draftValues={drafts[section.key]}
+                    savingKey={savingKey}
+                    editingState={editingState}
+                    key={section.key}
+                    onCancelEdit={cancelEditing}
+                    onCreate={handleCreate}
+                    onDelete={handleDelete}
+                    onDraftChange={updateDraft}
+                    onEditingValueChange={(fieldKey, value) =>
+                      setEditingState((current) => ({
+                        ...current,
+                        values: {
+                          ...current.values,
+                          [fieldKey]: value,
+                        },
+                      }))
+                    }
+                    onSaveEdit={handleSaveEdit}
+                    onStartEdit={startEditing}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        ))
       )}
     </div>
   );

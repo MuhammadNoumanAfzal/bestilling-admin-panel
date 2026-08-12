@@ -1,4 +1,9 @@
 function SearchResultCard({ item, itemType, onAdd }) {
+  const secondaryText =
+    itemType === "product"
+      ? `${item.vendor?.name || "Unknown vendor"}${item.priceLabel ? ` - ${item.priceLabel}` : ""}`
+      : `${item.city || "Unknown city"}${item.deliveryFeeLabel ? ` - ${item.deliveryFeeLabel}` : ""}`;
+
   return (
     <button
       className="flex w-full cursor-pointer items-center gap-3 rounded-[16px] border border-[#ece2da] bg-[#fffdfa] p-3 text-left transition hover:border-[#d8c6ba] hover:bg-white"
@@ -12,11 +17,7 @@ function SearchResultCard({ item, itemType, onAdd }) {
       />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[14px] font-bold text-[#241912]">{item.name}</span>
-        <span className="mt-1 block truncate text-[12px] text-[#7d7068]">
-          {itemType === "product"
-            ? `${item.vendor?.name || "Unknown vendor"}${item.priceLabel ? ` · ${item.priceLabel}` : ""}`
-            : `${item.city || "Unknown city"}${item.deliveryFeeLabel ? ` · ${item.deliveryFeeLabel}` : ""}`}
-        </span>
+        <span className="mt-1 block truncate text-[12px] text-[#7d7068]">{secondaryText}</span>
       </span>
       <span className="rounded-full bg-[#1f1712] px-3 py-1.5 text-[11px] font-bold text-white">
         Add

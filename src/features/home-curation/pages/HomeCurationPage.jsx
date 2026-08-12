@@ -47,6 +47,10 @@ function upsertById(items, nextItem) {
   return exists ? items.map((item) => (item.id === nextItem.id ? nextItem : item)) : [nextItem, ...items];
 }
 
+function isActiveProduct(item) {
+  return `${item?.menuStatus || ""}`.trim().toLowerCase() === "active";
+}
+
 export default function HomeCurationPage() {
   const [collections, setCollections] = useState(initialCollections);
   const [options, setOptions] = useState(initialOptions);
@@ -135,6 +139,7 @@ export default function HomeCurationPage() {
   const filteredPopularProductOptions = useMemo(() => {
     const selectedIds = new Set(collections.popularProducts.map((item) => item.id));
     return options.products
+      .filter(isActiveProduct)
       .filter((item) => !selectedIds.has(item.id))
       .filter((item) => matchesSearch(item, searchState.popularProducts, "product"))
       .slice(0, 8);

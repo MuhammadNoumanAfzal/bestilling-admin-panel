@@ -1,6 +1,10 @@
-export default function HomeCurationStatCard({ label, value, hint, icon: Icon, toneClass }) {
+export default function HomeCurationStatCard({ label, value, hint, icon: Icon, toneClass, onClick }) {
   return (
-    <div className="rounded-[20px] border border-[#e8ddd5] bg-white p-4 shadow-[0_18px_45px_rgba(49,30,19,0.05)]">
+    <button
+      className="rounded-[20px] border border-[#e8ddd5] bg-white p-4 text-left shadow-[0_18px_45px_rgba(49,30,19,0.05)] transition hover:-translate-y-0.5 hover:border-[#e0cdbf] hover:shadow-[0_22px_50px_rgba(49,30,19,0.08)]"
+      onClick={onClick}
+      type="button"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#9d897b]">
@@ -18,6 +22,6 @@ export default function HomeCurationStatCard({ label, value, hint, icon: Icon, t
           <Icon size={18} />
         </span>
       </div>
-    </div>
+    </button>
   );
 }

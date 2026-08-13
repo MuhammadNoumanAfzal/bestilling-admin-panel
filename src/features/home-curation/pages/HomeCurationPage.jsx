@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { RefreshCcw, Sparkles, Star, Store, UtensilsCrossed } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowDown, ArrowUp, RefreshCcw, Sparkles, Star, Store, UtensilsCrossed } from "lucide-react";
 import Swal from "sweetalert2";
 import {
   getAdminHomeCurationPageRequest,
@@ -58,6 +58,9 @@ export default function HomeCurationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [busyKey, setBusyKey] = useState("");
+  const [showScrollUp, setShowScrollUp] = useState(false);
+  const [showScrollDown, setShowScrollDown] = useState(true);
+  const sectionRefs = useRef({});
 
   async function loadPage({ silent = false } = {}) {
     if (silent) {
@@ -90,6 +93,23 @@ export default function HomeCurationPage() {
     loadPage();
   }, []);
 
+  useEffect(() => {
+    function handleScroll() {
+      const scrollTop = window.scrollY;
+      const maxScrollTop = document.documentElement.scrollHeight - window.innerHeight;
+
+      setShowScrollUp(scrollTop > 320);
+      setShowScrollDown(scrollTop < maxScrollTop - 320);
+    }
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   const stats = useMemo(
     () => [
       {
@@ -119,6 +139,49 @@ export default function HomeCurationPage() {
     ],
     [collections],
   );
+
+  function scrollToSection(sectionKey) {
+    const target = sectionRefs.current[sectionKey];
+
+    if (!target) {
+      return;
+    }
+
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
+  function scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function scrollDown() {
+    const orderedSections = [
+      sectionRefs.current["popular-vendors"],
+      sectionRefs.current["featured-vendors"],
+      sectionRefs.current["popular-products"],
+    ].filter(Boolean);
+
+    const nextSection = orderedSections.find((section) => section.getBoundingClientRect().top > 140);
+
+    if (nextSection) {
+      nextSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      return;
+    }
+
+    window.scrollBy({
+      top: window.innerHeight * 0.9,
+      behavior: "smooth",
+    });
+  }
 
   const filteredPopularVendorOptions = useMemo(() => {
     const selectedIds = new Set(collections.popularVendors.map((item) => item.id));
@@ -371,7 +434,11 @@ export default function HomeCurationPage() {
 
         <div className="mt-6 grid gap-3 xl:grid-cols-3">
           {stats.map((item) => (
-            <HomeCurationStatCard key={item.id} {...item} />
+            <HomeCurationStatCard
+              key={item.id}
+              {...item}
+              onClick={() => scrollToSection(item.id)}
+            />
           ))}
         </div>
       </section>
@@ -387,58 +454,103 @@ export default function HomeCurationPage() {
         </div>
       ) : (
         <div className="grid gap-5">
-          <CurationCollectionSection
-            emptyState="No vendors are currently marked as popular."
-            filteredOptions={filteredPopularVendorOptions}
-            itemType="vendor"
-            items={collections.popularVendors}
-            onAdd={handleAddPopularVendor}
-            onRemove={handleRemovePopularVendor}
-            onSearchChange={(value) =>
-              setSearchState((current) => ({ ...current, popularVendors: value }))
-            }
-            removeLabel={busyKey ? "Update flag" : "Remove Popular"}
-            searchPlaceholder="Search vendors to add into Popular Vendors"
-            searchValue={searchState.popularVendors}
-            subtitle="These vendors feed the Popular Vendors row on the client homepage."
-            title="Popular Vendors"
-          />
+          <div
+            className="scroll-mt-24"
+            ref={(node) => {
+              sectionRefs.current["popular-vendors"] = node;
+            }}
+          >
+            <CurationCollectionSection
+              emptyState="No vendors are currently marked as popular."
+              filteredOptions={filteredPopularVendorOptions}
+              itemType="vendor"
+              items={collections.popularVendors}
+              onAdd={handleAddPopularVendor}
+              onRemove={handleRemovePopularVendor}
+              onSearchChange={(value) =>
+                setSearchState((current) => ({ ...current, popularVendors: value }))
+              }
+              removeLabel={busyKey ? "Update flag" : "Remove Popular"}
+              searchPlaceholder="Search vendors to add into Popular Vendors"
+              searchValue={searchState.popularVendors}
+              subtitle="These vendors feed the Popular Vendors row on the client homepage."
+              title="Popular Vendors"
+            />
+          </div>
 
-          <CurationCollectionSection
-            emptyState="No vendors are currently marked as featured."
-            filteredOptions={filteredFeaturedVendorOptions}
-            itemType="vendor"
-            items={collections.featuredVendors}
-            onAdd={handleAddFeaturedVendor}
-            onRemove={handleRemoveFeaturedVendor}
-            onSearchChange={(value) =>
-              setSearchState((current) => ({ ...current, featuredVendors: value }))
-            }
-            removeLabel={busyKey ? "Update flag" : "Remove Featured"}
-            searchPlaceholder="Search vendors to add into Featured Vendors"
-            searchValue={searchState.featuredVendors}
-            subtitle="These vendors feed the Featured Vendors row on the client homepage."
-            title="Featured Vendors"
-          />
+          <div
+            className="scroll-mt-24"
+            ref={(node) => {
+              sectionRefs.current["featured-vendors"] = node;
+            }}
+          >
+            <CurationCollectionSection
+              emptyState="No vendors are currently marked as featured."
+              filteredOptions={filteredFeaturedVendorOptions}
+              itemType="vendor"
+              items={collections.featuredVendors}
+              onAdd={handleAddFeaturedVendor}
+              onRemove={handleRemoveFeaturedVendor}
+              onSearchChange={(value) =>
+                setSearchState((current) => ({ ...current, featuredVendors: value }))
+              }
+              removeLabel={busyKey ? "Update flag" : "Remove Featured"}
+              searchPlaceholder="Search vendors to add into Featured Vendors"
+              searchValue={searchState.featuredVendors}
+              subtitle="These vendors feed the Featured Vendors row on the client homepage."
+              title="Featured Vendors"
+            />
+          </div>
 
-          <CurationCollectionSection
-            emptyState="No products are currently marked as popular."
-            filteredOptions={filteredPopularProductOptions}
-            itemType="product"
-            items={collections.popularProducts}
-            onAdd={handleAddPopularProduct}
-            onRemove={handleRemovePopularProduct}
-            onSearchChange={(value) =>
-              setSearchState((current) => ({ ...current, popularProducts: value }))
-            }
-            removeLabel={busyKey ? "Update flag" : "Remove Popular"}
-            searchPlaceholder="Search products to add into Popular Products"
-            searchValue={searchState.popularProducts}
-            subtitle="These products feed the Popular Products row on the client homepage."
-            title="Popular Products"
-          />
+          <div
+            className="scroll-mt-24"
+            ref={(node) => {
+              sectionRefs.current["popular-products"] = node;
+            }}
+          >
+            <CurationCollectionSection
+              emptyState="No products are currently marked as popular."
+              filteredOptions={filteredPopularProductOptions}
+              itemType="product"
+              items={collections.popularProducts}
+              onAdd={handleAddPopularProduct}
+              onRemove={handleRemovePopularProduct}
+              onSearchChange={(value) =>
+                setSearchState((current) => ({ ...current, popularProducts: value }))
+              }
+              removeLabel={busyKey ? "Update flag" : "Remove Popular"}
+              searchPlaceholder="Search products to add into Popular Products"
+              searchValue={searchState.popularProducts}
+              subtitle="These products feed the Popular Products row on the client homepage."
+              title="Popular Products"
+            />
+          </div>
         </div>
       )}
+
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
+        {showScrollUp ? (
+          <button
+            aria-label="Scroll to top"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#1f1712] text-white shadow-[0_18px_36px_rgba(31,23,18,0.28)] transition hover:-translate-y-0.5 hover:bg-[#352720]"
+            onClick={scrollToTop}
+            type="button"
+          >
+            <ArrowUp size={18} />
+          </button>
+        ) : null}
+
+        {showScrollDown ? (
+          <button
+            aria-label="Scroll down"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#d16737] text-white shadow-[0_18px_36px_rgba(209,103,55,0.28)] transition hover:translate-y-0.5 hover:bg-[#bd592b]"
+            onClick={scrollDown}
+            type="button"
+          >
+            <ArrowDown size={18} />
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

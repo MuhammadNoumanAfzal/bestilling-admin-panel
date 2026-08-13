@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlarmClockPlus,
+  ArrowUp,
   Banknote,
   ChefHat,
   Clock3,
@@ -509,12 +510,11 @@ function getNextSortOrder(items = []) {
   return Math.max(...sortOrders) + 1;
 }
 
-function renderFieldInput({ field, value, onChange, autoFocus = false }) {
+function renderFieldInput({ field, value, onChange }) {
   if (field.type === "checkbox") {
     return (
       <label className="flex h-11 items-center gap-3 rounded-[12px] border border-[#dfd2c8] bg-white px-3.5 text-[13px] font-semibold text-[#312721]">
         <input
-          autoFocus={autoFocus}
           checked={Boolean(value)}
           className="h-4 w-4 accent-[#cf6e38]"
           onChange={(event) => onChange(field.key, event.target.checked)}
@@ -531,7 +531,6 @@ function renderFieldInput({ field, value, onChange, autoFocus = false }) {
         {field.label}
       </p>
       <input
-        autoFocus={autoFocus}
         className="h-11 w-full rounded-[12px] border border-[#dfd2c8] bg-white px-3.5 text-[14px] text-[#231913] outline-none transition placeholder:text-[#a28f82] focus:border-[#ce6938] focus:shadow-[0_0_0_4px_rgba(206,105,56,0.10)]"
         onChange={(event) => onChange(field.key, event.target.value)}
         placeholder={field.placeholder}
@@ -542,9 +541,13 @@ function renderFieldInput({ field, value, onChange, autoFocus = false }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, hint, toneClasses }) {
+function StatCard({ icon: Icon, label, onClick, value, hint, toneClasses }) {
   return (
-    <div className="rounded-[20px] border border-[#eadfd6] bg-white p-4 shadow-[0_18px_45px_rgba(49,30,19,0.05)]">
+    <button
+      className="rounded-[20px] border border-[#eadfd6] bg-white p-4 text-left shadow-[0_18px_45px_rgba(49,30,19,0.05)] transition hover:-translate-y-0.5 hover:border-[#e0cdbf] hover:shadow-[0_22px_50px_rgba(49,30,19,0.08)]"
+      onClick={onClick}
+      type="button"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#9a8576]">
@@ -562,7 +565,7 @@ function StatCard({ icon: Icon, label, value, hint, toneClasses }) {
           <Icon size={18} />
         </span>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -606,13 +609,12 @@ function SectionCard({
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {section.fields.map((field, index) => (
+          {section.fields.map((field) => (
             <div className={field.type === "checkbox" ? "md:self-end" : ""} key={field.key}>
               {renderFieldInput({
                 field,
                 value: draftValues[field.key],
                 onChange: (fieldKey, value) => onDraftChange(section.key, fieldKey, value),
-                autoFocus: index === 0,
               })}
             </div>
           ))}
@@ -647,13 +649,12 @@ function SectionCard({
                   {isEditing ? (
                     <div className="space-y-3">
                       <div className="grid gap-3 md:grid-cols-2">
-                        {section.fields.map((field, index) => (
+                        {section.fields.map((field) => (
                           <div key={field.key}>
                             {renderFieldInput({
                               field,
                               value: editingState.values[field.key],
                               onChange: onEditingValueChange,
-                              autoFocus: index === 0,
                             })}
                           </div>
                         ))}
@@ -755,6 +756,8 @@ export default function VendorSettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [savingKey, setSavingKey] = useState("");
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const sectionRefs = useRef({});
 
   async function loadVendorSettings({ silent = false } = {}) {
     if (silent) {
@@ -780,7 +783,21 @@ export default function VendorSettingsPage() {
   }
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
     loadVendorSettings();
+  }, []);
+
+  useEffect(() => {
+    function handleScroll() {
+      setShowScrollTop(window.scrollY > 480);
+    }
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const stats = useMemo(
@@ -852,6 +869,26 @@ export default function VendorSettingsPage() {
     ],
     [taxonomy],
   );
+
+  function scrollToSection(sectionKey) {
+    const target = sectionRefs.current[sectionKey];
+
+    if (!target) {
+      return;
+    }
+
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
+  function scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
 
   function updateDraft(sectionKey, fieldKey, value) {
     setDrafts((current) => ({
@@ -1044,7 +1081,11 @@ export default function VendorSettingsPage() {
 
         <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {stats.map((item) => (
-            <StatCard key={item.id} {...item} />
+            <StatCard
+              key={item.id}
+              {...item}
+              onClick={() => scrollToSection(item.id)}
+            />
           ))}
         </div>
       </section>
@@ -1076,35 +1117,53 @@ export default function VendorSettingsPage() {
                 const section = SECTION_MAP[sectionKey];
 
                 return (
-                  <SectionCard
-                    section={section}
-                    items={taxonomy[section.key]}
-                    draftValues={drafts[section.key]}
-                    savingKey={savingKey}
-                    editingState={editingState}
+                  <div
                     key={section.key}
-                    onCancelEdit={cancelEditing}
-                    onCreate={handleCreate}
-                    onDelete={handleDelete}
-                    onDraftChange={updateDraft}
-                    onEditingValueChange={(fieldKey, value) =>
-                      setEditingState((current) => ({
-                        ...current,
-                        values: {
-                          ...current.values,
-                          [fieldKey]: value,
-                        },
-                      }))
-                    }
-                    onSaveEdit={handleSaveEdit}
-                    onStartEdit={startEditing}
-                  />
+                    ref={(node) => {
+                      sectionRefs.current[section.key] = node;
+                    }}
+                    className="scroll-mt-24"
+                  >
+                    <SectionCard
+                      section={section}
+                      items={taxonomy[section.key]}
+                      draftValues={drafts[section.key]}
+                      savingKey={savingKey}
+                      editingState={editingState}
+                      onCancelEdit={cancelEditing}
+                      onCreate={handleCreate}
+                      onDelete={handleDelete}
+                      onDraftChange={updateDraft}
+                      onEditingValueChange={(fieldKey, value) =>
+                        setEditingState((current) => ({
+                          ...current,
+                          values: {
+                            ...current.values,
+                            [fieldKey]: value,
+                          },
+                        }))
+                      }
+                      onSaveEdit={handleSaveEdit}
+                      onStartEdit={startEditing}
+                    />
+                  </div>
                 );
               })}
             </div>
           </section>
         ))
       )}
+
+      {showScrollTop ? (
+        <button
+          aria-label="Back to top"
+          className="fixed bottom-6 right-6 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#1f1712] text-white shadow-[0_18px_36px_rgba(31,23,18,0.28)] transition hover:-translate-y-0.5 hover:bg-[#352720]"
+          onClick={scrollToTop}
+          type="button"
+        >
+          <ArrowUp size={18} />
+        </button>
+      ) : null}
     </div>
   );
 }

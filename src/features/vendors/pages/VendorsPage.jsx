@@ -16,6 +16,7 @@ import VendorsToolbar from "../components/VendorsToolbar.jsx";
 import VendorStatusOverviewCard from "../components/VendorStatusOverviewCard.jsx";
 
 const PAGE_SIZE = 10;
+const FETCH_PAGE_SIZE = 100;
 
 const iconMap = {
   total: Users,
@@ -27,25 +28,94 @@ const iconMap = {
 
 const ALL_DATES_FILTER = "All Dates";
 
-function getTabStatusFilter(tab) {
-  switch (tab) {
-    case "Pending Approval":
-      return "PENDING_APPROVAL";
-    case "Active":
-      return "ACTIVE";
-    case "Suspended":
-      return "SUSPENDED";
-    case "Rejected":
-      return "REJECTED";
-    case "Deactivated":
-      return "DEACTIVATED";
-    default:
-      return null;
+function matchesTab(row, tab) {
+  if (tab === "All") {
+    return true;
   }
+
+  if (tab === "Top Performing") {
+    return true;
+  }
+
+  return row.status === tab;
 }
 
-function isStatusTab(tab) {
-  return tab !== "All" && tab !== "Top Performing";
+function sortRows(rows, activeTab) {
+  const items = [...rows];
+
+  if (activeTab === "Top Performing") {
+    return items.sort((left, right) => right.revenueValue - left.revenueValue);
+  }
+
+  return items.sort((left, right) => {
+    const leftTime = new Date(left.joinDateValue || 0).getTime();
+    const rightTime = new Date(right.joinDateValue || 0).getTime();
+    return rightTime - leftTime;
+  });
+}
+
+function withinDateRange(value, dateRange) {
+  if (!dateRange?.start && !dateRange?.end) {
+    return true;
+  }
+
+  const timestamp = new Date(value || "").getTime();
+  if (Number.isNaN(timestamp)) {
+    return false;
+  }
+
+  const start = dateRange?.start ? new Date(dateRange.start).getTime() : null;
+  const end = dateRange?.end ? new Date(dateRange.end).getTime() : null;
+
+  if (start != null && timestamp < start) {
+    return false;
+  }
+
+  if (end != null && timestamp > end) {
+    return false;
+  }
+
+  return true;
+}
+
+function buildFilterOptions(rows) {
+  return {
+    vendors: rows
+      .map((row) => ({ id: row.id, name: row.name }))
+      .sort((left, right) => left.name.localeCompare(right.name)),
+    cities: [...new Set(rows.map((row) => row.city).filter(Boolean))].sort((left, right) =>
+      left.localeCompare(right),
+    ),
+    statuses: [...new Set(rows.map((row) => row.status).filter(Boolean))],
+  };
+}
+
+async function getAllAdminVendors(baseFilters) {
+  const firstPage = await getAdminVendorsRequest({
+    ...baseFilters,
+    page: 1,
+    pageSize: FETCH_PAGE_SIZE,
+  });
+
+  const totalPages = Math.max(1, Number(firstPage.pageInfo?.totalPages ?? 1));
+  if (totalPages === 1) {
+    return firstPage;
+  }
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) =>
+      getAdminVendorsRequest({
+        ...baseFilters,
+        page: index + 2,
+        pageSize: FETCH_PAGE_SIZE,
+      }),
+    ),
+  );
+
+  return {
+    ...firstPage,
+    rows: [firstPage.rows, ...remainingPages.map((page) => page.rows)].flat(),
+  };
 }
 
 export default function VendorsPage() {
@@ -60,13 +130,7 @@ export default function VendorsPage() {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [stats, setStats] = useState([]);
-  const [rows, setRows] = useState([]);
-  const [pageInfo, setPageInfo] = useState({
-    page: 1,
-    pageSize: PAGE_SIZE,
-    totalItems: 0,
-    totalPages: 1,
-  });
+  const [allRows, setAllRows] = useState([]);
   const [filterOptions, setFilterOptions] = useState({
     vendors: [],
     cities: [],
@@ -86,22 +150,50 @@ export default function VendorsPage() {
     [customEnd, customStart, timeframe],
   );
 
-  const normalizedFilters = useMemo(
-    () => ({
-      search: searchTerm,
-      vendorId: vendorFilter || null,
-      city: cityFilter || null,
-      minRating: ratingFilter ? Number(ratingFilter) : null,
-      status: isStatusTab(activeTab) ? getTabStatusFilter(activeTab) : null,
-      joinedFrom: dateRange?.start || null,
-      joinedTo: dateRange?.end || null,
+  const filteredRows = useMemo(
+    () =>
+      sortRows(
+        allRows.filter((row) => {
+          const searchValue = searchTerm.trim().toLowerCase();
+          const matchesSearch =
+            !searchValue ||
+            row.name.toLowerCase().includes(searchValue) ||
+            row.businessType.toLowerCase().includes(searchValue) ||
+            row.city.toLowerCase().includes(searchValue);
+
+          const matchesVendor = !vendorFilter || row.id === vendorFilter;
+          const matchesCity = !cityFilter || row.city === cityFilter;
+          const matchesRating = !ratingFilter || row.ratingValue >= Number(ratingFilter);
+          const matchesDate = withinDateRange(row.joinDateValue, dateRange);
+
+          return (
+            matchesSearch &&
+            matchesVendor &&
+            matchesCity &&
+            matchesRating &&
+            matchesDate &&
+            matchesTab(row, activeTab)
+          );
+        }),
+        activeTab,
+      ),
+    [activeTab, allRows, cityFilter, dateRange, ratingFilter, searchTerm, vendorFilter],
+  );
+
+  const paginatedRows = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredRows.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [currentPage, filteredRows]);
+
+  const pageInfo = useMemo(() => {
+    const totalItems = filteredRows.length;
+    return {
       page: currentPage,
       pageSize: PAGE_SIZE,
-      sortBy: activeTab === "Top Performing" ? "REVENUE" : "JOINED_AT",
-      sortOrder: "DESC",
-    }),
-    [activeTab, cityFilter, currentPage, dateRange, ratingFilter, searchTerm, vendorFilter],
-  );
+      totalItems,
+      totalPages: Math.max(1, Math.ceil(totalItems / PAGE_SIZE)),
+    };
+  }, [currentPage, filteredRows.length]);
 
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab");
@@ -119,15 +211,24 @@ export default function VendorsPage() {
       setLoadError("");
 
       try {
-        const response = await getAdminVendorsRequest(normalizedFilters);
+        const response = await getAllAdminVendors({
+          search: null,
+          vendorId: null,
+          city: null,
+          minRating: null,
+          status: null,
+          joinedFrom: null,
+          joinedTo: null,
+          sortBy: "JOINED_AT",
+          sortOrder: "DESC",
+        });
 
         if (!isMounted) {
           return;
         }
-        setRows(response.rows);
-        setPageInfo(response.pageInfo);
+        setAllRows(response.rows);
         setStats(response.stats);
-        setFilterOptions(response.filterOptions);
+        setFilterOptions(buildFilterOptions(response.rows));
         setSidePanels(response.sidePanels);
       } catch (error) {
         if (isMounted) {
@@ -145,7 +246,7 @@ export default function VendorsPage() {
     return () => {
       isMounted = false;
     };
-  }, [normalizedFilters]);
+  }, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -215,7 +316,7 @@ export default function VendorsPage() {
       setIsUpdatingStatusId(row.id);
       const result = await updateVendorStatusRequest(row.id, targetStatus, reasonResult.value || "");
 
-      setRows((current) =>
+      setAllRows((current) =>
         current.map((item) =>
           item.id === row.id
             ? {
@@ -306,7 +407,7 @@ export default function VendorsPage() {
               onToggleStatus={handleToggleStatus}
               pageSize={pageInfo.pageSize}
               totalItems={pageInfo.totalItems}
-              vendors={rows}
+              vendors={paginatedRows}
             />
           )}
         </div>
@@ -315,7 +416,7 @@ export default function VendorsPage() {
       <section className="grid gap-6 grid-cols-1 md:grid-cols-3">
         <TopPerformingVendorsCard vendors={sidePanels.topPerformers} />
         <RecentVendorRequestsCard vendors={sidePanels.recentRequests} />
-        <VendorStatusOverviewCard breakdown={sidePanels.statusBreakdown} vendors={rows} />
+        <VendorStatusOverviewCard breakdown={sidePanels.statusBreakdown} vendors={filteredRows} />
       </section>
     </div>
   );

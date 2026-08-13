@@ -98,6 +98,9 @@ function normalizeVendorStatus(value) {
   const normalized = `${value ?? ""}`.trim().toUpperCase();
 
   switch (normalized) {
+    case "APPROVED":
+    case "ACTIVE":
+      return "Active";
     case "PENDING_APPROVAL":
       return "Pending Approval";
     case "SUSPENDED":

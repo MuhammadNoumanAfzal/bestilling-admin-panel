@@ -183,6 +183,19 @@ function isComplianceChecklistItem(item) {
   return code.includes("compliance") || label.includes("compliance document");
 }
 
+function getApplicationBadgeClass(status) {
+  switch (`${status ?? ""}`.trim()) {
+    case "Rejected":
+      return "bg-[#fff1f0] text-[#b43c2d]";
+    case "Pending Approval":
+      return "bg-[#fff3df] text-[#8a5318]";
+    case "Active":
+      return "bg-[#edf8ef] text-[#247446]";
+    default:
+      return "bg-[#f2c49d] text-[#6f3a16]";
+  }
+}
+
 export default function VendorApplicationReviewPage() {
   const { vendorId } = useParams();
   const navigate = useNavigate();
@@ -442,12 +455,43 @@ export default function VendorApplicationReviewPage() {
       return;
     }
 
+    const suggestedFields = Array.isArray(vendor.missingRequirements)
+      ? vendor.missingRequirements.filter((item) => item?.code && item?.label)
+      : [];
+
     const result = await Swal.fire({
       title: "Request application changes",
       html: `
-        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
-          <textarea id="vendor-change-message" class="swal2-textarea" placeholder="Message for vendor"></textarea>
-          <input id="vendor-change-fields" class="swal2-input" placeholder="Checklist codes (comma separated)" />
+        <div style="display:flex;flex-direction:column;gap:14px;text-align:left;">
+          <div style="border:1px solid #eaded3;border-radius:14px;padding:14px;background:#fffaf6;">
+            <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#2a1e17;">Vendor instructions</p>
+            <p style="margin:0;font-size:12px;line-height:1.6;color:#6f6259;">
+              Tell the vendor exactly what needs to be corrected before approval.
+            </p>
+          </div>
+          <textarea id="vendor-change-message" class="swal2-textarea" placeholder="Explain what the vendor must update and how to fix it"></textarea>
+          <div style="border:1px solid #eaded3;border-radius:14px;padding:14px;background:#fff;">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#2a1e17;">Requested checklist items</p>
+            <div id="vendor-change-fields" style="display:flex;flex-direction:column;gap:8px;max-height:180px;overflow:auto;">
+              ${
+                suggestedFields.length
+                  ? suggestedFields
+                      .map(
+                        (item) => `
+                          <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid #efe3d8;border-radius:12px;background:#fffdfa;cursor:pointer;">
+                            <input type="checkbox" value="${item.code}" checked style="margin-top:2px;" />
+                            <span>
+                              <span style="display:block;font-size:13px;font-weight:700;color:#231913;">${item.label}</span>
+                              <span style="display:block;font-size:11px;color:#8b7d74;">${item.code}</span>
+                            </span>
+                          </label>
+                        `,
+                      )
+                      .join("")
+                  : `<p style="margin:0;font-size:12px;line-height:1.6;color:#7b6f66;">No checklist codes were returned by the API. You can still submit a free-text change request message.</p>`
+              }
+            </div>
+          </div>
         </div>
       `,
       showCancelButton: true,
@@ -457,7 +501,11 @@ export default function VendorApplicationReviewPage() {
       cancelButtonColor: "#c8b9aa",
       preConfirm: () => {
         const message = window.document.getElementById("vendor-change-message")?.value?.trim() || "";
-        const fieldsValue = window.document.getElementById("vendor-change-fields")?.value?.trim() || "";
+        const fieldsValue = Array.from(
+          window.document.querySelectorAll('#vendor-change-fields input[type="checkbox"]:checked'),
+        )
+          .map((element) => element.value?.trim())
+          .filter(Boolean);
 
         if (!message) {
           Swal.showValidationMessage("A message is required.");
@@ -466,10 +514,17 @@ export default function VendorApplicationReviewPage() {
 
         return {
           message,
-          fields: fieldsValue
-            ? fieldsValue.split(",").map((item) => item.trim()).filter(Boolean)
-            : [],
+          fields: fieldsValue,
         };
+      },
+      didOpen: () => {
+        const messageElement = window.document.getElementById("vendor-change-message");
+
+        if (messageElement && suggestedFields.length) {
+          messageElement.value = `Please update the following before approval:\n${suggestedFields
+            .map((item) => `- ${item.label}`)
+            .join("\n")}`;
+        }
       },
     });
 
@@ -479,16 +534,8 @@ export default function VendorApplicationReviewPage() {
 
     try {
       const response = await requestVendorApplicationChangesRequest(vendor.id, result.value);
-      setVendor((current) =>
-        current
-          ? {
-              ...current,
-              applicationStatus: response.applicationStatus,
-              reviewedAt: response.reviewedAt,
-              reviewedDate: response.reviewedAt || current.reviewedDate,
-            }
-          : current,
-      );
+      const refreshed = await getAdminVendorApplicationReviewRequest(vendor.id);
+      setVendor(refreshed);
 
       await Swal.fire({
         icon: "success",
@@ -566,7 +613,7 @@ export default function VendorApplicationReviewPage() {
                   <h1 className="text-[40px] font-extrabold tracking-[-0.04em] text-[#17110d]">
                     {vendor.name}
                   </h1>
-                  <span className="rounded-full bg-[#f2c49d] px-3 py-1.5 text-[11px] font-bold text-[#6f3a16]">
+                  <span className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${getApplicationBadgeClass(vendor.applicationStatus)}`}>
                     {vendor.applicationStatus}
                   </span>
                   {!canApproveForUi ? (

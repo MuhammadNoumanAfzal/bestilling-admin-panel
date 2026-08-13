@@ -8,6 +8,10 @@ export const LOGIN_ADMIN_MUTATION = `
         email
         firstName
         lastName
+        avatar {
+          id
+          url
+        }
         role
         isAdmin
         isStaff
@@ -24,6 +28,10 @@ export const CURRENT_ADMIN_QUERY = `
       email
       firstName
       lastName
+      avatar {
+        id
+        url
+      }
       role
       isAdmin
       isStaff
@@ -86,6 +94,10 @@ export const ADD_NEW_ADMINISTRATOR_MUTATION = `
         role
         firstName
         lastName
+        avatar {
+          id
+          url
+        }
       }
     }
   }

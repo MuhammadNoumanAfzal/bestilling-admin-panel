@@ -19,6 +19,12 @@ function normalizeAdminUser(user) {
     email: user.email,
     firstName: user.firstName ?? "",
     lastName: user.lastName ?? "",
+    avatar: user.avatar
+      ? {
+          id: user.avatar.id ?? "",
+          url: user.avatar.url ?? "",
+        }
+      : null,
     role: user.role ?? "",
     isAdmin: Boolean(user.isAdmin),
     isStaff: Boolean(user.isStaff),

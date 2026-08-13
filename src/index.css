@@ -332,3 +332,227 @@ textarea {
     font-size: 13px !important;
   }
 }
+
+.vendor-review-alert {
+  width: min(100%, 620px) !important;
+  overflow: hidden !important;
+  border: 1px solid #ebddd3 !important;
+  border-radius: 28px !important;
+  padding: 0 !important;
+  box-shadow: 0 36px 120px rgba(28, 17, 11, 0.28) !important;
+}
+
+.vendor-review-alert__content {
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+.vendor-review-alert__shell {
+  background:
+    radial-gradient(circle at top right, rgba(218, 111, 68, 0.16), transparent 34%),
+    linear-gradient(180deg, #fff7f2 0%, #fffdfa 52%, #ffffff 100%);
+}
+
+.vendor-review-alert__hero {
+  padding: 22px 26px 12px !important;
+}
+
+.vendor-review-alert__hero-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #efc8b8;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #b95e35;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  margin-bottom: 10px;
+  padding: 7px 11px;
+  text-transform: uppercase;
+}
+
+.vendor-review-alert__title {
+  margin: 0 !important;
+  color: #1d1510;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1.02;
+}
+
+.vendor-review-alert__lead {
+  margin: 10px 0 0 !important;
+  color: #6f625a;
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 48ch;
+}
+
+.vendor-review-alert__panel {
+  margin: 0 18px 14px;
+  border: 1px solid #efe2d8;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  padding: 18px;
+}
+
+.vendor-review-alert__field {
+  display: block;
+}
+
+.vendor-review-alert__field + .vendor-review-alert__field {
+  margin-top: 12px;
+}
+
+.vendor-review-alert__field span {
+  display: block;
+  margin-bottom: 6px;
+  color: #433730;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.vendor-review-alert__input,
+.vendor-review-alert__textarea {
+  width: 100% !important;
+  margin: 0 !important;
+  border: 1px solid #e3d5cb !important;
+  border-radius: 16px !important;
+  background: linear-gradient(180deg, #fffdfa 0%, #fff8f4 100%) !important;
+  box-shadow: none !important;
+  color: #201712 !important;
+  font-size: 14px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+.vendor-review-alert__input {
+  height: 50px !important;
+}
+
+.vendor-review-alert__textarea {
+  min-height: 108px !important;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+.vendor-review-alert__input::placeholder,
+.vendor-review-alert__textarea::placeholder {
+  color: #aa9b90 !important;
+}
+
+.vendor-review-alert__input:focus,
+.vendor-review-alert__textarea:focus {
+  border-color: #d26b39 !important;
+  box-shadow: 0 0 0 4px rgba(210, 107, 57, 0.12) !important;
+}
+
+.vendor-review-alert__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 14px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fff4ee 0%, #fffaf7 100%);
+  padding: 12px 14px;
+}
+
+.vendor-review-alert__note-icon {
+  display: inline-flex;
+  height: 22px;
+  width: 22px;
+  flex: 0 0 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #de6d46;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.vendor-review-alert__note p {
+  margin: 0;
+  color: #705f55;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.vendor-review-alert__actions {
+  margin: 0 !important;
+  padding: 0 18px 14px !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+
+.vendor-review-alert__cancel,
+.vendor-review-alert__confirm {
+  margin: 0 !important;
+  min-height: 48px !important;
+  border-radius: 14px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  padding: 0 18px !important;
+}
+
+.vendor-review-alert__cancel {
+  border: 1px solid #e2d5cc !important;
+  background: #f4ede7 !important;
+  color: #6f6056 !important;
+  box-shadow: none !important;
+}
+
+.vendor-review-alert__confirm {
+  background: linear-gradient(135deg, #d24539 0%, #bd3427 100%) !important;
+  box-shadow: 0 16px 30px rgba(189, 52, 39, 0.28) !important;
+}
+
+.vendor-review-alert__validation {
+  margin: 0 18px 16px !important;
+  border-radius: 14px !important;
+  background: #fff1ef !important;
+  color: #c83d31 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 12px 14px !important;
+}
+
+@media (max-width: 640px) {
+  .vendor-review-alert {
+    width: min(100%, 94vw) !important;
+    border-radius: 22px !important;
+  }
+
+  .vendor-review-alert__hero {
+    padding: 20px 18px 12px !important;
+  }
+
+  .vendor-review-alert__title {
+    font-size: 28px;
+  }
+
+  .vendor-review-alert__panel {
+    margin: 0 12px 12px;
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  .vendor-review-alert__actions {
+    padding: 0 12px 12px !important;
+  }
+
+  .vendor-review-alert__cancel,
+  .vendor-review-alert__confirm {
+    flex: 1 1 0;
+  }
+}

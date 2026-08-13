@@ -392,11 +392,40 @@ export default function VendorApplicationReviewPage() {
     }
 
     const result = await Swal.fire({
-      title: "Reject vendor application",
       html: `
-        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
-          <input id="vendor-reject-reason" class="swal2-input" placeholder="Reason" />
-          <textarea id="vendor-reject-note" class="swal2-textarea" placeholder="Optional note"></textarea>
+        <div class="vendor-review-alert__shell">
+          <div class="vendor-review-alert__hero">
+            <div class="vendor-review-alert__hero-badge">Decision Required</div>
+            <h2 class="vendor-review-alert__title">Reject vendor application</h2>
+            <p class="vendor-review-alert__lead">
+              Share a clear reason so the team has a proper audit trail and the vendor can understand what blocked approval.
+            </p>
+          </div>
+
+          <div class="vendor-review-alert__panel">
+            <label class="vendor-review-alert__field" for="vendor-reject-reason">
+              <span>Primary reason</span>
+              <input
+                id="vendor-reject-reason"
+                class="swal2-input vendor-review-alert__input"
+                placeholder="Compliance issue, incomplete documents, duplicate application..."
+              />
+            </label>
+
+            <label class="vendor-review-alert__field" for="vendor-reject-note">
+              <span>Internal note</span>
+              <textarea
+                id="vendor-reject-note"
+                class="swal2-textarea vendor-review-alert__textarea"
+                placeholder="Add extra context for your team or the support history"
+              ></textarea>
+            </label>
+
+            <div class="vendor-review-alert__note">
+              <span class="vendor-review-alert__note-icon">!</span>
+              <p>This action marks the application as rejected. Use a precise reason so future reviews stay consistent.</p>
+            </div>
+          </div>
         </div>
       `,
       showCancelButton: true,
@@ -404,6 +433,14 @@ export default function VendorApplicationReviewPage() {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#c53a2f",
       cancelButtonColor: "#c8b9aa",
+      customClass: {
+        popup: "vendor-review-alert",
+        htmlContainer: "vendor-review-alert__content",
+        actions: "vendor-review-alert__actions",
+        confirmButton: "vendor-review-alert__confirm",
+        cancelButton: "vendor-review-alert__cancel",
+        validationMessage: "vendor-review-alert__validation",
+      },
       preConfirm: () => {
         const reason = window.document.getElementById("vendor-reject-reason")?.value?.trim() || "";
         const note = window.document.getElementById("vendor-reject-note")?.value?.trim() || "";
@@ -414,6 +451,13 @@ export default function VendorApplicationReviewPage() {
         }
 
         return { reason, note };
+      },
+      didOpen: () => {
+        const reasonInput = window.document.getElementById("vendor-reject-reason");
+
+        if (reasonInput) {
+          reasonInput.focus();
+        }
       },
     });
 

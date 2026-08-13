@@ -459,8 +459,9 @@ function validateValues(section, values) {
   return missingField ? missingField.label : "";
 }
 
-function buildPayload(section, values, item) {
+function buildPayload(section, values, item, options = {}) {
   const payload = {};
+  const fallbackSortOrder = Number.isInteger(options?.fallbackSortOrder) ? options.fallbackSortOrder : 0;
 
   section.fields.forEach((field) => {
     const rawValue = values[field.key];
@@ -472,7 +473,17 @@ function buildPayload(section, values, item) {
 
     if (field.type === "number") {
       const normalized = normalizeString(rawValue);
-      payload[field.key] = normalized ? Number(normalized) : null;
+      if (normalized) {
+        payload[field.key] = Number(normalized);
+        return;
+      }
+
+      if (field.key === "sortOrder") {
+        payload[field.key] = fallbackSortOrder;
+        return;
+      }
+
+      payload[field.key] = null;
       return;
     }
 
@@ -484,6 +495,18 @@ function buildPayload(section, values, item) {
   }
 
   return payload;
+}
+
+function getNextSortOrder(items = []) {
+  const sortOrders = items
+    .map((item) => Number(item?.raw?.sortOrder))
+    .filter((value) => Number.isInteger(value));
+
+  if (!sortOrders.length) {
+    return 0;
+  }
+
+  return Math.max(...sortOrders) + 1;
 }
 
 function renderFieldInput({ field, value, onChange, autoFocus = false }) {
@@ -874,7 +897,11 @@ export default function VendorSettingsPage() {
 
     try {
       setSavingKey(`${section.key}:create`);
-      await section.save(buildPayload(section, values));
+      await section.save(
+        buildPayload(section, values, null, {
+          fallbackSortOrder: getNextSortOrder(taxonomy[section.key]),
+        }),
+      );
       setDrafts((current) => ({
         ...current,
         [section.key]: createEmptyDraft(section),
@@ -914,7 +941,11 @@ export default function VendorSettingsPage() {
 
     try {
       setSavingKey(`${section.key}:edit:${item.id}`);
-      await section.save(buildPayload(section, values, item));
+      await section.save(
+        buildPayload(section, values, item, {
+          fallbackSortOrder: Number.isInteger(item?.raw?.sortOrder) ? item.raw.sortOrder : 0,
+        }),
+      );
       cancelEditing();
       await loadVendorSettings({ silent: true });
       await Swal.fire({

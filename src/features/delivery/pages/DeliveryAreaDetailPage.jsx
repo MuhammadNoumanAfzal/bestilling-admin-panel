@@ -21,7 +21,6 @@ function createInitialSettingsForm(area) {
   return {
     maxDeliveryRadius: area?.settings?.maxDeliveryRadius || "",
     leadTimeDays: area?.settings?.leadTimeDays || "",
-    coverageType: area?.settings?.coverageType || "SELECTED_POSTAL_CODES_ONLY",
     minimumOrderAmount: area?.settings?.minimumOrderAmount || "",
     deliveryFee: area?.settings?.deliveryFee || "",
     isRestricted: Boolean(area?.settings?.isRestricted),

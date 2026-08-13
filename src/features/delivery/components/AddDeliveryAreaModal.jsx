@@ -3,11 +3,6 @@ import { useState } from "react";
 import AddDeliveryAreaField from "./add-area/AddDeliveryAreaField.jsx";
 import AddDeliveryPostalCodesTable from "./add-area/AddDeliveryPostalCodesTable.jsx";
 
-const coverageTypeOptions = [
-  { value: "ALL_CITY_COVERAGE", label: "All City Coverage" },
-  { value: "SELECTED_POSTAL_CODES_ONLY", label: "Selected Postal Codes Only" },
-];
-
 const postalStatusOptions = [
   { value: "ACTIVE", label: "Active" },
   { value: "INACTIVE", label: "Inactive" },
@@ -39,11 +34,8 @@ export default function AddDeliveryAreaModal({
 }) {
   const [form, setForm] = useState({
     country: "Norway",
-    region: regionOptions[0] || "",
+    region: "",
     city: "",
-    coverageType: "SELECTED_POSTAL_CODES_ONLY",
-    maxDeliveryRadius: "",
-    leadTimeDays: "",
   });
   const [postalRows, setPostalRows] = useState([]);
   const [postalForm, setPostalForm] = useState(initialPostalForm);
@@ -108,9 +100,6 @@ export default function AddDeliveryAreaModal({
       city: form.city,
       region: form.region,
       country: form.country,
-      coverageType: form.coverageType,
-      maxDeliveryRadius: form.maxDeliveryRadius,
-      leadTimeDays: form.leadTimeDays,
       postalAreas: postalRows,
     });
   }
@@ -147,10 +136,9 @@ export default function AddDeliveryAreaModal({
                   value={form.country}
                 />
                 <AddDeliveryAreaField
-                  as="select"
                   label="Region"
                   onChange={(event) => updateField("region", event.target.value)}
-                  options={regionOptions.map((item) => ({ value: item, label: item }))}
+                  placeholder="Enter region"
                   value={form.region}
                 />
                 <AddDeliveryAreaField
@@ -158,33 +146,6 @@ export default function AddDeliveryAreaModal({
                   onChange={(event) => updateField("city", event.target.value)}
                   placeholder="Enter city"
                   value={form.city}
-                />
-                <AddDeliveryAreaField
-                  as="select"
-                  label="Coverage Type"
-                  onChange={(event) => updateField("coverageType", event.target.value)}
-                  options={coverageTypeOptions}
-                  value={form.coverageType}
-                />
-              </div>
-            </section>
-
-            <section className="rounded-[14px] border border-[#eee3db] bg-white p-3.5">
-              <SectionTitle>Delivery Coverage</SectionTitle>
-              <div className="grid gap-2.5 sm:grid-cols-2">
-                <AddDeliveryAreaField
-                  label="Max Delivery Radius (km)"
-                  onChange={(event) => updateField("maxDeliveryRadius", event.target.value)}
-                  placeholder="15"
-                  type="number"
-                  value={form.maxDeliveryRadius}
-                />
-                <AddDeliveryAreaField
-                  label="Default Lead Time (days)"
-                  onChange={(event) => updateField("leadTimeDays", event.target.value)}
-                  placeholder="2"
-                  type="number"
-                  value={form.leadTimeDays}
                 />
               </div>
             </section>

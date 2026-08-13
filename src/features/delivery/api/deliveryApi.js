@@ -213,6 +213,20 @@ function normalizeStatusInput(value) {
   return `${value ?? ""}`.trim().toUpperCase() || "ACTIVE";
 }
 
+function getDefaultCoverageType(value) {
+  return `${value ?? ""}`.trim().toUpperCase() || "SELECTED_POSTAL_CODES_ONLY";
+}
+
+function getDefaultDeliveryRadius(value) {
+  const parsed = parseNumberOrNull(value);
+  return parsed ?? 0;
+}
+
+function getDefaultLeadTimeDays(value) {
+  const parsed = parseNumberOrNull(value);
+  return parsed ?? 0;
+}
+
 export async function getAdminDeliverySummaryRequest() {
   const data = await executeProtectedGraphqlRequest(ADMIN_DELIVERY_SUMMARY_QUERY, {});
   const summary = data?.adminDeliverySummary;
@@ -320,9 +334,9 @@ export async function createDeliveryAreaRequest(input) {
       city: `${input?.city ?? ""}`.trim(),
       region: `${input?.region ?? ""}`.trim(),
       country: `${input?.country ?? ""}`.trim(),
-      coverageType: `${input?.coverageType ?? ""}`.trim(),
-      maxDeliveryRadius: parseNumberOrNull(input?.maxDeliveryRadius),
-      leadTimeDays: parseNumberOrNull(input?.leadTimeDays),
+      coverageType: getDefaultCoverageType(input?.coverageType),
+      maxDeliveryRadius: getDefaultDeliveryRadius(input?.maxDeliveryRadius),
+      leadTimeDays: getDefaultLeadTimeDays(input?.leadTimeDays),
       postalAreas: Array.isArray(input?.postalAreas)
         ? input.postalAreas.map((area) => ({
             postalCode: `${area?.postalCode ?? ""}`.trim(),
@@ -355,7 +369,7 @@ export async function updateDeliveryAreaRequest(id, input) {
     input: {
       maxDeliveryRadius: parseNumberOrNull(input?.maxDeliveryRadius),
       leadTimeDays: parseNumberOrNull(input?.leadTimeDays),
-      coverageType: `${input?.coverageType ?? ""}`.trim() || null,
+      coverageType: getDefaultCoverageType(input?.coverageType),
       minimumOrderAmount: parseDecimalOrNull(input?.minimumOrderAmount),
       deliveryFee: parseDecimalOrNull(input?.deliveryFee),
       isRestricted: Boolean(input?.isRestricted),

@@ -54,12 +54,6 @@ function TextField({
   );
 }
 
-const coverageOptions = [
-  { value: "ALL_CITY_COVERAGE", label: "All City Coverage" },
-  { value: "SELECTED_POSTAL_CODES_ONLY", label: "Selected Postal Codes Only" },
-  { value: "POLYGON_COVERAGE", label: "Polygon Coverage" },
-];
-
 export default function DeliverySettingsCard({ area, form, onChange }) {
   return (
     <section className="rounded-[18px] border border-[#ddd4cd] bg-white p-5 shadow-[0_10px_24px_rgba(55,31,13,0.05)]">
@@ -76,35 +70,6 @@ export default function DeliverySettingsCard({ area, form, onChange }) {
         <TextField label="Region" onChange={() => {}} readOnly value={area.region} />
         <TextField label="Country" onChange={() => {}} readOnly value={area.country} />
         <TextField label="Created At" onChange={() => {}} readOnly value={area.createdAt} />
-        <TextField
-          label="Maximum Delivery Radius (km)"
-          onChange={(event) => onChange("maxDeliveryRadius", event.target.value)}
-          type="number"
-          value={form.maxDeliveryRadius}
-        />
-        <TextField
-          label="Default Minimum Lead Time (days)"
-          onChange={(event) => onChange("leadTimeDays", event.target.value)}
-          type="number"
-          value={form.leadTimeDays}
-        />
-        <TextField
-          as="select"
-          label="Coverage Type"
-          onChange={(event) => onChange("coverageType", event.target.value)}
-          options={coverageOptions}
-          value={form.coverageType}
-        />
-        <TextField
-          label="Minimum Order Amount"
-          onChange={(event) => onChange("minimumOrderAmount", event.target.value)}
-          value={form.minimumOrderAmount}
-        />
-        <TextField
-          label="Delivery Fee"
-          onChange={(event) => onChange("deliveryFee", event.target.value)}
-          value={form.deliveryFee}
-        />
         <div className="space-y-4">
           <ToggleField
             checked={form.isRestricted}

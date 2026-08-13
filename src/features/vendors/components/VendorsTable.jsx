@@ -5,9 +5,12 @@ import { useNavigate } from "react-router-dom";
 const statusClasses = {
   Active: "bg-[#2b9e62] text-white",
   "Pending Approval": "bg-[#ffb300] text-[#1d1713]",
+  "Changes Requested": "bg-[#f49b3f] text-[#1d1713]",
   Suspended: "bg-[#d83f3f] text-white",
   Rejected: "bg-[#8c8077] text-white",
   Deactivated: "bg-[#d7dde5] text-[#24303d]",
+  Deleted: "bg-[#e7eaef] text-[#3f4a59]",
+  Unknown: "bg-[#f7f4f2] text-[#6f645d]",
 };
 
 function PersonCell({ name, src, subtitle, avatar }) {

@@ -103,15 +103,26 @@ function normalizeVendorStatus(value) {
     case "ACTIVE":
       return "Active";
     case "PENDING_APPROVAL":
+    case "REVIEWING":
+    case "UNDER_REVIEW":
       return "Pending Approval";
+    case "CHANGES_REQUESTED":
+      return "Changes Requested";
     case "SUSPENDED":
       return "Suspended";
     case "REJECTED":
       return "Rejected";
     case "DEACTIVATED":
       return "Deactivated";
+    case "DELETED":
+      return "Deleted";
+    case "":
+      return "Unknown";
     default:
-      return "Active";
+      return normalized
+        .toLowerCase()
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
   }
 }
 

@@ -33,15 +33,21 @@ function PersonCell({ name, src, subtitle, avatar }) {
 
 function getVendorNavigationPath(row) {
   const cleanId = encodeURIComponent(row.id);
-  return row.status === "Pending Approval" ? `/vendors/${cleanId}/review` : `/vendors/${cleanId}`;
+  return ["Pending Approval", "Changes Requested"].includes(row.status)
+    ? `/vendors/${cleanId}/review`
+    : `/vendors/${cleanId}`;
 }
 
 function getReviewActionLabel(row) {
-  if (row.status !== "Pending Approval") {
-    return "View Details";
+  if (row.status === "Pending Approval") {
+    return row.canApprove ? "Review & Approve" : "Review Requirements";
   }
 
-  return row.canApprove ? "Review & Approve" : "Review Requirements";
+  if (row.status === "Changes Requested") {
+    return "Review Updates";
+  }
+
+  return "View Details";
 }
 
 export default function VendorsTable({
@@ -239,7 +245,7 @@ export default function VendorsTable({
                           >
                             {getReviewActionLabel(row)}
                           </button>
-                          {row.status !== "Pending Approval" ? (
+                          {!["Pending Approval", "Changes Requested"].includes(row.status) ? (
                             <button
                               onClick={() => {
                                 onToggleStatus?.(row);

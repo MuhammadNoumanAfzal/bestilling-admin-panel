@@ -185,8 +185,6 @@ export default function DeliveryPostalAreasCard({
                 <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Area Name</th>
                 <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
                 <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendors</th>
-                <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Coordinates</th>
-                <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">ETA</th>
                 <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
               </tr>
             </thead>
@@ -194,7 +192,7 @@ export default function DeliveryPostalAreasCard({
             <tbody>
               {filteredRows.length === 0 ? (
                 <tr className="border-t border-[#f1e9e2]">
-                  <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={7}>
+                  <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={5}>
                     No postal codes match the current search or filter.
                   </td>
                 </tr>
@@ -211,12 +209,6 @@ export default function DeliveryPostalAreasCard({
                         <UsersRound size={16} className="text-[#cf6e38]" />
                         <span>{row.vendors}</span>
                       </span>
-                    </td>
-                    <td className="px-3 py-4 text-[14px] font-medium text-[#18120f]">
-                      {row.lat && row.lng ? `${row.lat}, ${row.lng}` : "Not set"}
-                    </td>
-                    <td className="px-3 py-4 text-[14px] font-medium text-[#18120f]">
-                      {row.estimatedDeliveryMinutes ? `${row.estimatedDeliveryMinutes} min` : "Not set"}
                     </td>
                     <td className="px-4 py-4 text-right">
                       <div className="inline-flex items-center gap-1">

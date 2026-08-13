@@ -30,7 +30,7 @@ export default function DeliveryPostalCodeModal({
               {mode === "edit" ? "Edit Postal Code" : "Add Postal Code"}
             </h2>
             <p className="mt-2 text-[14px] leading-6 text-[#6f645d]">
-              Keep this delivery zone complete with clear area naming and coverage coordinates.
+              Keep this delivery zone complete with clear postal code and area naming.
             </p>
           </div>
 
@@ -51,7 +51,7 @@ export default function DeliveryPostalCodeModal({
               </span>
               <div>
                 <p className="text-[16px] font-bold text-[#18120f]">Coverage Details</p>
-                <p className="text-[13px] text-[#7b6f68]">Set the postal code, local area, and map coordinates.</p>
+                <p className="text-[13px] text-[#7b6f68]">Set the postal code, local area, and service status.</p>
               </div>
             </div>
 
@@ -75,28 +75,6 @@ export default function DeliveryPostalCodeModal({
                 onChange={(event) => onChange("status", event.target.value)}
                 options={statusOptions}
                 value={form.status}
-              />
-              <div />
-              <AddDeliveryAreaField
-                label="Latitude"
-                onChange={(event) => onChange("lat", event.target.value)}
-                placeholder="59.9139"
-                type="number"
-                value={form.lat}
-              />
-              <AddDeliveryAreaField
-                label="Longitude"
-                onChange={(event) => onChange("lng", event.target.value)}
-                placeholder="10.7522"
-                type="number"
-                value={form.lng}
-              />
-              <AddDeliveryAreaField
-                label="Estimated Delivery Minutes"
-                onChange={(event) => onChange("estimatedDeliveryMinutes", event.target.value)}
-                placeholder="45"
-                type="number"
-                value={form.estimatedDeliveryMinutes}
               />
             </div>
           </div>

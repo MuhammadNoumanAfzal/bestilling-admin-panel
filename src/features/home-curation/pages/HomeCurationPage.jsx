@@ -532,7 +532,7 @@ export default function HomeCurationPage() {
         {showScrollUp ? (
           <button
             aria-label="Scroll to top"
-            className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#1f1712] text-white shadow-[0_18px_36px_rgba(31,23,18,0.28)] transition hover:-translate-y-0.5 hover:bg-[#352720]"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#d16737] text-white shadow-[0_18px_36px_rgba(209,103,55,0.28)] transition hover:-translate-y-0.5 hover:bg-[#bd592b]"
             onClick={scrollToTop}
             type="button"
           >

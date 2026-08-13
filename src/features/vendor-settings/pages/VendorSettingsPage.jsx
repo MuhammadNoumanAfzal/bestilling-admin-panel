@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlarmClockPlus,
+  ArrowDown,
   ArrowUp,
   Banknote,
   ChefHat,
@@ -757,6 +758,7 @@ export default function VendorSettingsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [savingKey, setSavingKey] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showScrollDown, setShowScrollDown] = useState(true);
   const sectionRefs = useRef({});
 
   async function loadVendorSettings({ silent = false } = {}) {
@@ -789,7 +791,11 @@ export default function VendorSettingsPage() {
 
   useEffect(() => {
     function handleScroll() {
-      setShowScrollTop(window.scrollY > 480);
+      const scrollTop = window.scrollY;
+      const maxScrollTop = document.documentElement.scrollHeight - window.innerHeight;
+
+      setShowScrollTop(scrollTop > 320);
+      setShowScrollDown(scrollTop < maxScrollTop - 320);
     }
 
     handleScroll();
@@ -886,6 +892,27 @@ export default function VendorSettingsPage() {
   function scrollToTop() {
     window.scrollTo({
       top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function scrollDown() {
+    const orderedSections = SECTION_GROUPS.flatMap((group) => group.sectionKeys)
+      .map((sectionKey) => sectionRefs.current[sectionKey])
+      .filter(Boolean);
+
+    const nextSection = orderedSections.find((section) => section.getBoundingClientRect().top > 140);
+
+    if (nextSection) {
+      nextSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      return;
+    }
+
+    window.scrollBy({
+      top: window.innerHeight * 0.9,
       behavior: "smooth",
     });
   }
@@ -1154,16 +1181,29 @@ export default function VendorSettingsPage() {
         ))
       )}
 
-      {showScrollTop ? (
-        <button
-          aria-label="Back to top"
-          className="fixed bottom-6 right-6 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#1f1712] text-white shadow-[0_18px_36px_rgba(31,23,18,0.28)] transition hover:-translate-y-0.5 hover:bg-[#352720]"
-          onClick={scrollToTop}
-          type="button"
-        >
-          <ArrowUp size={18} />
-        </button>
-      ) : null}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
+        {showScrollTop ? (
+          <button
+            aria-label="Back to top"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#d16737] text-white shadow-[0_18px_36px_rgba(209,103,55,0.28)] transition hover:-translate-y-0.5 hover:bg-[#bd592b]"
+            onClick={scrollToTop}
+            type="button"
+          >
+            <ArrowUp size={18} />
+          </button>
+        ) : null}
+
+        {showScrollDown ? (
+          <button
+            aria-label="Scroll down"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#d16737] text-white shadow-[0_18px_36px_rgba(209,103,55,0.28)] transition hover:translate-y-0.5 hover:bg-[#bd592b]"
+            onClick={scrollDown}
+            type="button"
+          >
+            <ArrowDown size={18} />
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

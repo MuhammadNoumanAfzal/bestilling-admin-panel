@@ -92,18 +92,6 @@ export default function DeliveryPostalCodeModal({
                 value={form.lng}
               />
               <AddDeliveryAreaField
-                label="Delivery Fee Override"
-                onChange={(event) => onChange("deliveryFeeOverride", event.target.value)}
-                placeholder="49.00"
-                value={form.deliveryFeeOverride}
-              />
-              <AddDeliveryAreaField
-                label="Minimum Order Override"
-                onChange={(event) => onChange("minimumOrderAmountOverride", event.target.value)}
-                placeholder="199.00"
-                value={form.minimumOrderAmountOverride}
-              />
-              <AddDeliveryAreaField
                 label="Estimated Delivery Minutes"
                 onChange={(event) => onChange("estimatedDeliveryMinutes", event.target.value)}
                 placeholder="45"

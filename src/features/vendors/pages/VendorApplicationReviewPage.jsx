@@ -504,36 +504,73 @@ export default function VendorApplicationReviewPage() {
       : [];
 
     const result = await Swal.fire({
-      title: "Request application changes",
       html: `
-        <div style="display:flex;flex-direction:column;gap:14px;text-align:left;">
-          <div style="border:1px solid #eaded3;border-radius:14px;padding:14px;background:#fffaf6;">
-            <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#2a1e17;">Vendor instructions</p>
-            <p style="margin:0;font-size:12px;line-height:1.6;color:#6f6259;">
-              Tell the vendor exactly what needs to be corrected before approval.
-            </p>
-          </div>
-          <textarea id="vendor-change-message" class="swal2-textarea" placeholder="Explain what the vendor must update and how to fix it"></textarea>
-          <div style="border:1px solid #eaded3;border-radius:14px;padding:14px;background:#fff;">
-            <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#2a1e17;">Requested checklist items</p>
-            <div id="vendor-change-fields" style="display:flex;flex-direction:column;gap:8px;max-height:180px;overflow:auto;">
+        <div class="text-left">
+          <div class="rounded-[34px] border border-[#ebddd3] bg-[linear-gradient(180deg,#fff8f3_0%,#ffffff_100%)] p-3 shadow-[0_24px_70px_rgba(37,22,12,0.08)]">
+            <div class="mb-3">
+              <span class="inline-flex items-center rounded-full border border-[#efd1bf] bg-white px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#bf6739]">
+                Vendor Review
+              </span>
+              <h2 class="mt-2.5 text-[32px] font-black tracking-[-0.05em] text-[#1d1510]">
+                Request application changes
+              </h2>
+              <p class="mt-1.5 max-w-[44ch] text-[14px] leading-6 text-[#6f6259]">
+                Send a clear correction request so the vendor knows exactly what to update before approval.
+              </p>
+            </div>
+
+            <div class="space-y-2.5">
+              <div class="rounded-[22px] border border-[#efdfd3] bg-white/90 p-3">
+                <p class="text-[12px] font-extrabold uppercase tracking-[0.18em] text-[#4b3c33]">
+                  Vendor instructions
+                </p>
+                <p class="mt-1 text-[13px] leading-5 text-[#72655d]">
+                  Tell the vendor exactly what needs to be corrected before approval.
+                </p>
+              </div>
+
+              <div>
+                <label class="mb-1 block text-[12px] font-extrabold uppercase tracking-[0.18em] text-[#4b3c33]" for="vendor-change-message">
+                  Message
+                </label>
+                <textarea
+                  id="vendor-change-message"
+                  class="swal2-textarea !m-0 !min-h-[88px] !w-full !rounded-[22px] !border !border-[#e4d7ce] !bg-white !px-4 !py-3 !text-[15px] !leading-7 !text-[#2a1f19] !shadow-none placeholder:!text-[#ab9c91] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]"
+                  placeholder="Explain what the vendor must update and how to fix it"
+                ></textarea>
+              </div>
+
+              <div class="rounded-[22px] border border-[#efdfd3] bg-white p-3">
+                <div class="mb-2 flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-[12px] font-extrabold uppercase tracking-[0.18em] text-[#4b3c33]">
+                      Requested checklist items
+                    </p>
+                    <p class="mt-0.5 text-[12px] leading-4 text-[#85776e]">
+                      Select the blockers the vendor must resolve.
+                    </p>
+                  </div>
+                </div>
+                <div id="vendor-change-fields" class="flex max-h-[148px] flex-col gap-2 overflow-auto pr-1">
               ${
                 suggestedFields.length
                   ? suggestedFields
                       .map(
                         (item) => `
-                          <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid #efe3d8;border-radius:12px;background:#fffdfa;cursor:pointer;">
-                            <input type="checkbox" value="${item.code}" checked style="margin-top:2px;" />
+                          <label class="flex cursor-pointer items-start gap-3 rounded-[18px] border border-[#efe3d8] bg-[#fffdfa] px-3.5 py-2 transition hover:border-[#e4c9b8] hover:bg-[#fff7f1]">
+                            <input type="checkbox" value="${item.code}" checked class="mt-0.5 h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38]" />
                             <span>
-                              <span style="display:block;font-size:13px;font-weight:700;color:#231913;">${item.label}</span>
-                              <span style="display:block;font-size:11px;color:#8b7d74;">${item.code}</span>
+                              <span class="block text-[14px] font-bold text-[#231913]">${item.label}</span>
+                              <span class="mt-1 block text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8b7d74]">${item.code}</span>
                             </span>
                           </label>
                         `,
                       )
                       .join("")
-                  : `<p style="margin:0;font-size:12px;line-height:1.6;color:#7b6f66;">No checklist codes were returned by the API. You can still submit a free-text change request message.</p>`
+                  : `<p class="m-0 rounded-[14px] border border-dashed border-[#e8dad0] bg-[#fcfaf8] px-4 py-4 text-[12px] leading-6 text-[#7b6f66]">No checklist codes were returned by the API. You can still submit a free-text change request message.</p>`
               }
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -543,6 +580,17 @@ export default function VendorApplicationReviewPage() {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
+      width: 760,
+      customClass: {
+        popup: "!overflow-hidden !rounded-[34px] !border !border-[#ebddd3] !p-0",
+        htmlContainer: "!m-0 !p-0",
+        actions: "!mt-0 !gap-3 !px-5 !pb-5 !pt-0",
+        confirmButton:
+          "!m-0 !h-12 !rounded-[14px] !bg-[#d96834] !px-5 !text-[13px] !font-extrabold !shadow-[0_18px_30px_rgba(217,104,52,0.24)]",
+        cancelButton:
+          "!m-0 !h-12 !rounded-[14px] !border !border-[#ddd1c8] !bg-[#f4ede7] !px-5 !text-[13px] !font-extrabold !text-[#6d5f56]",
+        validationMessage: "!mx-6 !mb-4 !mt-0 !rounded-[14px] !bg-[#fff1ef] !px-4 !py-3 !text-[13px] !font-bold !text-[#c83d31]",
+      },
       preConfirm: () => {
         const message = window.document.getElementById("vendor-change-message")?.value?.trim() || "";
         const fieldsValue = Array.from(
@@ -568,6 +616,10 @@ export default function VendorApplicationReviewPage() {
           messageElement.value = `Please update the following before approval:\n${suggestedFields
             .map((item) => `- ${item.label}`)
             .join("\n")}`;
+        }
+
+        if (messageElement) {
+          messageElement.focus();
         }
       },
     });

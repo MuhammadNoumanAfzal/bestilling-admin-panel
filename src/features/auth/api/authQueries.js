@@ -9,6 +9,9 @@ export const LOGIN_ADMIN_MUTATION = `
         firstName
         lastName
         role
+        isAdmin
+        isStaff
+        isSuperuser
       }
     }
   }

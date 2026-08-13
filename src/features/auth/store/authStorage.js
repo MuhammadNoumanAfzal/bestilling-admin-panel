@@ -1,6 +1,7 @@
 import { isAllowedAdminRole } from "../authConfig.js";
 
 const AUTH_STORAGE_KEY = "bestilling-admin-auth";
+let inMemorySession = null;
 
 function createEmptySession() {
   return {
@@ -9,7 +10,21 @@ function createEmptySession() {
   };
 }
 
+function isValidAdminSession(session) {
+  return Boolean(
+    session?.accessToken &&
+      session?.user?.id &&
+      session?.user?.email &&
+      session?.user?.isAdmin &&
+      isAllowedAdminRole(session?.user?.role),
+  );
+}
+
 export function loadStoredAuthSession() {
+  if (isValidAdminSession(inMemorySession)) {
+    return inMemorySession;
+  }
+
   if (typeof window === "undefined") {
     return createEmptySession();
   }
@@ -25,33 +40,33 @@ export function loadStoredAuthSession() {
     const accessToken = parsedSession?.accessToken || null;
     const user = parsedSession?.user || null;
 
-    if (!accessToken || !user?.id || !user?.email || !user?.isAdmin || !isAllowedAdminRole(user?.role)) {
+    if (!isValidAdminSession({ accessToken, user })) {
       window.localStorage.removeItem(AUTH_STORAGE_KEY);
+      inMemorySession = createEmptySession();
       return createEmptySession();
     }
 
-    return {
+    inMemorySession = {
       accessToken,
       user,
     };
+
+    return inMemorySession;
   } catch {
     window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    inMemorySession = createEmptySession();
     return createEmptySession();
   }
 }
 
 export function persistAuthSession(session) {
+  inMemorySession = isValidAdminSession(session) ? session : createEmptySession();
+
   if (typeof window === "undefined") {
     return;
   }
 
-  if (
-    !session?.accessToken ||
-    !session?.user?.id ||
-    !session?.user?.email ||
-    !session?.user?.isAdmin ||
-    !isAllowedAdminRole(session?.user?.role)
-  ) {
+  if (!isValidAdminSession(session)) {
     window.localStorage.removeItem(AUTH_STORAGE_KEY);
     return;
   }
@@ -60,9 +75,15 @@ export function persistAuthSession(session) {
 }
 
 export function clearStoredAuthSession() {
+  inMemorySession = createEmptySession();
+
   if (typeof window === "undefined") {
     return;
   }
 
   window.localStorage.removeItem(AUTH_STORAGE_KEY);
+}
+
+export function getStoredAccessToken() {
+  return inMemorySession?.accessToken || loadStoredAuthSession().accessToken || null;
 }

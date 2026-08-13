@@ -1,5 +1,8 @@
 import { executeGraphqlRequest } from "../../features/auth/api/authClient.js";
-import { clearStoredAuthSession, loadStoredAuthSession } from "../../features/auth/store/authStorage.js";
+import {
+  clearStoredAuthSession,
+  getStoredAccessToken,
+} from "../../features/auth/store/authStorage.js";
 
 function createSessionExpiredError() {
   const error = new Error("Your session has expired. Please log in again.");
@@ -8,7 +11,7 @@ function createSessionExpiredError() {
 }
 
 export function getCurrentAccessToken() {
-  return loadStoredAuthSession().accessToken || null;
+  return getStoredAccessToken();
 }
 
 export async function executeProtectedGraphqlRequest(query, variables, options = {}) {

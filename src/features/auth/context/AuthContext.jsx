@@ -71,6 +71,7 @@ export function AuthProvider({ children }) {
       password: credentials?.password,
     });
 
+    persistAuthSession(nextSession);
     setSession(nextSession);
     return nextSession;
   }

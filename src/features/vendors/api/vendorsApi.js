@@ -11,6 +11,7 @@ import {
   REQUEST_VENDOR_APPLICATION_CHANGES_MUTATION,
   REVIEW_VENDOR_DOCUMENT_MUTATION,
   UPDATE_VENDOR_STATUS_MUTATION,
+  VENDOR_MENU_DETAIL_QUERY,
   VENDOR_DOCUMENT_ACCESS_QUERY,
 } from "./vendorsQueries.js";
 
@@ -378,6 +379,124 @@ function normalizeVendorDetail(vendor) {
   };
 }
 
+function getEdgeNodes(connection) {
+  return Array.isArray(connection?.edges)
+    ? connection.edges.map((edge) => edge?.node).filter(Boolean)
+    : [];
+}
+
+function formatVendorMenuStatus(value) {
+  const normalized = `${value ?? ""}`.trim().toLowerCase();
+
+  switch (normalized) {
+    case "active":
+      return "Active";
+    case "draft":
+      return "Draft";
+    case "archived":
+      return "Archived";
+    default:
+      return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : "Unknown";
+  }
+}
+
+function formatPricingType(value) {
+  const normalized = `${value ?? ""}`.trim();
+  if (!normalized) {
+    return "";
+  }
+
+  return normalized
+    .replace(/[_-]/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function normalizeVendorMenuDetail(menu) {
+  if (!menu?.id) {
+    return null;
+  }
+
+  const title = menu.title || menu.name || "Untitled menu";
+  const coverImageUrl = menu.coverImage?.fileUrl || "";
+  const attachments = getEdgeNodes(menu.attachments)
+    .filter((attachment) => attachment?.fileUrl)
+    .map((attachment) => ({
+      id: attachment.id || "",
+      fileUrl: attachment.fileUrl || "",
+      fileId: attachment.fileId || "",
+      isCover: Boolean(attachment.isCover),
+    }));
+  const galleryImages = attachments.filter((attachment) => !attachment.isCover);
+  const menuItems = Array.isArray(menu.menuItems)
+    ? menu.menuItems.map((item) => ({
+        id: item?.id || "",
+        title: item?.title || "Untitled item",
+        description: item?.description || "",
+        imageUrl: item?.imageUrl || "",
+        fileId: item?.fileId || "",
+        order: Number(item?.order ?? 0),
+        allergens: Array.isArray(item?.allergens)
+          ? item.allergens.map((allergen) => allergen?.name || allergen?.slug || "").filter(Boolean)
+          : [],
+      }))
+    : [];
+  const optionalAddOns = Array.isArray(menu.optionalAddOns)
+    ? menu.optionalAddOns.map((addOn) => ({
+        id: addOn?.id || "",
+        name: addOn?.name || "Unnamed add-on",
+        options: Array.isArray(addOn?.options)
+          ? addOn.options.map((option) => ({
+              id: option?.id || "",
+              name: option?.name || "Unnamed option",
+              price: option?.price || "",
+            }))
+          : [],
+      }))
+    : [];
+
+  return {
+    id: menu.id,
+    title,
+    description: menu.description || "",
+    category: menu.category?.name || "",
+    categoryId: menu.category?.id || "",
+    status: formatVendorMenuStatus(menu.menuStatus),
+    rawStatus: menu.menuStatus || "",
+    badge: menu.category?.name || menu.menuType || "",
+    imageUrl: coverImageUrl,
+    galleryImages,
+    price: menu.priceWithTax ? `kr ${menu.priceWithTax}` : "Not provided",
+    basePrice: menu.priceWithTax || "",
+    pricingType: formatPricingType(menu.pricingType),
+    taxPercent: menu.taxPercent || "",
+    minimumGuests: menu.minimumGuests || "",
+    minLeadTimeHours: menu.minLeadTimeHours || "",
+    minLeadTimeDays: menu.minLeadTimeDays || "",
+    availableDays: Array.isArray(menu.availableDays) ? menu.availableDays : [],
+    blackoutDates: Array.isArray(menu.blackoutDates) ? menu.blackoutDates : [],
+    dietaryTags: Array.isArray(menu.dietaryTags)
+      ? menu.dietaryTags.map((tag) => tag?.name || tag?.slug || "").filter(Boolean)
+      : [],
+    customDietary: menu.customDietary || "",
+    contains: menu.contains || "",
+    isAdjustableForSingleStaff: Boolean(menu.isAdjustableForSingleStaff),
+    isAvailabilityWindowEnabled: Boolean(menu.isAvailabilityWindowEnabled),
+    availableFrom: menu.availableFrom || "",
+    availableUntil: menu.availableUntil || "",
+    menuType: menu.menuType || "",
+    foodTypes: Array.isArray(menu.foodTypes)
+      ? menu.foodTypes.map((type) => type?.name || type?.slug || "").filter(Boolean)
+      : [],
+    occasions: Array.isArray(menu.occasions)
+      ? menu.occasions.map((occasion) => occasion?.name || occasion?.slug || "").filter(Boolean)
+      : [],
+    ingredients: getEdgeNodes(menu.ingredients).map((ingredient) => ingredient?.name || "").filter(Boolean),
+    menuItems,
+    optionalAddOns,
+    primaryImageUrl: coverImageUrl || galleryImages[0]?.fileUrl || "",
+  };
+}
+
 function normalizeVendorApplicationReview(review) {
   if (!review?.id) {
     return null;
@@ -474,6 +593,17 @@ export async function getAdminVendorDetailRequest(id) {
   }
 
   return vendor;
+}
+
+export async function getAdminVendorMenuDetailRequest(id) {
+  const data = await executeProtectedGraphqlRequest(VENDOR_MENU_DETAIL_QUERY, { id });
+  const menu = normalizeVendorMenuDetail(data?.vendorMenu);
+
+  if (!menu?.id) {
+    throw new Error("Unable to load full menu details for this menu.");
+  }
+
+  return menu;
 }
 
 export async function getAdminVendorApplicationReviewRequest(id) {

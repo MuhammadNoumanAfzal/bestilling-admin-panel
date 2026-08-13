@@ -238,6 +238,98 @@ export const ADMIN_VENDOR_DETAIL_QUERY = `
   }
 `;
 
+export const VENDOR_MENU_DETAIL_QUERY = `
+  query VendorMenuDetailForAdmin($id: ID!) {
+    vendorMenu(id: $id) {
+      id
+      name
+      title
+      description
+      category {
+        id
+        name
+      }
+      menuType
+      foodTypes {
+        id
+        name
+        slug
+      }
+      occasions {
+        id
+        name
+        slug
+      }
+      menuStatus
+      pricingType
+      priceWithTax
+      taxPercent
+      minimumGuests
+      minLeadTimeHours
+      minLeadTimeDays
+      availableDays
+      blackoutDates
+      dietaryTags {
+        id
+        name
+        slug
+        isActive
+        sortOrder
+      }
+      customDietary
+      contains
+      isAdjustableForSingleStaff
+      isAvailabilityWindowEnabled
+      availableFrom
+      availableUntil
+      coverImage {
+        fileUrl
+        fileId
+      }
+      ingredients {
+        edges {
+          node {
+            id
+            name
+          }
+        }
+      }
+      attachments {
+        edges {
+          node {
+            id
+            fileUrl
+            fileId
+            isCover
+          }
+        }
+      }
+      menuItems {
+        id
+        title
+        description
+        allergens {
+          id
+          name
+          slug
+        }
+        imageUrl
+        fileId
+        order
+      }
+      optionalAddOns {
+        id
+        name
+        options {
+          id
+          name
+          price
+        }
+      }
+    }
+  }
+`;
+
 export const ADMIN_VENDOR_APPLICATION_REVIEW_QUERY = `
   query AdminVendorApplicationReview($id: ID!) {
     adminVendorApplicationReview(id: $id) {

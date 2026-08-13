@@ -5,6 +5,7 @@ import {
   deactivateVendorRequest,
   deleteVendorRequest,
   getAdminVendorDetailRequest,
+  getAdminVendorMenuDetailRequest,
   getVendorDocumentAccessRequest,
   updateVendorStatusRequest,
 } from "../api/vendorsApi.js";
@@ -117,6 +118,10 @@ export default function VendorDetailPage() {
         confirmButtonColor: "#cf6e38",
       });
     }
+  }
+
+  async function handleViewMenu(menu) {
+    return getAdminVendorMenuDetailRequest(menu.id);
   }
 
   async function handleSuspendVendor() {
@@ -309,7 +314,7 @@ export default function VendorDetailPage() {
       </div>
 
       <div ref={(node) => { sectionRefs.current.menus = node; }} className="scroll-mt-6">
-        <VendorPublishedMenusSection menus={vendor.publishedMenus} tabs={vendor.menuTabs} />
+        <VendorPublishedMenusSection menus={vendor.publishedMenus} onViewMenu={handleViewMenu} tabs={vendor.menuTabs} />
       </div>
 
       <div ref={(node) => { sectionRefs.current.orders = node; }} className="scroll-mt-6">

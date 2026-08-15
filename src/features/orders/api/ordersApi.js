@@ -131,6 +131,12 @@ function normalizePaymentStatus(value) {
   }
 }
 
+function resolveLifecycleRawStatus(order) {
+  return `${order?.fulfillmentStatus ?? order?.delivery?.status ?? order?.status ?? ""}`
+    .trim()
+    .toUpperCase();
+}
+
 function normalizeTimelineStatus(value) {
   const normalized = `${value ?? ""}`.trim().toUpperCase();
 
@@ -159,7 +165,7 @@ function createTimelineStep(step) {
 }
 
 function buildProductionTimeline(order) {
-  const rawStatus = `${order?.status ?? ""}`.trim().toUpperCase();
+  const rawStatus = resolveLifecycleRawStatus(order);
   const rawPaymentStatus = `${order?.paymentStatus ?? ""}`.trim().toUpperCase();
 
   const placedAt = order?.placedAt || "";
@@ -175,11 +181,11 @@ function buildProductionTimeline(order) {
       ? "canceled"
       : rawStatus === "REFUNDED" || rawPaymentStatus === "REFUNDED" || rawPaymentStatus === "PARTIALLY_REFUNDED"
       ? "refunded"
-      : deliveredAt || rawStatus === "DELIVERED"
+      : deliveredAt || rawStatus === "DELIVERED" || rawStatus === "COMPLETED"
       ? "delivered"
-      : outForDeliveryAt || rawStatus === "OUT_FOR_DELIVERY"
+      : outForDeliveryAt || rawStatus === "OUT_FOR_DELIVERY" || rawStatus === "IN_TRANSIT"
       ? "out_for_delivery"
-      : preparedAt || rawStatus === "PREPARING"
+      : preparedAt || rawStatus === "PREPARING" || rawStatus === "FOOD_READY" || rawStatus === "READY"
       ? "preparing"
       : acceptedAt || rawStatus === "ACCEPTED" || rawStatus === "CONFIRMED"
       ? "accepted"
@@ -459,11 +465,11 @@ function normalizeOrderDetail(order) {
   return {
     id: order.id,
     orderNumber: order.orderNumber || order.id,
-    status: normalizeStatus(order.status),
-    rawStatus: `${order.status ?? ""}`.trim().toUpperCase(),
+    status: normalizeStatus(resolveLifecycleRawStatus(order)),
+    rawStatus: resolveLifecycleRawStatus(order),
     paymentStatus: normalizePaymentStatus(order.paymentStatus),
     rawPaymentStatus: `${order.paymentStatus ?? ""}`.trim().toUpperCase(),
-    fulfillmentStatus: normalizeStatus(order.fulfillmentStatus),
+    fulfillmentStatus: normalizeStatus(resolveLifecycleRawStatus(order)),
     placedAt: order.placedAt || "",
     placedAtLabel: formatDateTimeLabel(order.placedAt),
     acceptedAtLabel: formatDateTimeLabel(order.acceptedAt),
@@ -516,7 +522,7 @@ function normalizeOrderDetail(order) {
     },
     delivery: {
       type: order?.delivery?.type || "DELIVERY",
-      status: normalizeStatus(order?.delivery?.status),
+      status: normalizeStatus(order?.delivery?.status || order?.fulfillmentStatus || order?.status),
       scheduledAt: formatDateTimeLabel(order?.delivery?.scheduledAt),
       deliveredAt: formatDateTimeLabel(order?.delivery?.deliveredAt),
       recipientName: order?.delivery?.recipientName || customerName,

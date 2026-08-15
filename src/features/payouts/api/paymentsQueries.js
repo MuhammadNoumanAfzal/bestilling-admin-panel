@@ -189,8 +189,8 @@ export const ADMIN_PAYMENT_DETAIL_QUERY = `
 `;
 
 export const MARK_CUSTOMER_PAYMENT_RECEIVED_MUTATION = `
-  mutation MarkCustomerPaymentReceived($id: ID!) {
-    markCustomerPaymentReceived(id: $id) {
+  mutation MarkCustomerPaymentReceived($id: ID!, $reference: String, $note: String) {
+    markCustomerPaymentReceived(id: $id, reference: $reference, note: $note) {
       success
       message
       errors {
@@ -212,8 +212,8 @@ export const MARK_CUSTOMER_PAYMENT_RECEIVED_MUTATION = `
 `;
 
 export const MARK_VENDOR_PAYOUT_PAID_MUTATION = `
-  mutation MarkVendorPayoutPaid($id: ID!) {
-    markVendorPayoutPaid(id: $id) {
+  mutation MarkVendorPayoutPaid($id: ID!, $reference: String, $note: String) {
+    markVendorPayoutPaid(id: $id, reference: $reference, note: $note) {
       success
       message
       errors {

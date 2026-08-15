@@ -82,9 +82,38 @@ export default function PaymentDetailsPage() {
       return;
     }
 
+    const prompt = await Swal.fire({
+      title: "Confirm customer payment",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <div>
+            <label for="payment-reference" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Reference</label>
+            <input id="payment-reference" class="swal2-input" placeholder="Bank transfer reference or cash receipt number" style="margin:0;width:100%;" />
+          </div>
+          <div>
+            <label for="payment-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Internal note</label>
+            <textarea id="payment-note" class="swal2-textarea" placeholder="Optional admin note" style="margin:0;width:100%;min-height:110px;"></textarea>
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Mark as received",
+      confirmButtonColor: "#cf6e38",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => ({
+        reference: document.getElementById("payment-reference")?.value?.trim() || "",
+        note: document.getElementById("payment-note")?.value?.trim() || "",
+      }),
+    });
+
+    if (!prompt.isConfirmed) {
+      return;
+    }
+
     try {
       setIsUpdatingCustomerPayment(true);
-      const result = await markCustomerPaymentReceivedRequest(paymentDetail.id);
+      const result = await markCustomerPaymentReceivedRequest(paymentDetail.id, prompt.value || {});
       await refreshPaymentDetail();
       await Swal.fire({
         icon: "success",
@@ -109,9 +138,38 @@ export default function PaymentDetailsPage() {
       return;
     }
 
+    const prompt = await Swal.fire({
+      title: "Confirm vendor payout",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <div>
+            <label for="payout-reference" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Payout reference</label>
+            <input id="payout-reference" class="swal2-input" placeholder="Outbound bank transfer reference" style="margin:0;width:100%;" />
+          </div>
+          <div>
+            <label for="payout-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Internal note</label>
+            <textarea id="payout-note" class="swal2-textarea" placeholder="Optional admin note" style="margin:0;width:100%;min-height:110px;"></textarea>
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Mark payout paid",
+      confirmButtonColor: "#cf6e38",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => ({
+        reference: document.getElementById("payout-reference")?.value?.trim() || "",
+        note: document.getElementById("payout-note")?.value?.trim() || "",
+      }),
+    });
+
+    if (!prompt.isConfirmed) {
+      return;
+    }
+
     try {
       setIsUpdatingVendorPayout(true);
-      const result = await markVendorPayoutPaidRequest(paymentDetail.id);
+      const result = await markVendorPayoutPaidRequest(paymentDetail.id, prompt.value || {});
       await refreshPaymentDetail();
       await Swal.fire({
         icon: "success",

@@ -328,8 +328,12 @@ export async function getAdminPaymentDetailRequest(id) {
   return payment;
 }
 
-export async function markCustomerPaymentReceivedRequest(id) {
-  const data = await executeProtectedGraphqlRequest(MARK_CUSTOMER_PAYMENT_RECEIVED_MUTATION, { id });
+export async function markCustomerPaymentReceivedRequest(id, { reference = "", note = "" } = {}) {
+  const data = await executeProtectedGraphqlRequest(MARK_CUSTOMER_PAYMENT_RECEIVED_MUTATION, {
+    id,
+    reference: reference || null,
+    note: note || null,
+  });
   const result = data?.markCustomerPaymentReceived;
 
   if (!result?.success || !result?.payment?.id) {
@@ -343,8 +347,12 @@ export async function markCustomerPaymentReceivedRequest(id) {
   };
 }
 
-export async function markVendorPayoutPaidRequest(id) {
-  const data = await executeProtectedGraphqlRequest(MARK_VENDOR_PAYOUT_PAID_MUTATION, { id });
+export async function markVendorPayoutPaidRequest(id, { reference = "", note = "" } = {}) {
+  const data = await executeProtectedGraphqlRequest(MARK_VENDOR_PAYOUT_PAID_MUTATION, {
+    id,
+    reference: reference || null,
+    note: note || null,
+  });
   const result = data?.markVendorPayoutPaid;
 
   if (!result?.success || !result?.payment?.id) {

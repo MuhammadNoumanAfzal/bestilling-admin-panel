@@ -13,19 +13,42 @@ import ReportsStatCard from "../components/ReportsStatCard.jsx";
 import RevenueAnalyticsCard from "../components/RevenueAnalyticsCard.jsx";
 import VendorPerformanceCard from "../components/VendorPerformanceCard.jsx";
 import { reportFilterOptions, reportPresetMap } from "../data/reportsData.js";
+import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 
 function getTimezone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
 function buildReportsFilters(filterLabel, customStartDate, customEndDate) {
-  const preset = reportPresetMap[filterLabel] || null;
   const hasCustomDate = filterLabel === "Custom Date" && customStartDate && customEndDate;
+  const isClearFilter = filterLabel === "Clear Filter";
+
+  if (hasCustomDate) {
+    return {
+      dateFrom: new Date(`${customStartDate}T00:00:00`).toISOString(),
+      dateTo: new Date(`${customEndDate}T23:59:59`).toISOString(),
+      preset: null,
+      timezone: getTimezone(),
+      filterLabel,
+    };
+  }
+
+  if (isClearFilter) {
+    return {
+      dateFrom: null,
+      dateTo: null,
+      preset: null,
+      timezone: getTimezone(),
+      filterLabel: "Last 7 days",
+    };
+  }
+
+  const dateRange = getDateRangeForFilter(filterLabel, customStartDate, customEndDate);
 
   return {
-    dateFrom: hasCustomDate ? new Date(`${customStartDate}T00:00:00`).toISOString() : null,
-    dateTo: hasCustomDate ? new Date(`${customEndDate}T23:59:59`).toISOString() : null,
-    preset: hasCustomDate ? null : preset,
+    dateFrom: dateRange?.start ? dateRange.start.toISOString() : null,
+    dateTo: dateRange?.end ? dateRange.end.toISOString() : null,
+    preset: null,
     timezone: getTimezone(),
     filterLabel,
   };
@@ -68,6 +91,13 @@ export default function ReportsPage() {
         }
       } catch (error) {
         if (isMounted) {
+          setReportSnapshot((current) => ({
+            ...current,
+            revenueAnalytics: {
+              ...current.revenueAnalytics,
+              filterLabel: snapshotFilters.filterLabel || selectedFilter,
+            },
+          }));
           setLoadError(error instanceof Error ? error.message : "Unable to load reports snapshot.");
         }
       } finally {

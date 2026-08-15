@@ -54,6 +54,21 @@ function buildReportsFilters(filterLabel, customStartDate, customEndDate) {
   };
 }
 
+function triggerReportDownload(exportUrl, fileName) {
+  const anchor = document.createElement("a");
+  anchor.href = exportUrl;
+  anchor.target = "_blank";
+  anchor.rel = "noopener noreferrer";
+
+  if (fileName) {
+    anchor.download = fileName;
+  }
+
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+}
+
 export default function ReportsPage() {
   const [selectedFilter, setSelectedFilter] = useState("Last 7 days");
   const [customStartDate, setCustomStartDate] = useState("");
@@ -257,7 +272,7 @@ export default function ReportsPage() {
         sections: exportConfig.sections,
       });
 
-      window.open(result.exportUrl, "_blank", "noopener,noreferrer");
+      triggerReportDownload(result.exportUrl, result.fileName);
 
       await Swal.fire({
         icon: "success",

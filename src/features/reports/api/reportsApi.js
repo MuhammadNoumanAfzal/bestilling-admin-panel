@@ -13,6 +13,7 @@ const GRAPHQL_API_URL =
   import.meta.env.VITE_GRAPHQL_API_URL ??
   import.meta.env.VITE_GRAPHQL_URL ??
   DEFAULT_GRAPHQL_API_URL;
+const GRAPHQL_API_ORIGIN = new URL(GRAPHQL_API_URL).origin;
 
 function getReportsErrorMessage(result, fallbackMessage) {
   return result?.message || result?.errors?.find?.((item) => item?.message)?.message || fallbackMessage;
@@ -28,7 +29,11 @@ function normalizeExportUrl(exportUrl) {
   try {
     return new URL(rawValue).toString();
   } catch {
-    return new URL(rawValue, GRAPHQL_API_URL).toString();
+    if (rawValue.startsWith("/")) {
+      return new URL(rawValue, GRAPHQL_API_ORIGIN).toString();
+    }
+
+    return new URL(rawValue, `${GRAPHQL_API_ORIGIN}/`).toString();
   }
 }
 

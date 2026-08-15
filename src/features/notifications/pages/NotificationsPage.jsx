@@ -117,10 +117,16 @@ export default function NotificationsPage() {
         row.typeLabel.toLowerCase().includes(normalizedSearch);
 
       const matchesAudience = !audienceFilter || row.audience === audienceFilter;
+      const matchesType = !typeFilter || row.type === typeFilter;
+      const matchesStatus =
+        !statusFilter ||
+        (statusFilter === "UNREAD" && !row.isRead && !row.isArchived) ||
+        (statusFilter === "READ" && row.isRead && !row.isArchived) ||
+        (statusFilter === "ARCHIVED" && row.isArchived);
 
-      return matchesSearch && matchesAudience;
+      return matchesSearch && matchesAudience && matchesType && matchesStatus;
     });
-  }, [audienceFilter, rows, searchTerm]);
+  }, [audienceFilter, rows, searchTerm, statusFilter, typeFilter]);
 
   const notificationSummary = useMemo(
     () => buildSummary(pageInfo, filteredRows.length),
@@ -146,6 +152,8 @@ export default function NotificationsPage() {
           pageSize: PAGE_SIZE,
           status: statusFilter || null,
           type: typeFilter || null,
+          search: searchTerm.trim() || null,
+          audience: audienceFilter || null,
         });
 
         if (!isMounted) {
@@ -180,7 +188,7 @@ export default function NotificationsPage() {
     return () => {
       isMounted = false;
     };
-  }, [currentPage, statusFilter, typeFilter]);
+  }, [audienceFilter, currentPage, searchTerm, statusFilter, typeFilter]);
 
   function handlePageChange(nextPage) {
     const safePage = Math.min(Math.max(nextPage, 1), pageInfo.totalPages || 1);
@@ -190,7 +198,7 @@ export default function NotificationsPage() {
   async function handleViewDetails(notification) {
     let nextNotification = notification;
 
-    if (notification.status === "UNREAD") {
+    if (!notification.isRead && !notification.isArchived) {
       try {
         const result = await markNotificationReadRequest(notification.id);
 
@@ -244,7 +252,7 @@ export default function NotificationsPage() {
         ...currentInfo,
         totalItems: Math.max(0, (currentInfo.totalItems || 0) - 1),
         unreadCount:
-          notification.status === "UNREAD"
+          !notification.isRead && !notification.isArchived
             ? Math.max(0, (currentInfo.unreadCount || 0) - 1)
             : currentInfo.unreadCount || 0,
       }));
@@ -277,11 +285,12 @@ export default function NotificationsPage() {
 
       setRows((currentRows) =>
         currentRows.map((row) =>
-          row.status === "UNREAD"
+          !row.isRead && !row.isArchived
             ? {
                 ...row,
                 status: "READ",
                 statusLabel: "Read",
+                isRead: true,
                 readAtDisplay: "Just now",
               }
             : row,

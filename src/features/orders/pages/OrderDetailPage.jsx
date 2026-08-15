@@ -82,23 +82,56 @@ export default function OrderDetailPage() {
   const [loadError, setLoadError] = useState("");
   const [isWorking, setIsWorking] = useState(false);
 
-  async function loadOrder() {
+  async function loadOrder(options = {}) {
+    const { silent = false } = options;
+
     if (!orderId) {
       setLoadError("Order ID is missing.");
       setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-    setLoadError("");
+    if (!silent) {
+      setIsLoading(true);
+    }
+
+    if (!silent) {
+      setLoadError("");
+    }
 
     try {
       const detail = await getAdminOrderDetailRequest(decodeURIComponent(orderId));
-      setOrder(detail);
+
+      setOrder((current) => {
+        if (
+          silent &&
+          current &&
+          (current.rawStatus !== detail.rawStatus ||
+            current.paymentStatus !== detail.paymentStatus ||
+            current.updatedAtLabel !== detail.updatedAtLabel)
+        ) {
+          void Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "info",
+            title: `Order updated to ${detail.status}`,
+            text: `Latest sync: ${detail.updatedAtLabel}`,
+            showConfirmButton: false,
+            timer: 2800,
+            timerProgressBar: true,
+          });
+        }
+
+        return detail;
+      });
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : "Unable to load order details.");
+      if (!silent) {
+        setLoadError(error instanceof Error ? error.message : "Unable to load order details.");
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   }
 
@@ -106,11 +139,27 @@ export default function OrderDetailPage() {
     loadOrder();
   }, [orderId]);
 
+  useEffect(() => {
+    if (!orderId) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      if (!document.hidden && !isWorking) {
+        void loadOrder({ silent: true });
+      }
+    }, 15000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isWorking, orderId]);
+
   async function runAction(task) {
     try {
       setIsWorking(true);
       const message = await task();
-      await loadOrder();
+      await loadOrder({ silent: true });
       await Swal.fire({
         icon: "success",
         title: "Order updated",

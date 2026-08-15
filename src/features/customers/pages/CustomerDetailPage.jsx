@@ -7,7 +7,6 @@ import {
   getAdminCustomerDetailRequest,
   sendCustomerAdminMessageRequest,
   unblockCustomerRequest,
-  updateCustomerProfileRequest,
 } from "../api/customersApi.js";
 import CustomerDangerZoneCard from "../components/details/CustomerDangerZoneCard.jsx";
 import CustomerDetailHeader from "../components/details/CustomerDetailHeader.jsx";
@@ -278,130 +277,6 @@ export default function CustomerDetailPage() {
     }
   }
 
-  async function handleEditProfile() {
-    if (!customer) {
-      return;
-    }
-
-    const { value } = await openAdminModal({
-      title: "Edit customer profile",
-      width: 520,
-      html: `
-        <div style="display:flex;flex-direction:column;gap:14px;width:100%;max-width:100%;overflow:hidden;text-align:left;">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border:1px solid #ece2da;border-radius:16px;background:#fff8f3;padding:14px 16px;">
-            <div>
-              <p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#cf6e38;">Quick edit</p>
-              <p style="margin:0;font-size:13px;line-height:1.6;color:#7d7068;">Update contact details and internal notes.</p>
-            </div>
-            <div style="min-width:42px;height:42px;border-radius:12px;background:#ffffff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#cf6e38;border:1px solid #f0dfd4;">
-              ${escapeHtml((customer.firstName || customer.name || "CU").slice(0, 2).toUpperCase())}
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:12px;width:100%;">
-            <div>
-              <label for="customer-first-name" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">First name</label>
-              <input id="customer-first-name" class="swal2-input" placeholder="First name" value="${escapeHtml(customer.firstName || "")}">
-            </div>
-            <div>
-              <label for="customer-last-name" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Last name</label>
-              <input id="customer-last-name" class="swal2-input" placeholder="Last name" value="${escapeHtml(customer.lastName || "")}">
-            </div>
-          </div>
-          <div>
-            <label for="customer-email" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Email address</label>
-            <input id="customer-email" class="swal2-input" placeholder="Email" value="${escapeHtml(customer.email || "")}">
-          </div>
-          <div>
-            <label for="customer-phone" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Phone number</label>
-            <input id="customer-phone" class="swal2-input" placeholder="Phone" value="${escapeHtml(customer.phone || "")}">
-          </div>
-          <div>
-            <label for="customer-notes" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Admin notes</label>
-            <textarea id="customer-notes" class="swal2-textarea" placeholder="Add a private admin note">${escapeHtml(customer.profile?.notes || "")}</textarea>
-          </div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: "Save changes",
-      cancelButtonText: "Cancel",
-      confirmButtonColor: "#d96834",
-      cancelButtonColor: "#c8b9aa",
-      focusConfirm: false,
-      didOpen: () => {
-        const popup = Swal.getPopup();
-        if (popup) {
-          popup.style.overflow = "hidden";
-        }
-
-        const container = Swal.getHtmlContainer();
-        if (container) {
-          container.style.overflow = "visible";
-        }
-
-        const firstNameInput = window.document.getElementById("customer-first-name");
-        if (firstNameInput) {
-          firstNameInput.focus();
-        }
-      },
-      preConfirm: () => {
-        const firstName = document.getElementById("customer-first-name")?.value?.trim() || "";
-        const lastName = document.getElementById("customer-last-name")?.value?.trim() || "";
-        const email = document.getElementById("customer-email")?.value?.trim() || "";
-        const phone = document.getElementById("customer-phone")?.value?.trim() || "";
-        const notes = document.getElementById("customer-notes")?.value?.trim() || "";
-
-        if (!firstName || !lastName || !email || !phone) {
-          Swal.showValidationMessage("First name, last name, email, and phone are required.");
-          return null;
-        }
-
-        return { firstName, lastName, email, phone, notes };
-      },
-    });
-
-    if (!value) {
-      return;
-    }
-
-    try {
-      const result = await updateCustomerProfileRequest(customer.id, value);
-      setCustomer((current) =>
-        current
-          ? {
-              ...current,
-              name: result.customer.fullName || current.name,
-              fullName: result.customer.fullName || current.fullName,
-              firstName: value.firstName,
-              lastName: value.lastName,
-              email: result.customer.email,
-              phone: result.customer.phone,
-              city: result.customer.city,
-              status: result.customer.status,
-              rawStatus: result.customer.rawStatus,
-              profile: {
-                ...current.profile,
-                notes: value.notes,
-              },
-            }
-          : current,
-      );
-
-      await openAdminModal({
-        icon: "success",
-        title: "Profile updated",
-        text: result.message,
-        confirmButtonColor: "#cf6e38",
-      });
-    } catch (error) {
-      await openAdminModal({
-        icon: "error",
-        title: "Unable to update profile",
-        text: error instanceof Error ? error.message : "Please try again.",
-        confirmButtonColor: "#cf6e38",
-      });
-    }
-  }
-
   async function handleToggleBlock() {
     if (!customer) {
       return;
@@ -584,7 +459,7 @@ export default function CustomerDetailPage() {
         onToggleBlock={handleToggleBlock}
       />
 
-      <CustomerProfileInfoCard customer={customer} onEdit={handleEditProfile} />
+      <CustomerProfileInfoCard customer={customer} />
 
       <CustomerOrderHistoryCard
         ordersData={customer.orderHistory.items}

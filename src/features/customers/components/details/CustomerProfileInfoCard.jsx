@@ -8,11 +8,11 @@ const FALLBACKS = {
   country: "Norway",
 };
 
-export default function CustomerProfileInfoCard({ customer = {}, onEdit }) {
+export default function CustomerProfileInfoCard({ customer = {} }) {
   return (
     <section className="space-y-4">
       {/* Section Header */}
-      <div className="flex items-center justify-between gap-3 px-1">
+      <div className="flex items-center gap-2.5 px-1">
         <div className="flex items-center gap-2.5">
           <span className="h-5 w-[3px] bg-[#d96834] rounded-full" />
           <span className="inline-flex h-6 w-6 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#d96834] shadow-sm">
@@ -22,13 +22,6 @@ export default function CustomerProfileInfoCard({ customer = {}, onEdit }) {
             Profile Information
           </h3>
         </div>
-        <button
-          className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[10px] border border-[#ddd4cb] bg-white px-4 text-[12px] font-bold text-[#cf6e38] shadow-sm transition hover:bg-[#fff2ea]"
-          onClick={onEdit}
-          type="button"
-        >
-          Edit Profile
-        </button>
       </div>
 
       {/* Profile Details Card */}

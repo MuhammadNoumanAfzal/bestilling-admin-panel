@@ -110,253 +110,35 @@ export default function CustomerDetailPage() {
 
     const result = await openAdminModal({
       title: "Contact customer",
-      width: 720,
+      width: 680,
       html: `
-        <style>
-          #customer-contact-modal {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            text-align: left;
-          }
-
-          #customer-contact-modal .contact-hero {
-            position: relative;
-            overflow: hidden;
-            border: 1px solid #f0dfd3;
-            border-radius: 24px;
-            background:
-              radial-gradient(circle at top right, rgba(255, 208, 170, 0.9), transparent 34%),
-              radial-gradient(circle at bottom left, rgba(255, 233, 215, 0.95), transparent 32%),
-              linear-gradient(135deg, #fff6ef 0%, #ffffff 54%, #fff9f4 100%);
-            padding: 20px;
-          }
-
-          #customer-contact-modal .contact-hero::after {
-            content: "";
-            position: absolute;
-            inset: auto -36px -44px auto;
-            width: 132px;
-            height: 132px;
-            border-radius: 999px;
-            background: rgba(207, 110, 56, 0.08);
-          }
-
-          #customer-contact-modal .contact-hero-grid {
-            position: relative;
-            z-index: 1;
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 16px;
-            align-items: start;
-          }
-
-          #customer-contact-modal .contact-kicker {
-            margin: 0 0 8px;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #9b7865;
-          }
-
-          #customer-contact-modal .contact-name {
-            margin: 0;
-            font-size: 29px;
-            font-weight: 900;
-            line-height: 1.05;
-            letter-spacing: -0.05em;
-            color: #1f1712;
-          }
-
-          #customer-contact-modal .contact-copy {
-            margin: 10px 0 0;
-            max-width: 470px;
-            font-size: 13px;
-            line-height: 1.7;
-            color: #6f635c;
-          }
-
-          #customer-contact-modal .contact-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 14px;
-          }
-
-          #customer-contact-modal .contact-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            min-height: 32px;
-            padding: 0 12px;
-            border: 1px solid #ecdacf;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.82);
-            font-size: 12px;
-            font-weight: 700;
-            color: #594b42;
-            backdrop-filter: blur(4px);
-          }
-
-          #customer-contact-modal .contact-avatar {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 72px;
-            height: 72px;
-            border-radius: 24px;
-            background: linear-gradient(135deg, #cf6e38 0%, #f0a36c 100%);
-            color: white;
-            font-size: 24px;
-            font-weight: 900;
-            letter-spacing: -0.04em;
-            box-shadow: 0 18px 34px rgba(207, 110, 56, 0.22);
-          }
-
-          #customer-contact-modal .contact-form-card {
-            border: 1px solid #ece2da;
-            border-radius: 24px;
-            background: #fffefe;
-            padding: 18px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
-          }
-
-          #customer-contact-modal .contact-form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-          }
-
-          #customer-contact-modal .contact-field-full {
-            grid-column: 1 / -1;
-          }
-
-          #customer-contact-modal .contact-label {
-            display: block;
-            margin: 0 0 7px;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: #836f62;
-          }
-
-          #customer-contact-modal .contact-select,
-          #customer-contact-modal .contact-input,
-          #customer-contact-modal .contact-textarea {
-            width: 100%;
-            margin: 0;
-            border: 1px solid #ddd4cd;
-            border-radius: 16px;
-            background: #ffffff;
-            color: #2f241d;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-          }
-
-          #customer-contact-modal .contact-select,
-          #customer-contact-modal .contact-input {
-            height: 50px;
-            padding: 0 15px;
-            font-size: 14px;
-            font-weight: 600;
-          }
-
-          #customer-contact-modal .contact-textarea {
-            min-height: 148px;
-            padding: 14px 15px;
-            font-size: 14px;
-            line-height: 1.65;
-            resize: vertical;
-          }
-
-          #customer-contact-modal .contact-select:focus,
-          #customer-contact-modal .contact-input:focus,
-          #customer-contact-modal .contact-textarea:focus {
-            border-color: #cf6e38;
-            box-shadow: 0 0 0 4px rgba(207, 110, 56, 0.12);
-          }
-
-          #customer-contact-modal .contact-tips {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
-            margin-top: 14px;
-          }
-
-          #customer-contact-modal .contact-tip {
-            border: 1px solid #efe4db;
-            border-radius: 18px;
-            background: linear-gradient(180deg, #fffdfa 0%, #fff7f1 100%);
-            padding: 12px;
-          }
-
-          #customer-contact-modal .contact-tip-title {
-            margin: 0 0 4px;
-            font-size: 12px;
-            font-weight: 800;
-            color: #241913;
-          }
-
-          #customer-contact-modal .contact-tip-copy {
-            margin: 0;
-            font-size: 12px;
-            line-height: 1.6;
-            color: #7b6e65;
-          }
-
-          @media (max-width: 640px) {
-            #customer-contact-modal .contact-hero-grid,
-            #customer-contact-modal .contact-form-grid,
-            #customer-contact-modal .contact-tips {
-              grid-template-columns: 1fr;
-            }
-
-            #customer-contact-modal .contact-avatar {
-              width: 60px;
-              height: 60px;
-              border-radius: 20px;
-              font-size: 20px;
-            }
-
-            #customer-contact-modal .contact-name {
-              font-size: 24px;
-            }
-
-            #customer-contact-modal .contact-form-card,
-            #customer-contact-modal .contact-hero {
-              padding: 16px;
-            }
-          }
-        </style>
-        <div id="customer-contact-modal">
-          <div class="contact-hero">
-            <div class="contact-hero-grid">
+        <div id="customer-contact-modal" class="flex flex-col gap-3 text-left m-[20px]">
+          <div class="relative overflow-hidden rounded-[22px] border border-[#f0dfd3] bg-[radial-gradient(circle_at_top_right,rgba(255,208,170,0.9),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(255,233,215,0.95),transparent_32%),linear-gradient(135deg,#fff6ef_0%,#ffffff_54%,#fff9f4_100%)] p-4">
+            <div class="pointer-events-none absolute -bottom-11 -right-9 h-[132px] w-[132px] rounded-full bg-[rgba(207,110,56,0.08)]"></div>
+            <div class="relative z-[1] grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
               <div>
-                <p class="contact-kicker">Customer outreach</p>
-                <p class="contact-name">${escapeHtml(customer.name)}</p>
-                <p class="contact-copy">
+                <p class="mb-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#9b7865]">Customer outreach</p>
+                <p class="m-0 text-[22px] font-black leading-[1.05] tracking-[-0.05em] text-[#1f1712] sm:text-[26px]">${escapeHtml(customer.name)}</p>
+                <p class="mt-2 max-w-[470px] text-[12.5px] leading-[1.6] text-[#6f635c]">
                   Send a polished admin update across email, SMS, system notification, or in-app delivery with a cleaner communication workflow.
                 </p>
-                <div class="contact-badges">
-                  <span class="contact-badge">${escapeHtml(customer.email || "No email on file")}</span>
-                  <span class="contact-badge">${escapeHtml(customer.phone || "No phone on file")}</span>
-                  <span class="contact-badge">${escapeHtml(customer.status || "Active")}</span>
+                <div class="mt-2.5 flex flex-wrap gap-[7px]">
+                  <span class="inline-flex min-h-7 items-center rounded-full border border-[#ecdacf] bg-[rgba(255,255,255,0.82)] px-2.5 text-[11.5px] font-bold text-[#594b42] backdrop-blur-[4px]">${escapeHtml(customer.email || "No email on file")}</span>
+                  <span class="inline-flex min-h-7 items-center rounded-full border border-[#ecdacf] bg-[rgba(255,255,255,0.82)] px-2.5 text-[11.5px] font-bold text-[#594b42] backdrop-blur-[4px]">${escapeHtml(customer.phone || "No phone on file")}</span>
+                  <span class="inline-flex min-h-7 items-center rounded-full border border-[#ecdacf] bg-[rgba(255,255,255,0.82)] px-2.5 text-[11.5px] font-bold text-[#594b42] backdrop-blur-[4px]">${escapeHtml(customer.status || "Active")}</span>
                 </div>
               </div>
-              <div class="contact-avatar">
+              <div class="flex h-[54px] w-[54px] items-center justify-center self-start rounded-[18px] bg-[linear-gradient(135deg,#cf6e38_0%,#f0a36c_100%)] text-[20px] font-black tracking-[-0.04em] text-white shadow-[0_18px_34px_rgba(207,110,56,0.22)] sm:h-16 sm:w-16 sm:rounded-[20px] sm:text-[22px]">
                 ${escapeHtml((customer.name || "CU").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase() || "CU")}
               </div>
             </div>
           </div>
 
-          <div class="contact-form-card">
-            <div class="contact-form-grid">
+          <div class="rounded-[22px] border border-[#ece2da] bg-[#fffefe] p-[14px] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+            <div class="grid gap-3 sm:grid-cols-2">
               <div>
-                <label for="customer-message-channel" class="contact-label">Delivery channel</label>
-                <select id="customer-message-channel" class="contact-select">
+                <label for="customer-message-channel" class="mb-1.5 block text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#836f62]">Delivery channel</label>
+                <select id="customer-message-channel" class="h-[46px] w-full rounded-[14px] border border-[#ddd4cd] bg-white px-[14px] text-[13.5px] font-semibold text-[#2f241d] outline-none transition focus:border-[#cf6e38] focus:shadow-[0_0_0_4px_rgba(207,110,56,0.12)]">
                   <option value="EMAIL">Email</option>
                   <option value="SMS">SMS</option>
                   <option value="SYSTEM_NOTIFICATION">System Notification</option>
@@ -365,41 +147,41 @@ export default function CustomerDetailPage() {
               </div>
 
               <div>
-                <label for="customer-message-tone" class="contact-label">Message type</label>
-                <input id="customer-message-tone" class="contact-input" value="Important account update" readonly />
+                <label for="customer-message-tone" class="mb-1.5 block text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#836f62]">Message type</label>
+                <input id="customer-message-tone" class="h-[46px] w-full rounded-[14px] border border-[#ddd4cd] bg-white px-[14px] text-[13.5px] font-semibold text-[#2f241d] outline-none transition focus:border-[#cf6e38] focus:shadow-[0_0_0_4px_rgba(207,110,56,0.12)]" value="Important account update" readonly />
               </div>
 
-              <div class="contact-field-full">
-                <label for="customer-message-subject" class="contact-label">Subject</label>
+              <div class="sm:col-span-2">
+                <label for="customer-message-subject" class="mb-1.5 block text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#836f62]">Subject</label>
                 <input
                   id="customer-message-subject"
-                  class="contact-input"
+                  class="h-[46px] w-full rounded-[14px] border border-[#ddd4cd] bg-white px-[14px] text-[13.5px] font-semibold text-[#2f241d] outline-none transition focus:border-[#cf6e38] focus:shadow-[0_0_0_4px_rgba(207,110,56,0.12)]"
                   placeholder="Important update regarding your account"
                 />
               </div>
 
-              <div class="contact-field-full">
-                <label for="customer-message-body" class="contact-label">Message</label>
+              <div class="sm:col-span-2">
+                <label for="customer-message-body" class="mb-1.5 block text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#836f62]">Message</label>
                 <textarea
                   id="customer-message-body"
-                  class="contact-textarea"
+                  class="min-h-[112px] w-full resize-y rounded-[14px] border border-[#ddd4cd] bg-white px-[14px] py-3 text-[13.5px] leading-[1.55] text-[#2f241d] outline-none transition focus:border-[#cf6e38] focus:shadow-[0_0_0_4px_rgba(207,110,56,0.12)]"
                   placeholder="Write your message to the customer"
                 ></textarea>
               </div>
             </div>
 
-            <div class="contact-tips">
-              <div class="contact-tip">
-                <p class="contact-tip-title">Clear subject</p>
-                <p class="contact-tip-copy">Use a short summary so the customer understands the reason immediately.</p>
+            <div class="mt-2.5 grid gap-2 sm:grid-cols-3">
+              <div class="rounded-[16px] border border-[#efe4db] bg-[linear-gradient(180deg,#fffdfa_0%,#fff7f1_100%)] p-2.5">
+                <p class="mb-[3px] text-[11.5px] font-extrabold text-[#241913]">Clear subject</p>
+                <p class="m-0 text-[11.5px] leading-[1.5] text-[#7b6e65]">Use a short summary so the customer understands the reason immediately.</p>
               </div>
-              <div class="contact-tip">
-                <p class="contact-tip-title">Friendly tone</p>
-                <p class="contact-tip-copy">Keep it professional, direct, and helpful for better response quality.</p>
+              <div class="rounded-[16px] border border-[#efe4db] bg-[linear-gradient(180deg,#fffdfa_0%,#fff7f1_100%)] p-2.5">
+                <p class="mb-[3px] text-[11.5px] font-extrabold text-[#241913]">Friendly tone</p>
+                <p class="m-0 text-[11.5px] leading-[1.5] text-[#7b6e65]">Keep it professional, direct, and helpful for better response quality.</p>
               </div>
-              <div class="contact-tip">
-                <p class="contact-tip-title">Actionable next step</p>
-                <p class="contact-tip-copy">Tell the customer exactly what they should do after reading your note.</p>
+              <div class="rounded-[16px] border border-[#efe4db] bg-[linear-gradient(180deg,#fffdfa_0%,#fff7f1_100%)] p-2.5">
+                <p class="mb-[3px] text-[11.5px] font-extrabold text-[#241913]">Actionable next step</p>
+                <p class="m-0 text-[11.5px] leading-[1.5] text-[#7b6e65]">Tell the customer exactly what they should do after reading your note.</p>
               </div>
             </div>
           </div>
@@ -419,12 +201,12 @@ export default function CustomerDetailPage() {
         const placeholdersByChannel = {
           EMAIL: {
             subject: "Important update regarding your account",
-            message: "Hello ${contactFirstName},\\n\\nWe wanted to share an important update regarding your account.\\n\\nNext steps:\\n- Review the details above\\n- Reply if you need help\\n\\nBest regards,\\nAdmin team",
+            message: `Hello ${contactFirstName},\n\nWe wanted to share an important update regarding your account.\n\nNext steps:\n- Review the details above\n- Reply if you need help\n\nBest regards,\nAdmin team`,
             tone: "Important account update",
           },
           SMS: {
             subject: "Quick account alert",
-            message: "Hello ${contactFirstName}, this is a quick update from the admin team regarding your account. Reply if you need help.",
+            message: `Hello ${contactFirstName}, this is a quick update from the admin team regarding your account. Reply if you need help.`,
             tone: "Short SMS alert",
           },
           SYSTEM_NOTIFICATION: {

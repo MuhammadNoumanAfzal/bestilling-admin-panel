@@ -1,13 +1,18 @@
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
 import {
   ADMIN_ADD_ORDER_NOTE_MUTATION,
+  ADMIN_ASSIGN_ORDER_RIDER_MUTATION,
   ADMIN_CANCEL_ORDER_MUTATION,
   ADMIN_EXPORT_ORDERS_MUTATION,
+  ADMIN_ORDER_ALLOWED_ACTIONS_QUERY,
+  ADMIN_ORDER_AUDIT_LOGS_QUERY,
   ADMIN_ORDER_CATEGORY_BREAKDOWN_QUERY,
   ADMIN_ORDER_DETAIL_QUERY,
   ADMIN_ORDER_INVOICE_QUERY,
+  ADMIN_ORDER_PAYMENT_RECONCILIATION_QUERY,
   ADMIN_ORDERS_QUERY,
   ADMIN_REFUND_ORDER_MUTATION,
+  ADMIN_UPDATE_DELIVERY_STATUS_MUTATION,
   ADMIN_UPDATE_ORDER_STATUS_MUTATION,
   ADMIN_UPDATE_PAYMENT_STATUS_MUTATION,
 } from "./ordersQueries.js";
@@ -138,6 +143,10 @@ function buildAddressLabel(address) {
     return "Not provided";
   }
 
+  if (typeof address === "string") {
+    return address.trim() || "Not provided";
+  }
+
   return [
     address.line1,
     address.line2,
@@ -197,6 +206,9 @@ function normalizeOrderRow(item) {
   const customerName = item?.customer?.fullName || "Unknown customer";
   const vendorName = item?.vendor?.businessName || "Unknown vendor";
   const currency = item?.amount?.currency || "NOK";
+  const scheduledDateTime = item?.eventDate
+    ? `${item.eventDate}${item?.eventTime ? `T${item.eventTime}` : ""}`
+    : item?.placedAt;
 
   return {
     id: item?.id || "",
@@ -204,15 +216,15 @@ function normalizeOrderRow(item) {
     customer: customerName,
     customerEmail: item?.customer?.email || "",
     customerAvatar: toInitials(customerName),
-    customerAvatarUrl: item?.customer?.avatarUrl || "",
+    customerAvatarUrl: "",
     vendor: vendorName,
     vendorCity: item?.vendor?.city || item?.delivery?.city || "",
     vendorAvatar: toInitials(vendorName),
-    vendorAvatarUrl: item?.vendor?.avatarUrl || "",
-    eventType: item?.eventType || "Not specified",
-    guestCount: Number(item?.guestCount ?? 0),
+    vendorAvatarUrl: "",
+    eventType: item?.delivery?.status || "Not specified",
+    guestCount: 0,
     placedAt: item?.placedAt || "",
-    dateTime: formatDateTimeLabel(item?.placedAt),
+    dateTime: formatDateTimeLabel(scheduledDateTime),
     amount: formatMoney(item?.amount?.total, currency),
     amountValue: Number(item?.amount?.total ?? 0),
     status: normalizeStatus(item?.status),
@@ -221,23 +233,24 @@ function normalizeOrderRow(item) {
     rawPaymentStatus: `${item?.paymentStatus ?? ""}`.trim().toUpperCase(),
     fulfillmentStatus: normalizeStatus(item?.fulfillmentStatus),
     rawFulfillmentStatus: `${item?.fulfillmentStatus ?? ""}`.trim().toUpperCase(),
-    deliveryType: item?.delivery?.type || "",
+    deliveryType: "",
     deliveryStatus: normalizeStatus(item?.delivery?.status),
     rawDeliveryStatus: `${item?.delivery?.status ?? ""}`.trim().toUpperCase(),
-    scheduledAt: item?.delivery?.scheduledAt || "",
-    deliveredAt: item?.delivery?.deliveredAt || "",
+    scheduledAt: scheduledDateTime || "",
+    deliveredAt: "",
     flags: {
-      hasRefund: Boolean(item?.flags?.hasRefund),
-      needsReview: Boolean(item?.flags?.needsReview),
-      hasDispute: Boolean(item?.flags?.hasDispute),
+      canMarkDelivered: Boolean(item?.flags?.canMarkDelivered),
+      canCancel: Boolean(item?.flags?.canCancel),
+      canRefund: Boolean(item?.flags?.canRefund),
+      canUpdatePaymentStatus: Boolean(item?.flags?.canUpdatePaymentStatus),
     },
     actions: {
-      canCancel: Boolean(item?.actions?.canCancel),
-      canRefund: Boolean(item?.actions?.canRefund),
-      canMarkPaid: Boolean(item?.actions?.canMarkPaid),
-      canMarkDelivered: Boolean(item?.actions?.canMarkDelivered),
-      canAssignVendor: Boolean(item?.actions?.canAssignVendor),
-      canDownloadInvoice: Boolean(item?.actions?.canDownloadInvoice),
+      canCancel: Boolean(item?.flags?.canCancel),
+      canRefund: Boolean(item?.flags?.canRefund),
+      canMarkPaid: Boolean(item?.flags?.canUpdatePaymentStatus),
+      canMarkDelivered: Boolean(item?.flags?.canMarkDelivered),
+      canAssignVendor: false,
+      canDownloadInvoice: true,
     },
   };
 }
@@ -296,15 +309,9 @@ function normalizeOrderDetail(order) {
   const currency = order?.amount?.currency || "NOK";
   const customerName = order?.customer?.fullName || "Unknown customer";
   const vendorName = order?.vendor?.businessName || "Unknown vendor";
-  const notes = Array.isArray(order?.notes)
-    ? order.notes.map((note) => ({
-        id: note?.id || "",
-        message: note?.message || "",
-        createdAt: note?.createdAt || "",
-        createdAtLabel: formatDateTimeLabel(note?.createdAt),
-        createdBy: note?.createdBy?.name || "Admin",
-      }))
-    : [];
+  const itemCount = Array.isArray(order?.items)
+    ? order.items.reduce((sum, item) => sum + Number(item?.quantity ?? 0), 0)
+    : 0;
 
   return {
     id: order.id,
@@ -322,12 +329,12 @@ function normalizeOrderDetail(order) {
     deliveredAtLabel: formatDateTimeLabel(order.deliveredAt),
     canceledAtLabel: formatDateTimeLabel(order.canceledAt),
     cancellationReason: order.cancellationReason || "",
-    eventType: order.eventType || "Not specified",
+    eventType: order.delivery?.type || "Not specified",
     eventDate: order.eventDate ? formatDateLabel(order.eventDate) : "Not scheduled",
     eventTime: order.eventTime || "Not specified",
-    guestCount: Number(order.guestCount ?? 0),
-    source: order.source || "Not specified",
-    specialInstructions: order.specialInstructions || "No special instructions added.",
+    guestCount: itemCount,
+    source: "Admin order flow",
+    specialInstructions: "No special instructions added.",
     amount: {
       subtotal: formatMoney(order?.amount?.subtotal, currency),
       tax: formatMoney(order?.amount?.tax, currency),
@@ -342,27 +349,27 @@ function normalizeOrderDetail(order) {
       ),
     },
     customer: {
-      id: order?.customer?.id || "",
+      id: "",
       fullName: customerName,
       email: order?.customer?.email || "",
       phone: order?.customer?.phone || "Not provided",
       avatar: toInitials(customerName),
-      avatarUrl: order?.customer?.avatarUrl || "",
-      totalOrders: Number(order?.customer?.totalOrders ?? 0),
-      totalSpent: formatMoney(order?.customer?.totalSpent, currency),
-      address: buildAddressLabel(order?.customer?.defaultAddress),
+      avatarUrl: "",
+      totalOrders: 0,
+      totalSpent: formatMoney(0, currency),
+      address: "Not provided",
     },
     vendor: {
-      id: order?.vendor?.id || "",
+      id: "",
       businessName: vendorName,
       email: order?.vendor?.email || "",
       phone: order?.vendor?.phone || "Not provided",
       avatar: toInitials(vendorName),
-      avatarUrl: order?.vendor?.avatarUrl || "",
+      avatarUrl: "",
       city: order?.vendor?.city || "Unknown",
       address: buildAddressLabel(order?.vendor?.address),
-      totalOrders: Number(order?.vendor?.totalOrders ?? 0),
-      rating: Number(order?.vendor?.rating ?? 0),
+      totalOrders: 0,
+      rating: 0,
     },
     delivery: {
       type: order?.delivery?.type || "DELIVERY",
@@ -372,26 +379,20 @@ function normalizeOrderDetail(order) {
       recipientName: order?.delivery?.recipientName || customerName,
       recipientPhone: order?.delivery?.recipientPhone || order?.customer?.phone || "Not provided",
       city: order?.delivery?.city || order?.delivery?.address?.city || "",
-      address: buildAddressLabel(order?.delivery?.address),
-      riderName: order?.delivery?.rider?.name || "Not assigned",
-      riderPhone: order?.delivery?.rider?.phone || "Not provided",
+      address: buildAddressLabel(order?.vendor?.address),
+      riderName: "Not assigned",
+      riderPhone: "Not provided",
     },
     items: Array.isArray(order?.items)
       ? order.items.map((item) => ({
           id: item?.id || "",
           name: item?.name || "Unnamed item",
-          imageUrl: item?.imageUrl || "",
+          imageUrl: "",
           quantity: Number(item?.quantity ?? 0),
           unitPrice: formatMoney(item?.unitPrice, currency),
           totalPrice: formatMoney(item?.totalPrice, currency),
           notes: item?.notes || "",
-          addons: Array.isArray(item?.addons)
-            ? item.addons.map((addon) => ({
-                id: addon?.id || "",
-                name: addon?.name || "Addon",
-                price: formatMoney(addon?.price, currency),
-              }))
-            : [],
+          addons: [],
         }))
       : [],
     timeline: Array.isArray(order?.timeline)
@@ -402,7 +403,7 @@ function normalizeOrderDetail(order) {
           happenedAt: item?.happenedAt || "",
           happenedAtLabel: formatDateTimeLabel(item?.happenedAt),
           description: item?.description || "",
-          actor: item?.actor?.name || item?.actor?.role || "",
+          actor: "",
         }))
       : [],
     payment: {
@@ -414,16 +415,31 @@ function normalizeOrderDetail(order) {
       invoiceUrl: order?.payment?.invoiceUrl || "",
       receiptUrl: order?.payment?.receiptUrl || "",
     },
-    notes,
-    actions: {
-      canCancel: Boolean(order?.actions?.canCancel),
-      canRefund: Boolean(order?.actions?.canRefund),
-      canMarkPaid: Boolean(order?.actions?.canMarkPaid),
-      canMarkDelivered: Boolean(order?.actions?.canMarkDelivered),
-      canAssignVendor: Boolean(order?.actions?.canAssignVendor),
-      canDownloadInvoice: Boolean(order?.actions?.canDownloadInvoice),
+    notes: [],
+    flags: {
+      canCancel: Boolean(order?.flags?.canCancel),
+      canRefund: Boolean(order?.flags?.canRefund),
+      canMarkPaid: Boolean(order?.flags?.canUpdatePaymentStatus),
+      canMarkDelivered: Boolean(order?.flags?.canMarkDelivered),
+      canAssignRider: Boolean(order?.flags?.canAssignRider),
+      canReschedule: Boolean(order?.flags?.canReschedule),
     },
-    updatedAtLabel: formatDateTimeLabel(order?.updatedAt),
+    actions: {
+      canCancel: Boolean(order?.flags?.canCancel),
+      canRefund: Boolean(order?.flags?.canRefund),
+      canMarkPaid: Boolean(order?.flags?.canUpdatePaymentStatus),
+      canMarkDelivered: Boolean(order?.flags?.canMarkDelivered),
+      canAssignVendor: Boolean(order?.flags?.canAssignRider),
+      canDownloadInvoice: Boolean(order?.payment?.invoiceUrl || order?.payment?.receiptUrl),
+    },
+    updatedAtLabel: formatDateTimeLabel(
+      order?.deliveredAt ||
+      order?.outForDeliveryAt ||
+      order?.preparedAt ||
+      order?.acceptedAt ||
+      order?.canceledAt ||
+      order?.placedAt,
+    ),
   };
 }
 
@@ -473,13 +489,28 @@ export async function getAdminOrderCategoryBreakdownRequest(filters) {
 
 export async function getAdminOrderDetailRequest(orderId) {
   const data = await executeProtectedGraphqlRequest(ADMIN_ORDER_DETAIL_QUERY, { orderId });
-  const detail = normalizeOrderDetail(data?.adminOrder);
+  const detail = normalizeOrderDetail(data?.adminOrderDetail);
 
   if (!detail) {
     throw new Error("Unable to load order details.");
   }
 
   return detail;
+}
+
+export async function getAdminOrderAllowedActionsRequest(orderId) {
+  const data = await executeProtectedGraphqlRequest(ADMIN_ORDER_ALLOWED_ACTIONS_QUERY, { orderId });
+  return data?.adminOrderAllowedActions || null;
+}
+
+export async function getAdminOrderAuditLogsRequest(orderId) {
+  const data = await executeProtectedGraphqlRequest(ADMIN_ORDER_AUDIT_LOGS_QUERY, { orderId });
+  return Array.isArray(data?.adminOrderAuditLogs) ? data.adminOrderAuditLogs : [];
+}
+
+export async function getAdminOrderPaymentReconciliationRequest(orderId) {
+  const data = await executeProtectedGraphqlRequest(ADMIN_ORDER_PAYMENT_RECONCILIATION_QUERY, { orderId });
+  return data?.adminOrderPaymentReconciliation || null;
 }
 
 export async function updateOrderStatusRequest(input) {
@@ -529,6 +560,32 @@ export async function refundOrderRequest(input) {
 
   if (!result?.success) {
     throw new Error(getErrorMessage(result, "Unable to refund order."));
+  }
+
+  return result;
+}
+
+export async function assignOrderRiderRequest(input) {
+  const data = await executeProtectedGraphqlRequest(ADMIN_ASSIGN_ORDER_RIDER_MUTATION, {
+    input,
+  });
+  const result = data?.adminAssignOrderRider;
+
+  if (!result?.success) {
+    throw new Error(getErrorMessage(result, "Unable to assign rider."));
+  }
+
+  return result;
+}
+
+export async function updateDeliveryStatusRequest(input) {
+  const data = await executeProtectedGraphqlRequest(ADMIN_UPDATE_DELIVERY_STATUS_MUTATION, {
+    input,
+  });
+  const result = data?.adminUpdateDeliveryStatus;
+
+  if (!result?.success) {
+    throw new Error(getErrorMessage(result, "Unable to update delivery status."));
   }
 
   return result;

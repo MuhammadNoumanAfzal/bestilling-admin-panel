@@ -8,51 +8,37 @@ export const ADMIN_ORDERS_QUERY = `
         paymentStatus
         fulfillmentStatus
         placedAt
-        eventType
-        guestCount
+        eventDate
+        eventTime
         amount {
           currency
           subtotal
           tax
           deliveryFee
-          serviceFee
           discount
           total
         }
         customer {
-          id
           fullName
           email
           phone
-          avatarUrl
         }
         vendor {
-          id
           businessName
-          city
-          avatarUrl
+          phone
         }
-      delivery {
-        type
+        delivery {
         status
-        scheduledAt
-        deliveredAt
+        recipientName
         city
-      }
-      flags {
-        hasRefund
-        needsReview
-        hasDispute
-      }
-      actions {
+        }
+        flags {
+        canMarkDelivered
         canCancel
         canRefund
-        canMarkPaid
-        canMarkDelivered
-        canAssignVendor
-        canDownloadInvoice
+        canUpdatePaymentStatus
+        }
       }
-    }
       pageInfo {
         page
         limit
@@ -77,7 +63,6 @@ export const ADMIN_ORDERS_QUERY = `
         }
         statuses
         paymentStatuses
-        eventTypes
       }
     }
   }
@@ -85,7 +70,7 @@ export const ADMIN_ORDERS_QUERY = `
 
 export const ADMIN_ORDER_DETAIL_QUERY = `
   query AdminOrderDetail($orderId: ID!) {
-    adminOrder(orderId: $orderId) {
+    adminOrderDetail(orderId: $orderId) {
       id
       orderNumber
       status
@@ -98,12 +83,8 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
       deliveredAt
       canceledAt
       cancellationReason
-      eventType
       eventDate
       eventTime
-      guestCount
-      specialInstructions
-      source
       amount {
         currency
         subtotal
@@ -115,35 +96,16 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
         total
       }
       customer {
-        id
         fullName
         email
         phone
-        avatarUrl
-        totalOrders
-        totalSpent
-        defaultAddress {
-          line1
-          line2
-          city
-          postalCode
-        }
       }
       vendor {
-        id
         businessName
         email
         phone
-        avatarUrl
         city
-        address {
-          line1
-          line2
-          city
-          postalCode
-        }
-        totalOrders
-        rating
+        address
       }
       delivery {
         type
@@ -153,32 +115,15 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
         recipientName
         recipientPhone
         city
-        address {
-          line1
-          line2
-          city
-          postalCode
-        }
-        rider {
-          id
-          name
-          phone
-        }
       }
       items {
         id
         menuItemId
         name
-        imageUrl
         quantity
         unitPrice
         totalPrice
         notes
-        addons {
-          id
-          name
-          price
-        }
       }
       timeline {
         key
@@ -186,11 +131,6 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
         status
         happenedAt
         description
-        actor {
-          id
-          name
-          role
-        }
       }
       payment {
         method
@@ -201,24 +141,14 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
         invoiceUrl
         receiptUrl
       }
-      notes {
-        id
-        message
-        createdAt
-        createdBy {
-          id
-          name
-        }
-      }
-      actions {
+      flags {
+        canMarkDelivered
         canCancel
         canRefund
-        canMarkPaid
-        canMarkDelivered
-        canAssignVendor
-        canDownloadInvoice
+        canUpdatePaymentStatus
+        canAssignRider
+        canReschedule
       }
-      updatedAt
     }
   }
 `;
@@ -232,8 +162,7 @@ export const ADMIN_UPDATE_ORDER_STATUS_MUTATION = `
       order {
         id
         status
-        fulfillmentStatus
-        updatedAt
+        deliveredAt
       }
     }
   }
@@ -248,7 +177,6 @@ export const ADMIN_UPDATE_PAYMENT_STATUS_MUTATION = `
       order {
         id
         paymentStatus
-        updatedAt
       }
     }
   }
@@ -282,27 +210,80 @@ export const ADMIN_REFUND_ORDER_MUTATION = `
         amount
         processedAt
       }
-      order {
-        id
-        paymentStatus
-      }
     }
   }
 `;
-
-export const ADMIN_ASSIGN_ORDER_VENDOR_MUTATION = `
-  mutation AdminAssignOrderVendor($input: AdminAssignOrderVendorInput!) {
-    adminAssignOrderVendor(input: $input) {
+export const ADMIN_ASSIGN_ORDER_RIDER_MUTATION = `
+  mutation AdminAssignOrderRider($input: AdminAssignOrderRiderInput!) {
+    adminAssignOrderRider(input: $input) {
       success
       message
       code
       order {
         id
-        vendor {
-          id
-          businessName
-        }
       }
+    }
+  }
+`;
+
+export const ADMIN_UPDATE_DELIVERY_STATUS_MUTATION = `
+  mutation AdminUpdateDeliveryStatus($input: AdminUpdateDeliveryStatusInput!) {
+    adminUpdateDeliveryStatus(input: $input) {
+      success
+      message
+      code
+      order {
+        id
+        fulfillmentStatus
+      }
+    }
+  }
+`;
+
+export const ADMIN_ORDER_ALLOWED_ACTIONS_QUERY = `
+  query AdminOrderAllowedActions($orderId: ID!) {
+    adminOrderAllowedActions(orderId: $orderId) {
+      canMarkDelivered
+      canCancel
+      canRefund
+      canUpdatePaymentStatus
+      canAssignRider
+      canReschedule
+      reasonsBlocked
+    }
+  }
+`;
+
+export const ADMIN_ORDER_AUDIT_LOGS_QUERY = `
+  query AdminOrderAuditLogs($orderId: ID!) {
+    adminOrderAuditLogs(orderId: $orderId) {
+      id
+      action
+      actorType
+      actorId
+      actorName
+      beforeState
+      afterState
+      reason
+      createdAt
+    }
+  }
+`;
+
+export const ADMIN_ORDER_PAYMENT_RECONCILIATION_QUERY = `
+  query AdminOrderPaymentReconciliation($orderId: ID!) {
+    adminOrderPaymentReconciliation(orderId: $orderId) {
+      paymentId
+      provider
+      providerReference
+      internalStatus
+      providerStatus
+      amountAuthorized
+      amountCaptured
+      amountRefunded
+      currency
+      lastSyncedAt
+      mismatchFlag
     }
   }
 `;

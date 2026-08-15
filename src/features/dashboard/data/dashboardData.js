@@ -576,7 +576,12 @@ export const dashboardFilterOptions = [
   "Clear Filter",
 ];
 
-export function getDateRangeForFilter(selectedFilter, customStart, customEnd) {
+export function getDateRangeForFilter(
+  selectedFilter,
+  customStart,
+  customEnd,
+  referenceDate = new Date(),
+) {
   if (selectedFilter === "Custom Date" && customStart && customEnd) {
     const start = new Date(`${customStart}T00:00:00Z`);
     const end = new Date(`${customEnd}T23:59:59Z`);
@@ -585,8 +590,11 @@ export function getDateRangeForFilter(selectedFilter, customStart, customEnd) {
     }
   }
 
-  const end = new Date(REFERENCE_DATE);
-  const start = new Date(REFERENCE_DATE);
+  const normalizedReferenceDate = new Date(referenceDate);
+  const end = Number.isNaN(normalizedReferenceDate.getTime())
+    ? new Date()
+    : normalizedReferenceDate;
+  const start = new Date(end);
 
   switch (selectedFilter) {
     case "Last Month":
@@ -712,7 +720,12 @@ function buildCustomTopVendors(days) {
 }
 
 export function getDashboardSnapshot(selectedFilter, customStart, customEnd) {
-  const range = getDateRangeForFilter(selectedFilter, customStart, customEnd);
+  const range = getDateRangeForFilter(
+    selectedFilter,
+    customStart,
+    customEnd,
+    REFERENCE_DATE,
+  );
 
   const approvals = allApprovals
     .filter((approval) => {

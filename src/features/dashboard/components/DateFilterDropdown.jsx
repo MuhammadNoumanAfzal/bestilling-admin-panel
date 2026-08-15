@@ -8,6 +8,7 @@ export default function DateFilterDropdown({
   startDate,
   endDate,
   onCustomDateChange,
+  clearFilterValue = "Last 7 days",
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showCustomFields, setShowCustomFields] = useState(false);
@@ -55,7 +56,7 @@ export default function DateFilterDropdown({
   };
 
   const handleClear = () => {
-    onChangeFilter("Last 7 days");
+    onChangeFilter(clearFilterValue);
     onCustomDateChange("", "");
     setTempStart("");
     setTempEnd("");

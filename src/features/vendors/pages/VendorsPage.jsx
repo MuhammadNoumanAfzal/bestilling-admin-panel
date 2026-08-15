@@ -355,6 +355,7 @@ export default function VendorsPage() {
           startDate={customStart}
           endDate={customEnd}
           onCustomDateChange={handleCustomDateChange}
+          clearFilterValue={ALL_DATES_FILTER}
         />
       </section>
 

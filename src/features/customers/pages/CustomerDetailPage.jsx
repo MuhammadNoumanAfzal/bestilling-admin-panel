@@ -106,35 +106,302 @@ export default function CustomerDetailPage() {
       return;
     }
 
+    const contactFirstName = escapeHtml(customer.firstName || customer.name || "customer");
+
     const result = await openAdminModal({
       title: "Contact customer",
+      width: 720,
       html: `
-        <div style="display:flex;flex-direction:column;gap:14px;text-align:left;">
-          <div style="border:1px solid #ece2da;border-radius:18px;background:linear-gradient(180deg,#fff8f3 0%,#ffffff 100%);padding:18px;">
-            <div style="display:flex;flex-direction:column;gap:10px;">
+        <style>
+          #customer-contact-modal {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            text-align: left;
+          }
+
+          #customer-contact-modal .contact-hero {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #f0dfd3;
+            border-radius: 24px;
+            background:
+              radial-gradient(circle at top right, rgba(255, 208, 170, 0.9), transparent 34%),
+              radial-gradient(circle at bottom left, rgba(255, 233, 215, 0.95), transparent 32%),
+              linear-gradient(135deg, #fff6ef 0%, #ffffff 54%, #fff9f4 100%);
+            padding: 20px;
+          }
+
+          #customer-contact-modal .contact-hero::after {
+            content: "";
+            position: absolute;
+            inset: auto -36px -44px auto;
+            width: 132px;
+            height: 132px;
+            border-radius: 999px;
+            background: rgba(207, 110, 56, 0.08);
+          }
+
+          #customer-contact-modal .contact-hero-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: start;
+          }
+
+          #customer-contact-modal .contact-kicker {
+            margin: 0 0 8px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #9b7865;
+          }
+
+          #customer-contact-modal .contact-name {
+            margin: 0;
+            font-size: 29px;
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -0.05em;
+            color: #1f1712;
+          }
+
+          #customer-contact-modal .contact-copy {
+            margin: 10px 0 0;
+            max-width: 470px;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #6f635c;
+          }
+
+          #customer-contact-modal .contact-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+          }
+
+          #customer-contact-modal .contact-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            min-height: 32px;
+            padding: 0 12px;
+            border: 1px solid #ecdacf;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.82);
+            font-size: 12px;
+            font-weight: 700;
+            color: #594b42;
+            backdrop-filter: blur(4px);
+          }
+
+          #customer-contact-modal .contact-avatar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #cf6e38 0%, #f0a36c 100%);
+            color: white;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            box-shadow: 0 18px 34px rgba(207, 110, 56, 0.22);
+          }
+
+          #customer-contact-modal .contact-form-card {
+            border: 1px solid #ece2da;
+            border-radius: 24px;
+            background: #fffefe;
+            padding: 18px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+          }
+
+          #customer-contact-modal .contact-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+          }
+
+          #customer-contact-modal .contact-field-full {
+            grid-column: 1 / -1;
+          }
+
+          #customer-contact-modal .contact-label {
+            display: block;
+            margin: 0 0 7px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #836f62;
+          }
+
+          #customer-contact-modal .contact-select,
+          #customer-contact-modal .contact-input,
+          #customer-contact-modal .contact-textarea {
+            width: 100%;
+            margin: 0;
+            border: 1px solid #ddd4cd;
+            border-radius: 16px;
+            background: #ffffff;
+            color: #2f241d;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+          }
+
+          #customer-contact-modal .contact-select,
+          #customer-contact-modal .contact-input {
+            height: 50px;
+            padding: 0 15px;
+            font-size: 14px;
+            font-weight: 600;
+          }
+
+          #customer-contact-modal .contact-textarea {
+            min-height: 148px;
+            padding: 14px 15px;
+            font-size: 14px;
+            line-height: 1.65;
+            resize: vertical;
+          }
+
+          #customer-contact-modal .contact-select:focus,
+          #customer-contact-modal .contact-input:focus,
+          #customer-contact-modal .contact-textarea:focus {
+            border-color: #cf6e38;
+            box-shadow: 0 0 0 4px rgba(207, 110, 56, 0.12);
+          }
+
+          #customer-contact-modal .contact-tips {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+          }
+
+          #customer-contact-modal .contact-tip {
+            border: 1px solid #efe4db;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #fffdfa 0%, #fff7f1 100%);
+            padding: 12px;
+          }
+
+          #customer-contact-modal .contact-tip-title {
+            margin: 0 0 4px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #241913;
+          }
+
+          #customer-contact-modal .contact-tip-copy {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #7b6e65;
+          }
+
+          @media (max-width: 640px) {
+            #customer-contact-modal .contact-hero-grid,
+            #customer-contact-modal .contact-form-grid,
+            #customer-contact-modal .contact-tips {
+              grid-template-columns: 1fr;
+            }
+
+            #customer-contact-modal .contact-avatar {
+              width: 60px;
+              height: 60px;
+              border-radius: 20px;
+              font-size: 20px;
+            }
+
+            #customer-contact-modal .contact-name {
+              font-size: 24px;
+            }
+
+            #customer-contact-modal .contact-form-card,
+            #customer-contact-modal .contact-hero {
+              padding: 16px;
+            }
+          }
+        </style>
+        <div id="customer-contact-modal">
+          <div class="contact-hero">
+            <div class="contact-hero-grid">
               <div>
-                <p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#a0938b;">Customer</p>
-                <p style="margin:0;font-size:24px;font-weight:800;color:#201814;">${escapeHtml(customer.name)}</p>
+                <p class="contact-kicker">Customer outreach</p>
+                <p class="contact-name">${escapeHtml(customer.name)}</p>
+                <p class="contact-copy">
+                  Send a polished admin update across email, SMS, system notification, or in-app delivery with a cleaner communication workflow.
+                </p>
+                <div class="contact-badges">
+                  <span class="contact-badge">${escapeHtml(customer.email || "No email on file")}</span>
+                  <span class="contact-badge">${escapeHtml(customer.phone || "No phone on file")}</span>
+                  <span class="contact-badge">${escapeHtml(customer.status || "Active")}</span>
+                </div>
               </div>
-              <p style="margin:0;font-size:13px;line-height:1.7;color:#7d7068;">Send an admin message through email, SMS, system notification, or in-app delivery.</p>
+              <div class="contact-avatar">
+                ${escapeHtml((customer.name || "CU").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase() || "CU")}
+              </div>
             </div>
           </div>
-          <div>
-            <label for="customer-message-channel" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Channel</label>
-            <select id="customer-message-channel" class="swal2-select" style="display:flex;width:100%;margin:0;">
-              <option value="EMAIL">Email</option>
-              <option value="SMS">SMS</option>
-              <option value="SYSTEM_NOTIFICATION">System Notification</option>
-              <option value="IN_APP">In-App</option>
-            </select>
-          </div>
-          <div>
-            <label for="customer-message-subject" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Subject</label>
-            <input id="customer-message-subject" class="swal2-input" placeholder="Important update regarding your account" />
-          </div>
-          <div>
-            <label for="customer-message-body" style="display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:#6f645d;">Message</label>
-            <textarea id="customer-message-body" class="swal2-textarea" placeholder="Write your message to the customer"></textarea>
+
+          <div class="contact-form-card">
+            <div class="contact-form-grid">
+              <div>
+                <label for="customer-message-channel" class="contact-label">Delivery channel</label>
+                <select id="customer-message-channel" class="contact-select">
+                  <option value="EMAIL">Email</option>
+                  <option value="SMS">SMS</option>
+                  <option value="SYSTEM_NOTIFICATION">System Notification</option>
+                  <option value="IN_APP">In-App</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="customer-message-tone" class="contact-label">Message type</label>
+                <input id="customer-message-tone" class="contact-input" value="Important account update" readonly />
+              </div>
+
+              <div class="contact-field-full">
+                <label for="customer-message-subject" class="contact-label">Subject</label>
+                <input
+                  id="customer-message-subject"
+                  class="contact-input"
+                  placeholder="Important update regarding your account"
+                />
+              </div>
+
+              <div class="contact-field-full">
+                <label for="customer-message-body" class="contact-label">Message</label>
+                <textarea
+                  id="customer-message-body"
+                  class="contact-textarea"
+                  placeholder="Write your message to the customer"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="contact-tips">
+              <div class="contact-tip">
+                <p class="contact-tip-title">Clear subject</p>
+                <p class="contact-tip-copy">Use a short summary so the customer understands the reason immediately.</p>
+              </div>
+              <div class="contact-tip">
+                <p class="contact-tip-title">Friendly tone</p>
+                <p class="contact-tip-copy">Keep it professional, direct, and helpful for better response quality.</p>
+              </div>
+              <div class="contact-tip">
+                <p class="contact-tip-title">Actionable next step</p>
+                <p class="contact-tip-copy">Tell the customer exactly what they should do after reading your note.</p>
+              </div>
+            </div>
           </div>
         </div>
       `,
@@ -143,6 +410,55 @@ export default function CustomerDetailPage() {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
+      didOpen: () => {
+        const channelSelect = window.document.getElementById("customer-message-channel");
+        const subjectInput = window.document.getElementById("customer-message-subject");
+        const bodyTextarea = window.document.getElementById("customer-message-body");
+        const toneInput = window.document.getElementById("customer-message-tone");
+
+        const placeholdersByChannel = {
+          EMAIL: {
+            subject: "Important update regarding your account",
+            message: "Hello ${contactFirstName},\\n\\nWe wanted to share an important update regarding your account.\\n\\nNext steps:\\n- Review the details above\\n- Reply if you need help\\n\\nBest regards,\\nAdmin team",
+            tone: "Important account update",
+          },
+          SMS: {
+            subject: "Quick account alert",
+            message: "Hello ${contactFirstName}, this is a quick update from the admin team regarding your account. Reply if you need help.",
+            tone: "Short SMS alert",
+          },
+          SYSTEM_NOTIFICATION: {
+            subject: "Platform notification",
+            message: "We have posted an important platform update related to your account. Open your dashboard for more details.",
+            tone: "System notification",
+          },
+          IN_APP: {
+            subject: "In-app update",
+            message: "You have a new update from the admin team inside your account. Please review it when convenient.",
+            tone: "In-app message",
+          },
+        };
+
+        const applyChannelPreset = () => {
+          const nextPreset = placeholdersByChannel[channelSelect?.value] || placeholdersByChannel.EMAIL;
+
+          if (toneInput) {
+            toneInput.value = nextPreset.tone;
+          }
+
+          if (subjectInput && !subjectInput.value.trim()) {
+            subjectInput.placeholder = nextPreset.subject;
+          }
+
+          if (bodyTextarea && !bodyTextarea.value.trim()) {
+            bodyTextarea.placeholder = nextPreset.message.replace(/\\n/g, "\n");
+          }
+        };
+
+        channelSelect?.addEventListener("change", applyChannelPreset);
+        applyChannelPreset();
+        subjectInput?.focus();
+      },
       preConfirm: () => {
         const channel = window.document.getElementById("customer-message-channel")?.value || "";
         const subject = window.document.getElementById("customer-message-subject")?.value?.trim() || "";

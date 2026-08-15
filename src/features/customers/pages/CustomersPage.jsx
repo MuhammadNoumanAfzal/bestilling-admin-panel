@@ -8,6 +8,7 @@ import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.js
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 
 const PAGE_SIZE = 10;
+const ALL_DATES_FILTER = "All Dates";
 
 function toDisplayStatus(status) {
   switch (`${status ?? ""}`.trim().toUpperCase()) {
@@ -25,7 +26,7 @@ export default function CustomersPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [timeframe, setTimeframe] = useState("Last 7 days");
+  const [timeframe, setTimeframe] = useState(ALL_DATES_FILTER);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [summaryCards, setSummaryCards] = useState([]);
@@ -47,7 +48,7 @@ export default function CustomersPage() {
   const [isUpdatingStatusId, setIsUpdatingStatusId] = useState("");
 
   const dateRange = useMemo(
-    () => getDateRangeForFilter(timeframe, customStart, customEnd),
+    () => (timeframe === ALL_DATES_FILTER ? null : getDateRangeForFilter(timeframe, customStart, customEnd)),
     [customEnd, customStart, timeframe],
   );
 
@@ -119,7 +120,7 @@ export default function CustomersPage() {
     setSearchTerm("");
     setStatusFilter("");
     setCityFilter("");
-    setTimeframe("Last 7 days");
+    setTimeframe(ALL_DATES_FILTER);
     setCustomStart("");
     setCustomEnd("");
     setCurrentPage(1);
@@ -212,6 +213,7 @@ export default function CustomersPage() {
           startDate={customStart}
           endDate={customEnd}
           onCustomDateChange={handleCustomDateChange}
+          clearFilterValue={ALL_DATES_FILTER}
         />
       </section>
 

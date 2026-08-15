@@ -196,6 +196,10 @@ function isNavItemActive(item, pathname) {
     return false;
   }
 
+  if (item.to === "/payouts" && pathname.startsWith("/payouts/commission-settings")) {
+    return false;
+  }
+
   return item.matchPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 

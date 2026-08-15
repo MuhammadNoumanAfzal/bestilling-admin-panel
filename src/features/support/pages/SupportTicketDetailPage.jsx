@@ -1,5 +1,5 @@
 import { ChevronLeft } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../../auth/hooks/useAuth.js";
@@ -51,6 +51,8 @@ export default function SupportTicketDetailPage() {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [isUpdatingPriority, setIsUpdatingPriority] = useState(false);
+  const knownConversationIdsRef = useRef(new Set());
+  const hasPrimedConversationRef = useRef(false);
 
   const fallbackPriorityOptions = useMemo(
     () => [
@@ -105,6 +107,63 @@ export default function SupportTicketDetailPage() {
 
     return () => {
       isMounted = false;
+    };
+  }, [ticketId]);
+
+  useEffect(() => {
+    if (!ticket?.conversation?.length) {
+      return undefined;
+    }
+
+    const currentIds = new Set(ticket.conversation.map((item) => item.id));
+
+    if (!hasPrimedConversationRef.current) {
+      knownConversationIdsRef.current = currentIds;
+      hasPrimedConversationRef.current = true;
+      return undefined;
+    }
+
+    const newIncomingMessages = ticket.conversation.filter(
+      (item) =>
+        item?.id &&
+        !knownConversationIdsRef.current.has(item.id) &&
+        item.side !== "admin",
+    );
+
+    knownConversationIdsRef.current = currentIds;
+
+    if (!newIncomingMessages.length) {
+      return undefined;
+    }
+
+    const latestIncomingMessage = newIncomingMessages[newIncomingMessages.length - 1];
+
+    void Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "info",
+      title: "New support response",
+      text: `${latestIncomingMessage.author?.fullName || "Customer"} replied at ${formatReadableDate(latestIncomingMessage.createdAt)}.`,
+      showConfirmButton: false,
+      timer: 4500,
+      timerProgressBar: true,
+      showCloseButton: true,
+    });
+
+    return undefined;
+  }, [ticket]);
+
+  useEffect(() => {
+    if (!ticketId) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void refreshTicket().catch(() => {});
+    }, 15000);
+
+    return () => {
+      window.clearInterval(intervalId);
     };
   }, [ticketId]);
 

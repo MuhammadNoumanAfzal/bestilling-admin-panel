@@ -1,6 +1,8 @@
 import { MessageSquareReply, Paperclip, SendHorizonal, Shield, X } from "lucide-react";
 import { formatReadableDate } from "../../supportUtils.js";
 
+const URL_PATTERN = /(https?:\/\/[^\s]+)/giu;
+
 function DraftAttachmentChip({ filename, onRemove }) {
   return (
     <span className="inline-flex items-center gap-2 rounded-full border border-[#eaded6] bg-[#f6f1ed] px-3 py-1 text-[11px] font-medium text-[#7c6f67]">
@@ -12,9 +14,26 @@ function DraftAttachmentChip({ filename, onRemove }) {
   );
 }
 
+function parseMessageContent(message) {
+  const rawMessage = `${message ?? ""}`.trim();
+  const urls = Array.from(rawMessage.matchAll(URL_PATTERN)).map((match) => match[0]);
+  const cleanedMessage = rawMessage
+    .replace(/\n?Attachments:\s*/giu, "\n")
+    .replace(/\n?Attachment:\s*/giu, "\n")
+    .replace(URL_PATTERN, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  return {
+    text: cleanedMessage,
+    urls,
+  };
+}
+
 function MessageBubble({ message, requesterAvatarUrl }) {
   const isRight = message.side === "admin";
   const isInternal = message.author?.role?.toLowerCase().includes("admin") && message.side === "admin";
+  const { text, urls } = parseMessageContent(message.message);
 
   return (
     <div className={["flex gap-3", isRight ? "justify-end" : "justify-start"].join(" ")}>
@@ -52,7 +71,27 @@ function MessageBubble({ message, requesterAvatarUrl }) {
             isRight ? "bg-[#cb6432] text-white" : "border border-[#ece2da] bg-white text-[#392d27]",
           ].join(" ")}
         >
-          {message.message}
+          {text ? <span className="whitespace-pre-line">{text}</span> : null}
+          {urls.length ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {urls.map((url, index) => (
+                <a
+                  key={`${message.id}-url-${index}`}
+                  className={[
+                    "inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-[11px] font-semibold no-underline transition",
+                    isRight
+                      ? "bg-white/15 text-white hover:bg-white/20"
+                      : "border border-[#eaded6] bg-[#fff3ea] text-[#c45f30] hover:border-[#cf6e38]/35 hover:bg-[#ffe7d8]",
+                  ].join(" ")}
+                  href={url}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Open attachment
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         {message.attachments?.length ? (

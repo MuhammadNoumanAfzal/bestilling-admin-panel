@@ -206,9 +206,6 @@ function normalizeOrderRow(item) {
   const customerName = item?.customer?.fullName || "Unknown customer";
   const vendorName = item?.vendor?.businessName || "Unknown vendor";
   const currency = item?.amount?.currency || "NOK";
-  const scheduledDateTime = item?.eventDate
-    ? `${item.eventDate}${item?.eventTime ? `T${item.eventTime}` : ""}`
-    : item?.placedAt;
 
   return {
     id: item?.id || "",
@@ -221,10 +218,10 @@ function normalizeOrderRow(item) {
     vendorCity: item?.vendor?.city || item?.delivery?.city || "",
     vendorAvatar: toInitials(vendorName),
     vendorAvatarUrl: "",
-    eventType: item?.delivery?.status || "Not specified",
+    eventType: item?.eventType || "Not specified",
     guestCount: 0,
     placedAt: item?.placedAt || "",
-    dateTime: formatDateTimeLabel(scheduledDateTime),
+    dateTime: formatDateTimeLabel(item?.placedAt),
     amount: formatMoney(item?.amount?.total, currency),
     amountValue: Number(item?.amount?.total ?? 0),
     status: normalizeStatus(item?.status),
@@ -236,7 +233,7 @@ function normalizeOrderRow(item) {
     deliveryType: "",
     deliveryStatus: normalizeStatus(item?.delivery?.status),
     rawDeliveryStatus: `${item?.delivery?.status ?? ""}`.trim().toUpperCase(),
-    scheduledAt: scheduledDateTime || "",
+    scheduledAt: item?.placedAt || "",
     deliveredAt: "",
     flags: {
       canMarkDelivered: Boolean(item?.flags?.canMarkDelivered),

@@ -8,8 +8,7 @@ export const ADMIN_ORDERS_QUERY = `
         paymentStatus
         fulfillmentStatus
         placedAt
-        eventDate
-        eventTime
+        eventType
         amount {
           currency
           subtotal

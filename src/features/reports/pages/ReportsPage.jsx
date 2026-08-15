@@ -117,29 +117,92 @@ export default function ReportsPage() {
 
   async function handleExport() {
     const { value: exportConfig } = await Swal.fire({
-      title: "Export admin report",
       html: `
-        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
-          <label style="display:flex;flex-direction:column;gap:6px;">
-            <span style="font-size:12px;font-weight:700;color:#4a352b;">Format</span>
-            <select id="report-export-format" class="swal2-select" style="display:flex;width:100%;margin:0;">
-              <option value="PDF" selected>PDF</option>
-              <option value="CSV">CSV</option>
-              <option value="XLSX">XLSX</option>
-            </select>
-          </label>
-          <label style="display:flex;flex-direction:column;gap:6px;">
-            <span style="font-size:12px;font-weight:700;color:#4a352b;">Sections</span>
-            <select id="report-export-sections" class="swal2-select" multiple style="display:flex;width:100%;min-height:180px;margin:0;">
-              <option value="SUMMARY" selected>Summary</option>
-              <option value="REVENUE" selected>Revenue</option>
-              <option value="ORDERS" selected>Orders</option>
-              <option value="VENDORS" selected>Vendors</option>
-              <option value="CUSTOMERS" selected>Customers</option>
-              <option value="CATEGORY" selected>Category</option>
-              <option value="OPERATIONS" selected>Operations</option>
-            </select>
-          </label>
+        <div class="text-left">
+          <div class="rounded-[28px] border border-[#f0ddd2] bg-[linear-gradient(135deg,#fff8f3_0%,#ffffff_52%,#fff4ea_100%)] p-5 shadow-[0_22px_50px_rgba(71,41,16,0.10)] sm:p-6">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-[#c96b3b]">Report Export</p>
+                <h2 class="mt-2 text-[28px] font-bold tracking-[-0.03em] text-[#2b1d16]">Export admin report</h2>
+                <p class="mt-2 max-w-[440px] text-[14px] leading-6 text-[#6a574d]">
+                  Choose a file format and the sections you want to include in this export.
+                </p>
+              </div>
+              <div class="hidden h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-[#fff1e7] text-[#cf6e38] sm:flex">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 3v10m0 0 4-4m-4 4-4-4M5 15v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="mt-6 grid gap-5">
+              <label class="block">
+                <span class="mb-2 block text-[11px] font-bold uppercase tracking-[0.16em] text-[#9e7761]">Format</span>
+                <div class="rounded-[18px] border border-[#ead7cb] bg-white px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+                  <select id="report-export-format" class="w-full border-0 bg-transparent text-[16px] font-semibold text-[#2b1d16] outline-none">
+                    <option value="PDF" selected>PDF document</option>
+                    <option value="CSV">CSV spreadsheet</option>
+                    <option value="XLSX">Excel workbook</option>
+                  </select>
+                </div>
+              </label>
+
+              <div>
+                <span class="mb-2 block text-[11px] font-bold uppercase tracking-[0.16em] text-[#9e7761]">Sections</span>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <label class="flex items-start gap-3 rounded-[18px] border border-[#ecdacf] bg-white px-4 py-3 transition hover:border-[#dfb49a] hover:bg-[#fffaf6]">
+                    <input id="section-summary" type="checkbox" value="SUMMARY" checked class="mt-1 h-4 w-4 rounded border-[#d8c1b0] text-[#cf6e38] focus:ring-[#cf6e38]" />
+                    <span>
+                      <span class="block text-[15px] font-semibold text-[#251913]">Summary</span>
+                      <span class="mt-1 block text-[12px] text-[#79685f]">Top-line KPIs and platform totals.</span>
+                    </span>
+                  </label>
+                  <label class="flex items-start gap-3 rounded-[18px] border border-[#ecdacf] bg-white px-4 py-3 transition hover:border-[#dfb49a] hover:bg-[#fffaf6]">
+                    <input id="section-revenue" type="checkbox" value="REVENUE" checked class="mt-1 h-4 w-4 rounded border-[#d8c1b0] text-[#cf6e38] focus:ring-[#cf6e38]" />
+                    <span>
+                      <span class="block text-[15px] font-semibold text-[#251913]">Revenue</span>
+                      <span class="mt-1 block text-[12px] text-[#79685f]">Gross earnings and revenue trends.</span>
+                    </span>
+                  </label>
+                  <label class="flex items-start gap-3 rounded-[18px] border border-[#ecdacf] bg-white px-4 py-3 transition hover:border-[#dfb49a] hover:bg-[#fffaf6]">
+                    <input id="section-orders" type="checkbox" value="ORDERS" checked class="mt-1 h-4 w-4 rounded border-[#d8c1b0] text-[#cf6e38] focus:ring-[#cf6e38]" />
+                    <span>
+                      <span class="block text-[15px] font-semibold text-[#251913]">Orders</span>
+                      <span class="mt-1 block text-[12px] text-[#79685f]">Volume, scheduling, and order flow.</span>
+                    </span>
+                  </label>
+                  <label class="flex items-start gap-3 rounded-[18px] border border-[#ecdacf] bg-white px-4 py-3 transition hover:border-[#dfb49a] hover:bg-[#fffaf6]">
+                    <input id="section-vendors" type="checkbox" value="VENDORS" checked class="mt-1 h-4 w-4 rounded border-[#d8c1b0] text-[#cf6e38] focus:ring-[#cf6e38]" />
+                    <span>
+                      <span class="block text-[15px] font-semibold text-[#251913]">Vendors</span>
+                      <span class="mt-1 block text-[12px] text-[#79685f]">Top performers and registrations.</span>
+                    </span>
+                  </label>
+                  <label class="flex items-start gap-3 rounded-[18px] border border-[#ecdacf] bg-white px-4 py-3 transition hover:border-[#dfb49a] hover:bg-[#fffaf6]">
+                    <input id="section-customers" type="checkbox" value="CUSTOMERS" checked class="mt-1 h-4 w-4 rounded border-[#d8c1b0] text-[#cf6e38] focus:ring-[#cf6e38]" />
+                    <span>
+                      <span class="block text-[15px] font-semibold text-[#251913]">Customers</span>
+                      <span class="mt-1 block text-[12px] text-[#79685f]">Acquisition, retention, and satisfaction.</span>
+                    </span>
+                  </label>
+                  <label class="flex items-start gap-3 rounded-[18px] border border-[#ecdacf] bg-white px-4 py-3 transition hover:border-[#dfb49a] hover:bg-[#fffaf6]">
+                    <input id="section-category" type="checkbox" value="CATEGORY" checked class="mt-1 h-4 w-4 rounded border-[#d8c1b0] text-[#cf6e38] focus:ring-[#cf6e38]" />
+                    <span>
+                      <span class="block text-[15px] font-semibold text-[#251913]">Category</span>
+                      <span class="mt-1 block text-[12px] text-[#79685f]">Category share and product mix.</span>
+                    </span>
+                  </label>
+                  <label class="flex items-start gap-3 rounded-[18px] border border-[#ecdacf] bg-white px-4 py-3 transition hover:border-[#dfb49a] hover:bg-[#fffaf6] sm:col-span-2">
+                    <input id="section-operations" type="checkbox" value="OPERATIONS" checked class="mt-1 h-4 w-4 rounded border-[#d8c1b0] text-[#cf6e38] focus:ring-[#cf6e38]" />
+                    <span>
+                      <span class="block text-[15px] font-semibold text-[#251913]">Operations</span>
+                      <span class="mt-1 block text-[12px] text-[#79685f]">SLA, delivery, support, and operational health.</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       `,
       showCancelButton: true,
@@ -147,14 +210,23 @@ export default function ReportsPage() {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
+      buttonsStyling: false,
+      customClass: {
+        popup: "rounded-[30px] !p-3 sm:!p-4",
+        htmlContainer: "!m-0 !overflow-visible !p-0",
+        actions: "!mt-5 flex w-full justify-end gap-3 !px-3 !pb-3 sm:!px-4 sm:!pb-4",
+        confirmButton:
+          "!m-0 inline-flex h-12 items-center justify-center rounded-[16px] bg-[#cf6e38] px-6 text-[14px] font-semibold text-white shadow-[0_18px_36px_rgba(207,110,56,0.24)] transition hover:bg-[#bc612f]",
+        cancelButton:
+          "!m-0 inline-flex h-12 items-center justify-center rounded-[16px] border border-[#e7d5c8] bg-white px-6 text-[14px] font-semibold text-[#6d5b4e] transition hover:bg-[#faf4ee]",
+      },
       focusConfirm: false,
       preConfirm: () => {
         const formatElement = document.getElementById("report-export-format");
-        const sectionsElement = document.getElementById("report-export-sections");
         const format = formatElement?.value || "";
-        const sections = Array.from(sectionsElement?.selectedOptions || []).map(
-          (option) => option.value,
-        );
+        const sections = Array.from(
+          document.querySelectorAll('input[id^="section-"]:checked'),
+        ).map((element) => element.value);
 
         if (!format) {
           Swal.showValidationMessage("Please choose an export format.");

@@ -16,11 +16,13 @@ export const ADMIN_ORDERS_QUERY = `
           fullName
           email
           phone
+          avatarUrl
         }
         vendor {
           id
           businessName
           city
+          avatarUrl
         }
       }
       summary {
@@ -72,15 +74,19 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
         total
       }
       customer {
+        id
         fullName
         email
         phone
+        avatarUrl
       }
       vendor {
+        id
         businessName
         email
         phone
         city
+        avatarUrl
         address {
           city
           country

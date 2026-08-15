@@ -98,6 +98,9 @@ export const EXPORT_ADMIN_REPORT_MUTATION = `
       message
       exportUrl
       fileName
+      contentType
+      expiresAt
+      generatedAt
     }
   }
 `;

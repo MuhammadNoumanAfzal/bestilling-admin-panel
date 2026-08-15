@@ -252,7 +252,7 @@ export default function ReportsPage() {
       const result = await exportAdminReportRequest({
         dateFrom: snapshotFilters.dateFrom,
         dateTo: snapshotFilters.dateTo,
-        preset: snapshotFilters.preset,
+        timezone: snapshotFilters.timezone,
         format: exportConfig.format,
         sections: exportConfig.sections,
       });

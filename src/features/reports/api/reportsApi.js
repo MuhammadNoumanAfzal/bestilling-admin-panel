@@ -8,8 +8,28 @@ import {
   EXPORT_ADMIN_REPORT_MUTATION,
 } from "./reportsQueries.js";
 
+const DEFAULT_GRAPHQL_API_URL = "https://api.gocatering.no/graphql/";
+const GRAPHQL_API_URL =
+  import.meta.env.VITE_GRAPHQL_API_URL ??
+  import.meta.env.VITE_GRAPHQL_URL ??
+  DEFAULT_GRAPHQL_API_URL;
+
 function getReportsErrorMessage(result, fallbackMessage) {
   return result?.message || result?.errors?.find?.((item) => item?.message)?.message || fallbackMessage;
+}
+
+function normalizeExportUrl(exportUrl) {
+  const rawValue = `${exportUrl ?? ""}`.trim();
+
+  if (!rawValue) {
+    return "";
+  }
+
+  try {
+    return new URL(rawValue).toString();
+  } catch {
+    return new URL(rawValue, GRAPHQL_API_URL).toString();
+  }
 }
 
 export async function getAdminReportsSnapshotRequest(filters) {
@@ -39,7 +59,7 @@ export async function exportAdminReportRequest(input) {
     input: {
       dateFrom: input?.dateFrom || null,
       dateTo: input?.dateTo || null,
-      preset: input?.preset || null,
+      timezone: input?.timezone || "UTC",
       format: input?.format || "PDF",
       sections: input?.sections?.length ? input.sections : exportSectionOptions,
     },
@@ -50,5 +70,8 @@ export async function exportAdminReportRequest(input) {
     throw new Error(getReportsErrorMessage(result, "Unable to export report."));
   }
 
-  return result;
+  return {
+    ...result,
+    exportUrl: normalizeExportUrl(result.exportUrl),
+  };
 }

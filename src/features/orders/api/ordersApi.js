@@ -146,6 +146,139 @@ function normalizeTimelineStatus(value) {
   }
 }
 
+function createTimelineStep(step) {
+  return {
+    key: step.key,
+    label: step.label,
+    status: step.status,
+    happenedAt: step.happenedAt || "",
+    happenedAtLabel: formatDateTimeLabel(step.happenedAt),
+    description: step.description,
+    actor: step.actor || "",
+  };
+}
+
+function buildProductionTimeline(order) {
+  const rawStatus = `${order?.status ?? ""}`.trim().toUpperCase();
+  const rawPaymentStatus = `${order?.paymentStatus ?? ""}`.trim().toUpperCase();
+
+  const placedAt = order?.placedAt || "";
+  const acceptedAt = order?.acceptedAt || "";
+  const preparedAt = order?.preparedAt || "";
+  const outForDeliveryAt = order?.outForDeliveryAt || "";
+  const deliveredAt = order?.deliveredAt || "";
+  const canceledAt = order?.canceledAt || "";
+  const refundedAt = order?.payment?.refundedAt || "";
+
+  const currentStage =
+    canceledAt || rawStatus === "CANCELLED" || rawStatus === "CANCELED"
+      ? "canceled"
+      : rawStatus === "REFUNDED" || rawPaymentStatus === "REFUNDED" || rawPaymentStatus === "PARTIALLY_REFUNDED"
+      ? "refunded"
+      : deliveredAt || rawStatus === "DELIVERED"
+      ? "delivered"
+      : outForDeliveryAt || rawStatus === "OUT_FOR_DELIVERY"
+      ? "out_for_delivery"
+      : preparedAt || rawStatus === "PREPARING"
+      ? "preparing"
+      : acceptedAt || rawStatus === "ACCEPTED" || rawStatus === "CONFIRMED"
+      ? "accepted"
+      : "placed";
+
+  const steps = [
+    createTimelineStep({
+      key: "placed",
+      label: "Placed",
+      status: "completed",
+      happenedAt: placedAt,
+      description: "Customer placed the order.",
+    }),
+    createTimelineStep({
+      key: "accepted",
+      label: "Accepted",
+      status:
+        currentStage === "placed"
+          ? "pending"
+          : ["accepted", "preparing", "out_for_delivery", "delivered", "refunded"].includes(currentStage)
+          ? "completed"
+          : "failed",
+      happenedAt: acceptedAt,
+      description: "Vendor accepted and confirmed the order.",
+    }),
+    createTimelineStep({
+      key: "preparing",
+      label: "Preparing",
+      status:
+        currentStage === "preparing"
+          ? "current"
+          : ["out_for_delivery", "delivered", "refunded"].includes(currentStage)
+          ? "completed"
+          : currentStage === "canceled"
+          ? "failed"
+          : "pending",
+      happenedAt: preparedAt,
+      description: "Kitchen or vendor is preparing the order.",
+    }),
+    createTimelineStep({
+      key: "out_for_delivery",
+      label: "Out for delivery",
+      status:
+        currentStage === "out_for_delivery"
+          ? "current"
+          : ["delivered", "refunded"].includes(currentStage)
+          ? "completed"
+          : currentStage === "canceled"
+          ? "failed"
+          : "pending",
+      happenedAt: outForDeliveryAt,
+      description: "Order left the vendor and is on the way.",
+    }),
+    createTimelineStep({
+      key: "delivered",
+      label: "Delivered",
+      status:
+        currentStage === "delivered" || currentStage === "refunded"
+          ? "completed"
+          : currentStage === "canceled"
+          ? "failed"
+          : "pending",
+      happenedAt: deliveredAt,
+      description: "Order was delivered successfully.",
+    }),
+  ];
+
+  if (currentStage === "canceled") {
+    steps.push(
+      createTimelineStep({
+        key: "canceled",
+        label: "Canceled",
+        status: "failed",
+        happenedAt: canceledAt,
+        description: order?.cancellationReason
+          ? `Order was canceled. Reason: ${order.cancellationReason}`
+          : "Order was canceled before completion.",
+      }),
+    );
+  }
+
+  if (currentStage === "refunded") {
+    steps.push(
+      createTimelineStep({
+        key: "refunded",
+        label: rawPaymentStatus === "PARTIALLY_REFUNDED" ? "Partially refunded" : "Refunded",
+        status: "completed",
+        happenedAt: refundedAt,
+        description:
+          rawPaymentStatus === "PARTIALLY_REFUNDED"
+            ? "A partial refund was processed for this order."
+            : "The order payment was refunded.",
+      }),
+    );
+  }
+
+  return steps;
+}
+
 function buildAddressLabel(address) {
   if (!address) {
     return "Not provided";
@@ -405,17 +538,7 @@ function normalizeOrderDetail(order) {
           addons: [],
         }))
       : [],
-    timeline: Array.isArray(order?.timeline)
-      ? order.timeline.map((item) => ({
-          key: item?.key || "",
-          label: item?.label || "Timeline item",
-          status: normalizeTimelineStatus(item?.status),
-          happenedAt: item?.happenedAt || "",
-          happenedAtLabel: formatDateTimeLabel(item?.happenedAt),
-          description: item?.description || "",
-          actor: "",
-        }))
-      : [],
+    timeline: buildProductionTimeline(order),
     payment: {
       method: order?.payment?.method || "Not specified",
       transactionId: order?.payment?.transactionId || "Not available",

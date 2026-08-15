@@ -255,13 +255,15 @@ export async function getAdminSupportTicketRequest(id) {
 }
 
 export async function replyToSupportTicketRequest(input) {
+  const payload = {
+    ticketId: input.ticketId,
+    message: input.message,
+    attachmentIds: input.attachmentIds || [],
+    internalNote: Boolean(input.internalNote),
+  };
+
   const data = await executeProtectedGraphqlRequest(REPLY_TO_SUPPORT_TICKET_MUTATION, {
-    input: {
-      ticketId: input.ticketId,
-      message: input.message,
-      attachmentIds: input.attachmentIds || [],
-      internalNote: Boolean(input.internalNote),
-    },
+    input: payload,
   });
 
   const result = data?.replyToSupportTicket;

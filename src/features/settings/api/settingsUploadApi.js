@@ -1,7 +1,7 @@
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-export async function uploadAdminAvatar(file) {
+export async function uploadAdminFile(file, resourceType = "image") {
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
     throw new Error(
       "Missing Cloudinary configuration. Add VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.",
@@ -13,7 +13,7 @@ export async function uploadAdminAvatar(file) {
   formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
   const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`,
     {
       method: "POST",
       body: formData,
@@ -30,4 +30,8 @@ export async function uploadAdminAvatar(file) {
     photoUrl: payload.secure_url,
     assetKey: payload.public_id,
   };
+}
+
+export async function uploadAdminAvatar(file) {
+  return uploadAdminFile(file, "image");
 }

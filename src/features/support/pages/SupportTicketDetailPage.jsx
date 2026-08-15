@@ -6,8 +6,6 @@ import { useAuth } from "../../auth/hooks/useAuth.js";
 import {
   addSupportInternalNoteRequest,
   assignSupportTicketRequest,
-  createSupportAttachmentUploadUrlRequest,
-  finalizeSupportAttachmentRequest,
   getAdminSupportTicketRequest,
   getSupportFilterOptionsRequest,
   reopenSupportTicketRequest,
@@ -15,8 +13,8 @@ import {
   resolveSupportTicketRequest,
   updateSupportTicketPriorityRequest,
   updateSupportTicketStatusRequest,
-  uploadSupportAttachmentFile,
 } from "../api/supportApi.js";
+import { uploadAdminFile } from "../../settings/api/settingsUploadApi.js";
 import SupportConversationPanel from "../components/details/SupportConversationPanel.jsx";
 import SupportCustomerProfileCard from "../components/details/SupportCustomerProfileCard.jsx";
 import SupportCustomerProfileModal from "../components/details/SupportCustomerProfileModal.jsx";
@@ -135,22 +133,27 @@ export default function SupportTicketDetailPage() {
     setIsSending(true);
 
     try {
-      const finalizedAttachments = [];
+      const uploadedAttachmentUrls = [];
 
       for (const file of attachments) {
-        const uploadPayload = await createSupportAttachmentUploadUrlRequest(file.name, file.type || "application/octet-stream");
-        await uploadSupportAttachmentFile(uploadPayload.uploadUrl, file);
-        const attachment = await finalizeSupportAttachmentRequest(uploadPayload.assetKey);
-        finalizedAttachments.push(attachment);
+        const uploadResult = await uploadAdminFile(file, "auto");
+        if (uploadResult?.photoUrl) {
+          uploadedAttachmentUrls.push(uploadResult.photoUrl);
+        }
       }
 
       if (internalNote) {
         await addSupportInternalNoteRequest(ticketId, trimmedMessage);
       } else {
+        const attachmentSummary = uploadedAttachmentUrls.length
+          ? `${trimmedMessage}\n\nAttachments:\n${uploadedAttachmentUrls.join("\n")}`
+          : trimmedMessage;
+
         await replyToSupportTicketRequest({
           ticketId,
-          message: trimmedMessage,
-          attachmentIds: finalizedAttachments.map((item) => item.id),
+          message: attachmentSummary,
+          attachmentUrl: uploadedAttachmentUrls[0] || "",
+          attachmentIds: [],
           internalNote: false,
         });
       }

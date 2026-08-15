@@ -2,14 +2,12 @@ export const ADMIN_REPORTS_SNAPSHOT_QUERY = `
   query AdminReportsSnapshot(
     $dateFrom: DateTime
     $dateTo: DateTime
-    $preset: String
-    $timezone: String
+    $timezone: String!
   ) {
     adminReportsSnapshot(
       filters: {
         dateFrom: $dateFrom
         dateTo: $dateTo
-        preset: $preset
         timezone: $timezone
       }
     ) {
@@ -22,11 +20,7 @@ export const ADMIN_REPORTS_SNAPSHOT_QUERY = `
         totalOrders
         activeVendors
         activeCustomers
-        pendingApprovalsValue {
-          amount
-          currency
-          formatted
-        }
+        pendingApprovals
         averageOrderValue {
           amount
           currency

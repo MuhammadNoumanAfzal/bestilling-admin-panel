@@ -8,14 +8,6 @@ export const reportFilterOptions = [
   "Clear Filter",
 ];
 
-export const reportPresetMap = {
-  "Last 7 days": "LAST_7_DAYS",
-  "Last Month": "LAST_MONTH",
-  "Last 3 Months": "LAST_3_MONTHS",
-  "Last 6 Months": "LAST_6_MONTHS",
-  "This Year": "THIS_YEAR",
-};
-
 export const exportSectionOptions = ["SUMMARY", "REVENUE", "ORDERS", "VENDORS", "CUSTOMERS", "CATEGORY", "OPERATIONS"];
 
 function getNumberValue(value) {
@@ -98,7 +90,7 @@ export function buildReportsSnapshotViewModel(snapshot, filterLabel) {
       {
         id: "approvals",
         label: "Pending Approvals",
-        value: normalizeMoney(snapshot?.summary?.pendingApprovalsValue),
+        value: String(snapshot?.summary?.pendingApprovals ?? 0),
         icon: "clock",
         accent: "warm",
       },

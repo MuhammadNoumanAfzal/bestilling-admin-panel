@@ -416,7 +416,9 @@ export default function OrderDetailPage() {
             <p className="text-[16px] leading-7 text-[#6f645d]">
               Placed on {order.placedAtLabel}
             </p>
-            <p className="text-[13px] text-[#8c8077]">Last updated {order.updatedAtLabel}</p>
+            <p className="text-[13px] text-[#8c8077]">
+              Internal ID {order.id} · Last updated {order.updatedAtLabel}
+            </p>
           </div>
 
           <div className="flex flex-wrap gap-2">

@@ -160,7 +160,7 @@ export default function OrdersTable({
                           {row.orderNumber}
                         </span>
                         <span className="block text-[11px] text-[#7a6d66]">
-                          {row.guestCount} guests
+                          ID {row.id} · {row.guestCount} guests
                         </span>
                       </button>
                     </td>
@@ -308,7 +308,7 @@ export default function OrdersTable({
                   >
                     {row.orderNumber}
                   </button>
-                  <p className="mt-1 text-[12px] text-[#7a6d66]">{row.dateTime}</p>
+                  <p className="mt-1 text-[12px] text-[#7a6d66]">ID {row.id} · {row.dateTime}</p>
                 </div>
 
                 <span

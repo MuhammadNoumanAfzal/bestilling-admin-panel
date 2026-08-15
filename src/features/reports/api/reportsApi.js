@@ -98,6 +98,12 @@ async function getConsistentSummaryValues(filters = {}) {
 
 function buildFallbackSnapshotViewModel(summaryValues, filterLabel) {
   return {
+    fallbackMeta: {
+      isFallback: true,
+      reason:
+        "Detailed analytics are unavailable for this filter because the reports backend returned a decimal calculation error.",
+      filterLabel,
+    },
     summary: [
       {
         id: "revenue",
@@ -190,6 +196,11 @@ export async function getAdminReportsSnapshotRequest(filters) {
 
     return {
       ...baseViewModel,
+      fallbackMeta: {
+        isFallback: false,
+        reason: "",
+        filterLabel: filters?.filterLabel || "Last 7 days",
+      },
       summary: baseViewModel.summary.map((item) => {
         switch (item.id) {
           case "revenue":

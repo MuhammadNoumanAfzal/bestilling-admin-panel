@@ -59,6 +59,7 @@ export default function ReportsPage() {
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [reportSnapshot, setReportSnapshot] = useState({
+    fallbackMeta: { isFallback: false, reason: "", filterLabel: "Last 7 days" },
     summary: [],
     revenueAnalytics: { title: "", subtitle: "", scale: [0, 1], bars: [], filterLabel: "Last 7 days" },
     orderAnalytics: { title: "", subtitle: "", scale: [0, 1], bars: [] },
@@ -224,6 +225,12 @@ export default function ReportsPage() {
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-10 text-center text-[15px] font-medium text-[#9f4d33]">
           {loadError}
+        </div>
+      ) : null}
+
+      {!loadError && reportSnapshot.fallbackMeta?.isFallback ? (
+        <div className="rounded-[16px] border border-[#f1d8cd] bg-[#fff6f1] px-5 py-4 text-[13px] font-medium text-[#9f4d33]">
+          {`Detailed report sections for ${reportSnapshot.fallbackMeta.filterLabel} are not loading because the backend reports snapshot is failing. The summary cards above are still coming from live Orders, Vendors, and Customers data.`}
         </div>
       ) : null}
 

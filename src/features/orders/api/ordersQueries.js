@@ -6,45 +6,22 @@ export const ADMIN_ORDERS_QUERY = `
         orderNumber
         status
         paymentStatus
-        fulfillmentStatus
         placedAt
-        eventType
         amount {
           currency
-          subtotal
-          tax
-          deliveryFee
-          discount
           total
         }
         customer {
+          id
           fullName
           email
           phone
         }
         vendor {
+          id
           businessName
-          phone
+          city
         }
-        delivery {
-        status
-        recipientName
-        city
-        }
-        flags {
-        canMarkDelivered
-        canCancel
-        canRefund
-        canUpdatePaymentStatus
-        }
-      }
-      pageInfo {
-        page
-        limit
-        totalItems
-        totalPages
-        hasNextPage
-        hasPreviousPage
       }
       summary {
         totalOrders
@@ -104,7 +81,13 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
         email
         phone
         city
-        address
+        address {
+          city
+          country
+          line1
+          line2
+          postalCode
+        }
       }
       delivery {
         type
@@ -182,32 +165,42 @@ export const ADMIN_UPDATE_PAYMENT_STATUS_MUTATION = `
 `;
 
 export const ADMIN_CANCEL_ORDER_MUTATION = `
-  mutation AdminCancelOrder($input: AdminCancelOrderInput!) {
-    adminCancelOrder(input: $input) {
+  mutation CancelOrder($input: CancelOrderInput!) {
+    cancelOrder(input: $input) {
       success
       message
-      code
       order {
         id
         status
         canceledAt
-        cancellationReason
       }
     }
   }
 `;
 
 export const ADMIN_REFUND_ORDER_MUTATION = `
-  mutation AdminRefundOrder($input: AdminRefundOrderInput!) {
-    adminRefundOrder(input: $input) {
+  mutation RefundOrder($input: RefundOrderInput!) {
+    refundOrder(input: $input) {
       success
       message
-      code
       refund {
         id
         status
-        amount
-        processedAt
+        providerRefundId
+        amount {
+          amount
+          currency
+          formatted
+        }
+      }
+      order {
+        id
+        status
+        paymentStatus
+      }
+      payment {
+        id
+        status
       }
     }
   }

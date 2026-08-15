@@ -84,6 +84,14 @@ function formatMoney(value, currency = "NOK") {
   })}`;
 }
 
+function getMoneyNumber(value) {
+  if (value && typeof value === "object") {
+    return Number(value.amount ?? 0);
+  }
+
+  return Number(value ?? 0);
+}
+
 function normalizeStatus(value) {
   const normalized = `${value ?? ""}`.trim().toUpperCase();
 
@@ -148,10 +156,13 @@ function buildAddressLabel(address) {
   }
 
   return [
+    address.address,
     address.line1,
     address.line2,
     address.city,
+    address.postCode,
     address.postalCode,
+    address.country,
   ]
     .filter(Boolean)
     .join(", ") || "Not provided";
@@ -211,10 +222,12 @@ function normalizeOrderRow(item) {
     id: item?.id || "",
     orderNumber: item?.orderNumber || item?.id || "Not available",
     customer: customerName,
+    customerId: item?.customer?.id || "",
     customerEmail: item?.customer?.email || "",
     customerAvatar: toInitials(customerName),
     customerAvatarUrl: "",
     vendor: vendorName,
+    vendorId: item?.vendor?.id || "",
     vendorCity: item?.vendor?.city || item?.delivery?.city || "",
     vendorAvatar: toInitials(vendorName),
     vendorAvatarUrl: "",
@@ -223,16 +236,16 @@ function normalizeOrderRow(item) {
     placedAt: item?.placedAt || "",
     dateTime: formatDateTimeLabel(item?.placedAt),
     amount: formatMoney(item?.amount?.total, currency),
-    amountValue: Number(item?.amount?.total ?? 0),
+    amountValue: getMoneyNumber(item?.amount?.total),
     status: normalizeStatus(item?.status),
     rawStatus: `${item?.status ?? ""}`.trim().toUpperCase(),
     paymentStatus: normalizePaymentStatus(item?.paymentStatus),
     rawPaymentStatus: `${item?.paymentStatus ?? ""}`.trim().toUpperCase(),
-    fulfillmentStatus: normalizeStatus(item?.fulfillmentStatus),
-    rawFulfillmentStatus: `${item?.fulfillmentStatus ?? ""}`.trim().toUpperCase(),
+    fulfillmentStatus: normalizeStatus(item?.fulfillmentStatus || item?.status),
+    rawFulfillmentStatus: `${item?.fulfillmentStatus ?? item?.status ?? ""}`.trim().toUpperCase(),
     deliveryType: "",
-    deliveryStatus: normalizeStatus(item?.delivery?.status),
-    rawDeliveryStatus: `${item?.delivery?.status ?? ""}`.trim().toUpperCase(),
+    deliveryStatus: normalizeStatus(item?.delivery?.status || item?.status),
+    rawDeliveryStatus: `${item?.delivery?.status ?? item?.status ?? ""}`.trim().toUpperCase(),
     scheduledAt: item?.placedAt || "",
     deliveredAt: "",
     flags: {
@@ -454,9 +467,9 @@ export async function getAdminOrdersRequest(filters) {
     rows: Array.isArray(response.items) ? response.items.map(normalizeOrderRow) : [],
     summaryCards: normalizeSummary(response.summary),
     pageInfo: {
-      page: Number(response?.pageInfo?.page ?? 1),
-      pageSize: Number(response?.pageInfo?.limit ?? 10),
-      totalItems: Number(response?.pageInfo?.totalItems ?? 0),
+      page: Number(filters?.page ?? 1),
+      pageSize: Number(filters?.limit ?? 10),
+      totalItems: Number(response?.pageInfo?.totalItems ?? response?.items?.length ?? 0),
       totalPages: Number(response?.pageInfo?.totalPages ?? 1),
       hasNextPage: Boolean(response?.pageInfo?.hasNextPage),
       hasPreviousPage: Boolean(response?.pageInfo?.hasPreviousPage),
@@ -540,7 +553,7 @@ export async function cancelOrderRequest(input) {
   const data = await executeProtectedGraphqlRequest(ADMIN_CANCEL_ORDER_MUTATION, {
     input,
   });
-  const result = data?.adminCancelOrder;
+  const result = data?.cancelOrder;
 
   if (!result?.success) {
     throw new Error(getErrorMessage(result, "Unable to cancel order."));
@@ -553,7 +566,7 @@ export async function refundOrderRequest(input) {
   const data = await executeProtectedGraphqlRequest(ADMIN_REFUND_ORDER_MUTATION, {
     input,
   });
-  const result = data?.adminRefundOrder;
+  const result = data?.refundOrder;
 
   if (!result?.success) {
     throw new Error(getErrorMessage(result, "Unable to refund order."));

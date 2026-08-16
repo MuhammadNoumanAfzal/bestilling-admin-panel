@@ -43,7 +43,9 @@ export async function saveVendorCategoryRequest(input) {
   const variables =
     typeof input === "string"
       ? { name: input }
-      : { id: input?.id || null, name: input?.name || "" };
+      : input?.id
+        ? { id: input.id, name: input?.name || "" }
+        : { name: input?.name || "" };
 
   const result = await executeProtectedGraphqlRequest(CREATE_VENDOR_CATEGORY_MUTATION, {
     input: variables,

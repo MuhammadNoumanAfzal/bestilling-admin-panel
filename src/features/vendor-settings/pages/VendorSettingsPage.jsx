@@ -461,6 +461,24 @@ function validateValues(section, values) {
   return missingField ? missingField.label : "";
 }
 
+function getCreateErrorMessage(section, error) {
+  const rawMessage = String(error?.message || "").trim();
+  const normalizedMessage = rawMessage.toLowerCase();
+
+  if (
+    section.key === "categories" &&
+    (
+      normalizedMessage.includes("not authorized") ||
+      normalizedMessage.includes("not authorised") ||
+      normalizedMessage.includes("permission denied")
+    )
+  ) {
+    return "Category creation is being blocked by the backend permission for vendorCategoryMutation. Other taxonomy items can save, but categories need backend access updated for this admin action.";
+  }
+
+  return rawMessage || "Please try again.";
+}
+
 function buildPayload(section, values, item, options = {}) {
   const payload = {};
   const fallbackSortOrder = Number.isInteger(options?.fallbackSortOrder) ? options.fallbackSortOrder : 0;
@@ -981,7 +999,7 @@ export default function VendorSettingsPage() {
       await Swal.fire({
         icon: "error",
         title: `Unable to add ${section.singularLabel}`,
-        text: error?.message || "Please try again.",
+        text: getCreateErrorMessage(section, error),
         confirmButtonColor: "#cf6e38",
       });
     } finally {

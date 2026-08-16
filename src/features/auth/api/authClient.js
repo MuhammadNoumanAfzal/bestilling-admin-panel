@@ -34,14 +34,30 @@ export function isAuthenticationError(payload) {
   return (
     code === "unauthorized" ||
     code === "invalid_token" ||
-    code === "permission_denied" ||
     code === "authentication_failed" ||
-    message.includes("unauthorized") ||
-    message.includes("not authorized") ||
-    message.includes("authorization") ||
-    message.includes("authentication") ||
-    message.includes("token") ||
+    message.includes("authentication failed") ||
+    message.includes("invalid token") ||
+    message.includes("expired token") ||
+    message.includes("token expired") ||
+    message.includes("token is invalid") ||
+    message.includes("login required") ||
+    message.includes("session expired") ||
+    message.includes("please log in") ||
     message.includes("login required")
+  );
+}
+
+export function isAuthorizationError(payload) {
+  const firstError = payload?.errors?.[0];
+  const code = String(firstError?.extensions?.code || "").toLowerCase();
+  const message = String(firstError?.message || "").toLowerCase();
+
+  return (
+    code === "permission_denied" ||
+    message.includes("not authorized") ||
+    message.includes("not authorised") ||
+    message.includes("permission denied") ||
+    message.includes("insufficient permissions")
   );
 }
 
@@ -80,6 +96,7 @@ export async function executeGraphqlRequest(query, variables, options = {}) {
   if (payload?.errors?.length) {
     const error = new Error(getErrorMessage(payload, "Authentication request failed."));
     error.isAuthenticationError = isAuthenticationError(payload);
+    error.isAuthorizationError = isAuthorizationError(payload);
     throw error;
   }
 

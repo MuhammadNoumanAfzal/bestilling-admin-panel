@@ -10,7 +10,9 @@ export default function CustomerDetailHeader({
 }) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const isActive = customer.status !== "Blocked";
+  const shouldShowAvatar = Boolean(customer.avatarUrl) && !avatarFailed;
 
   const handleCopyId = () => {
     navigator.clipboard.writeText(customer.id);
@@ -33,11 +35,18 @@ export default function CustomerDetailHeader({
 
         {/* Avatar Container */}
         <div className="relative shrink-0">
-          <img
-            src={customer.avatarUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=80&q=80"}
-            alt={customer.name}
-            className="h-14 w-14 rounded-full border-2 border-white object-cover shadow-[0_6px_16px_rgba(53,34,20,0.08)] transition duration-300 hover:rotate-3 hover:scale-105 sm:h-16 sm:w-16"
-          />
+          {shouldShowAvatar ? (
+            <img
+              src={customer.avatarUrl}
+              alt={customer.name}
+              className="h-14 w-14 rounded-full border-2 border-white object-cover shadow-[0_6px_16px_rgba(53,34,20,0.08)] transition duration-300 hover:rotate-3 hover:scale-105 sm:h-16 sm:w-16"
+              onError={() => setAvatarFailed(true)}
+            />
+          ) : (
+            <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border-2 border-white bg-[#f6eee8] text-[16px] font-extrabold text-[#2f241d] shadow-[0_6px_16px_rgba(53,34,20,0.08)] sm:h-16 sm:w-16 sm:text-[17px]">
+              {customer.avatar || "CU"}
+            </span>
+          )}
           <span className="absolute bottom-0 right-0 flex h-4.5 w-4.5">
             <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping ${isActive ? "bg-[#2b9e62]" : "bg-[#d83f3f]"}`} />
             <span className={`relative inline-flex h-4.5 w-4.5 rounded-full border-2 border-white ${isActive ? "bg-[#2b9e62]" : "bg-[#d83f3f]"}`} />

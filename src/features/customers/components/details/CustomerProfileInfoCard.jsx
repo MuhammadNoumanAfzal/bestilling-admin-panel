@@ -1,13 +1,5 @@
 import { User } from "lucide-react";
 
-const FALLBACKS = {
-  email: "eleanor.shellstrop@heaven.com",
-  phone: "+1 (555) 123-4567",
-  streetAddress: "123 Arizona Avenue, Suite 4B",
-  cityState: "Phoenix, Arizona",
-  country: "Norway",
-};
-
 export default function CustomerProfileInfoCard({ customer = {} }) {
   return (
     <section className="space-y-4">
@@ -39,10 +31,10 @@ export default function CustomerProfileInfoCard({ customer = {} }) {
             </div>
             <div className="rounded-[12px] bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef] border border-[#f0eae4]/60">
               <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
-                Company Name
+                City
               </span>
               <span className="block text-[15px] font-bold text-[#18120f] mt-1.5 leading-tight">
-                {customer.profile?.companyName || "Not provided"}
+                {customer.city || "Not provided"}
               </span>
             </div>
           </div>
@@ -54,7 +46,7 @@ export default function CustomerProfileInfoCard({ customer = {} }) {
                 Email Address
               </span>
               <span className="block text-[15px] font-bold text-[#18120f] mt-1.5 leading-tight break-all">
-                {customer.email || FALLBACKS.email}
+                {customer.email || "Not provided"}
               </span>
             </div>
             <div className="rounded-[12px] bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef] border border-[#f0eae4]/60">
@@ -74,7 +66,7 @@ export default function CustomerProfileInfoCard({ customer = {} }) {
                 Phone Number
               </span>
               <span className="block text-[15px] font-bold text-[#18120f] mt-1.5 leading-tight">
-                {customer.phone || FALLBACKS.phone}
+                {customer.phone || "Not provided"}
               </span>
             </div>
             <div className="rounded-[12px] bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef] border border-[#f0eae4]/60">
@@ -99,10 +91,10 @@ export default function CustomerProfileInfoCard({ customer = {} }) {
           </div>
           <div className="rounded-[12px] border border-[#f0eae4]/60 bg-[#faf9f8] p-4 transition duration-200 hover:bg-[#f5f2ef]">
             <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
-              Admin Notes
+              Member Since
             </span>
             <span className="block text-[15px] font-bold text-[#18120f] mt-1.5 leading-tight">
-              {customer.profile?.notes || "No admin notes added."}
+              {customer.joinDate || "Not available"}
             </span>
           </div>
         </div>

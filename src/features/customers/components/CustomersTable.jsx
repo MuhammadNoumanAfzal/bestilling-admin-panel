@@ -8,13 +8,17 @@ const statusClasses = {
 };
 
 function PersonCell({ name, src, email, avatar }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const shouldShowAvatar = Boolean(src) && !imageFailed;
+
   return (
     <div className="flex items-center gap-2.5">
-      {src ? (
+      {shouldShowAvatar ? (
         <img
           alt={name}
           className="h-9 w-9 shrink-0 rounded-full object-cover border border-[#eee4dd]"
           src={src}
+          onError={() => setImageFailed(true)}
         />
       ) : (
         <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f6eee8] text-[10px] font-bold text-[#2f241d]">

@@ -92,17 +92,17 @@ function AssetCard({ imageUrl, label }) {
 
 function DocumentCard({ document, onDownload, onPreview, onReview }) {
   return (
-    <article className="rounded-[16px] border border-[#d8d0c8] bg-white p-4 shadow-[0_6px_14px_rgba(53,34,20,0.05)]">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h3 className="text-[16px] font-bold text-[#1c1510]">{document.title}</h3>
-          <p className="mt-1 text-[12px] text-[#8d8078]">{document.subtitle || document.type}</p>
+    <article className="group rounded-[22px] border border-[#e7ddd4] bg-[linear-gradient(180deg,#fffdfb_0%,#ffffff_100%)] p-5 shadow-[0_10px_30px_rgba(53,34,20,0.05)] transition duration-300 hover:-translate-y-0.5 hover:border-[#e3c9b8] hover:shadow-[0_20px_40px_rgba(53,34,20,0.08)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-[18px] font-extrabold tracking-[-0.02em] text-[#1c1510]">{document.title}</h3>
+          <p className="mt-1 text-[12px] leading-5 text-[#8d8078]">{document.subtitle || document.type}</p>
         </div>
         <span
           className={[
-            "rounded-full border px-2.5 py-1 text-[10px] font-bold",
+            "shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em]",
             document.status === "Verified"
-              ? "border-[#d9ddd8] bg-[#ffffff] text-[#1d1510]"
+              ? "border-[#d9eadf] bg-[#eef8f1] text-[#287946]"
               : document.status === "Rejected"
                 ? "border-[#f3c7c7] bg-[#fff5f5] text-[#b83a3a]"
                 : "border-[#ead9c9] bg-[#fff8f1] text-[#8f5a2e]",
@@ -112,45 +112,45 @@ function DocumentCard({ document, onDownload, onPreview, onReview }) {
         </span>
       </div>
 
-      <div className="mt-3 grid gap-2 text-[12px] text-[#8d8078]">
-        <p>Uploaded: {document.uploadedAtLabel}</p>
-        <p>Reviewed: {document.reviewedAt ? document.reviewedAtLabel : "Not reviewed yet"}</p>
-        <p>{document.isRequired ? "Required compliance document" : "Optional document"}</p>
+      <div className="mt-4 grid gap-2 rounded-[18px] border border-[#f1e8e1] bg-[#fcfaf8] p-3 text-[12px] text-[#7f7269]">
+        <p><span className="font-bold text-[#3f322c]">Uploaded:</span> {document.uploadedAtLabel}</p>
+        <p><span className="font-bold text-[#3f322c]">Reviewed:</span> {document.reviewedAt ? document.reviewedAtLabel : "Not reviewed yet"}</p>
+        <p><span className="font-bold text-[#3f322c]">Type:</span> {document.isRequired ? "Required compliance document" : "Optional document"}</p>
       </div>
 
       {document.reviewNote ? (
-        <div className="mt-3 rounded-[12px] bg-[#f7f3f0] px-3 py-2 text-[12px] leading-5 text-[#6f6259]">
+        <div className="mt-3 rounded-[16px] border border-[#ece2da] bg-[#f7f3f0] px-3.5 py-3 text-[12px] leading-5 text-[#6f6259]">
           <span className="font-bold text-[#433630]">Review note:</span> {document.reviewNote}
         </div>
       ) : null}
 
       {document.rejectionReason ? (
-        <div className="mt-2 rounded-[12px] bg-[#fff5f5] px-3 py-2 text-[12px] leading-5 text-[#b83a3a]">
+        <div className="mt-2 rounded-[16px] border border-[#f3d2cf] bg-[#fff5f5] px-3.5 py-3 text-[12px] leading-5 text-[#b83a3a]">
           <span className="font-bold">Reason:</span> {document.rejectionReason}
         </div>
       ) : null}
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <button
-          className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-[#f3f0ed] px-3 py-2.5 text-[12px] font-bold text-[#1c1510] transition hover:bg-[#ebe6e1]"
+          className="inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] border border-[#e6dbd3] bg-[#f6f1ec] px-4 py-2.5 text-[13px] font-bold text-[#1c1510] transition hover:border-[#dcc5b5] hover:bg-[#efe8e1]"
           onClick={() => onPreview(document)}
           type="button"
         >
-          <Eye size={12} />
+          <Eye size={14} />
           Preview
         </button>
         <button
-          className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-[#f3f0ed] px-3 py-2.5 text-[12px] font-bold text-[#1c1510] transition hover:bg-[#ebe6e1]"
+          className="inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] border border-[#e6dbd3] bg-[#f6f1ec] px-4 py-2.5 text-[13px] font-bold text-[#1c1510] transition hover:border-[#dcc5b5] hover:bg-[#efe8e1]"
           onClick={() => onDownload(document)}
           type="button"
         >
-          <Download size={12} />
+          <Download size={14} />
           Download
         </button>
       </div>
 
       <button
-        className="mt-2 inline-flex w-full cursor-pointer items-center justify-center rounded-full border border-[#d8ccc2] px-3 py-2 text-[12px] font-bold text-[#cf6e38] transition hover:bg-[#fff2ea]"
+        className="mt-3 inline-flex min-h-[46px] w-full cursor-pointer items-center justify-center rounded-[14px] border border-[#e8cdbf] bg-[#fff8f3] px-4 py-2.5 text-[13px] font-bold text-[#cf6e38] transition hover:border-[#cf6e38] hover:bg-[#fff0e5]"
         onClick={() => onReview(document)}
         type="button"
       >
@@ -253,16 +253,45 @@ export default function VendorApplicationReviewPage() {
 
   async function handleReviewDocument(document) {
     const result = await Swal.fire({
-      title: "Review vendor document",
       html: `
-        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
-          <select id="vendor-document-status" class="swal2-select" style="display:flex;width:100%;margin:0;">
-            <option value="VERIFIED">Verified</option>
-            <option value="PENDING">Pending</option>
-            <option value="REJECTED">Rejected</option>
-          </select>
-          <textarea id="vendor-document-note" class="swal2-textarea" placeholder="Review note"></textarea>
-          <input id="vendor-document-reason" class="swal2-input" placeholder="Rejection reason (required for rejected)" />
+        <div class="flex flex-col gap-5 px-6 pb-2 pt-6 text-center sm:px-8">
+          <div class="flex flex-col items-center gap-2">
+            <div>
+              <span class="block text-[12px] font-medium text-[#6f6761]">Document review</span>
+              <h2 class="mt-1 text-[20px] font-semibold text-[#4a4a4a] sm:text-[22px]">Review vendor document</h2>
+              <p class="mx-auto mt-1 max-w-[540px] text-[14px] leading-7 text-[#5d5d5d] sm:text-[15px]">
+                Update the review result for <strong>${document.title}</strong> and leave a clear note for the audit trail.
+              </p>
+            </div>
+          </div>
+
+          <div class="space-y-5">
+            <div class="space-y-1 text-center">
+              <div class="text-[13px] text-[#66615b]">Uploaded <strong class="text-[15px] font-semibold text-[#434343]">${document.uploadedAtLabel || "Not available"}</strong></div>
+              <div class="text-[13px] text-[#66615b]">Current state <strong class="text-[15px] font-semibold text-[#434343]">${document.status || "Pending"}</strong></div>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)] md:items-start">
+              <label class="flex flex-col gap-2 text-left" for="vendor-document-status">
+                <span class="text-[13px] font-medium text-[#56504a]">Status</span>
+                <select id="vendor-document-status" class="swal2-select !m-0 !flex !h-[50px] !w-full !rounded-[12px] !border !border-[#e1d7cf] !bg-white !px-4 !text-[15px] !font-medium !text-[#4e4943] !shadow-none focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]">
+                  <option value="VERIFIED">Verified</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+              </label>
+
+              <label class="flex flex-col gap-2 text-left" for="vendor-document-note">
+                <span class="text-[13px] font-medium text-[#56504a]">Review note</span>
+                <textarea id="vendor-document-note" class="swal2-textarea !m-0 !min-h-[136px] !w-full !resize-none !rounded-[12px] !border !border-[#e1d7cf] !bg-white !px-4 !py-3 !text-[15px] !leading-7 !text-[#413b36] !shadow-none placeholder:!text-[#c3beb8] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]" placeholder="Add a helpful note about what was checked or what still needs attention"></textarea>
+              </label>
+            </div>
+
+            <label class="hidden flex-col gap-2 text-left" id="vendor-document-reason-field" for="vendor-document-reason">
+              <span class="text-[13px] font-medium text-[#56504a]">Rejection reason</span>
+              <input id="vendor-document-reason" class="swal2-input !m-0 !flex !h-[50px] !w-full !rounded-[12px] !border !border-[#e1d7cf] !bg-white !px-4 !text-[14px] !font-medium !text-[#413b36] !shadow-none placeholder:!text-[#b8afa7] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]" placeholder="Required only when the document is rejected" />
+            </label>
+          </div>
         </div>
       `,
       showCancelButton: true,
@@ -270,6 +299,19 @@ export default function VendorApplicationReviewPage() {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
+      width: 720,
+      customClass: {
+        popup:
+          "vendor-document-review-modal__popup !overflow-hidden !rounded-[18px] !border !border-[#eadfd7] !bg-white !p-0 shadow-[0_30px_80px_rgba(37,22,12,0.18)]",
+        htmlContainer: "vendor-document-review-modal__content !m-0 !p-0",
+        actions: "vendor-document-review-modal__actions !mt-0 !gap-2 !px-6 !pb-6 !pt-0",
+        confirmButton:
+          "vendor-document-review-modal__confirm !m-0 !h-11 !rounded-[10px] !bg-[#db6d34] !px-5 !text-[13px] !font-bold !text-white !shadow-none hover:!bg-[#c9602c]",
+        cancelButton:
+          "vendor-document-review-modal__cancel !m-0 !h-11 !rounded-[10px] !border-0 !bg-[#cbb8a3] !px-5 !text-[13px] !font-bold !text-white !shadow-none hover:!bg-[#b8a38e]",
+        validationMessage:
+          "vendor-document-review-modal__validation !mx-6 !mb-4 !mt-0 !rounded-[12px] !bg-[#fff1ef] !px-4 !py-3 !text-[13px] !font-semibold !text-[#c83d31]",
+      },
       preConfirm: () => {
         const status = window.document.getElementById("vendor-document-status")?.value || "";
         const reviewNote = window.document.getElementById("vendor-document-note")?.value?.trim() || "";
@@ -291,9 +333,19 @@ export default function VendorApplicationReviewPage() {
         const statusElement = window.document.getElementById("vendor-document-status");
         const noteElement = window.document.getElementById("vendor-document-note");
         const reasonElement = window.document.getElementById("vendor-document-reason");
+        const reasonField = window.document.getElementById("vendor-document-reason-field");
+
+        const syncReasonVisibility = () => {
+          const isRejected = statusElement?.value === "REJECTED";
+
+          if (reasonField) {
+            reasonField.style.display = isRejected ? "flex" : "none";
+          }
+        };
 
         if (statusElement) {
           statusElement.value = document.rawStatus || "PENDING";
+          statusElement.addEventListener("change", syncReasonVisibility);
         }
         if (noteElement) {
           noteElement.value = document.reviewNote || "";
@@ -301,6 +353,8 @@ export default function VendorApplicationReviewPage() {
         if (reasonElement) {
           reasonElement.value = document.rejectionReason || "";
         }
+
+        syncReasonVisibility();
       },
     });
 

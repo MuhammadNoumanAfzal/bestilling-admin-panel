@@ -1,6 +1,7 @@
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
 import {
   buildReportsSnapshotViewModel,
+  createEmptyReportsSnapshot,
   exportSectionOptions,
 } from "../reportsUtils.js";
 import {
@@ -46,17 +47,10 @@ export async function getAdminReportsSnapshotRequest(filters) {
   const snapshot = data?.adminReportsSnapshot;
 
   if (!snapshot) {
-    throw new Error("Unable to load reports snapshot.");
+    return createEmptyReportsSnapshot(filters?.filterLabel || "Last 7 days");
   }
 
-  return {
-    fallbackMeta: {
-      isFallback: false,
-      reason: "",
-      filterLabel: filters?.filterLabel || "Last 7 days",
-    },
-    ...buildReportsSnapshotViewModel(snapshot, filters?.filterLabel || "Last 7 days"),
-  };
+  return buildReportsSnapshotViewModel(snapshot, filters?.filterLabel || "Last 7 days");
 }
 
 export async function exportAdminReportRequest(input) {

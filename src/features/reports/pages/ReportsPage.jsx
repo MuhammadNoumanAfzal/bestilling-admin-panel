@@ -13,6 +13,7 @@ import ReportsStatCard from "../components/ReportsStatCard.jsx";
 import RevenueAnalyticsCard from "../components/RevenueAnalyticsCard.jsx";
 import VendorPerformanceCard from "../components/VendorPerformanceCard.jsx";
 import { reportFilterOptions } from "../data/reportsData.js";
+import { createEmptyReportsSnapshot } from "../reportsUtils.js";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 
 function getTimezone() {
@@ -73,16 +74,9 @@ export default function ReportsPage() {
   const [selectedFilter, setSelectedFilter] = useState("Last 7 days");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
-  const [reportSnapshot, setReportSnapshot] = useState({
-    fallbackMeta: { isFallback: false, reason: "", filterLabel: "Last 7 days" },
-    summary: [],
-    revenueAnalytics: { title: "", subtitle: "", scale: [0, 1], bars: [], filterLabel: "Last 7 days" },
-    orderAnalytics: { title: "", subtitle: "", scale: [0, 1], bars: [] },
-    vendorPerformance: { registration: { count: 0, note: "" }, vendors: [] },
-    customerAnalytics: { stats: [], satisfaction: { score: "0%", note: "" } },
-    categoryPerformance: [],
-    operationalHealth: [],
-  });
+  const [reportSnapshot, setReportSnapshot] = useState(() =>
+    createEmptyReportsSnapshot("Last 7 days"),
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -107,13 +101,9 @@ export default function ReportsPage() {
         }
       } catch (error) {
         if (isMounted) {
-          setReportSnapshot((current) => ({
-            ...current,
-            revenueAnalytics: {
-              ...current.revenueAnalytics,
-              filterLabel: snapshotFilters.filterLabel || selectedFilter,
-            },
-          }));
+          setReportSnapshot(
+            createEmptyReportsSnapshot(snapshotFilters.filterLabel || selectedFilter),
+          );
           setLoadError(error instanceof Error ? error.message : "Unable to load reports snapshot.");
         }
       } finally {
@@ -315,23 +305,23 @@ export default function ReportsPage() {
         </div>
       ) : null}
 
-      {!loadError && reportSnapshot.fallbackMeta?.isFallback ? (
-        <div className="rounded-[16px] border border-[#f1d8cd] bg-[#fff6f1] px-5 py-4 text-[13px] font-medium text-[#9f4d33]">
-          {`Detailed report sections for ${reportSnapshot.fallbackMeta.filterLabel} are not loading because the backend reports snapshot is failing. The summary cards above are still coming from live Orders, Vendors, and Customers data.`}
-        </div>
-      ) : null}
-
       {isLoading ? (
         <div className="rounded-[16px] border border-[#ece4de] bg-white px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
           Loading reports snapshot...
         </div>
       ) : (
         <>
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-            {reportSnapshot.summary.map((item) => (
-              <ReportsStatCard key={item.id} {...item} />
-            ))}
-          </section>
+          {reportSnapshot.summary.length ? (
+            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+              {reportSnapshot.summary.map((item) => (
+                <ReportsStatCard key={item.id} {...item} />
+              ))}
+            </section>
+          ) : (
+            <section className="rounded-[16px] border border-dashed border-[#e3d7cf] bg-[#fffdfa] px-5 py-8 text-center text-[14px] font-medium text-[#7a6d66]">
+              No report summary data is available for the selected period.
+            </section>
+          )}
 
           <section className="grid items-stretch gap-3 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
             <RevenueAnalyticsCard analytics={reportSnapshot.revenueAnalytics} />

@@ -10,6 +10,43 @@ export const reportFilterOptions = [
 
 export const exportSectionOptions = ["SUMMARY", "REVENUE", "ORDERS", "VENDORS", "CUSTOMERS", "CATEGORY", "OPERATIONS"];
 
+export function createEmptyReportsSnapshot(filterLabel = "Last 7 days") {
+  return {
+    summary: [],
+    revenueAnalytics: {
+      title: "Revenue Analytics",
+      subtitle: "No revenue data is available for the selected period",
+      scale: [0, 1],
+      bars: [],
+      valuePrefix: "",
+      filterLabel,
+    },
+    orderAnalytics: {
+      title: "Order Analytics",
+      subtitle: "No order data is available for the selected period",
+      scale: [0, 1],
+      bars: [],
+      valuePrefix: "",
+    },
+    vendorPerformance: {
+      registration: {
+        count: 0,
+        note: "",
+      },
+      vendors: [],
+    },
+    customerAnalytics: {
+      stats: [],
+      satisfaction: {
+        score: "0%",
+        note: "",
+      },
+    },
+    categoryPerformance: [],
+    operationalHealth: [],
+  };
+}
+
 function getNumberValue(value) {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
@@ -117,7 +154,7 @@ export function buildReportsSnapshotViewModel(snapshot, filterLabel) {
     vendorPerformance: buildVendorPerformanceViewModel(snapshot?.vendorPerformance),
     customerAnalytics: {
       stats: (snapshot?.customerAnalytics?.stats || []).map((item) => ({
-        id: item?.id || item?.label || Math.random().toString(36).slice(2),
+        id: item?.id || item?.label || `customer-stat-${String(item?.value ?? "").trim() || "unknown"}`,
         label: item?.label || "",
         value: String(item?.value ?? ""),
         note: item?.note || "",

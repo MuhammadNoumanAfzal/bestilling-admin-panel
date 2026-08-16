@@ -76,7 +76,25 @@ export default function DeliveryPostalCodeModal({
                 options={statusOptions}
                 value={form.status}
               />
+              <AddDeliveryAreaField
+                label="Latitude"
+                onChange={(event) => onChange("lat", event.target.value)}
+                placeholder="59.9139"
+                type="number"
+                value={form.lat}
+              />
+              <AddDeliveryAreaField
+                label="Longitude"
+                onChange={(event) => onChange("lng", event.target.value)}
+                placeholder="10.7522"
+                type="number"
+                value={form.lng}
+              />
             </div>
+
+            <p className="mt-3 text-[12px] leading-5 text-[#8a7d75]">
+              Latitude and longitude are required by the backend for each postal area.
+            </p>
           </div>
         </div>
 

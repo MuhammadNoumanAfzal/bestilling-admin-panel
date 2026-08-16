@@ -382,6 +382,8 @@ export default function DeliveryAreaDetailPage() {
       <DeliveryPostalAreasCard
         areaId={area.id}
         areaName={area.city}
+        defaultLat={area.map?.center?.lat}
+        defaultLng={area.map?.center?.lng}
         isSubmitting={isSubmittingPostalArea}
         onCreate={handleCreatePostalArea}
         onDelete={handleDeletePostalArea}

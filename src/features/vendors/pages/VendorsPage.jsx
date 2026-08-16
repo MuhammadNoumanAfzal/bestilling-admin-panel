@@ -6,6 +6,7 @@ import StatCard from "../../dashboard/components/StatCard.jsx";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 import {
+  deactivateVendorRequest,
   getAdminVendorsRequest,
   updateVendorStatusRequest,
 } from "../api/vendorsApi.js";
@@ -291,7 +292,6 @@ export default function VendorsPage() {
 
   async function handleToggleStatus(row) {
     const isReactivating = row.status === "Suspended" || row.status === "Deactivated";
-    const targetStatus = isReactivating ? "ACTIVE" : "SUSPENDED";
 
     const reasonResult = await Swal.fire({
       title: isReactivating ? "Reactivate vendor?" : "Suspend vendor?",
@@ -314,7 +314,9 @@ export default function VendorsPage() {
 
     try {
       setIsUpdatingStatusId(row.id);
-      const result = await updateVendorStatusRequest(row.id, targetStatus, reasonResult.value || "");
+      const result = isReactivating
+        ? await updateVendorStatusRequest(row.id, "ACTIVE", reasonResult.value || "")
+        : await deactivateVendorRequest(row.id, reasonResult.value || "");
 
       setAllRows((current) =>
         current.map((item) =>

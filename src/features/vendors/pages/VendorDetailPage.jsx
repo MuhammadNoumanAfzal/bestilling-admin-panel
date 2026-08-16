@@ -130,7 +130,6 @@ export default function VendorDetailPage() {
     }
 
     const isReactivating = vendor.status === "Suspended" || vendor.status === "Deactivated";
-    const targetStatus = isReactivating ? "ACTIVE" : "SUSPENDED";
 
     const result = await Swal.fire({
       title: isReactivating ? "Reactivate vendor?" : "Suspend vendor?",
@@ -153,7 +152,9 @@ export default function VendorDetailPage() {
 
     try {
       setIsSuspending(true);
-      const response = await updateVendorStatusRequest(vendor.id, targetStatus, result.value || "");
+      const response = isReactivating
+        ? await updateVendorStatusRequest(vendor.id, "ACTIVE", result.value || "")
+        : await deactivateVendorRequest(vendor.id, result.value || "");
       setVendor((current) =>
         current
           ? {

@@ -82,7 +82,7 @@ export default function PaymentStatusCards({
               ? "Updating..."
               : "Mark as Received"
         }
-        description="Customer pays manually via invoice."
+        description="Customer pays manually by bank transfer against the invoice reference."
         details={[
           { label: "Invoice", value: payout.invoiceNumber },
           { label: "Customer", value: payout.customer.fullName },
@@ -101,7 +101,7 @@ export default function PaymentStatusCards({
               ? "Updating..."
               : "Mark as Paid"
         }
-        description="Processed manually after customer payment."
+        description="Admin sends the vendor payout manually after customer payment is confirmed."
         details={[
           { label: "Vendor", value: payout.vendor.name },
           { label: "Payout", value: payout.financials.vendorAmount },

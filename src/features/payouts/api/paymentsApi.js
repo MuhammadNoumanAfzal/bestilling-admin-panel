@@ -68,10 +68,25 @@ function normalizeOrderStatus(status) {
     case "CANCELLED":
     case "CANCELED":
       return "Canceled";
+    case "ACCEPTED":
+      return "Accepted";
+    case "PREPARING":
+    case "READY":
+    case "FOOD_READY":
+      return "Preparing";
+    case "OUT_FOR_DELIVERY":
+    case "IN_TRANSIT":
+      return "Out for delivery";
+    case "DELIVERED":
+    case "COMPLETED":
+      return "Delivered";
     case "PENDING":
+    case "PLACED":
+    case "NEW":
+    case "DRAFT":
       return "Pending";
     default:
-      return "Delivered";
+      return "Pending";
   }
 }
 
@@ -133,7 +148,7 @@ function normalizeSummary(summary) {
 }
 
 function deriveCustomerPaymentStatus(item) {
-  if (item?.paidAt) {
+  if (item?.lifecycle?.paymentReceivedAt || item?.paidAt) {
     return "Paid";
   }
 
@@ -226,12 +241,21 @@ function deriveVendorPayoutStatusFromDetail(payment) {
 function normalizePaymentRow(item) {
   const customerName = item?.customer?.fullName || "Unknown customer";
   const vendorName = item?.vendor?.name || "Unknown vendor";
+  const resolvedOrderStatus =
+    item?.order?.delivery?.deliveredAt ||
+    item?.order?.deliveredAt
+      ? "Delivered"
+      : normalizeOrderStatus(
+          item?.order?.delivery?.status ||
+          item?.order?.fulfillmentStatus ||
+          item?.order?.status,
+        );
 
   return {
     id: item?.id || "",
     invoiceNumber: item?.invoiceNumber || "Not available",
     orderId: item?.order?.id || "",
-    orderStatus: normalizeOrderStatus(item?.order?.status),
+    orderStatus: resolvedOrderStatus,
     customer: customerName,
     customerEmail: item?.customer?.email || "",
     customerAvatar: toInitials(customerName),
@@ -262,7 +286,15 @@ function normalizePaymentDetail(payment) {
   const vendorName = payment.vendor?.name || "Unknown vendor";
   const customerPaymentStatus = deriveCustomerPaymentStatusFromDetail(payment);
   const vendorPayoutStatus = deriveVendorPayoutStatusFromDetail(payment);
-  const orderStatus = normalizeOrderStatus(payment.order?.status);
+  const orderStatus =
+    payment.order?.delivery?.deliveredAt ||
+    payment.order?.deliveredAt
+      ? "Delivered"
+      : normalizeOrderStatus(
+          payment.order?.delivery?.status ||
+          payment.order?.fulfillmentStatus ||
+          payment.order?.status,
+        );
 
   return {
     id: payment.id,

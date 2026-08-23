@@ -131,6 +131,30 @@ function normalizePaymentStatus(value) {
   }
 }
 
+function deriveAdminOrderPaymentStatus(order) {
+  const rawPaymentStatus = `${order?.paymentStatus ?? ""}`.trim().toUpperCase();
+  const capturedAt = order?.payment?.capturedAt || "";
+  const refundedAt = order?.payment?.refundedAt || "";
+
+  if (refundedAt || rawPaymentStatus === "REFUNDED") {
+    return "Refunded";
+  }
+
+  if (rawPaymentStatus === "PARTIALLY_REFUNDED") {
+    return "Partially refunded";
+  }
+
+  if (capturedAt) {
+    return "Paid";
+  }
+
+  if (rawPaymentStatus === "FAILED") {
+    return "Failed";
+  }
+
+  return "Pending";
+}
+
 function resolveLifecycleRawStatus(order) {
   return `${order?.fulfillmentStatus ?? order?.delivery?.status ?? order?.status ?? ""}`
     .trim()
@@ -376,17 +400,17 @@ function normalizeOrderRow(item) {
     dateTime: formatDateTimeLabel(item?.placedAt),
     amount: formatMoney(item?.amount?.total, currency),
     amountValue: getMoneyNumber(item?.amount?.total),
-    status: normalizeStatus(item?.status),
-    rawStatus: `${item?.status ?? ""}`.trim().toUpperCase(),
-    paymentStatus: normalizePaymentStatus(item?.paymentStatus),
+    status: normalizeStatus(resolveLifecycleRawStatus(item)),
+    rawStatus: resolveLifecycleRawStatus(item),
+    paymentStatus: deriveAdminOrderPaymentStatus(item),
     rawPaymentStatus: `${item?.paymentStatus ?? ""}`.trim().toUpperCase(),
     fulfillmentStatus: normalizeStatus(item?.fulfillmentStatus || item?.status),
     rawFulfillmentStatus: `${item?.fulfillmentStatus ?? item?.status ?? ""}`.trim().toUpperCase(),
     deliveryType: "",
-    deliveryStatus: normalizeStatus(item?.delivery?.status || item?.status),
-    rawDeliveryStatus: `${item?.delivery?.status ?? item?.status ?? ""}`.trim().toUpperCase(),
+    deliveryStatus: normalizeStatus(item?.delivery?.status || item?.fulfillmentStatus || item?.status),
+    rawDeliveryStatus: `${item?.delivery?.status ?? item?.fulfillmentStatus ?? item?.status ?? ""}`.trim().toUpperCase(),
     scheduledAt: item?.placedAt || "",
-    deliveredAt: "",
+    deliveredAt: item?.delivery?.deliveredAt || item?.deliveredAt || "",
     flags: {
       canMarkDelivered: Boolean(item?.flags?.canMarkDelivered),
       canCancel: Boolean(item?.flags?.canCancel),
@@ -467,7 +491,7 @@ function normalizeOrderDetail(order) {
     orderNumber: order.orderNumber || order.id,
     status: normalizeStatus(resolveLifecycleRawStatus(order)),
     rawStatus: resolveLifecycleRawStatus(order),
-    paymentStatus: normalizePaymentStatus(order.paymentStatus),
+    paymentStatus: deriveAdminOrderPaymentStatus(order),
     rawPaymentStatus: `${order.paymentStatus ?? ""}`.trim().toUpperCase(),
     fulfillmentStatus: normalizeStatus(resolveLifecycleRawStatus(order)),
     placedAt: order.placedAt || "",

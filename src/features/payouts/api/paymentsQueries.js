@@ -64,6 +64,12 @@ export const ADMIN_PAYMENTS_QUERY = `
         createdAt
         paidAt
         payoutReleasedAt
+        lifecycle {
+          paymentReceivedAt
+          payoutReleasedAt
+          payoutCompletedAt
+          cancelledAt
+        }
       }
       pageInfo {
         page

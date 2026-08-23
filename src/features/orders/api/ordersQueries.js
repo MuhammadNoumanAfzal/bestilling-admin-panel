@@ -5,24 +5,11 @@ export const ADMIN_ORDERS_QUERY = `
         id
         orderNumber
         status
-        fulfillmentStatus
         paymentStatus
         placedAt
-        acceptedAt
-        preparedAt
-        outForDeliveryAt
-        deliveredAt
         amount {
           currency
           total
-        }
-        payment {
-          capturedAt
-          refundedAt
-        }
-        delivery {
-          status
-          deliveredAt
         }
         customer {
           id

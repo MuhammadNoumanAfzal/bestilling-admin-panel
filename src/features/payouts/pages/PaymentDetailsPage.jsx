@@ -13,6 +13,7 @@ import {
 import PaymentActivityCard from "../components/details/PaymentActivityCard.jsx";
 import PaymentDetailsInfoCard from "../components/details/PaymentDetailsInfoCard.jsx";
 import PaymentDetailsOverviewCard from "../components/details/PaymentDetailsOverviewCard.jsx";
+import PaymentFinanceContractCard from "../components/details/PaymentFinanceContractCard.jsx";
 import PaymentLifecycleCard from "../components/details/PaymentLifecycleCard.jsx";
 import PaymentStatusCards from "../components/details/PaymentStatusCards.jsx";
 
@@ -440,6 +441,7 @@ export default function PaymentDetailsPage() {
         <div className="space-y-4">
           <PaymentDetailsInfoCard payout={paymentDetail} />
           <PaymentLifecycleCard payout={paymentDetail} />
+          <PaymentFinanceContractCard payout={paymentDetail} />
           <PaymentStatusCards
             isApprovingInvoice={isApprovingInvoice}
             isMarkingInvoicePaid={isMarkingInvoicePaid}

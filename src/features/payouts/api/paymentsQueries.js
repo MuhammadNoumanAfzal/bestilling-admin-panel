@@ -186,6 +186,151 @@ export const ADMIN_PAYMENT_DETAIL_QUERY = `
   }
 `;
 
+export const ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY = `
+  query AdminPaymentFinanceContract($invoiceId: ID!) {
+    invoice(id: $invoiceId) {
+      id
+      invoiceNumber
+      paymentStatus
+      paymentMethod
+      paymentReference
+      issuedAt
+      dueDate
+      paidAt
+      verifiedAt
+      rejectedAt
+      subtotal {
+        amount
+        currency
+        formatted
+      }
+      taxAmount {
+        amount
+        currency
+        formatted
+      }
+      deliveryFee {
+        amount
+        currency
+        formatted
+      }
+      serviceFee {
+        amount
+        currency
+        formatted
+      }
+      grandTotal {
+        amount
+        currency
+        formatted
+      }
+      amountPaid {
+        amount
+        currency
+        formatted
+      }
+      amountDue {
+        amount
+        currency
+        formatted
+      }
+      paymentReport {
+        paymentDate
+        transferReference
+        note
+        receiptUrl
+        reportedAt
+        reportedByCustomerId
+      }
+      paymentHistory {
+        id
+        action
+        actorType
+        actorId
+        actorName
+        fromStatus
+        toStatus
+        note
+        createdAt
+      }
+      settlement {
+        id
+        settlementNumber
+        status
+        fundedAt
+        readyForPayoutAt
+        settledAt
+        payoutId
+        grossOrderAmount {
+          amount
+          currency
+          formatted
+        }
+        taxAmount {
+          amount
+          currency
+          formatted
+        }
+        deliveryFee {
+          amount
+          currency
+          formatted
+        }
+        serviceFee {
+          amount
+          currency
+          formatted
+        }
+        vendorPayable {
+          amount
+          currency
+          formatted
+        }
+        history {
+          id
+          action
+          actorType
+          actorId
+          actorName
+          fromStatus
+          toStatus
+          note
+          createdAt
+        }
+        commissionRecord {
+          id
+          status
+          commissionModel
+          ratePercent
+          grossCommission {
+            amount
+            currency
+            formatted
+          }
+          totalCommission {
+            amount
+            currency
+            formatted
+          }
+          fixedFee {
+            amount
+            currency
+            formatted
+          }
+          vatOnCommission {
+            amount
+            currency
+            formatted
+          }
+          note
+          lockedAt
+          adjustedAt
+        }
+      }
+    }
+  }
+`;
+
 export const MARK_CUSTOMER_PAYMENT_RECEIVED_MUTATION = `
   mutation MarkCustomerPaymentReceived($id: ID!, $reference: String, $note: String) {
     markCustomerPaymentReceived(id: $id, reference: $reference, note: $note) {

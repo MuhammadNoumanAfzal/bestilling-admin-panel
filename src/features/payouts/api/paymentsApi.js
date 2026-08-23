@@ -1,6 +1,7 @@
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
 import {
   ADMIN_PAYMENT_DETAIL_QUERY,
+  ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY,
   ADMIN_PAYMENTS_QUERY,
   APPROVE_INVOICE_PAYMENT_MUTATION,
   MARK_INVOICE_PAID_MUTATION,
@@ -116,6 +117,65 @@ function normalizePaymentStatus(status) {
     default:
       return "Pending";
   }
+}
+
+function normalizeInvoiceContractStatus(status) {
+  const normalized = `${status ?? ""}`.trim().toUpperCase();
+
+  switch (normalized) {
+    case "PAYMENT_REPORTED":
+      return "Reported";
+    case "PAID":
+      return "Paid";
+    case "OVERDUE":
+      return "Overdue";
+    case "REJECTED":
+      return "Rejected";
+    case "CANCELLED":
+    case "CANCELED":
+      return "Canceled";
+    default:
+      return "Pending";
+  }
+}
+
+function normalizeSettlementStatus(status) {
+  const normalized = `${status ?? ""}`.trim().toUpperCase();
+
+  switch (normalized) {
+    case "SETTLED":
+      return "Paid";
+    case "INCLUDED_IN_PAYOUT":
+      return "Released";
+    case "READY_FOR_PAYOUT":
+    case "FUNDED":
+      return "Pending";
+    case "DISPUTED":
+      return "Failed";
+    case "REFUNDED":
+      return "Canceled";
+    default:
+      return "Pending";
+  }
+}
+
+function formatMoneyLabel(value, fallback = "NOK 0.00") {
+  if (!value) {
+    return fallback;
+  }
+
+  if (value.formatted) {
+    return value.formatted;
+  }
+
+  const amount = Number(value.amount ?? 0);
+  const currency = value.currency || "NOK";
+
+  if (!Number.isFinite(amount)) {
+    return fallback;
+  }
+
+  return `${currency} ${amount.toFixed(2)}`;
 }
 
 function normalizeSummary(summary) {
@@ -238,6 +298,90 @@ function deriveVendorPayoutStatusFromDetail(payment) {
   return "Pending";
 }
 
+function normalizeContractHistory(items) {
+  return Array.isArray(items)
+    ? items.map((item) => ({
+        id: item?.id || `${item?.action || "history"}-${item?.createdAt || ""}`,
+        action: item?.action || "Activity",
+        actorType: item?.actorType || "",
+        actorId: item?.actorId || "",
+        actorName: item?.actorName || "",
+        fromStatus: item?.fromStatus || "",
+        toStatus: item?.toStatus || "",
+        note: item?.note || "",
+        createdAt: item?.createdAt || "",
+        createdAtLabel: formatDateTimeLabel(item?.createdAt),
+      }))
+    : [];
+}
+
+function normalizeContractInvoice(invoice) {
+  if (!invoice?.id) {
+    return null;
+  }
+
+  const settlement = invoice?.settlement || null;
+  const commissionRecord = settlement?.commissionRecord || null;
+
+  return {
+    paymentStatus: normalizeInvoiceContractStatus(invoice.paymentStatus),
+    paymentStatusRaw: invoice.paymentStatus || "",
+    paymentMethod: invoice.paymentMethod || "Not available",
+    paymentReference: invoice.paymentReference || invoice.invoiceNumber || "Not available",
+    issuedAtLabel: formatDateTimeLabel(invoice.issuedAt),
+    dueDateLabel: formatDateLabel(invoice.dueDate),
+    paidAtLabel: formatDateTimeLabel(invoice.paidAt),
+    verifiedAtLabel: formatDateTimeLabel(invoice.verifiedAt),
+    rejectedAtLabel: formatDateTimeLabel(invoice.rejectedAt),
+    paymentReport: invoice.paymentReport
+      ? {
+          paymentDate: invoice.paymentReport.paymentDate || "Not available",
+          transferReference: invoice.paymentReport.transferReference || "Not available",
+          note: invoice.paymentReport.note || "",
+          receiptUrl: invoice.paymentReport.receiptUrl || "Not available",
+          reportedAtLabel: formatDateTimeLabel(invoice.paymentReport.reportedAt),
+        }
+      : null,
+    paymentHistory: normalizeContractHistory(invoice.paymentHistory),
+    settlement: settlement
+      ? {
+          id: settlement.id || "",
+          settlementNumber: settlement.settlementNumber || "Not available",
+          status: settlement.status || "Not available",
+          statusLabel: normalizeSettlementStatus(settlement.status),
+          grossOrderAmount: formatMoneyLabel(settlement.grossOrderAmount),
+          taxAmount: formatMoneyLabel(settlement.taxAmount),
+          deliveryFee: formatMoneyLabel(settlement.deliveryFee),
+          serviceFee: formatMoneyLabel(settlement.serviceFee),
+          vendorPayable: formatMoneyLabel(settlement.vendorPayable),
+          fundedAtLabel: formatDateTimeLabel(settlement.fundedAt),
+          readyForPayoutAtLabel: formatDateTimeLabel(settlement.readyForPayoutAt),
+          settledAtLabel: formatDateTimeLabel(settlement.settledAt),
+          payoutId: settlement.payoutId || "",
+          history: normalizeContractHistory(settlement.history),
+          commission: commissionRecord
+            ? {
+                id: commissionRecord.id || "",
+                status: commissionRecord.status || "Not available",
+                model: commissionRecord.commissionModel || "Not available",
+                ratePercentLabel:
+                  commissionRecord.ratePercent === 0 || commissionRecord.ratePercent
+                    ? `${commissionRecord.ratePercent}%`
+                    : "Not available",
+                grossCommission: formatMoneyLabel(commissionRecord.grossCommission),
+                totalCommission: formatMoneyLabel(commissionRecord.totalCommission),
+                fixedFee: formatMoneyLabel(commissionRecord.fixedFee),
+                vatOnCommission: formatMoneyLabel(commissionRecord.vatOnCommission),
+                note: commissionRecord.note || "",
+                lockedAtLabel: formatDateTimeLabel(commissionRecord.lockedAt),
+                adjustedAtLabel: formatDateTimeLabel(commissionRecord.adjustedAt),
+              }
+            : null,
+        }
+      : null,
+  };
+}
+
 function normalizePaymentRow(item) {
   const customerName = item?.customer?.fullName || "Unknown customer";
   const vendorName = item?.vendor?.name || "Unknown vendor";
@@ -277,15 +421,17 @@ function normalizePaymentRow(item) {
   };
 }
 
-function normalizePaymentDetail(payment) {
+function normalizePaymentDetail(payment, contractInvoice = null) {
   if (!payment?.id) {
     return null;
   }
 
   const customerName = payment.customer?.fullName || "Unknown customer";
   const vendorName = payment.vendor?.name || "Unknown vendor";
-  const customerPaymentStatus = deriveCustomerPaymentStatusFromDetail(payment);
-  const vendorPayoutStatus = deriveVendorPayoutStatusFromDetail(payment);
+  const customerPaymentStatus =
+    contractInvoice?.paymentStatus || deriveCustomerPaymentStatusFromDetail(payment);
+  const vendorPayoutStatus =
+    contractInvoice?.settlement?.statusLabel || deriveVendorPayoutStatusFromDetail(payment);
   const orderStatus =
     payment.order?.delivery?.deliveredAt ||
     payment.order?.deliveredAt
@@ -326,11 +472,23 @@ function normalizePaymentDetail(payment) {
       contactName: payment.vendor?.contactName || "",
     },
     financials: {
-      orderAmount: payment.financials?.orderAmount?.formatted || "NOK 0.00",
-      platformCommission: payment.financials?.platformCommission?.formatted || "NOK 0.00",
-      vendorAmount: payment.financials?.vendorAmount?.formatted || "NOK 0.00",
+      orderAmount:
+        payment.financials?.orderAmount?.formatted ||
+        contractInvoice?.settlement?.grossOrderAmount ||
+        "NOK 0.00",
+      platformCommission:
+        payment.financials?.platformCommission?.formatted ||
+        contractInvoice?.settlement?.commission?.totalCommission ||
+        "NOK 0.00",
+      vendorAmount:
+        payment.financials?.vendorAmount?.formatted ||
+        contractInvoice?.settlement?.vendorPayable ||
+        "NOK 0.00",
       refundAmount: payment.financials?.refundAmount?.formatted || "NOK 0.00",
-      taxAmount: payment.financials?.taxAmount?.formatted || "NOK 0.00",
+      taxAmount:
+        payment.financials?.taxAmount?.formatted ||
+        contractInvoice?.settlement?.taxAmount ||
+        "NOK 0.00",
     },
     statuses: {
       customerPaymentStatus,
@@ -338,12 +496,18 @@ function normalizePaymentDetail(payment) {
       orderStatus,
     },
     lifecycle: {
-      paymentReceivedAt: payment.lifecycle?.paymentReceivedAt || "",
-      payoutScheduledAt: payment.lifecycle?.payoutScheduledAt || "",
-      payoutReleasedAt: payment.lifecycle?.payoutReleasedAt || "",
-      payoutCompletedAt: payment.lifecycle?.payoutCompletedAt || "",
+      paymentReceivedAt: payment.lifecycle?.paymentReceivedAt || contractInvoice?.paidAtLabel || "",
+      payoutScheduledAt:
+        payment.lifecycle?.payoutScheduledAt || contractInvoice?.settlement?.readyForPayoutAtLabel || "",
+      payoutReleasedAt:
+        payment.lifecycle?.payoutReleasedAt || contractInvoice?.settlement?.readyForPayoutAtLabel || "",
+      payoutCompletedAt:
+        payment.lifecycle?.payoutCompletedAt || contractInvoice?.settlement?.settledAtLabel || "",
       cancelledAt: payment.lifecycle?.cancelledAt || "",
     },
+    contractInvoice,
+    settlement: contractInvoice?.settlement || null,
+    commission: contractInvoice?.settlement?.commission || null,
     timelineItems: [
       {
         id: "payment-received",
@@ -393,8 +557,9 @@ function normalizePaymentDetail(payment) {
           ]
         : []),
     ],
-    activityItems: Array.isArray(payment.activityLog)
-      ? payment.activityLog.map((item) => ({
+    activityItems: [
+      ...(Array.isArray(payment.activityLog)
+        ? payment.activityLog.map((item) => ({
           id: item?.id || `${item?.title || "activity"}-${item?.createdAt || ""}`,
           title: item?.title || "Activity",
           helperText:
@@ -404,7 +569,21 @@ function normalizePaymentDetail(payment) {
           timestamp: formatDateTimeLabel(item?.createdAt),
           isComplete: true,
         }))
-      : [],
+        : []),
+      ...normalizeContractHistory(contractInvoice?.paymentHistory).map((item) => ({
+        id: `invoice-history-${item.id}`,
+        title: item.action,
+        helperText:
+          [
+            [item.actorName, item.actorType].filter(Boolean).join(" | "),
+            item.note,
+          ]
+            .filter(Boolean)
+            .join(" - ") || "Recorded in invoice payment history.",
+        timestamp: item.createdAtLabel,
+        isComplete: true,
+      })),
+    ],
   };
 }
 
@@ -458,8 +637,14 @@ export async function getAdminPaymentsRequest(filters) {
 }
 
 export async function getAdminPaymentDetailRequest(id) {
-  const data = await executeProtectedGraphqlRequest(ADMIN_PAYMENT_DETAIL_QUERY, { id });
-  const payment = normalizePaymentDetail(data?.adminPayment);
+  const [data, contractData] = await Promise.all([
+    executeProtectedGraphqlRequest(ADMIN_PAYMENT_DETAIL_QUERY, { id }),
+    executeProtectedGraphqlRequest(ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY, { invoiceId: id }).catch(
+      () => null,
+    ),
+  ]);
+  const contractInvoice = normalizeContractInvoice(contractData?.invoice);
+  const payment = normalizePaymentDetail(data?.adminPayment, contractInvoice);
 
   if (!payment?.id) {
     throw new Error("Unable to load this payment.");

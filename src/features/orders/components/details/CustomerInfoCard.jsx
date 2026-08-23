@@ -1,5 +1,14 @@
 import { User } from "lucide-react";
 
+function displayValue(value, fallback = "Not available") {
+  if (value === null || value === undefined) {
+    return fallback;
+  }
+
+  const normalized = `${value}`.trim();
+  return normalized || fallback;
+}
+
 export default function CustomerInfoCard({ customer }) {
   return (
     <article className="h-full rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
@@ -28,23 +37,23 @@ export default function CustomerInfoCard({ customer }) {
               Customer
             </span>
           </div>
-          <p className="truncate text-[12px] text-[#5a4d46]">{customer.email}</p>
-          <p className="text-[12px] text-[#5a4d46]">{customer.phone}</p>
+          <p className="truncate text-[12px] text-[#5a4d46]">{displayValue(customer.email)}</p>
+          <p className="text-[12px] text-[#5a4d46]">{displayValue(customer.phone)}</p>
         </div>
       </div>
 
       <div className="space-y-3.5 border-t border-[#f1e9e2] pt-4">
         <div className="flex items-center justify-between text-[13px]">
           <span className="font-semibold text-[#8c8077]">Total Orders</span>
-          <span className="font-bold text-[#18120f]">{customer.totalOrders}</span>
+          <span className="font-bold text-[#18120f]">{displayValue(customer.totalOrders)}</span>
         </div>
         <div className="flex items-center justify-between text-[13px]">
           <span className="font-semibold text-[#8c8077]">Total Spent</span>
-          <span className="font-bold text-[#18120f]">{customer.totalSpent}</span>
+          <span className="font-bold text-[#18120f]">{displayValue(customer.totalSpent)}</span>
         </div>
         <div className="space-y-1 text-[13px]">
           <span className="block font-semibold text-[#8c8077]">Default Address</span>
-          <span className="block leading-6 text-[#18120f]">{customer.address}</span>
+          <span className="block leading-6 text-[#18120f]">{displayValue(customer.address, "Not provided")}</span>
         </div>
       </div>
     </article>

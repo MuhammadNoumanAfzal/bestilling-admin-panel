@@ -1,5 +1,14 @@
 import { Store, Star } from "lucide-react";
 
+function displayValue(value, fallback = "Not available") {
+  if (value === null || value === undefined) {
+    return fallback;
+  }
+
+  const normalized = `${value}`.trim();
+  return normalized || fallback;
+}
+
 export default function VendorInfoCard({ vendor }) {
   return (
     <article className="h-full rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
@@ -28,30 +37,34 @@ export default function VendorInfoCard({ vendor }) {
               Vendor
             </span>
           </div>
-          <p className="truncate text-[12px] text-[#5a4d46]">{vendor.email}</p>
-          <p className="text-[12px] text-[#5a4d46]">{vendor.phone}</p>
+          <p className="truncate text-[12px] text-[#5a4d46]">{displayValue(vendor.email)}</p>
+          <p className="text-[12px] text-[#5a4d46]">{displayValue(vendor.phone)}</p>
         </div>
       </div>
 
       <div className="space-y-3 border-t border-[#f1e9e2] pt-4">
         <div className="flex items-center justify-between text-[13px]">
           <span className="font-semibold text-[#8c8077]">City</span>
-          <span className="font-bold text-[#18120f]">{vendor.city}</span>
+          <span className="font-bold text-[#18120f]">{displayValue(vendor.city)}</span>
         </div>
         <div className="flex items-center justify-between text-[13px]">
           <span className="font-semibold text-[#8c8077]">Total Orders</span>
-          <span className="font-bold text-[#18120f]">{vendor.totalOrders}</span>
+          <span className="font-bold text-[#18120f]">{displayValue(vendor.totalOrders)}</span>
         </div>
         <div className="flex items-center justify-between text-[13px]">
           <span className="font-semibold text-[#8c8077]">Rating</span>
-          <span className="flex items-center gap-1 font-bold text-[#18120f]">
-            {vendor.rating.toFixed(1)}
-            <Star size={13} fill="#ffc107" stroke="none" />
-          </span>
+          {typeof vendor.rating === "number" ? (
+            <span className="flex items-center gap-1 font-bold text-[#18120f]">
+              {vendor.rating.toFixed(1)}
+              <Star size={13} fill="#ffc107" stroke="none" />
+            </span>
+          ) : (
+            <span className="font-bold text-[#18120f]">Not available</span>
+          )}
         </div>
         <div className="space-y-1 text-[13px]">
           <span className="block font-semibold text-[#8c8077]">Address</span>
-          <span className="block leading-6 text-[#18120f]">{vendor.address}</span>
+          <span className="block leading-6 text-[#18120f]">{displayValue(vendor.address, "Not provided")}</span>
         </div>
       </div>
     </article>

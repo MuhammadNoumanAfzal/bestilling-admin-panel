@@ -331,6 +331,11 @@ function buildAddressLabel(address) {
     .join(", ") || "Not provided";
 }
 
+function fallbackValue(value, fallback = "Not available") {
+  const normalized = `${value ?? ""}`.trim();
+  return normalized || fallback;
+}
+
 function toIsoOrNull(value) {
   if (!value) {
     return null;
@@ -524,25 +529,31 @@ function normalizeOrderDetail(order) {
     customer: {
       id: order?.customer?.id || "",
       fullName: customerName,
-      email: order?.customer?.email || "",
-      phone: order?.customer?.phone || "Not provided",
+      email: fallbackValue(order?.customer?.email),
+      phone: fallbackValue(order?.customer?.phone),
       avatar: toInitials(customerName),
       avatarUrl: order?.customer?.avatarUrl || "",
-      totalOrders: 0,
-      totalSpent: formatMoney(0, currency),
-      address: "Not provided",
+      totalOrders: null,
+      totalSpent: "",
+      address:
+        buildAddressLabel(order?.delivery?.address) !== "Not provided"
+          ? buildAddressLabel(order?.delivery?.address)
+          : fallbackValue(order?.delivery?.city, "Not provided"),
     },
     vendor: {
       id: order?.vendor?.id || "",
       businessName: vendorName,
-      email: order?.vendor?.email || "",
-      phone: order?.vendor?.phone || "Not provided",
+      email: fallbackValue(order?.vendor?.email),
+      phone: fallbackValue(order?.vendor?.phone),
       avatar: toInitials(vendorName),
       avatarUrl: order?.vendor?.avatarUrl || "",
-      city: order?.vendor?.city || "Unknown",
+      city:
+        order?.vendor?.address?.city ||
+        order?.vendor?.city ||
+        "Not available",
       address: buildAddressLabel(order?.vendor?.address),
-      totalOrders: 0,
-      rating: 0,
+      totalOrders: null,
+      rating: null,
     },
     delivery: {
       type: order?.delivery?.type || "DELIVERY",

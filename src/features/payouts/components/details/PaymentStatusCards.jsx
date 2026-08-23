@@ -66,17 +66,28 @@ function PaymentActionCard({
 }
 
 export default function PaymentStatusCards({
+  isApprovingInvoice = false,
+  isRejectingInvoice = false,
   isUpdatingCustomerPayment = false,
+  isReleasingVendorPayout = false,
   isUpdatingVendorPayout = false,
+  onApproveInvoice,
+  onRejectInvoice,
+  onReleasePayout,
   onMarkPaid,
   onMarkReceived,
   payout,
+  onMarkInvoicePaid,
+  isMarkingInvoicePaid = false,
 }) {
+  const customerStatus = payout.statuses.customerPaymentStatus;
+  const payoutStatus = payout.statuses.vendorPayoutStatus;
+
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <PaymentActionCard
         buttonLabel={
-          payout.statuses.customerPaymentStatus === "Paid"
+          customerStatus === "Paid"
             ? "Already Received"
             : isUpdatingCustomerPayment
               ? "Updating..."
@@ -87,15 +98,15 @@ export default function PaymentStatusCards({
           { label: "Invoice", value: payout.invoiceNumber },
           { label: "Customer", value: payout.customer.fullName },
         ]}
-        disabled={isUpdatingCustomerPayment || payout.statuses.customerPaymentStatus === "Paid"}
+        disabled={isUpdatingCustomerPayment || customerStatus === "Paid"}
         icon={FileText}
         onClick={onMarkReceived}
-        status={payout.statuses.customerPaymentStatus}
+        status={customerStatus}
         title="Customer Payment"
       />
       <PaymentActionCard
         buttonLabel={
-          payout.statuses.vendorPayoutStatus === "Paid"
+          payoutStatus === "Paid"
             ? "Already Paid"
             : isUpdatingVendorPayout
               ? "Updating..."
@@ -108,13 +119,77 @@ export default function PaymentStatusCards({
         ]}
         disabled={
           isUpdatingVendorPayout ||
-          payout.statuses.vendorPayoutStatus === "Paid" ||
-          payout.statuses.customerPaymentStatus !== "Paid"
+          payoutStatus === "Paid" ||
+          customerStatus !== "Paid"
         }
         icon={CreditCard}
         onClick={onMarkPaid}
-        status={payout.statuses.vendorPayoutStatus}
+        status={payoutStatus}
         title="Vendor Payout"
+      />
+      <PaymentActionCard
+        buttonLabel={
+          customerStatus === "Reported"
+            ? isApprovingInvoice
+              ? "Approving..."
+              : "Approve Reported Payment"
+            : customerStatus === "Paid"
+              ? "Already Approved"
+              : isMarkingInvoicePaid
+                ? "Updating..."
+                : "Mark Invoice Paid"
+        }
+        description="Review the customer payment report or manually confirm the invoice payment from the bank statement."
+        details={[
+          { label: "Invoice", value: payout.invoiceNumber },
+          { label: "Customer status", value: customerStatus },
+        ]}
+        disabled={
+          isApprovingInvoice ||
+          isMarkingInvoicePaid ||
+          customerStatus === "Paid" ||
+          customerStatus === "Rejected"
+        }
+        icon={BadgeCheck}
+        onClick={customerStatus === "Reported" ? onApproveInvoice : onMarkInvoicePaid}
+        status={customerStatus}
+        title="Invoice Review"
+      />
+      <PaymentActionCard
+        buttonLabel={
+          payoutStatus === "Released"
+            ? "Already Released"
+            : payoutStatus === "Paid"
+              ? "Already Paid"
+              : isReleasingVendorPayout
+                ? "Releasing..."
+                : customerStatus === "Reported"
+                  ? isRejectingInvoice
+                    ? "Rejecting..."
+                    : "Reject Invoice Report"
+                  : "Release Payout"
+        }
+        description={
+          customerStatus === "Reported"
+            ? "Reject the reported customer payment if the transfer proof or reference does not match."
+            : "Release the vendor payout once the customer payment has been verified."
+        }
+        details={[
+          { label: customerStatus === "Reported" ? "Invoice" : "Vendor" , value: customerStatus === "Reported" ? payout.invoiceNumber : payout.vendor.name },
+          { label: customerStatus === "Reported" ? "Current status" : "Payout", value: customerStatus === "Reported" ? customerStatus : payout.financials.vendorAmount },
+        ]}
+        disabled={
+          customerStatus === "Reported"
+            ? isRejectingInvoice || customerStatus === "Paid"
+            : isReleasingVendorPayout ||
+              payoutStatus === "Released" ||
+              payoutStatus === "Paid" ||
+              customerStatus !== "Paid"
+        }
+        icon={CreditCard}
+        onClick={customerStatus === "Reported" ? onRejectInvoice : onReleasePayout}
+        status={customerStatus === "Reported" ? customerStatus : payoutStatus}
+        title={customerStatus === "Reported" ? "Reject Report" : "Release Payout"}
       />
     </div>
   );

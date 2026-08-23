@@ -2,8 +2,12 @@ import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphq
 import {
   ADMIN_PAYMENT_DETAIL_QUERY,
   ADMIN_PAYMENTS_QUERY,
+  APPROVE_INVOICE_PAYMENT_MUTATION,
+  MARK_INVOICE_PAID_MUTATION,
   MARK_CUSTOMER_PAYMENT_RECEIVED_MUTATION,
   MARK_VENDOR_PAYOUT_PAID_MUTATION,
+  REJECT_INVOICE_PAYMENT_MUTATION,
+  RELEASE_VENDOR_PAYOUT_MUTATION,
 } from "./paymentsQueries.js";
 
 function getErrorMessage(result, fallbackMessage) {
@@ -76,14 +80,24 @@ function normalizePaymentStatus(status) {
 
   switch (normalized) {
     case "PAID":
+    case "PAYOUT_PAID":
       return "Paid";
     case "SCHEDULED":
       return "Scheduled";
     case "RELEASED":
+    case "PAYOUT_RELEASED":
       return "Released";
+    case "PAYMENT_REPORTED":
+      return "Reported";
+    case "PAYOUT_PENDING":
+      return "Pending";
+    case "PAYOUT_FAILED":
+      return "Failed";
     case "CANCELLED":
     case "CANCELED":
       return "Canceled";
+    case "REJECTED":
+      return "Rejected";
     default:
       return "Pending";
   }
@@ -118,6 +132,97 @@ function normalizeSummary(summary) {
   ];
 }
 
+function deriveCustomerPaymentStatus(item) {
+  if (item?.paidAt) {
+    return "Paid";
+  }
+
+  return "Pending";
+}
+
+function deriveVendorPayoutStatus(item) {
+  if (item?.payoutReleasedAt) {
+    return "Released";
+  }
+
+  return "Pending";
+}
+
+function hasActivityMatch(activityLog, patterns) {
+  if (!Array.isArray(activityLog) || activityLog.length === 0) {
+    return false;
+  }
+
+  return activityLog.some((item) => {
+    const haystack = [
+      item?.type,
+      item?.title,
+      item?.description,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toUpperCase();
+
+    return patterns.some((pattern) => haystack.includes(pattern));
+  });
+}
+
+function deriveCustomerPaymentStatusFromDetail(payment) {
+  if (payment?.lifecycle?.paymentReceivedAt) {
+    return "Paid";
+  }
+
+  if (hasActivityMatch(payment?.activityLog, ["REJECT", "PAYMENT_REJECTED"])) {
+    return "Rejected";
+  }
+
+  if (
+    hasActivityMatch(payment?.activityLog, [
+      "PAYMENT_REPORTED",
+      "REPORTED PAYMENT",
+      "INVOICE_PAYMENT_REPORTED",
+      "REPORT INVOICE PAYMENT",
+    ])
+  ) {
+    return "Reported";
+  }
+
+  if (payment?.lifecycle?.cancelledAt) {
+    return "Canceled";
+  }
+
+  return "Pending";
+}
+
+function deriveVendorPayoutStatusFromDetail(payment) {
+  if (payment?.lifecycle?.payoutCompletedAt) {
+    return "Paid";
+  }
+
+  if (payment?.lifecycle?.payoutReleasedAt) {
+    return "Released";
+  }
+
+  if (payment?.lifecycle?.payoutScheduledAt) {
+    return "Scheduled";
+  }
+
+  if (
+    hasActivityMatch(payment?.activityLog, [
+      "PAYOUT_FAILED",
+      "FAILED PAYOUT",
+    ])
+  ) {
+    return "Failed";
+  }
+
+  if (payment?.lifecycle?.cancelledAt) {
+    return "Canceled";
+  }
+
+  return "Pending";
+}
+
 function normalizePaymentRow(item) {
   const customerName = item?.customer?.fullName || "Unknown customer";
   const vendorName = item?.vendor?.name || "Unknown vendor";
@@ -139,8 +244,8 @@ function normalizePaymentRow(item) {
     orderAmount: item?.orderAmount?.formatted || "NOK 0.00",
     platformCommission: item?.platformCommission?.formatted || "NOK 0.00",
     vendorAmount: item?.vendorAmount?.formatted || "NOK 0.00",
-    customerPaymentStatus: normalizePaymentStatus(item?.customerPaymentStatus),
-    vendorPayoutStatus: normalizePaymentStatus(item?.vendorPayoutStatus),
+    customerPaymentStatus: deriveCustomerPaymentStatus(item),
+    vendorPayoutStatus: deriveVendorPayoutStatus(item),
     createdAt: item?.createdAt || "",
     paidAt: item?.paidAt || "",
     payoutReleasedAt: item?.payoutReleasedAt || "",
@@ -155,6 +260,9 @@ function normalizePaymentDetail(payment) {
 
   const customerName = payment.customer?.fullName || "Unknown customer";
   const vendorName = payment.vendor?.name || "Unknown vendor";
+  const customerPaymentStatus = deriveCustomerPaymentStatusFromDetail(payment);
+  const vendorPayoutStatus = deriveVendorPayoutStatusFromDetail(payment);
+  const orderStatus = normalizeOrderStatus(payment.order?.status);
 
   return {
     id: payment.id,
@@ -166,7 +274,7 @@ function normalizePaymentDetail(payment) {
     updatedAtLabel: formatDateTimeLabel(payment.updatedAt),
     order: {
       id: payment.order?.id || "",
-      status: normalizeOrderStatus(payment.statuses?.orderStatus || payment.order?.status),
+      status: orderStatus,
       createdAt: payment.order?.createdAt || "",
       createdAtLabel: formatDateTimeLabel(payment.order?.createdAt),
     },
@@ -193,9 +301,9 @@ function normalizePaymentDetail(payment) {
       taxAmount: payment.financials?.taxAmount?.formatted || "NOK 0.00",
     },
     statuses: {
-      customerPaymentStatus: normalizePaymentStatus(payment.statuses?.customerPaymentStatus),
-      vendorPayoutStatus: normalizePaymentStatus(payment.statuses?.vendorPayoutStatus),
-      orderStatus: normalizeOrderStatus(payment.statuses?.orderStatus),
+      customerPaymentStatus,
+      vendorPayoutStatus,
+      orderStatus,
     },
     lifecycle: {
       paymentReceivedAt: payment.lifecycle?.paymentReceivedAt || "",
@@ -312,7 +420,7 @@ export async function getAdminPaymentsRequest(filters) {
     summaryCards: normalizeSummary(response.summary),
     filterOptions: {
       vendors: Array.isArray(response.filterOptions?.vendors) ? response.filterOptions.vendors : [],
-      statuses: Array.isArray(response.filterOptions?.statuses) ? response.filterOptions.statuses : [],
+      statuses: [],
     },
   };
 }
@@ -347,21 +455,118 @@ export async function markCustomerPaymentReceivedRequest(id, { reference = "", n
   };
 }
 
-export async function markVendorPayoutPaidRequest(id, { reference = "", note = "" } = {}) {
-  const data = await executeProtectedGraphqlRequest(MARK_VENDOR_PAYOUT_PAID_MUTATION, {
-    id,
-    reference: reference || null,
-    note: note || null,
+export async function approveInvoicePaymentRequest(id, { note = "" } = {}) {
+  const data = await executeProtectedGraphqlRequest(
+    APPROVE_INVOICE_PAYMENT_MUTATION,
+    {
+      invoiceId: id,
+      input: {
+        note: note || null,
+      },
+    },
+  );
+  const result = data?.approveInvoicePayment;
+
+  if (!result?.success || !result?.invoice?.id) {
+    throw new Error(getErrorMessage(result, "Unable to approve invoice payment."));
+  }
+
+  return {
+    message: result.message || "Invoice payment approved.",
+    status: normalizePaymentStatus(result.invoice.paymentStatus),
+    paidAt: result.invoice.paidAt || "",
+    verifiedAt: result.invoice.verifiedAt || "",
+  };
+}
+
+export async function rejectInvoicePaymentRequest(id, { reason = "" } = {}) {
+  const data = await executeProtectedGraphqlRequest(
+    REJECT_INVOICE_PAYMENT_MUTATION,
+    {
+      invoiceId: id,
+      input: {
+        reason: reason || null,
+      },
+    },
+  );
+  const result = data?.rejectInvoicePayment;
+
+  if (!result?.success || !result?.invoice?.id) {
+    throw new Error(getErrorMessage(result, "Unable to reject invoice payment."));
+  }
+
+  return {
+    message: result.message || "Invoice payment rejected.",
+    status: normalizePaymentStatus(result.invoice.paymentStatus),
+    rejectedAt: result.invoice.rejectedAt || "",
+  };
+}
+
+export async function markInvoicePaidRequest(id, { note = "" } = {}) {
+  const data = await executeProtectedGraphqlRequest(MARK_INVOICE_PAID_MUTATION, {
+    invoiceId: id,
+    input: {
+      note: note || null,
+    },
   });
+  const result = data?.markInvoicePaid;
+
+  if (!result?.success || !result?.invoice?.id) {
+    throw new Error(getErrorMessage(result, "Unable to mark invoice paid."));
+  }
+
+  return {
+    message: result.message || "Invoice marked as paid.",
+    status: normalizePaymentStatus(result.invoice.paymentStatus),
+    paidAt: result.invoice.paidAt || "",
+    verifiedAt: result.invoice.verifiedAt || "",
+  };
+}
+
+export async function releaseVendorPayoutRequest(id, { note = "" } = {}) {
+  const data = await executeProtectedGraphqlRequest(
+    RELEASE_VENDOR_PAYOUT_MUTATION,
+    {
+      payoutId: id,
+      input: {
+        note: note || null,
+      },
+    },
+  );
+  const result = data?.releaseVendorPayout;
+
+  if (!result?.success || !result?.payout?.id) {
+    throw new Error(getErrorMessage(result, "Unable to release vendor payout."));
+  }
+
+  return {
+    message: result.message || "Vendor payout released.",
+    status: normalizePaymentStatus(result.payout.status),
+    releasedAt: result.payout.releasedAt || "",
+  };
+}
+
+export async function markVendorPayoutPaidRequest(id, { reference = "", note = "" } = {}) {
+  const data = await executeProtectedGraphqlRequest(
+    MARK_VENDOR_PAYOUT_PAID_MUTATION,
+    {
+      payoutId: id,
+      input: {
+        payoutReference: reference || null,
+        note: note || null,
+      },
+    },
+  );
   const result = data?.markVendorPayoutPaid;
 
-  if (!result?.success || !result?.payment?.id) {
+  if (!result?.success || !result?.payout?.id) {
     throw new Error(getErrorMessage(result, "Unable to mark vendor payout paid."));
   }
 
   return {
     message: result.message || "Vendor payout marked as paid.",
-    status: normalizePaymentStatus(result.payment.statuses?.vendorPayoutStatus),
-    payoutCompletedAt: result.payment.lifecycle?.payoutCompletedAt || "",
+    status: normalizePaymentStatus(result.payout.status),
+    payoutCompletedAt: result.payout.paidAt || "",
+    payoutReference: result.payout.payoutReference || "",
   };
 }

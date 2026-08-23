@@ -2,9 +2,13 @@ import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
+  approveInvoicePaymentRequest,
   getAdminPaymentDetailRequest,
+  markInvoicePaidRequest,
   markCustomerPaymentReceivedRequest,
   markVendorPayoutPaidRequest,
+  rejectInvoicePaymentRequest,
+  releaseVendorPayoutRequest,
 } from "../api/paymentsApi.js";
 import PaymentActivityCard from "../components/details/PaymentActivityCard.jsx";
 import PaymentDetailsInfoCard from "../components/details/PaymentDetailsInfoCard.jsx";
@@ -39,6 +43,10 @@ export default function PaymentDetailsPage() {
   const [loadError, setLoadError] = useState("");
   const [isUpdatingCustomerPayment, setIsUpdatingCustomerPayment] = useState(false);
   const [isUpdatingVendorPayout, setIsUpdatingVendorPayout] = useState(false);
+  const [isApprovingInvoice, setIsApprovingInvoice] = useState(false);
+  const [isRejectingInvoice, setIsRejectingInvoice] = useState(false);
+  const [isMarkingInvoicePaid, setIsMarkingInvoicePaid] = useState(false);
+  const [isReleasingVendorPayout, setIsReleasingVendorPayout] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -189,6 +197,214 @@ export default function PaymentDetailsPage() {
     }
   }
 
+  async function handleApproveInvoice() {
+    if (!paymentDetail?.id || paymentDetail.statuses.customerPaymentStatus !== "Reported") {
+      return;
+    }
+
+    const prompt = await Swal.fire({
+      title: "Approve invoice payment",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <div>
+            <label for="approve-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Verification note</label>
+            <textarea id="approve-note" class="swal2-textarea" placeholder="Payment verified in bank statement" style="margin:0;width:100%;min-height:110px;"></textarea>
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Approve payment",
+      confirmButtonColor: "#cf6e38",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => ({
+        note: document.getElementById("approve-note")?.value?.trim() || "",
+      }),
+    });
+
+    if (!prompt.isConfirmed) {
+      return;
+    }
+
+    try {
+      setIsApprovingInvoice(true);
+      const result = await approveInvoicePaymentRequest(paymentDetail.id, prompt.value || {});
+      await refreshPaymentDetail();
+      await Swal.fire({
+        icon: "success",
+        title: "Invoice approved",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to approve invoice payment",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsApprovingInvoice(false);
+    }
+  }
+
+  async function handleRejectInvoice() {
+    if (!paymentDetail?.id || paymentDetail.statuses.customerPaymentStatus !== "Reported") {
+      return;
+    }
+
+    const prompt = await Swal.fire({
+      title: "Reject invoice payment report",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <div>
+            <label for="reject-reason" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Reason</label>
+            <textarea id="reject-reason" class="swal2-textarea" placeholder="Explain why the reported payment is rejected" style="margin:0;width:100%;min-height:110px;"></textarea>
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Reject report",
+      confirmButtonColor: "#cf6e38",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => ({
+        reason: document.getElementById("reject-reason")?.value?.trim() || "",
+      }),
+    });
+
+    if (!prompt.isConfirmed) {
+      return;
+    }
+
+    try {
+      setIsRejectingInvoice(true);
+      const result = await rejectInvoicePaymentRequest(paymentDetail.id, prompt.value || {});
+      await refreshPaymentDetail();
+      await Swal.fire({
+        icon: "success",
+        title: "Invoice report rejected",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to reject invoice payment report",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsRejectingInvoice(false);
+    }
+  }
+
+  async function handleMarkInvoicePaid() {
+    if (!paymentDetail?.id || paymentDetail.statuses.customerPaymentStatus === "Paid") {
+      return;
+    }
+
+    const prompt = await Swal.fire({
+      title: "Mark invoice paid",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <div>
+            <label for="invoice-paid-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Internal note</label>
+            <textarea id="invoice-paid-note" class="swal2-textarea" placeholder="Optional admin note" style="margin:0;width:100%;min-height:110px;"></textarea>
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Mark invoice paid",
+      confirmButtonColor: "#cf6e38",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => ({
+        note: document.getElementById("invoice-paid-note")?.value?.trim() || "",
+      }),
+    });
+
+    if (!prompt.isConfirmed) {
+      return;
+    }
+
+    try {
+      setIsMarkingInvoicePaid(true);
+      const result = await markInvoicePaidRequest(paymentDetail.id, prompt.value || {});
+      await refreshPaymentDetail();
+      await Swal.fire({
+        icon: "success",
+        title: "Invoice updated",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to mark invoice paid",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsMarkingInvoicePaid(false);
+    }
+  }
+
+  async function handleReleasePayout() {
+    if (
+      !paymentDetail?.id ||
+      paymentDetail.statuses.vendorPayoutStatus === "Released" ||
+      paymentDetail.statuses.vendorPayoutStatus === "Paid"
+    ) {
+      return;
+    }
+
+    const prompt = await Swal.fire({
+      title: "Release vendor payout",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <div>
+            <label for="release-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Release note</label>
+            <textarea id="release-note" class="swal2-textarea" placeholder="Approved for payout batch" style="margin:0;width:100%;min-height:110px;"></textarea>
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Release payout",
+      confirmButtonColor: "#cf6e38",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => ({
+        note: document.getElementById("release-note")?.value?.trim() || "",
+      }),
+    });
+
+    if (!prompt.isConfirmed) {
+      return;
+    }
+
+    try {
+      setIsReleasingVendorPayout(true);
+      const result = await releaseVendorPayoutRequest(paymentDetail.id, prompt.value || {});
+      await refreshPaymentDetail();
+      await Swal.fire({
+        icon: "success",
+        title: "Vendor payout released",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to release vendor payout",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsReleasingVendorPayout(false);
+    }
+  }
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -225,10 +441,18 @@ export default function PaymentDetailsPage() {
           <PaymentDetailsInfoCard payout={paymentDetail} />
           <PaymentLifecycleCard payout={paymentDetail} />
           <PaymentStatusCards
+            isApprovingInvoice={isApprovingInvoice}
+            isMarkingInvoicePaid={isMarkingInvoicePaid}
+            isRejectingInvoice={isRejectingInvoice}
+            isReleasingVendorPayout={isReleasingVendorPayout}
             isUpdatingCustomerPayment={isUpdatingCustomerPayment}
             isUpdatingVendorPayout={isUpdatingVendorPayout}
+            onApproveInvoice={handleApproveInvoice}
+            onMarkInvoicePaid={handleMarkInvoicePaid}
             onMarkPaid={handleMarkPaid}
             onMarkReceived={handleMarkReceived}
+            onRejectInvoice={handleRejectInvoice}
+            onReleasePayout={handleReleasePayout}
             payout={paymentDetail}
           />
         </div>

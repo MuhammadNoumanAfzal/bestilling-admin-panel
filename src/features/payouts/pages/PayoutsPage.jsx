@@ -9,6 +9,13 @@ import PayoutsTable from "../components/PayoutsTable.jsx";
 import PayoutToolbar from "../components/PayoutToolbar.jsx";
 
 const PAGE_SIZE = 10;
+const STATIC_STATUS_OPTIONS = [
+  { value: "PENDING", label: "Pending" },
+  { value: "PAID", label: "Paid" },
+  { value: "RELEASED", label: "Released" },
+  { value: "SCHEDULED", label: "Scheduled" },
+  { value: "CANCELED", label: "Canceled" },
+];
 
 function mapPaymentStatusFilter(value) {
   switch (`${value ?? ""}`.trim().toUpperCase()) {
@@ -45,7 +52,7 @@ export default function PayoutsPage() {
     hasPreviousPage: false,
   });
   const [filterOptions, setFilterOptions] = useState({
-    statuses: [],
+    statuses: STATIC_STATUS_OPTIONS,
     vendors: [],
   });
   const [commissionBreakdown, setCommissionBreakdown] = useState({
@@ -96,7 +103,7 @@ export default function PayoutsPage() {
         setSummaryCards(paymentsResponse.summaryCards);
         setPageInfo(paymentsResponse.pageInfo);
         setFilterOptions({
-          statuses: paymentsResponse.filterOptions.statuses.map(mapPaymentStatusFilter),
+          statuses: STATIC_STATUS_OPTIONS,
           vendors: paymentsResponse.filterOptions.vendors.map((vendor) => ({
             value: vendor.id,
             label: vendor.name,

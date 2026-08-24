@@ -147,6 +147,10 @@ function deriveAdminOrderPaymentStatus(order) {
     return "Partially refunded";
   }
 
+  if (rawPaymentStatus === "PAID") {
+    return "Paid";
+  }
+
   if (capturedAt) {
     return "Paid";
   }

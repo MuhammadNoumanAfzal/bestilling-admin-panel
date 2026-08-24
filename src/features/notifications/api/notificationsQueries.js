@@ -1,100 +1,67 @@
-export const NOTIFICATIONS_QUERY = `
-  query Notifications($filter: NotificationFilterInput, $pagination: PaginationInput) {
-    notifications(filter: $filter, pagination: $pagination) {
-      items {
-        id
-        code
-        title
-        message
-        audienceType
-        audienceId
-        actorType
-        actorId
-        actorName
-        entityType
-        entityId
-        entityCode
-        priority
-        channelInApp
-        channelEmail
-        channelSms
-        isRead
-        isArchived
-        actionUrl
-        createdAt
-        readAt
-        metadata
+export const FINANCE_NOTIFICATION_FIELDS = `
+  id
+  type
+  audience
+  title
+  message
+  isRead
+  createdAt
+  invoiceId
+  orderId
+  payoutId
+  paymentStatus
+  settlementStatus
+  payoutStatus
+  actorType
+  actorId
+  actorName
+  note
+  rejectionReason
+  receiptUrl
+  transferReference
+  paymentDate
+`;
+
+export const ADMIN_FINANCE_NOTIFICATIONS_QUERY = `
+  query AdminFinanceNotifications($first: Int, $status: String) {
+    adminFinanceNotifications(first: $first, status: $status) {
+      edges {
+        node {
+          ${FINANCE_NOTIFICATION_FIELDS}
+        }
       }
+      unreadCount
       totalCount
-      unreadCount
     }
   }
 `;
 
-export const NOTIFICATION_BELL_QUERY = `
-  query NotificationBell {
-    notificationBell {
-      unreadCount
-      items {
-        id
-        title
-        message
-        entityType
-        entityId
-        actionUrl
-        isRead
-        createdAt
-      }
+export const FINANCE_NOTIFICATION_DETAIL_QUERY = `
+  query FinanceNotificationDetail($id: ID!) {
+    financeNotification(id: $id) {
+      ${FINANCE_NOTIFICATION_FIELDS}
     }
   }
 `;
 
-export const NOTIFICATION_COUNTS_QUERY = `
-  query NotificationCounts {
-    notificationCounts {
-      total
-      unread
-      archived
-      highPriority
-    }
-  }
-`;
-
-export const MARK_NOTIFICATION_READ_MUTATION = `
-  mutation MarkNotificationRead($id: ID!) {
-    markNotificationRead(id: $id) {
+export const MARK_FINANCE_NOTIFICATION_READ_MUTATION = `
+  mutation MarkFinanceNotificationRead($id: ID!) {
+    markFinanceNotificationRead(id: $id) {
+      success
+      message
       notification {
         id
         isRead
-        readAt
       }
     }
   }
 `;
 
-export const MARK_ALL_NOTIFICATIONS_READ_MUTATION = `
-  mutation MarkAllNotificationsRead {
-    markAllNotificationsRead {
-      success
-      unreadCount
-    }
-  }
-`;
-
-export const ARCHIVE_NOTIFICATION_MUTATION = `
-  mutation ArchiveNotification($id: ID!) {
-    archiveNotification(id: $id) {
+export const MARK_ALL_FINANCE_NOTIFICATIONS_READ_MUTATION = `
+  mutation MarkAllFinanceNotificationsRead($audience: String!) {
+    markAllFinanceNotificationsRead(audience: $audience) {
       success
       message
-    }
-  }
-`;
-
-export const UNARCHIVE_NOTIFICATION_MUTATION = `
-  mutation UnarchiveNotification($id: ID!) {
-    unarchiveNotification(id: $id) {
-      id
-      isArchived
     }
   }
 `;

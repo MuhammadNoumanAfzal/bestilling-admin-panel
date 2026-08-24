@@ -69,6 +69,18 @@ function DeliveryChip({ active, label }) {
 }
 
 function formatLinkedResource(notification) {
+  if (notification.payoutId) {
+    return `Payout #${notification.payoutId}`;
+  }
+
+  if (notification.orderId) {
+    return `Order #${notification.orderId}`;
+  }
+
+  if (notification.invoiceId) {
+    return `Invoice #${notification.invoiceId}`;
+  }
+
   if (notification.entityType && notification.entityId) {
     return `${notification.entityType} #${notification.entityId}`;
   }
@@ -149,6 +161,51 @@ export default function NotificationDetailsModal({ notification, onClose, onOpen
               <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">Message</p>
               <p className="mt-2 text-[14px] leading-6 text-[#40342e]">{notification.message}</p>
             </div>
+
+            {notification.note ? (
+              <div className="rounded-[16px] border border-[#f0e2d8] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">Admin Note</p>
+                <p className="mt-2 text-[14px] leading-6 text-[#40342e]">{notification.note}</p>
+              </div>
+            ) : null}
+
+            {notification.rejectionReason ? (
+              <div className="rounded-[16px] border border-[#f2d9d1] bg-[#fff7f4] px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#b56b58]">Rejection Reason</p>
+                <p className="mt-2 text-[14px] leading-6 text-[#5f4339]">{notification.rejectionReason}</p>
+              </div>
+            ) : null}
+
+            {notification.receiptUrl || notification.transferReference || notification.paymentDate ? (
+              <div className="grid gap-3 md:grid-cols-2">
+                {notification.paymentDate ? (
+                  <DetailRow label="Payment Date" value={notification.paymentDate} />
+                ) : null}
+                {notification.transferReference ? (
+                  <DetailRow label="Transfer Reference" value={notification.transferReference} />
+                ) : null}
+                {notification.paymentStatus ? (
+                  <DetailRow label="Payment Status" value={notification.paymentStatus} />
+                ) : null}
+                {notification.settlementStatus ? (
+                  <DetailRow label="Settlement Status" value={notification.settlementStatus} />
+                ) : null}
+              </div>
+            ) : null}
+
+            {notification.receiptUrl ? (
+              <div className="rounded-[16px] border border-[#f0e2d8] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">Receipt Proof</p>
+                <a
+                  className="mt-2 inline-flex text-[14px] font-semibold text-[#cf6e38] hover:text-[#bc6030]"
+                  href={notification.receiptUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Open uploaded receipt
+                </a>
+              </div>
+            ) : null}
 
             <div className="flex items-center gap-3 rounded-[16px] border border-[#f0e2d8] bg-[linear-gradient(90deg,#fff4ec_0%,#fffdfa_100%)] px-4 py-3">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#fff0e7] text-[#d16737] shadow-[0_6px_18px_rgba(209,103,55,0.18)]">

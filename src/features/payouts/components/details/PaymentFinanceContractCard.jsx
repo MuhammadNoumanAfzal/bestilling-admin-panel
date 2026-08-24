@@ -56,6 +56,41 @@ function Section({ children, title }) {
   );
 }
 
+function ReceiptPreview({ url }) {
+  const normalizedUrl = `${url || ""}`.trim();
+
+  if (!normalizedUrl || normalizedUrl === "Not available") {
+    return null;
+  }
+
+  const isImage = /\.(png|jpe?g|webp|gif)($|\?)/i.test(normalizedUrl);
+
+  return (
+    <div className="mt-4 rounded-[14px] border border-[#ecdcd0] bg-white px-4 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[14px] font-semibold text-[#221914]">Uploaded receipt</p>
+        <a
+          className="text-[13px] font-semibold text-[#cf6e38] hover:text-[#bc6030]"
+          href={normalizedUrl}
+          rel="noreferrer"
+          target="_blank"
+        >
+          Open file
+        </a>
+      </div>
+      {isImage ? (
+        <img
+          alt="Customer payment receipt"
+          className="mt-3 max-h-[320px] w-full rounded-[12px] border border-[#eee3db] object-contain"
+          src={normalizedUrl}
+        />
+      ) : (
+        <p className="mt-3 break-all text-[13px] leading-6 text-[#5b4f48]">{normalizedUrl}</p>
+      )}
+    </div>
+  );
+}
+
 export default function PaymentFinanceContractCard({ payout }) {
   const invoice = payout.contractInvoice;
   const settlement = payout.settlement;
@@ -94,6 +129,7 @@ export default function PaymentFinanceContractCard({ payout }) {
                   {invoice.paymentReport.note}
                 </p>
               ) : null}
+              <ReceiptPreview url={invoice.paymentReport.receiptUrl} />
             </div>
           ) : null}
         </Section>

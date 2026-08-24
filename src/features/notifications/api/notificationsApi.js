@@ -1,13 +1,12 @@
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
 import {
-  ARCHIVE_NOTIFICATION_MUTATION,
-  MARK_ALL_NOTIFICATIONS_READ_MUTATION,
-  MARK_NOTIFICATION_READ_MUTATION,
-  NOTIFICATION_BELL_QUERY,
-  NOTIFICATION_COUNTS_QUERY,
-  NOTIFICATIONS_QUERY,
-  UNARCHIVE_NOTIFICATION_MUTATION,
+  ADMIN_FINANCE_NOTIFICATIONS_QUERY,
+  FINANCE_NOTIFICATION_DETAIL_QUERY,
+  MARK_ALL_FINANCE_NOTIFICATIONS_READ_MUTATION,
+  MARK_FINANCE_NOTIFICATION_READ_MUTATION,
 } from "./notificationsQueries.js";
+
+const ADMIN_FINANCE_AUDIENCE = "ADMIN";
 
 function formatDisplayDate(value, options = {}) {
   if (!value) {
@@ -25,44 +24,18 @@ function formatDisplayDate(value, options = {}) {
   }).format(date);
 }
 
-function parseMetadata(metadata) {
-  if (!metadata) {
-    return {};
-  }
-
-  if (typeof metadata === "object") {
-    return metadata;
-  }
-
-  try {
-    return JSON.parse(metadata);
-  } catch {
-    return {};
-  }
-}
-
 function formatAudienceLabel(audienceType) {
   switch (String(audienceType || "").toUpperCase()) {
+    case "CLIENT":
     case "CUSTOMER":
-    case "CUSTOMERS":
       return "Customers";
     case "VENDOR":
-    case "VENDORS":
       return "Vendors";
     case "ADMIN":
-    case "ADMINS":
       return "Admins";
-    case "USER":
-    case "USERS":
-      return "All User";
     default:
-      return String(audienceType || "All User")
-        .toLowerCase()
-        .split("_")
-        .filter(Boolean)
-        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(" ");
-    }
+      return "Finance";
+  }
 }
 
 function formatTypeLabel(code) {
@@ -75,10 +48,6 @@ function formatTypeLabel(code) {
 }
 
 function formatStatusLabel(item) {
-  if (item?.isArchived) {
-    return "Archived";
-  }
-
   if (item?.isRead) {
     return "Read";
   }
@@ -87,140 +56,222 @@ function formatStatusLabel(item) {
 }
 
 function deriveChannels(item) {
-  const channels = [];
+  return ["in-app"];
+}
 
-  if (item?.channelEmail) {
-    channels.push("email");
-  }
-  if (item?.channelSms) {
-    channels.push("push");
-  }
-  if (item?.channelInApp) {
-    channels.push("in-app");
+function formatRelativeTime(value) {
+  if (!value) {
+    return "Just now";
   }
 
-  return channels.length ? channels : ["in-app"];
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "Just now";
+  }
+
+  const diffInSeconds = Math.round((date.getTime() - Date.now()) / 1000);
+  const absSeconds = Math.abs(diffInSeconds);
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+  if (absSeconds < 60) {
+    return rtf.format(diffInSeconds, "second");
+  }
+
+  const diffInMinutes = Math.round(diffInSeconds / 60);
+  if (Math.abs(diffInMinutes) < 60) {
+    return rtf.format(diffInMinutes, "minute");
+  }
+
+  const diffInHours = Math.round(diffInMinutes / 60);
+  if (Math.abs(diffInHours) < 24) {
+    return rtf.format(diffInHours, "hour");
+  }
+
+  return rtf.format(Math.round(diffInHours / 24), "day");
+}
+
+function buildAdminNotificationTarget(item) {
+  if (item?.payoutId) {
+    return `/payouts/${encodeURIComponent(item.payoutId)}`;
+  }
+
+  if (item?.orderId) {
+    return `/orders/${encodeURIComponent(item.orderId)}`;
+  }
+
+  if (item?.invoiceId) {
+    return `/payouts/${encodeURIComponent(item.invoiceId)}`;
+  }
+
+  return "/notifications";
+}
+
+function buildMetadata(item) {
+  return {
+    invoiceId: item?.invoiceId || "",
+    orderId: item?.orderId || "",
+    payoutId: item?.payoutId || "",
+    paymentStatus: item?.paymentStatus || "",
+    settlementStatus: item?.settlementStatus || "",
+    payoutStatus: item?.payoutStatus || "",
+    actorType: item?.actorType || "",
+    actorId: item?.actorId || "",
+    actorName: item?.actorName || "",
+    note: item?.note || "",
+    rejectionReason: item?.rejectionReason || "",
+    receiptUrl: item?.receiptUrl || "",
+    transferReference: item?.transferReference || "",
+    paymentDate: item?.paymentDate || "",
+    audience: item?.audience || "",
+    type: item?.type || "",
+  };
+}
+
+function buildMessage(item) {
+  const fragments = [String(item?.message || "").trim()];
+
+  if (item?.note) {
+    fragments.push(`Note: ${item.note}`);
+  }
+
+  if (item?.rejectionReason) {
+    fragments.push(`Reason: ${item.rejectionReason}`);
+  }
+
+  if (item?.transferReference) {
+    fragments.push(`Reference: ${item.transferReference}`);
+  }
+
+  return fragments.filter(Boolean).join(" ");
 }
 
 function normalizeNotification(item) {
-  const metadata = parseMetadata(item?.metadata);
+  const metadata = buildMetadata(item);
   const statusLabel = formatStatusLabel(item);
 
   return {
     id: item?.id ?? "",
-    title: item?.title ?? "Notification",
-    subject: item?.title ?? "Notification",
-    message: item?.message ?? "",
-    code: item?.code ?? "",
-    type: item?.code ?? "",
-    typeLabel: formatTypeLabel(item?.code),
+    title: item?.title ?? "Finance notification",
+    subject: item?.title ?? "Finance notification",
+    message: buildMessage(item),
+    code: item?.type ?? "",
+    type: item?.type ?? "",
+    typeLabel: formatTypeLabel(item?.type),
     status: statusLabel.toUpperCase(),
     statusLabel,
     createdAt: item?.createdAt ?? "",
     createdAtDisplay: formatDisplayDate(item?.createdAt),
-    readAt: item?.readAt ?? "",
-    readAtDisplay: item?.readAt ? formatDisplayDate(item?.readAt) : "",
+    readAt: "",
+    readAtDisplay: item?.isRead ? "Opened in app" : "",
     scheduledAt: formatDisplayDate(item?.createdAt),
-    audience: formatAudienceLabel(item?.audienceType),
+    audience: formatAudienceLabel(item?.audience),
     channels: deriveChannels(item),
-    sendEmail: Boolean(item?.channelEmail),
-    sendPush: Boolean(item?.channelSms),
-    sendInApp: Boolean(item?.channelInApp),
-    sentBy: item?.actorName || "System",
-    actionUrl: item?.actionUrl ?? "",
-    entityId: item?.entityId ?? "",
-    entityType: item?.entityType ?? "",
-    entityCode: item?.entityCode ?? "",
-    priority: item?.priority ?? "",
-    audienceType: item?.audienceType ?? "",
-    audienceId: item?.audienceId ?? "",
+    sendEmail: false,
+    sendPush: false,
+    sendInApp: true,
+    sentBy: item?.actorName || "Finance system",
+    actionUrl: buildAdminNotificationTarget(item),
+    entityId: item?.payoutId || item?.orderId || item?.invoiceId || "",
+    entityType: item?.payoutId ? "PAYOUT" : item?.orderId ? "ORDER" : "INVOICE",
+    entityCode: item?.invoiceId || item?.orderId || item?.payoutId || "",
+    priority: item?.isRead ? "normal" : "high",
+    audienceType: item?.audience ?? "",
+    audienceId: "",
     actorType: item?.actorType ?? "",
     actorId: item?.actorId ?? "",
     isRead: Boolean(item?.isRead),
-    isArchived: Boolean(item?.isArchived),
+    isArchived: false,
     metadata,
     rawMetadata: Object.keys(metadata).length ? JSON.stringify(metadata, null, 2) : "",
+    timeLabel: formatRelativeTime(item?.createdAt),
+    note: metadata.note,
+    rejectionReason: metadata.rejectionReason,
+    receiptUrl: metadata.receiptUrl,
+    transferReference: metadata.transferReference,
+    paymentDate: metadata.paymentDate,
+    invoiceId: metadata.invoiceId,
+    orderId: metadata.orderId,
+    payoutId: metadata.payoutId,
+    paymentStatus: metadata.paymentStatus,
+    settlementStatus: metadata.settlementStatus,
+    payoutStatus: metadata.payoutStatus,
   };
 }
 
-function normalizeBellNotification(item) {
-  return {
-    id: item?.id ?? "",
-    title: item?.title ?? "Notification",
-    message: item?.message ?? "",
-    type: item?.entityType ?? "",
-    entityType: item?.entityType ?? "",
-    entityId: item?.entityId ?? "",
-    actionUrl: item?.actionUrl ?? "",
-    unread: !item?.isRead,
-    createdAt: item?.createdAt ?? "",
-  };
-}
-
-export async function getMyNotificationsRequest({ page, pageSize, status, type, search, audience } = {}) {
-  const filter = {
-    search: search || null,
-    audienceType: audience || null,
-    code: type || null,
-    isRead: status === "READ" ? true : status === "UNREAD" ? false : null,
-    isArchived: status === "ARCHIVED" ? true : status ? false : null,
-  };
-
-  const data = await executeProtectedGraphqlRequest(NOTIFICATIONS_QUERY, {
-    filter,
-    pagination: {
-      page: page || 1,
-      pageSize: pageSize || 10,
-    },
+async function fetchAdminFinanceNotifications({ first = 50, status = null } = {}) {
+  const data = await executeProtectedGraphqlRequest(ADMIN_FINANCE_NOTIFICATIONS_QUERY, {
+    first,
+    status,
   });
 
-  const result = data?.notifications;
-  const items = Array.isArray(result?.items) ? result.items.map(normalizeNotification) : [];
-  const totalItems = Number(result?.totalCount ?? items.length) || 0;
+  return data?.adminFinanceNotifications || {
+    edges: [],
+    unreadCount: 0,
+    totalCount: 0,
+  };
+}
+
+export async function getMyNotificationsRequest({ page, pageSize, status } = {}) {
+  const safePage = Math.max(1, page || 1);
+  const safePageSize = Math.max(1, pageSize || 10);
+  const connection = await fetchAdminFinanceNotifications({
+    first: Math.max(safePage * safePageSize, 50),
+    status: status === "UNREAD" ? "UNREAD" : status === "READ" ? "READ" : null,
+  });
+  const allItems = Array.isArray(connection?.edges)
+    ? connection.edges.map((edge) => normalizeNotification(edge?.node)).filter(Boolean)
+    : [];
+  const totalItems = Number(connection?.totalCount ?? allItems.length) || 0;
+  const startIndex = (safePage - 1) * safePageSize;
+  const items = allItems.slice(startIndex, startIndex + safePageSize);
 
   return {
     items,
     pageInfo: {
-      page: page || 1,
-      pageSize: pageSize || 10,
+      page: safePage,
+      pageSize: safePageSize,
       totalItems,
-      totalPages: Math.max(1, Math.ceil(totalItems / (pageSize || 10))),
-      unreadCount: Number(result?.unreadCount ?? 0) || 0,
+      totalPages: Math.max(1, Math.ceil(Math.max(totalItems, allItems.length) / safePageSize)),
+      unreadCount: Number(connection?.unreadCount ?? 0) || 0,
     },
   };
 }
 
 export async function getMyNotificationUnreadCountRequest() {
-  const data = await executeProtectedGraphqlRequest(NOTIFICATION_COUNTS_QUERY, {});
-  return Number(data?.notificationCounts?.unread ?? 0) || 0;
+  const connection = await fetchAdminFinanceNotifications({ first: 1 });
+  return Number(connection?.unreadCount ?? 0) || 0;
 }
 
 export async function getNotificationBellRequest() {
-  const data = await executeProtectedGraphqlRequest(NOTIFICATION_BELL_QUERY, {});
-  const bell = data?.notificationBell;
+  const connection = await fetchAdminFinanceNotifications({ first: 5 });
 
   return {
-    unreadCount: Number(bell?.unreadCount ?? 0) || 0,
-    items: Array.isArray(bell?.items) ? bell.items.map(normalizeBellNotification) : [],
+    unreadCount: Number(connection?.unreadCount ?? 0) || 0,
+    items: Array.isArray(connection?.edges)
+      ? connection.edges.map((edge) => normalizeNotification(edge?.node)).filter(Boolean)
+      : [],
   };
 }
 
 export async function getNotificationCountsRequest() {
-  const data = await executeProtectedGraphqlRequest(NOTIFICATION_COUNTS_QUERY, {});
+  const connection = await fetchAdminFinanceNotifications({ first: 50 });
   return {
-    total: Number(data?.notificationCounts?.total ?? 0) || 0,
-    unread: Number(data?.notificationCounts?.unread ?? 0) || 0,
-    archived: Number(data?.notificationCounts?.archived ?? 0) || 0,
-    highPriority: Number(data?.notificationCounts?.highPriority ?? 0) || 0,
+    total: Number(connection?.totalCount ?? 0) || 0,
+    unread: Number(connection?.unreadCount ?? 0) || 0,
+    archived: 0,
+    highPriority: Number(connection?.unreadCount ?? 0) || 0,
   };
 }
 
 export async function markNotificationReadRequest(id) {
-  const data = await executeProtectedGraphqlRequest(MARK_NOTIFICATION_READ_MUTATION, { id });
-  const notification = data?.markNotificationRead?.notification;
+  const data = await executeProtectedGraphqlRequest(MARK_FINANCE_NOTIFICATION_READ_MUTATION, {
+    id,
+  });
+  const result = data?.markFinanceNotificationRead;
+  const notification = result?.notification;
 
-  if (!notification?.id) {
-    throw new Error("Unable to mark notification as read.");
+  if (!result?.success || !notification?.id) {
+    throw new Error(result?.message || "Unable to mark notification as read.");
   }
 
   return {
@@ -228,48 +279,39 @@ export async function markNotificationReadRequest(id) {
     status: "READ",
     statusLabel: "Read",
     isRead: true,
-    readAt: notification.readAt ?? "",
-    readAtDisplay: notification.readAt ? formatDisplayDate(notification.readAt) : "Just now",
+    readAt: "",
+    readAtDisplay: "Opened in app",
   };
 }
 
 export async function markAllNotificationsReadRequest() {
-  const data = await executeProtectedGraphqlRequest(MARK_ALL_NOTIFICATIONS_READ_MUTATION, {});
-  const result = data?.markAllNotificationsRead;
+  const data = await executeProtectedGraphqlRequest(
+    MARK_ALL_FINANCE_NOTIFICATIONS_READ_MUTATION,
+    {
+      audience: ADMIN_FINANCE_AUDIENCE,
+    },
+  );
+  const result = data?.markAllFinanceNotificationsRead;
 
   if (!result?.success) {
-    throw new Error("Unable to mark notifications as read.");
+    throw new Error(result?.message || "Unable to mark notifications as read.");
   }
 
   return {
-    count: Number(result?.unreadCount ?? 0) || 0,
-    message: "Notifications marked as read.",
+    count: 0,
+    message: result?.message || "Notifications marked as read.",
   };
 }
 
-export async function archiveNotificationRequest(id) {
-  const data = await executeProtectedGraphqlRequest(ARCHIVE_NOTIFICATION_MUTATION, { id });
-  const result = data?.archiveNotification;
-
-  if (!result?.success) {
-    throw new Error(result?.message || "Unable to archive notification.");
-  }
-
-  return {
-    message: result?.message ?? "Notification archived successfully.",
-  };
+export async function archiveNotificationRequest() {
+  throw new Error("Finance notifications cannot be archived.");
 }
 
-export async function unarchiveNotificationRequest(id) {
-  const data = await executeProtectedGraphqlRequest(UNARCHIVE_NOTIFICATION_MUTATION, { id });
-  const result = data?.unarchiveNotification;
+export async function unarchiveNotificationRequest() {
+  throw new Error("Finance notifications cannot be unarchived.");
+}
 
-  if (!result?.id) {
-    throw new Error("Unable to unarchive notification.");
-  }
-
-  return {
-    id: result.id,
-    isArchived: Boolean(result.isArchived),
-  };
+export async function getFinanceNotificationDetailRequest(id) {
+  const data = await executeProtectedGraphqlRequest(FINANCE_NOTIFICATION_DETAIL_QUERY, { id });
+  return normalizeNotification(data?.financeNotification);
 }

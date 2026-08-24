@@ -79,6 +79,19 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
         email
         phone
         avatarUrl
+        totalOrders
+        totalSpent {
+          amount
+          currency
+          formatted
+        }
+        defaultAddress {
+          line1
+          line2
+          city
+          postalCode
+          country
+        }
       }
       vendor {
         id
@@ -86,7 +99,10 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
         email
         phone
         city
+        postalCode
         avatarUrl
+        rating
+        totalOrders
         address {
           city
           country
@@ -103,6 +119,13 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
         recipientName
         recipientPhone
         city
+        address {
+          line1
+          line2
+          city
+          postalCode
+          country
+        }
       }
       items {
         id

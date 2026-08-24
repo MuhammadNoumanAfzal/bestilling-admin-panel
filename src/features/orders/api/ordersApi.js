@@ -120,6 +120,8 @@ function normalizePaymentStatus(value) {
   switch (normalized) {
     case "PAID":
       return "Paid";
+    case "PAYMENT_REPORTED":
+      return "Reported";
     case "FAILED":
       return "Failed";
     case "REFUNDED":
@@ -146,6 +148,10 @@ function deriveAdminOrderPaymentStatus(order) {
 
   if (capturedAt) {
     return "Paid";
+  }
+
+  if (rawPaymentStatus === "PAYMENT_REPORTED") {
+    return "Reported";
   }
 
   if (rawPaymentStatus === "FAILED") {
@@ -533,12 +539,19 @@ function normalizeOrderDetail(order) {
       phone: fallbackValue(order?.customer?.phone),
       avatar: toInitials(customerName),
       avatarUrl: order?.customer?.avatarUrl || "",
-      totalOrders: null,
-      totalSpent: "",
+      totalOrders:
+        order?.customer?.totalOrders === 0 || order?.customer?.totalOrders
+          ? Number(order.customer.totalOrders)
+          : null,
+      totalSpent: order?.customer?.totalSpent
+        ? formatMoney(order.customer.totalSpent, order.customer.totalSpent.currency || currency)
+        : "",
       address:
-        buildAddressLabel(order?.delivery?.address) !== "Not provided"
-          ? buildAddressLabel(order?.delivery?.address)
-          : fallbackValue(order?.delivery?.city, "Not provided"),
+        buildAddressLabel(order?.customer?.defaultAddress) !== "Not provided"
+          ? buildAddressLabel(order?.customer?.defaultAddress)
+          : buildAddressLabel(order?.delivery?.address) !== "Not provided"
+            ? buildAddressLabel(order?.delivery?.address)
+            : fallbackValue(order?.delivery?.city, "Not provided"),
     },
     vendor: {
       id: order?.vendor?.id || "",
@@ -552,8 +565,17 @@ function normalizeOrderDetail(order) {
         order?.vendor?.city ||
         "Not available",
       address: buildAddressLabel(order?.vendor?.address),
-      totalOrders: null,
-      rating: null,
+      postalCode: fallbackValue(order?.vendor?.postalCode, ""),
+      totalOrders:
+        order?.vendor?.totalOrders === 0 || order?.vendor?.totalOrders
+          ? Number(order.vendor.totalOrders)
+          : null,
+      rating:
+        typeof order?.vendor?.rating === "number"
+          ? order.vendor.rating
+          : order?.vendor?.rating !== null && order?.vendor?.rating !== undefined && `${order.vendor.rating}`.trim() !== ""
+            ? Number(order.vendor.rating)
+            : null,
     },
     delivery: {
       type: order?.delivery?.type || "DELIVERY",
@@ -563,7 +585,7 @@ function normalizeOrderDetail(order) {
       recipientName: order?.delivery?.recipientName || customerName,
       recipientPhone: order?.delivery?.recipientPhone || order?.customer?.phone || "Not provided",
       city: order?.delivery?.city || order?.delivery?.address?.city || "",
-      address: buildAddressLabel(order?.vendor?.address),
+      address: buildAddressLabel(order?.delivery?.address),
       riderName: "Not assigned",
       riderPhone: "Not provided",
     },

@@ -63,6 +63,10 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
       cancellationReason
       eventDate
       eventTime
+      guestCount
+      source
+      specialInstructions
+      orderNotes
       amount {
         currency
         subtotal
@@ -126,27 +130,33 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
           postalCode
           country
         }
+        rider {
+          id
+          fullName
+          phone
+        }
       }
       items {
         id
-        menuItemId
         name
         quantity
         unitPrice
         totalPrice
         notes
-      }
-      timeline {
-        key
-        label
-        status
-        happenedAt
-        description
+        imageUrl
+        addons {
+          id
+          name
+          quantity
+          unitPrice
+          totalPrice
+        }
       }
       payment {
         method
         transactionId
         provider
+        providerReference
         capturedAt
         refundedAt
         invoiceUrl

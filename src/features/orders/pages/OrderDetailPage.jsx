@@ -556,6 +556,14 @@ export default function OrderDetailPage() {
             </div>
             <div>
               <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
+                Provider Reference
+              </span>
+              <span className="block text-[13px] font-semibold text-[#18120f]">
+                {order.payment.providerReference}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
                 Delivery Type
               </span>
               <span className="block text-[13px] font-semibold text-[#18120f]">
@@ -592,6 +600,22 @@ export default function OrderDetailPage() {
               </span>
               <span className="block text-[13px] font-semibold leading-6 text-[#18120f]">
                 {order.delivery.address}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
+                Rider
+              </span>
+              <span className="block text-[13px] font-semibold text-[#18120f]">
+                {order.delivery.riderName}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
+                Rider Phone
+              </span>
+              <span className="block text-[13px] font-semibold text-[#18120f]">
+                {order.delivery.riderPhone}
               </span>
             </div>
           </div>

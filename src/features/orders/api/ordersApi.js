@@ -496,6 +496,10 @@ function normalizeOrderDetail(order) {
   const itemCount = Array.isArray(order?.items)
     ? order.items.reduce((sum, item) => sum + Number(item?.quantity ?? 0), 0)
     : 0;
+  const guestCount =
+    order?.guestCount === 0 || order?.guestCount
+      ? Number(order.guestCount)
+      : itemCount;
 
   return {
     id: order.id,
@@ -516,9 +520,12 @@ function normalizeOrderDetail(order) {
     eventType: order.delivery?.type || "Not specified",
     eventDate: order.eventDate ? formatDateLabel(order.eventDate) : "Not scheduled",
     eventTime: order.eventTime || "Not specified",
-    guestCount: itemCount,
-    source: "Admin order flow",
-    specialInstructions: "No special instructions added.",
+    guestCount,
+    source: order?.source || "Not specified",
+    specialInstructions:
+      order?.specialInstructions ||
+      order?.orderNotes ||
+      "No special instructions added.",
     amount: {
       subtotal: formatMoney(order?.amount?.subtotal, currency),
       tax: formatMoney(order?.amount?.tax, currency),
@@ -586,19 +593,28 @@ function normalizeOrderDetail(order) {
       recipientPhone: order?.delivery?.recipientPhone || order?.customer?.phone || "Not provided",
       city: order?.delivery?.city || order?.delivery?.address?.city || "",
       address: buildAddressLabel(order?.delivery?.address),
-      riderName: "Not assigned",
-      riderPhone: "Not provided",
+      riderName: order?.delivery?.rider?.fullName || "Not assigned",
+      riderPhone: order?.delivery?.rider?.phone || "Not provided",
+      riderId: order?.delivery?.rider?.id || "",
     },
     items: Array.isArray(order?.items)
       ? order.items.map((item) => ({
           id: item?.id || "",
           name: item?.name || "Unnamed item",
-          imageUrl: "",
+          imageUrl: item?.imageUrl || "",
           quantity: Number(item?.quantity ?? 0),
           unitPrice: formatMoney(item?.unitPrice, currency),
           totalPrice: formatMoney(item?.totalPrice, currency),
           notes: item?.notes || "",
-          addons: [],
+          addons: Array.isArray(item?.addons)
+            ? item.addons.map((addon) => ({
+                id: addon?.id || "",
+                name: addon?.name || "Add-on",
+                quantity: Number(addon?.quantity ?? 0),
+                unitPrice: formatMoney(addon?.unitPrice, currency),
+                totalPrice: formatMoney(addon?.totalPrice, currency),
+              }))
+            : [],
         }))
       : [],
     timeline: buildProductionTimeline(order),
@@ -606,6 +622,7 @@ function normalizeOrderDetail(order) {
       method: order?.payment?.method || "Not specified",
       transactionId: order?.payment?.transactionId || "Not available",
       provider: order?.payment?.provider || "Not specified",
+      providerReference: order?.payment?.providerReference || "Not available",
       capturedAt: formatDateTimeLabel(order?.payment?.capturedAt),
       refundedAt: formatDateTimeLabel(order?.payment?.refundedAt),
       invoiceUrl: order?.payment?.invoiceUrl || "",

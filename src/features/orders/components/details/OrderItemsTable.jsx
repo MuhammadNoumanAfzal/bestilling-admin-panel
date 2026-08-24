@@ -48,7 +48,12 @@ export default function OrderItemsTable({ items }) {
                         {item.addons.length > 0 ? (
                           <p className="mt-0.5 text-[11px] text-[#8c8077]">
                             Add-ons:{" "}
-                            {item.addons.map((addon) => `${addon.name} (${addon.price})`).join(", ")}
+                            {item.addons
+                              .map(
+                                (addon) =>
+                                  `${addon.name} (${addon.quantity} x ${addon.unitPrice} = ${addon.totalPrice})`,
+                              )
+                              .join(", ")}
                           </p>
                         ) : null}
                       </div>

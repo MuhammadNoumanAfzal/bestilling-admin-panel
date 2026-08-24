@@ -178,6 +178,87 @@ function formatMoneyLabel(value, fallback = "NOK 0.00") {
   return `${currency} ${amount.toFixed(2)}`;
 }
 
+function parseMoneyAmount(value) {
+  if (!value) {
+    return Number.NaN;
+  }
+
+  if (typeof value === "object") {
+    const amount = Number(value.amount ?? Number.NaN);
+    return Number.isFinite(amount) ? amount : Number.NaN;
+  }
+
+  const numeric = Number(String(value).replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(numeric) ? numeric : Number.NaN;
+}
+
+function resolvePreferredMoneyLabel(primaryValue, fallbackValue, defaultValue = "NOK 0.00") {
+  const primaryAmount = parseMoneyAmount(primaryValue);
+  const fallbackAmount = parseMoneyAmount(fallbackValue);
+
+  if (Number.isFinite(fallbackAmount) && fallbackAmount > 0 && (!Number.isFinite(primaryAmount) || primaryAmount <= 0)) {
+    return typeof fallbackValue === "string" ? fallbackValue : formatMoneyLabel(fallbackValue, defaultValue);
+  }
+
+  if (primaryValue) {
+    return typeof primaryValue === "string" ? primaryValue : formatMoneyLabel(primaryValue, defaultValue);
+  }
+
+  if (fallbackValue) {
+    return typeof fallbackValue === "string" ? fallbackValue : formatMoneyLabel(fallbackValue, defaultValue);
+  }
+
+  return defaultValue;
+}
+
+function formatComputedMoney(amount, currency = "NOK") {
+  return `${currency} ${amount.toFixed(2)}`;
+}
+
+function resolveVendorReceivesLabel({
+  primaryVendorAmount,
+  fallbackVendorPayable,
+  orderAmount,
+  commissionAmount,
+}) {
+  const vendorAmount = parseMoneyAmount(primaryVendorAmount);
+  const fallbackVendorAmount = parseMoneyAmount(fallbackVendorPayable);
+  const grossAmount = parseMoneyAmount(orderAmount);
+  const commission = parseMoneyAmount(commissionAmount);
+
+  if (Number.isFinite(fallbackVendorAmount) && fallbackVendorAmount > 0) {
+    return typeof fallbackVendorPayable === "string"
+      ? fallbackVendorPayable
+      : formatMoneyLabel(fallbackVendorPayable, "NOK 0.00");
+  }
+
+  const preferredVendorLabel = resolvePreferredMoneyLabel(
+    primaryVendorAmount,
+    fallbackVendorPayable,
+    "",
+  );
+  const normalizedVendorAmount = vendorAmount;
+
+  if (
+    Number.isFinite(grossAmount) &&
+    Number.isFinite(commission) &&
+    commission > 0 &&
+    Number.isFinite(normalizedVendorAmount) &&
+    Math.abs(normalizedVendorAmount - grossAmount) < 0.01
+  ) {
+    const currency =
+      fallbackVendorPayable?.currency ||
+      primaryVendorAmount?.currency ||
+      orderAmount?.currency ||
+      commissionAmount?.currency ||
+      "NOK";
+
+    return formatComputedMoney(Math.max(grossAmount - commission, 0), currency);
+  }
+
+  return preferredVendorLabel || "NOK 0.00";
+}
+
 function normalizeSummary(summary) {
   return [
     {
@@ -472,22 +553,31 @@ function normalizePaymentDetail(payment, contractInvoice = null) {
       contactName: payment.vendor?.contactName || "",
     },
     financials: {
-      orderAmount:
-        payment.financials?.orderAmount?.formatted ||
-        contractInvoice?.settlement?.grossOrderAmount ||
-        "NOK 0.00",
-      platformCommission:
-        payment.financials?.platformCommission?.formatted ||
-        contractInvoice?.settlement?.commission?.totalCommission ||
-        "NOK 0.00",
+      orderAmount: resolvePreferredMoneyLabel(
+        payment.financials?.orderAmount,
+        contractInvoice?.settlement?.grossOrderAmount,
+      ) || "NOK 0.00",
+      platformCommission: resolvePreferredMoneyLabel(
+        payment.financials?.platformCommission,
+        contractInvoice?.settlement?.commission?.totalCommission,
+      ) || "NOK 0.00",
       vendorAmount:
-        payment.financials?.vendorAmount?.formatted ||
-        contractInvoice?.settlement?.vendorPayable ||
-        "NOK 0.00",
+        resolveVendorReceivesLabel({
+          primaryVendorAmount: payment.financials?.vendorAmount,
+          fallbackVendorPayable: contractInvoice?.settlement?.vendorPayable,
+          orderAmount:
+            payment.financials?.orderAmount ||
+            contractInvoice?.settlement?.grossOrderAmount,
+          commissionAmount:
+            payment.financials?.platformCommission ||
+            contractInvoice?.settlement?.commission?.totalCommission,
+        }) || "NOK 0.00",
       refundAmount: payment.financials?.refundAmount?.formatted || "NOK 0.00",
       taxAmount:
-        payment.financials?.taxAmount?.formatted ||
-        contractInvoice?.settlement?.taxAmount ||
+        resolvePreferredMoneyLabel(
+          payment.financials?.taxAmount,
+          contractInvoice?.settlement?.taxAmount,
+        ) ||
         "NOK 0.00",
     },
     statuses: {

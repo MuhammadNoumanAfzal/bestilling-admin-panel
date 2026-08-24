@@ -65,3 +65,31 @@ export const MARK_ALL_FINANCE_NOTIFICATIONS_READ_MUTATION = `
     }
   }
 `;
+
+export const ORDER_NOTIFICATION_FIELDS = `
+  id
+  type
+  audience
+  title
+  message
+  isRead
+  createdAt
+  orderId
+  actorType
+  actorId
+  actorName
+`;
+
+export const ADMIN_ORDER_NOTIFICATIONS_QUERY = `
+  query AdminOrderNotifications($first: Int, $status: String) {
+    adminOrderNotifications(first: $first, status: $status) {
+      edges {
+        node {
+          ${ORDER_NOTIFICATION_FIELDS}
+        }
+      }
+      unreadCount
+      totalCount
+    }
+  }
+`;

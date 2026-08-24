@@ -1,5 +1,6 @@
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
 import {
+  ADMIN_ORDER_NOTIFICATIONS_QUERY,
   ADMIN_FINANCE_NOTIFICATIONS_QUERY,
   FINANCE_NOTIFICATION_DETAIL_QUERY,
   MARK_ALL_FINANCE_NOTIFICATIONS_READ_MUTATION,
@@ -57,6 +58,14 @@ function formatStatusLabel(item) {
 
 function deriveChannels(item) {
   return ["in-app"];
+}
+
+function sortNotificationsByCreatedAtDesc(items) {
+  return [...items].sort((left, right) => {
+    const leftTime = new Date(left?.createdAt || 0).getTime();
+    const rightTime = new Date(right?.createdAt || 0).getTime();
+    return rightTime - leftTime;
+  });
 }
 
 function formatRelativeTime(value) {
@@ -198,6 +207,66 @@ function normalizeNotification(item) {
   };
 }
 
+function normalizeOrderNotification(item) {
+  const statusLabel = formatStatusLabel(item);
+  const typeLabel = formatTypeLabel(item?.type || "NEW_ORDER_PLACED");
+
+  return {
+    id: item?.id ?? "",
+    title: item?.title ?? "Order notification",
+    subject: item?.title ?? "Order notification",
+    message: String(item?.message || "").trim() || "A new order requires admin attention.",
+    code: item?.type ?? "NEW_ORDER_PLACED",
+    type: item?.type ?? "NEW_ORDER_PLACED",
+    typeLabel,
+    status: statusLabel.toUpperCase(),
+    statusLabel,
+    createdAt: item?.createdAt ?? "",
+    createdAtDisplay: formatDisplayDate(item?.createdAt),
+    readAt: "",
+    readAtDisplay: item?.isRead ? "Opened in app" : "",
+    scheduledAt: formatDisplayDate(item?.createdAt),
+    audience: formatAudienceLabel(item?.audience || "ADMIN"),
+    channels: deriveChannels(item),
+    sendEmail: false,
+    sendPush: false,
+    sendInApp: true,
+    sentBy: item?.actorName || "Order system",
+    actionUrl: item?.orderId ? `/orders/${encodeURIComponent(item.orderId)}` : "/orders",
+    entityId: item?.orderId || "",
+    entityType: "ORDER",
+    entityCode: item?.orderId || "",
+    priority: item?.isRead ? "normal" : "high",
+    audienceType: item?.audience ?? "ADMIN",
+    audienceId: "",
+    actorType: item?.actorType ?? "",
+    actorId: item?.actorId ?? "",
+    isRead: Boolean(item?.isRead),
+    isArchived: false,
+    metadata: {
+      orderId: item?.orderId || "",
+      actorType: item?.actorType || "",
+      actorId: item?.actorId || "",
+      actorName: item?.actorName || "",
+      audience: item?.audience || "ADMIN",
+      type: item?.type || "NEW_ORDER_PLACED",
+    },
+    rawMetadata: "",
+    timeLabel: formatRelativeTime(item?.createdAt),
+    note: "",
+    rejectionReason: "",
+    receiptUrl: "",
+    transferReference: "",
+    paymentDate: "",
+    invoiceId: "",
+    orderId: item?.orderId || "",
+    payoutId: "",
+    paymentStatus: "",
+    settlementStatus: "",
+    payoutStatus: "",
+  };
+}
+
 async function fetchAdminFinanceNotifications({ first = 50, status = null } = {}) {
   const data = await executeProtectedGraphqlRequest(ADMIN_FINANCE_NOTIFICATIONS_QUERY, {
     first,
@@ -211,16 +280,56 @@ async function fetchAdminFinanceNotifications({ first = 50, status = null } = {}
   };
 }
 
+async function fetchAdminOrderNotifications({ first = 50, status = null } = {}) {
+  const data = await executeProtectedGraphqlRequest(ADMIN_ORDER_NOTIFICATIONS_QUERY, {
+    first,
+    status,
+  });
+
+  return data?.adminOrderNotifications || {
+    edges: [],
+    unreadCount: 0,
+    totalCount: 0,
+  };
+}
+
+async function fetchCombinedAdminNotifications({ first = 50, status = null } = {}) {
+  const [financeConnection, orderConnection] = await Promise.all([
+    fetchAdminFinanceNotifications({ first, status }),
+    fetchAdminOrderNotifications({ first, status }).catch(() => ({
+      edges: [],
+      unreadCount: 0,
+      totalCount: 0,
+    })),
+  ]);
+
+  const financeItems = Array.isArray(financeConnection?.edges)
+    ? financeConnection.edges.map((edge) => normalizeNotification(edge?.node)).filter(Boolean)
+    : [];
+  const orderItems = Array.isArray(orderConnection?.edges)
+    ? orderConnection.edges.map((edge) => normalizeOrderNotification(edge?.node)).filter(Boolean)
+    : [];
+  const items = sortNotificationsByCreatedAtDesc([...financeItems, ...orderItems]);
+
+  return {
+    items,
+    unreadCount:
+      (Number(financeConnection?.unreadCount ?? 0) || 0) +
+      (Number(orderConnection?.unreadCount ?? 0) || 0),
+    totalCount:
+      (Number(financeConnection?.totalCount ?? 0) || financeItems.length) +
+      (Number(orderConnection?.totalCount ?? 0) || orderItems.length),
+  };
+}
+
 export async function getMyNotificationsRequest({ page, pageSize, status } = {}) {
   const safePage = Math.max(1, page || 1);
   const safePageSize = Math.max(1, pageSize || 10);
-  const connection = await fetchAdminFinanceNotifications({
+  const connection = await fetchCombinedAdminNotifications({
     first: Math.max(safePage * safePageSize, 50),
     status: status === "UNREAD" ? "UNREAD" : status === "READ" ? "READ" : null,
   });
-  const allItems = Array.isArray(connection?.edges)
-    ? connection.edges.map((edge) => normalizeNotification(edge?.node)).filter(Boolean)
-    : [];
+  const allItems = Array.isArray(connection?.items) ? connection.items : [];
   const totalItems = Number(connection?.totalCount ?? allItems.length) || 0;
   const startIndex = (safePage - 1) * safePageSize;
   const items = allItems.slice(startIndex, startIndex + safePageSize);
@@ -238,23 +347,21 @@ export async function getMyNotificationsRequest({ page, pageSize, status } = {})
 }
 
 export async function getMyNotificationUnreadCountRequest() {
-  const connection = await fetchAdminFinanceNotifications({ first: 1 });
+  const connection = await fetchCombinedAdminNotifications({ first: 5 });
   return Number(connection?.unreadCount ?? 0) || 0;
 }
 
 export async function getNotificationBellRequest() {
-  const connection = await fetchAdminFinanceNotifications({ first: 5 });
+  const connection = await fetchCombinedAdminNotifications({ first: 5 });
 
   return {
     unreadCount: Number(connection?.unreadCount ?? 0) || 0,
-    items: Array.isArray(connection?.edges)
-      ? connection.edges.map((edge) => normalizeNotification(edge?.node)).filter(Boolean)
-      : [],
+    items: Array.isArray(connection?.items) ? connection.items.slice(0, 5) : [],
   };
 }
 
 export async function getNotificationCountsRequest() {
-  const connection = await fetchAdminFinanceNotifications({ first: 50 });
+  const connection = await fetchCombinedAdminNotifications({ first: 50 });
   return {
     total: Number(connection?.totalCount ?? 0) || 0,
     unread: Number(connection?.unreadCount ?? 0) || 0,

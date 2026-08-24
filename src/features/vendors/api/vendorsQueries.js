@@ -238,6 +238,33 @@ export const ADMIN_VENDOR_DETAIL_QUERY = `
   }
 `;
 
+export const ADMIN_VENDOR_PAYOUT_PROFILE_QUERY = `
+  query AdminVendorPayoutProfile($vendorId: ID!) {
+    adminVendorPayoutProfile(vendorId: $vendorId) {
+      id
+      vendorId
+      payoutMethod
+      bankDetailsVerified
+      verificationStatus
+      verificationNote
+      accountHolderName
+      bankName
+      accountNumber
+      iban
+      swiftBic
+      routingNumber
+      branchName
+      branchCode
+      billingAddress
+      city
+      postalCode
+      country
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
 export const VENDOR_MENU_DETAIL_QUERY = `
   query VendorMenuDetailForAdmin($id: ID!) {
     vendorMenu(id: $id) {

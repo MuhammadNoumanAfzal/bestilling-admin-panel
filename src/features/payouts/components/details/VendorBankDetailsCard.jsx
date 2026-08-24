@@ -1,4 +1,4 @@
-import { Building2, CheckCircle2, Landmark, MessageSquareWarning, ShieldCheck } from "lucide-react";
+import { Building2, Landmark, ShieldCheck } from "lucide-react";
 
 function DetailCell({ label, value }) {
   return (
@@ -28,35 +28,7 @@ function StatusPill({ verified, verificationStatus }) {
   );
 }
 
-function ActionButton({
-  disabled = false,
-  icon: Icon,
-  label,
-  onClick,
-  secondary = false,
-}) {
-  return (
-    <button
-      className={
-        secondary
-          ? "inline-flex h-11 items-center justify-center gap-2 rounded-[14px] border border-[#ead5c8] bg-white px-4 text-[13px] font-semibold text-[#5a4b43] transition hover:-translate-y-[1px] hover:border-[#d8b8a4] hover:bg-[#fffaf6] disabled:cursor-not-allowed disabled:opacity-60"
-          : "inline-flex h-11 items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(135deg,#d97342_0%,#c65b2d_100%)] px-4 text-[13px] font-semibold text-white shadow-[0_14px_28px_rgba(198,91,45,0.22)] transition hover:-translate-y-[1px] hover:shadow-[0_18px_34px_rgba(198,91,45,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
-      }
-      disabled={disabled}
-      onClick={onClick}
-      type="button"
-    >
-      <Icon size={15} />
-      <span>{label}</span>
-    </button>
-  );
-}
-
 export default function VendorBankDetailsCard({
-  isApproving = false,
-  isRequestingChanges = false,
-  onApprove,
-  onRequestChanges,
   payout,
 }) {
   const payoutProfile = payout?.vendor?.payoutProfile;
@@ -105,30 +77,6 @@ export default function VendorBankDetailsCard({
               <ShieldCheck size={14} className={payoutProfile.bankDetailsVerified ? "text-[#208348]" : "text-[#cf6e38]"} />
               {payoutProfile.bankDetailsVerified ? "Bank details confirmed" : "Needs admin review"}
             </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3 rounded-[18px] border border-[#ece1d7] bg-[#fcfaf8] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[14px] font-semibold text-[#211915]">Admin verification</p>
-            <p className="mt-1 text-[13px] leading-6 text-[#665850]">
-              Approve valid payout details, or request corrections before payout release.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <ActionButton
-              disabled={isApproving || isRequestingChanges || payoutProfile.bankDetailsVerified}
-              icon={CheckCircle2}
-              label={payoutProfile.bankDetailsVerified ? "Already verified" : isApproving ? "Approving..." : "Approve bank details"}
-              onClick={onApprove}
-            />
-            <ActionButton
-              disabled={isApproving || isRequestingChanges}
-              icon={MessageSquareWarning}
-              label={isRequestingChanges ? "Sending..." : "Request changes"}
-              onClick={onRequestChanges}
-              secondary
-            />
           </div>
         </div>
 

@@ -3,6 +3,7 @@ import {
   ADMIN_VENDOR_APPLICATION_REVIEW_QUERY,
   ADMIN_VENDOR_DETAIL_QUERY,
   ADMIN_VENDOR_DOCUMENTS_QUERY,
+  ADMIN_VENDOR_PAYOUT_PROFILE_QUERY,
   ADMIN_VENDORS_QUERY,
   APPROVE_VENDOR_APPLICATION_MUTATION,
   DEACTIVATE_VENDOR_MUTATION,
@@ -151,6 +152,21 @@ function normalizeDocumentStatus(value) {
       return "Rejected";
     default:
       return "Pending";
+  }
+}
+
+function normalizePayoutProfileStatus(value, isVerified = false) {
+  const normalized = `${value ?? ""}`.trim().toUpperCase();
+
+  switch (normalized) {
+    case "VERIFIED":
+      return "Verified";
+    case "CHANGES_REQUESTED":
+      return "Changes requested";
+    case "PENDING":
+      return "Pending review";
+    default:
+      return isVerified ? "Verified" : "Pending review";
   }
 }
 
@@ -309,6 +325,7 @@ function normalizeVendorDetail(vendor) {
       contact: Array.isArray(vendor.overview?.contact) ? vendor.overview.contact : [],
       logistics: Array.isArray(vendor.overview?.logistics) ? vendor.overview.logistics : [],
     },
+    payoutProfile: null,
     menuTabs: Array.isArray(vendor.menuTabs)
       ? vendor.menuTabs.map((tab) => ({
           label: tab?.count != null ? `${tab.label} (${tab.count})` : tab?.label || "",
@@ -387,6 +404,41 @@ function normalizeVendorDetail(vendor) {
       deleteTitle: vendor.dangerZone?.deleteTitle || "Delete vendor",
       deleteDescription: vendor.dangerZone?.deleteDescription || "",
     },
+  };
+}
+
+function normalizeVendorPayoutProfile(profile, fallbackVendorId = "") {
+  if (!profile?.id) {
+    return null;
+  }
+
+  return {
+    id: profile.id || "",
+    vendorId: profile.vendorId || fallbackVendorId || "",
+    payoutMethod: profile.payoutMethod || "BANK_TRANSFER",
+    bankDetailsVerified: Boolean(profile.bankDetailsVerified),
+    verificationStatus: normalizePayoutProfileStatus(
+      profile.verificationStatus,
+      profile.bankDetailsVerified,
+    ),
+    verificationStatusRaw: profile.verificationStatus || "",
+    verificationNote: profile.verificationNote || "",
+    accountHolderName: profile.accountHolderName || "",
+    bankName: profile.bankName || "",
+    accountNumber: profile.accountNumber || "",
+    iban: profile.iban || "",
+    swiftBic: profile.swiftBic || "",
+    routingNumber: profile.routingNumber || "",
+    branchName: profile.branchName || "",
+    branchCode: profile.branchCode || "",
+    billingAddress: profile.billingAddress || "",
+    city: profile.city || "",
+    postalCode: profile.postalCode || "",
+    country: profile.country || "",
+    createdAt: profile.createdAt || "",
+    updatedAt: profile.updatedAt || "",
+    createdAtLabel: formatDateTimeLabel(profile.createdAt),
+    updatedAtLabel: formatDateTimeLabel(profile.updatedAt),
   };
 }
 
@@ -603,7 +655,20 @@ export async function getAdminVendorDetailRequest(id) {
     throw new Error("Unable to load this vendor.");
   }
 
-  return vendor;
+  const payoutProfileData = await executeProtectedGraphqlRequest(
+    ADMIN_VENDOR_PAYOUT_PROFILE_QUERY,
+    { vendorId: vendor.id },
+  ).catch(() => null);
+
+  const payoutProfile = normalizeVendorPayoutProfile(
+    payoutProfileData?.adminVendorPayoutProfile,
+    vendor.id,
+  );
+
+  return {
+    ...vendor,
+    payoutProfile,
+  };
 }
 
 export async function getAdminVendorMenuDetailRequest(id) {

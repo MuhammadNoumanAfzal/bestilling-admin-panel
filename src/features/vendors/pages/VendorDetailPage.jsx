@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
+  approveVendorPayoutProfileRequest,
+  requestVendorPayoutProfileChangesRequest,
+} from "../../payouts/api/paymentsApi.js";
+import {
   deactivateVendorRequest,
   deleteVendorRequest,
   getAdminVendorDetailRequest,
@@ -15,6 +19,7 @@ import VendorDetailHeader from "../components/details/VendorDetailHeader.jsx";
 import VendorDetailStatCard from "../components/details/VendorDetailStatCard.jsx";
 import VendorFinancialPerformanceSection from "../components/details/VendorFinancialPerformanceSection.jsx";
 import VendorPublishedMenusSection from "../components/details/VendorPublishedMenusSection.jsx";
+import VendorPayoutProfileSection from "../components/details/VendorPayoutProfileSection.jsx";
 import VendorRecentOrdersSection from "../components/details/VendorRecentOrdersSection.jsx";
 import VendorReviewsSection from "../components/details/VendorReviewsSection.jsx";
 import VendorVerificationSection from "../components/details/VendorVerificationSection.jsx";
@@ -41,6 +46,8 @@ export default function VendorDetailPage() {
   const [loadError, setLoadError] = useState("");
   const [isSuspending, setIsSuspending] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isApprovingPayoutProfile, setIsApprovingPayoutProfile] = useState(false);
+  const [isRequestingPayoutProfileChanges, setIsRequestingPayoutProfileChanges] = useState(false);
   const sectionRefs = useRef({});
 
   const sections = [
@@ -48,6 +55,7 @@ export default function VendorDetailPage() {
     { id: "menus", label: "Menus" },
     { id: "orders", label: "Orders" },
     { id: "earnings", label: "Earnings" },
+    { id: "payout-profile", label: "Bank Profile" },
     { id: "reviews", label: "Reviews" },
     { id: "documents", label: "Documents" },
     { id: "admin-actions", label: "Admin Actions" },
@@ -277,6 +285,141 @@ export default function VendorDetailPage() {
     }
   }
 
+  async function handleApprovePayoutProfile() {
+    if (!vendor?.id || vendor?.payoutProfile?.bankDetailsVerified) {
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Approve bank details",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <div>
+            <label for="vendor-payout-approve-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Verification note</label>
+            <textarea id="vendor-payout-approve-note" class="swal2-textarea" placeholder="Bank details verified and matched with company records." style="margin:0;width:100%;min-height:110px;"></textarea>
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Approve bank details",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#cf6e38",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => ({
+        verificationNote:
+          document.getElementById("vendor-payout-approve-note")?.value?.trim() || "",
+      }),
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    try {
+      setIsApprovingPayoutProfile(true);
+      const response = await approveVendorPayoutProfileRequest(vendor.id, result.value || {});
+      setVendor((current) =>
+        current
+          ? {
+              ...current,
+              payoutProfile: {
+                ...current.payoutProfile,
+                ...response.payoutProfile,
+              },
+            }
+          : current,
+      );
+
+      await Swal.fire({
+        icon: "success",
+        title: "Bank details approved",
+        text: response.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to approve bank details",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsApprovingPayoutProfile(false);
+    }
+  }
+
+  async function handleRequestPayoutProfileChanges() {
+    if (!vendor?.id) {
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Request bank detail changes",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <div>
+            <label for="vendor-payout-change-reason" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Reason</label>
+            <textarea id="vendor-payout-change-reason" class="swal2-textarea" placeholder="Explain what the vendor needs to correct before payout can be verified." style="margin:0;width:100%;min-height:120px;"></textarea>
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Request changes",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#cf6e38",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => {
+        const reason =
+          document.getElementById("vendor-payout-change-reason")?.value?.trim() || "";
+
+        if (!reason) {
+          Swal.showValidationMessage("Please add a reason for the requested changes.");
+          return null;
+        }
+
+        return { reason };
+      },
+    });
+
+    if (!result.isConfirmed || !result.value?.reason) {
+      return;
+    }
+
+    try {
+      setIsRequestingPayoutProfileChanges(true);
+      const response = await requestVendorPayoutProfileChangesRequest(vendor.id, result.value);
+      setVendor((current) =>
+        current
+          ? {
+              ...current,
+              payoutProfile: {
+                ...current.payoutProfile,
+                ...response.payoutProfile,
+              },
+            }
+          : current,
+      );
+
+      await Swal.fire({
+        icon: "success",
+        title: "Changes requested",
+        text: response.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to request changes",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsRequestingPayoutProfileChanges(false);
+    }
+  }
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -324,6 +467,16 @@ export default function VendorDetailPage() {
 
       <div ref={(node) => { sectionRefs.current.earnings = node; }} className="scroll-mt-6">
         <VendorFinancialPerformanceSection financial={vendor.financial} />
+      </div>
+
+      <div ref={(node) => { sectionRefs.current["payout-profile"] = node; }} className="scroll-mt-6">
+        <VendorPayoutProfileSection
+          isApproving={isApprovingPayoutProfile}
+          isRequestingChanges={isRequestingPayoutProfileChanges}
+          onApprove={handleApprovePayoutProfile}
+          onRequestChanges={handleRequestPayoutProfileChanges}
+          vendor={vendor}
+        />
       </div>
 
       <div ref={(node) => { sectionRefs.current.reviews = node; }} className="scroll-mt-6">

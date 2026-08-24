@@ -181,6 +181,33 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
   }
 `;
 
+export const ADMIN_ORDER_STATUS_FALLBACK_QUERY = `
+  query AdminOrderStatusFallback($search: String!, $page: Int!, $pageSize: Int!) {
+    adminPayments(
+      filters: {
+        search: $search
+      }
+      pagination: {
+        page: $page
+        pageSize: $pageSize
+      }
+      sort: {
+        field: CREATED_AT
+        order: DESC
+      }
+    ) {
+      items {
+        id
+        invoiceNumber
+        order {
+          id
+          status
+        }
+      }
+    }
+  }
+`;
+
 export const ADMIN_UPDATE_ORDER_STATUS_MUTATION = `
   mutation AdminUpdateOrderStatus($input: AdminUpdateOrderStatusInput!) {
     adminUpdateOrderStatus(input: $input) {

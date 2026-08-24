@@ -10,6 +10,7 @@ import {
   ADMIN_ORDER_DETAIL_QUERY,
   ADMIN_ORDER_INVOICE_QUERY,
   ADMIN_ORDER_PAYMENT_RECONCILIATION_QUERY,
+  ADMIN_ORDER_STATUS_FALLBACK_QUERY,
   ADMIN_ORDERS_QUERY,
   ADMIN_REFUND_ORDER_MUTATION,
   ADMIN_UPDATE_DELIVERY_STATUS_MUTATION,
@@ -162,9 +163,31 @@ function deriveAdminOrderPaymentStatus(order) {
 }
 
 function resolveLifecycleRawStatus(order) {
-  return `${order?.fulfillmentStatus ?? order?.delivery?.status ?? order?.status ?? ""}`
-    .trim()
-    .toUpperCase();
+  const status = `${order?.status ?? ""}`.trim().toUpperCase();
+  const fulfillmentStatus = `${order?.fulfillmentStatus ?? ""}`.trim().toUpperCase();
+  const deliveryStatus = `${order?.delivery?.status ?? ""}`.trim().toUpperCase();
+
+  if (order?.canceledAt || status === "CANCELLED" || status === "CANCELED") {
+    return "CANCELLED";
+  }
+
+  if (order?.deliveredAt || order?.delivery?.deliveredAt || status === "DELIVERED") {
+    return "DELIVERED";
+  }
+
+  if (order?.outForDeliveryAt || status === "OUT_FOR_DELIVERY" || deliveryStatus === "OUT_FOR_DELIVERY") {
+    return "OUT_FOR_DELIVERY";
+  }
+
+  if (order?.preparedAt || status === "PREPARING" || status === "READY" || status === "FOOD_READY") {
+    return "PREPARING";
+  }
+
+  if (order?.acceptedAt || status === "ACCEPTED" || status === "CONFIRMED") {
+    return "ACCEPTED";
+  }
+
+  return `${fulfillmentStatus || deliveryStatus || status}`.trim().toUpperCase();
 }
 
 function normalizeTimelineStatus(value) {
@@ -672,6 +695,19 @@ function normalizeOrderDetail(order) {
   };
 }
 
+function findFallbackPaymentOrderStatus(fallbackItems, orderId) {
+  if (!Array.isArray(fallbackItems) || !orderId) {
+    return "";
+  }
+
+  const normalizedOrderId = `${orderId}`.trim();
+  const directMatch = fallbackItems.find(
+    (item) => `${item?.order?.id ?? ""}`.trim() === normalizedOrderId,
+  );
+
+  return directMatch?.order?.status || "";
+}
+
 export async function getAdminOrdersRequest(filters) {
   const data = await executeProtectedGraphqlRequest(ADMIN_ORDERS_QUERY, {
     input: buildOrdersInput(filters),
@@ -717,10 +753,42 @@ export async function getAdminOrderCategoryBreakdownRequest(filters) {
 }
 
 export async function getAdminOrderDetailRequest(orderId) {
-  const data = await executeProtectedGraphqlRequest(ADMIN_ORDER_DETAIL_QUERY, {
-    id: orderId,
-  });
-  const detail = normalizeOrderDetail(data?.adminOrder);
+  const [data, fallbackData] = await Promise.all([
+    executeProtectedGraphqlRequest(ADMIN_ORDER_DETAIL_QUERY, {
+      id: orderId,
+    }),
+    executeProtectedGraphqlRequest(ADMIN_ORDER_STATUS_FALLBACK_QUERY, {
+      search: `${orderId}`,
+      page: 1,
+      pageSize: 20,
+    }).catch(() => null),
+  ]);
+
+  const rawOrder = data?.adminOrder || null;
+  const fallbackStatus = findFallbackPaymentOrderStatus(
+    fallbackData?.adminPayments?.items,
+    rawOrder?.id || orderId,
+  );
+
+  const enrichedOrder =
+    rawOrder && fallbackStatus
+      ? {
+          ...rawOrder,
+          status: rawOrder.status || fallbackStatus,
+          fulfillmentStatus:
+            rawOrder.fulfillmentStatus ||
+            rawOrder.delivery?.status ||
+            fallbackStatus,
+          delivery: rawOrder.delivery
+            ? {
+                ...rawOrder.delivery,
+                status: rawOrder.delivery.status || fallbackStatus,
+              }
+            : rawOrder.delivery,
+        }
+      : rawOrder;
+
+  const detail = normalizeOrderDetail(enrichedOrder);
 
   if (!detail) {
     throw new Error("Unable to load order details.");

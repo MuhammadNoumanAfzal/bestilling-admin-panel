@@ -259,7 +259,18 @@ function resolveVendorReceivesLabel({
   return preferredVendorLabel || "NOK 0.00";
 }
 
-function normalizeSummary(summary) {
+function normalizeSummary(summary, rows = []) {
+  const summaryCommissionAmount = parseMoneyAmount(summary?.platformCommission);
+  const computedCommissionAmount = Array.isArray(rows)
+    ? rows.reduce((sum, row) => sum + (parseMoneyAmount(row?.platformCommission) || 0), 0)
+    : 0;
+  const shouldUseComputedCommission =
+    computedCommissionAmount > 0 &&
+    (!Number.isFinite(summaryCommissionAmount) || summaryCommissionAmount <= 0);
+  const summaryCommissionCurrency =
+    summary?.platformCommission?.currency ||
+    "NOK";
+
   return [
     {
       id: "total",
@@ -270,7 +281,9 @@ function normalizeSummary(summary) {
     {
       id: "commission",
       label: "Platform Commission",
-      value: summary?.platformCommission?.formatted || "NOK 0.00",
+      value: shouldUseComputedCommission
+        ? formatComputedMoney(computedCommissionAmount, summaryCommissionCurrency)
+        : summary?.platformCommission?.formatted || "NOK 0.00",
       accent: "warm",
     },
     {
@@ -778,7 +791,12 @@ export async function getAdminPaymentsRequest(filters) {
       hasNextPage: Boolean(response.pageInfo?.hasNextPage),
       hasPreviousPage: Boolean(response.pageInfo?.hasPreviousPage),
     },
-    summaryCards: normalizeSummary(response.summary),
+    summaryCards: normalizeSummary(
+      response.summary,
+      responseItems.map((item) =>
+        normalizePaymentRow(item, contractInvoicesById.get(item?.id) || null),
+      ),
+    ),
     filterOptions: {
       vendors: Array.isArray(response.filterOptions?.vendors) ? response.filterOptions.vendors : [],
       statuses: [],

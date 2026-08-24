@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
+import { ArrowLeft, Download, RefreshCw } from "lucide-react";
 import {
   approveInvoicePaymentRequest,
   getAdminPaymentDetailRequest,
@@ -16,6 +17,15 @@ import PaymentDetailsOverviewCard from "../components/details/PaymentDetailsOver
 import PaymentFinanceContractCard from "../components/details/PaymentFinanceContractCard.jsx";
 import PaymentLifecycleCard from "../components/details/PaymentLifecycleCard.jsx";
 import PaymentStatusCards from "../components/details/PaymentStatusCards.jsx";
+
+function HeaderBadge({ label, value }) {
+  return (
+    <div className="rounded-[18px] border border-[#efd9cb] bg-white/85 px-4 py-3 shadow-[0_10px_24px_rgba(52,30,16,0.05)]">
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a88b7b]">{label}</p>
+      <p className="mt-2 text-[15px] font-semibold text-[#1e1713]">{value}</p>
+    </div>
+  );
+}
 
 function LoadingState() {
   return (
@@ -430,14 +440,70 @@ export default function PaymentDetailsPage() {
         </div>
       ) : null}
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="relative overflow-hidden rounded-[30px] border border-[#e6d7cb] bg-[linear-gradient(135deg,#fffdfb_0%,#fff6ef_52%,#fff1e5_100%)] px-5 py-5 shadow-[0_20px_44px_rgba(51,30,17,0.08)] sm:px-6 sm:py-6">
+        <div className="absolute -right-10 top-0 h-32 w-32 rounded-full bg-[#ffd8c2]/60 blur-3xl" aria-hidden="true" />
+        <div className="absolute bottom-0 left-0 h-28 w-28 rounded-full bg-[#fff0d4]/60 blur-3xl" aria-hidden="true" />
+
+        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
+            <button
+              className="inline-flex items-center gap-2 rounded-full border border-[#edd8ca] bg-white/85 px-4 py-2 text-[13px] font-semibold text-[#c86332] shadow-[0_8px_20px_rgba(51,30,17,0.05)] transition hover:-translate-y-[1px] hover:border-[#d7b39c] hover:text-[#b9582a]"
+              onClick={() => window.history.back()}
+              type="button"
+            >
+              <ArrowLeft size={15} />
+              <span>Back to payouts</span>
+            </button>
+
+            <div className="mt-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#b07a5b]">
+                Payment Operations
+              </p>
+              <h1 className="mt-2 text-[32px] font-bold tracking-[-0.05em] text-[#191310] sm:text-[40px]">
+                {paymentDetail.invoiceNumber}
+              </h1>
+              <p className="mt-3 max-w-3xl text-[15px] leading-7 text-[#665a53]">
+                Review customer payment proof, vendor payout readiness, settlement details, and finance activity from one place.
+              </p>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <HeaderBadge label="Customer" value={paymentDetail.customer.fullName} />
+              <HeaderBadge label="Vendor" value={paymentDetail.vendor.name} />
+              <HeaderBadge label="Order Status" value={paymentDetail.order.status} />
+              <HeaderBadge label="Last Updated" value={paymentDetail.updatedAtLabel} />
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:w-[320px] xl:grid-cols-1">
+            <button
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-[16px] bg-[linear-gradient(135deg,#d97342_0%,#c65b2d_100%)] px-4 text-[14px] font-semibold text-white shadow-[0_16px_34px_rgba(198,91,45,0.24)] transition hover:-translate-y-[1px] hover:shadow-[0_20px_40px_rgba(198,91,45,0.3)]"
+              onClick={() => refreshPaymentDetail()}
+              type="button"
+            >
+              <RefreshCw size={16} />
+              <span>Refresh details</span>
+            </button>
+            <button
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-[16px] border border-[#e4d5ca] bg-white px-4 text-[14px] font-semibold text-[#2f251f] shadow-[0_10px_24px_rgba(51,30,17,0.05)] transition hover:-translate-y-[1px] hover:border-[#d3b6a3] hover:bg-[#fffaf6]"
+              onClick={() => window.print()}
+              type="button"
+            >
+              <Download size={16} />
+              <span>Save / Print</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <PaymentDetailsOverviewCard label="Total Order Amount" value={paymentDetail.financials.orderAmount} />
         <PaymentDetailsOverviewCard label="Platform Commission" value={paymentDetail.financials.platformCommission} />
         <PaymentDetailsOverviewCard label="Vendor Receives" value={paymentDetail.financials.vendorAmount} />
         <PaymentDetailsOverviewCard label="Customer Payment" value={paymentDetail.statuses.customerPaymentStatus} />
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.08fr)_360px]">
         <div className="space-y-4">
           <PaymentDetailsInfoCard payout={paymentDetail} />
           <PaymentLifecycleCard payout={paymentDetail} />
@@ -459,7 +525,9 @@ export default function PaymentDetailsPage() {
           />
         </div>
 
-        <PaymentActivityCard activity={paymentDetail.activityItems} />
+        <div className="xl:sticky xl:top-6">
+          <PaymentActivityCard activity={paymentDetail.activityItems} />
+        </div>
       </div>
     </div>
   );

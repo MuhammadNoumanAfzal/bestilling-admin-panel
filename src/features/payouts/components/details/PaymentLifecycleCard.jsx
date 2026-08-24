@@ -21,12 +21,12 @@ function FlowNode({ icon: Icon, label, tone = "default", value }) {
 
 export default function PaymentLifecycleCard({ payout }) {
   return (
-    <section className="rounded-[18px] border border-[#ddd4cd] bg-white px-5 py-5 shadow-[0_12px_30px_rgba(55,31,13,0.05)]">
+    <section className="rounded-[24px] border border-[#ddd4cd] bg-white px-5 py-5 shadow-[0_14px_34px_rgba(55,31,13,0.06)]">
       <div className="text-center">
         <p className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#6f645d]">Transaction Lifecycle Flow</p>
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center">
+      <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center">
         <FlowNode icon={CircleDollarSign} label="Customer Pays" tone="blue" value={payout.financials.orderAmount} />
         <div className="hidden justify-center lg:flex">
           <ArrowRight className="text-[#c9b7ab]" size={20} />

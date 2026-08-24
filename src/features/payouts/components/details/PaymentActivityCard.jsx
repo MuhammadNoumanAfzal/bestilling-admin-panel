@@ -22,20 +22,26 @@ function TimelineItem({ helperText, isComplete, timestamp, title }) {
 
 export default function PaymentActivityCard({ activity }) {
   return (
-    <section className="rounded-[18px] border border-[#ddd4cd] bg-white shadow-[0_12px_30px_rgba(55,31,13,0.05)]">
+    <section className="rounded-[24px] border border-[#ddd4cd] bg-white shadow-[0_14px_34px_rgba(55,31,13,0.06)]">
       <div className="border-b border-[#eee5de] bg-[linear-gradient(180deg,#fff7f1_0%,#fffdfa_100%)] px-5 py-4">
         <h2 className="text-[18px] font-bold text-[#221914]">Activity Timeline</h2>
       </div>
 
       <div className="px-5 py-5">
-        {activity.map((item, index) => (
-          <div key={item.id} className="relative">
-            {index !== activity.length - 1 ? (
-              <span className="absolute left-[7px] top-5 h-[calc(100%-4px)] w-px bg-[#f0e2d9]" />
-            ) : null}
-            <TimelineItem {...item} />
+        {activity.length ? (
+          activity.map((item, index) => (
+            <div key={item.id} className="relative">
+              {index !== activity.length - 1 ? (
+                <span className="absolute left-[7px] top-5 h-[calc(100%-4px)] w-px bg-[#f0e2d9]" />
+              ) : null}
+              <TimelineItem {...item} />
+            </div>
+          ))
+        ) : (
+          <div className="rounded-[18px] border border-dashed border-[#e5d8cf] bg-[#fffdfa] px-4 py-8 text-center text-[14px] text-[#7e7067]">
+            No finance activity yet.
           </div>
-        ))}
+        )}
       </div>
     </section>
   );

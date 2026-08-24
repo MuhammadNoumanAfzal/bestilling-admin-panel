@@ -40,7 +40,7 @@ function PaymentActionCard({
         </span>
       </div>
 
-      <div className="mt-4 rounded-[14px] bg-[#f5f6f8] px-4 py-3.5">
+      <div className="mt-4 rounded-[16px] border border-[#ece5df] bg-[linear-gradient(180deg,#f7f7f8_0%,#fefdfc_100%)] px-4 py-3.5">
         <div className="space-y-2.5">
           {details.map((detail) => (
             <DetailRow key={detail.label} label={detail.label} value={detail.value} />
@@ -53,7 +53,7 @@ function PaymentActionCard({
       </div>
 
       <button
-        className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[12px] border border-[#ef9f7f] bg-white px-3 text-[13px] font-semibold text-[#cf6e38] transition hover:bg-[#fff5ef] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-[#ef9f7f] bg-white px-3 text-[13px] font-semibold text-[#cf6e38] transition hover:-translate-y-[1px] hover:bg-[#fff5ef] disabled:cursor-not-allowed disabled:opacity-60"
         disabled={disabled}
         onClick={onClick}
         type="button"

@@ -437,6 +437,26 @@ function normalizeContractInvoice(contract) {
 
   const vendorName = contract?.vendor?.businessName || contract?.vendor?.name || "Unknown vendor";
   const settlementHistory = normalizeUnifiedSettlementHistory(contract?.settlementHistory);
+  const vendorPayoutProfile = contract?.vendor?.payoutProfile
+    ? {
+        id: contract.vendor.payoutProfile.id || "",
+        payoutMethod: contract.vendor.payoutProfile.payoutMethod || "BANK_TRANSFER",
+        bankDetailsVerified: Boolean(contract.vendor.payoutProfile.bankDetailsVerified),
+        verificationStatus: contract.vendor.payoutProfile.verificationStatus || "Pending review",
+        accountHolderName: contract.vendor.payoutProfile.accountHolderName || "",
+        bankName: contract.vendor.payoutProfile.bankName || "",
+        accountNumber: contract.vendor.payoutProfile.accountNumber || "",
+        iban: contract.vendor.payoutProfile.iban || "",
+        swiftBic: contract.vendor.payoutProfile.swiftBic || "",
+        routingNumber: contract.vendor.payoutProfile.routingNumber || "",
+        branchName: contract.vendor.payoutProfile.branchName || "",
+        branchCode: contract.vendor.payoutProfile.branchCode || "",
+        billingAddress: contract.vendor.payoutProfile.billingAddress || "",
+        city: contract.vendor.payoutProfile.city || "",
+        postalCode: contract.vendor.payoutProfile.postalCode || "",
+        country: contract.vendor.payoutProfile.country || "",
+      }
+    : null;
 
   return {
     id: contract.id || "",
@@ -500,6 +520,7 @@ function normalizeContractInvoice(contract) {
       },
     },
     vendorName,
+    vendorPayoutProfile,
   };
 }
 
@@ -632,6 +653,7 @@ function normalizePaymentDetail(payment, contractInvoice = null) {
       avatar: toInitials(vendorName),
       avatarUrl: rawPayment.vendor?.avatarUrl || "",
       contactName: rawPayment.vendor?.contactName || "",
+      payoutProfile: contractInvoice?.vendorPayoutProfile || null,
     },
     financials: {
       orderAmount: resolvePreferredMoneyLabel(
@@ -917,23 +939,23 @@ export async function approveInvoicePaymentRequest(id, { note = "" } = {}) {
   const data = await executeProtectedGraphqlRequest(
     APPROVE_INVOICE_PAYMENT_MUTATION,
     {
-      invoiceId: id,
       input: {
-        note: note || null,
+        invoiceId: id,
+        verificationNote: note || null,
       },
     },
   );
   const result = data?.approveInvoicePayment;
 
-  if (!result?.success || !result?.invoice?.id) {
+  if (!result?.success || !result?.payment?.id) {
     throw new Error(getErrorMessage(result, "Unable to approve invoice payment."));
   }
 
   return {
     message: result.message || "Invoice payment approved.",
-    status: normalizePaymentStatus(result.invoice.paymentStatus),
-    paidAt: result.invoice.paidAt || "",
-    verifiedAt: result.invoice.verifiedAt || "",
+    status: normalizePaymentStatus(result.payment.paymentStatus),
+    paidAt: result.payment.fundedAt || "",
+    verifiedAt: result.payment.paymentApprovedAt || "",
   };
 }
 
@@ -941,22 +963,22 @@ export async function rejectInvoicePaymentRequest(id, { reason = "" } = {}) {
   const data = await executeProtectedGraphqlRequest(
     REJECT_INVOICE_PAYMENT_MUTATION,
     {
-      invoiceId: id,
       input: {
-        reason: reason || null,
+        invoiceId: id,
+        rejectionReason: reason || null,
       },
     },
   );
   const result = data?.rejectInvoicePayment;
 
-  if (!result?.success || !result?.invoice?.id) {
+  if (!result?.success || !result?.payment?.id) {
     throw new Error(getErrorMessage(result, "Unable to reject invoice payment."));
   }
 
   return {
     message: result.message || "Invoice payment rejected.",
-    status: normalizePaymentStatus(result.invoice.paymentStatus),
-    rejectedAt: result.invoice.rejectedAt || "",
+    status: normalizePaymentStatus(result.payment.paymentStatus),
+    rejectedAt: result.payment.paymentRejectedAt || "",
   };
 }
 
@@ -985,8 +1007,8 @@ export async function releaseVendorPayoutRequest(id, { note = "" } = {}) {
   const data = await executeProtectedGraphqlRequest(
     RELEASE_VENDOR_PAYOUT_MUTATION,
     {
-      payoutId: id,
       input: {
+        payoutId: id,
         note: note || null,
       },
     },
@@ -1008,10 +1030,9 @@ export async function markVendorPayoutPaidRequest(id, { reference = "", note = "
   const data = await executeProtectedGraphqlRequest(
     MARK_VENDOR_PAYOUT_PAID_MUTATION,
     {
-      payoutId: id,
       input: {
-        payoutReference: reference || null,
         transferReference: reference || null,
+        payoutId: id,
         note: note || null,
       },
     },
@@ -1026,6 +1047,6 @@ export async function markVendorPayoutPaidRequest(id, { reference = "", note = "
     message: result.message || "Vendor payout marked as paid.",
     status: normalizePaymentStatus(result.payout.status),
     payoutCompletedAt: result.payout.paidAt || "",
-    payoutReference: result.payout.payoutReference || "",
+    payoutReference: result.payout.transferReference || "",
   };
 }

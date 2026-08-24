@@ -17,6 +17,7 @@ import PaymentDetailsOverviewCard from "../components/details/PaymentDetailsOver
 import PaymentFinanceContractCard from "../components/details/PaymentFinanceContractCard.jsx";
 import PaymentLifecycleCard from "../components/details/PaymentLifecycleCard.jsx";
 import PaymentStatusCards from "../components/details/PaymentStatusCards.jsx";
+import VendorBankDetailsCard from "../components/details/VendorBankDetailsCard.jsx";
 
 function HeaderBadge({ label, value }) {
   return (
@@ -97,7 +98,7 @@ export default function PaymentDetailsPage() {
   }
 
   async function handleMarkReceived() {
-    if (!paymentDetail?.id || paymentDetail.statuses.customerPaymentStatus === "Paid") {
+    if (!paymentDetail?.invoiceId || paymentDetail.statuses.customerPaymentStatus === "Paid") {
       return;
     }
 
@@ -132,7 +133,7 @@ export default function PaymentDetailsPage() {
 
     try {
       setIsUpdatingCustomerPayment(true);
-      const result = await markCustomerPaymentReceivedRequest(paymentDetail.id, prompt.value || {});
+      const result = await markCustomerPaymentReceivedRequest(paymentDetail.invoiceId, prompt.value || {});
       await refreshPaymentDetail();
       await Swal.fire({
         icon: "success",
@@ -153,7 +154,7 @@ export default function PaymentDetailsPage() {
   }
 
   async function handleMarkPaid() {
-    if (!paymentDetail?.id || paymentDetail.statuses.vendorPayoutStatus === "Paid") {
+    if (!paymentDetail?.payoutId || paymentDetail.statuses.vendorPayoutStatus === "Paid") {
       return;
     }
 
@@ -188,7 +189,7 @@ export default function PaymentDetailsPage() {
 
     try {
       setIsUpdatingVendorPayout(true);
-      const result = await markVendorPayoutPaidRequest(paymentDetail.id, prompt.value || {});
+      const result = await markVendorPayoutPaidRequest(paymentDetail.payoutId, prompt.value || {});
       await refreshPaymentDetail();
       await Swal.fire({
         icon: "success",
@@ -209,7 +210,7 @@ export default function PaymentDetailsPage() {
   }
 
   async function handleApproveInvoice() {
-    if (!paymentDetail?.id || paymentDetail.statuses.customerPaymentStatus !== "Reported") {
+    if (!paymentDetail?.invoiceId || paymentDetail.statuses.customerPaymentStatus !== "Reported") {
       return;
     }
 
@@ -239,7 +240,7 @@ export default function PaymentDetailsPage() {
 
     try {
       setIsApprovingInvoice(true);
-      const result = await approveInvoicePaymentRequest(paymentDetail.id, prompt.value || {});
+      const result = await approveInvoicePaymentRequest(paymentDetail.invoiceId, prompt.value || {});
       await refreshPaymentDetail();
       await Swal.fire({
         icon: "success",
@@ -260,7 +261,7 @@ export default function PaymentDetailsPage() {
   }
 
   async function handleRejectInvoice() {
-    if (!paymentDetail?.id || paymentDetail.statuses.customerPaymentStatus !== "Reported") {
+    if (!paymentDetail?.invoiceId || paymentDetail.statuses.customerPaymentStatus !== "Reported") {
       return;
     }
 
@@ -290,7 +291,7 @@ export default function PaymentDetailsPage() {
 
     try {
       setIsRejectingInvoice(true);
-      const result = await rejectInvoicePaymentRequest(paymentDetail.id, prompt.value || {});
+      const result = await rejectInvoicePaymentRequest(paymentDetail.invoiceId, prompt.value || {});
       await refreshPaymentDetail();
       await Swal.fire({
         icon: "success",
@@ -311,7 +312,7 @@ export default function PaymentDetailsPage() {
   }
 
   async function handleMarkInvoicePaid() {
-    if (!paymentDetail?.id || paymentDetail.statuses.customerPaymentStatus === "Paid") {
+    if (!paymentDetail?.invoiceId || paymentDetail.statuses.customerPaymentStatus === "Paid") {
       return;
     }
 
@@ -341,7 +342,7 @@ export default function PaymentDetailsPage() {
 
     try {
       setIsMarkingInvoicePaid(true);
-      const result = await markInvoicePaidRequest(paymentDetail.id, prompt.value || {});
+      const result = await markInvoicePaidRequest(paymentDetail.invoiceId, prompt.value || {});
       await refreshPaymentDetail();
       await Swal.fire({
         icon: "success",
@@ -363,7 +364,7 @@ export default function PaymentDetailsPage() {
 
   async function handleReleasePayout() {
     if (
-      !paymentDetail?.id ||
+      !paymentDetail?.payoutId ||
       paymentDetail.statuses.vendorPayoutStatus === "Released" ||
       paymentDetail.statuses.vendorPayoutStatus === "Paid"
     ) {
@@ -396,7 +397,7 @@ export default function PaymentDetailsPage() {
 
     try {
       setIsReleasingVendorPayout(true);
-      const result = await releaseVendorPayoutRequest(paymentDetail.id, prompt.value || {});
+      const result = await releaseVendorPayoutRequest(paymentDetail.payoutId, prompt.value || {});
       await refreshPaymentDetail();
       await Swal.fire({
         icon: "success",
@@ -507,6 +508,7 @@ export default function PaymentDetailsPage() {
         <div className="space-y-4">
           <PaymentDetailsInfoCard payout={paymentDetail} />
           <PaymentLifecycleCard payout={paymentDetail} />
+          <VendorBankDetailsCard payout={paymentDetail} />
           <PaymentFinanceContractCard payout={paymentDetail} />
           <PaymentStatusCards
             isApprovingInvoice={isApprovingInvoice}

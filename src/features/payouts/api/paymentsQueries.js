@@ -267,6 +267,24 @@ export const ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY = `
         phone
         city
         address
+        payoutProfile {
+          id
+          payoutMethod
+          bankDetailsVerified
+          verificationStatus
+          accountHolderName
+          bankName
+          accountNumber
+          iban
+          swiftBic
+          routingNumber
+          branchName
+          branchCode
+          billingAddress
+          city
+          postalCode
+          country
+        }
       }
       grossAmount {
         amount
@@ -402,31 +420,35 @@ export const MARK_CUSTOMER_PAYMENT_RECEIVED_MUTATION = `
 `;
 
 export const APPROVE_INVOICE_PAYMENT_MUTATION = `
-  mutation ApproveInvoicePayment($invoiceId: ID!, $input: ApproveInvoicePaymentInput) {
-    approveInvoicePayment(invoiceId: $invoiceId, input: $input) {
+  mutation ApproveInvoicePayment($input: ApproveInvoicePaymentInput!) {
+    approveInvoicePayment(input: $input) {
       success
       message
-      invoice {
+      payment {
         id
         invoiceNumber
         paymentStatus
-        paidAt
-        verifiedAt
+        settlementStatus
+        fundedAt
+        paymentApprovedAt
+        note
       }
     }
   }
 `;
 
 export const REJECT_INVOICE_PAYMENT_MUTATION = `
-  mutation RejectInvoicePayment($invoiceId: ID!, $input: RejectInvoicePaymentInput!) {
-    rejectInvoicePayment(invoiceId: $invoiceId, input: $input) {
+  mutation RejectInvoicePayment($input: RejectInvoicePaymentInput!) {
+    rejectInvoicePayment(input: $input) {
       success
       message
-      invoice {
+      payment {
         id
         invoiceNumber
         paymentStatus
-        rejectedAt
+        paymentRejectedAt
+        rejectionReason
+        note
       }
     }
   }
@@ -449,23 +471,25 @@ export const MARK_INVOICE_PAID_MUTATION = `
 `;
 
 export const RELEASE_VENDOR_PAYOUT_MUTATION = `
-  mutation ReleaseVendorPayout($payoutId: ID!, $input: ReleaseVendorPayoutInput) {
-    releaseVendorPayout(payoutId: $payoutId, input: $input) {
+  mutation ReleaseVendorPayout($input: ReleaseVendorPayoutInput!) {
+    releaseVendorPayout(input: $input) {
       success
       message
       payout {
         id
         payoutNumber
         status
+        readyForPayoutAt
         releasedAt
+        note
       }
     }
   }
 `;
 
 export const MARK_VENDOR_PAYOUT_PAID_MUTATION = `
-  mutation MarkVendorPayoutPaid($payoutId: ID!, $input: MarkVendorPayoutPaidInput!) {
-    markVendorPayoutPaid(payoutId: $payoutId, input: $input) {
+  mutation MarkVendorPayoutPaid($input: MarkVendorPayoutPaidInput!) {
+    markVendorPayoutPaid(input: $input) {
       success
       message
       payout {
@@ -473,7 +497,9 @@ export const MARK_VENDOR_PAYOUT_PAID_MUTATION = `
         payoutNumber
         status
         paidAt
-        payoutReference
+        settledAt
+        transferReference
+        note
       }
     }
   }

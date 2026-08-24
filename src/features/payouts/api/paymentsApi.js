@@ -463,9 +463,31 @@ function normalizeContractInvoice(invoice) {
   };
 }
 
-function normalizePaymentRow(item) {
+function normalizePaymentRow(item, contractInvoice = null) {
   const customerName = item?.customer?.fullName || "Unknown customer";
   const vendorName = item?.vendor?.name || "Unknown vendor";
+  const orderAmountSource = item?.orderAmount || contractInvoice?.settlement?.grossOrderAmount;
+  const commissionSource =
+    item?.platformCommission || contractInvoice?.settlement?.commission?.totalCommission;
+  const vendorAmountSource = item?.vendorAmount || contractInvoice?.settlement?.vendorPayable;
+  const orderAmountNumber = parseMoneyAmount(orderAmountSource);
+  const commissionAmountNumber = parseMoneyAmount(commissionSource);
+  const vendorAmountNumber = parseMoneyAmount(item?.vendorAmount);
+  const computedVendorNet =
+    Number.isFinite(orderAmountNumber) &&
+    Number.isFinite(commissionAmountNumber) &&
+    commissionAmountNumber > 0
+      ? Math.max(orderAmountNumber - commissionAmountNumber, 0)
+      : Number.NaN;
+  const shouldUseComputedVendorNet =
+    Number.isFinite(computedVendorNet) &&
+    (!Number.isFinite(vendorAmountNumber) ||
+      Math.abs(vendorAmountNumber - orderAmountNumber) < 0.01);
+  const rowCurrency =
+    item?.vendorAmount?.currency ||
+    item?.orderAmount?.currency ||
+    item?.platformCommission?.currency ||
+    "NOK";
   const resolvedOrderStatus =
     item?.order?.delivery?.deliveredAt ||
     item?.order?.deliveredAt
@@ -490,9 +512,18 @@ function normalizePaymentRow(item) {
     vendorCity: item?.vendor?.city || "",
     vendorAvatar: toInitials(vendorName),
     vendorAvatarUrl: item?.vendor?.avatarUrl || "",
-    orderAmount: item?.orderAmount?.formatted || "NOK 0.00",
-    platformCommission: item?.platformCommission?.formatted || "NOK 0.00",
-    vendorAmount: item?.vendorAmount?.formatted || "NOK 0.00",
+    orderAmount:
+      resolvePreferredMoneyLabel(item?.orderAmount, contractInvoice?.settlement?.grossOrderAmount) ||
+      "NOK 0.00",
+    platformCommission:
+      resolvePreferredMoneyLabel(
+        item?.platformCommission,
+        contractInvoice?.settlement?.commission?.totalCommission,
+      ) || "NOK 0.00",
+    vendorAmount: shouldUseComputedVendorNet
+      ? formatComputedMoney(computedVendorNet, rowCurrency)
+      : resolvePreferredMoneyLabel(item?.vendorAmount, contractInvoice?.settlement?.vendorPayable) ||
+        "NOK 0.00",
     customerPaymentStatus: deriveCustomerPaymentStatus(item),
     vendorPayoutStatus: deriveVendorPayoutStatus(item),
     createdAt: item?.createdAt || "",
@@ -708,8 +739,37 @@ export async function getAdminPaymentsRequest(filters) {
     throw new Error("Unable to load payments.");
   }
 
+  const contractInvoicesById = new Map();
+  const responseItems = Array.isArray(response.items) ? response.items : [];
+
+  await Promise.all(
+    responseItems.map(async (item) => {
+      const invoiceId = item?.id;
+
+      if (!invoiceId) {
+        return;
+      }
+
+      try {
+        const contractData = await executeProtectedGraphqlRequest(
+          ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY,
+          { invoiceId },
+        );
+        const contractInvoice = normalizeContractInvoice(contractData?.invoice);
+
+        if (contractInvoice) {
+          contractInvoicesById.set(invoiceId, contractInvoice);
+        }
+      } catch {
+        // Keep the list resilient even when a per-row finance contract fails.
+      }
+    }),
+  );
+
   return {
-    rows: Array.isArray(response.items) ? response.items.map(normalizePaymentRow) : [],
+    rows: responseItems.map((item) =>
+      normalizePaymentRow(item, contractInvoicesById.get(item?.id) || null),
+    ),
     pageInfo: {
       page: Number(response.pageInfo?.page ?? filters?.page ?? 1),
       pageSize: Number(response.pageInfo?.pageSize ?? filters?.pageSize ?? 10),

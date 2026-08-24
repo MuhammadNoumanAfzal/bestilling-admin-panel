@@ -29,6 +29,32 @@ function formatHistoryActor(item) {
   return actorName || actorType || "System";
 }
 
+function parsePaymentHistoryNote(note) {
+  const rawNote = String(note || "").trim();
+
+  if (!rawNote) {
+    return {
+      summary: "",
+      reference: "",
+      note: "",
+    };
+  }
+
+  const referenceMatch = rawNote.match(/reference:\s*(.*?)(?=(?:\s+note:)|$)/i);
+  const noteMatch = rawNote.match(/note:\s*(.*)$/i);
+  const summary = rawNote
+    .replace(/reference:\s*.*?(?=(?:\s+note:)|$)/i, "")
+    .replace(/note:\s*.*$/i, "")
+    .trim()
+    .replace(/\s{2,}/g, " ");
+
+  return {
+    summary,
+    reference: referenceMatch?.[1]?.trim() || "",
+    note: noteMatch?.[1]?.trim() || "",
+  };
+}
+
 function HistoryList({ items }) {
   if (!Array.isArray(items) || items.length === 0) {
     return (
@@ -40,42 +66,75 @@ function HistoryList({ items }) {
 
   return (
     <div className="space-y-3">
-      {items.map((item) => (
-        <article
-          key={item.id}
-          className="overflow-hidden rounded-[20px] border border-[#eee1d7] bg-[linear-gradient(180deg,#ffffff_0%,#fffaf6_100%)] shadow-[0_10px_24px_rgba(51,31,17,0.05)]"
-        >
-          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center rounded-full border border-[#f2d3c1] bg-[linear-gradient(135deg,#fff4ec_0%,#ffe9dc_100%)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#bf6737]">
-                    {formatHistoryAction(item.action)}
-                  </span>
-                  {(item.fromStatus || item.toStatus) ? (
-                    <span className="inline-flex items-center rounded-full bg-[#f6f1ec] px-3 py-1 text-[11px] font-semibold text-[#74675f]">
-                      {(item.fromStatus || "Unknown")} to {(item.toStatus || "Unknown")}
+      {items.map((item) => {
+        const parsedHistoryNote = parsePaymentHistoryNote(item.note);
+
+        return (
+          <article
+            key={item.id}
+            className="overflow-hidden rounded-[20px] border border-[#eee1d7] bg-[linear-gradient(180deg,#ffffff_0%,#fffaf6_100%)] shadow-[0_10px_24px_rgba(51,31,17,0.05)]"
+          >
+            <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center rounded-full border border-[#f2d3c1] bg-[linear-gradient(135deg,#fff4ec_0%,#ffe9dc_100%)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#bf6737]">
+                      {formatHistoryAction(item.action)}
                     </span>
+                    {(item.fromStatus || item.toStatus) ? (
+                      <span className="inline-flex items-center rounded-full bg-[#f6f1ec] px-3 py-1 text-[11px] font-semibold text-[#74675f]">
+                        {(item.fromStatus || "Unknown")} to {(item.toStatus || "Unknown")}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-3 text-[14px] font-semibold text-[#2a201a]">
+                    {formatHistoryActor(item)}
+                  </p>
+                </div>
+
+                <div className="rounded-full bg-[#fbf5ef] px-3 py-1.5 text-[11px] font-semibold text-[#8f8177]">
+                  {item.createdAtLabel}
+                </div>
+              </div>
+
+              {item.note ? (
+                <div className="rounded-[16px] border border-[#f1e4da] bg-white/85 px-4 py-3">
+                  {parsedHistoryNote.summary ? (
+                    <p className="text-[13px] font-medium leading-6 text-[#4d433d]">
+                      {parsedHistoryNote.summary}
+                    </p>
+                  ) : null}
+
+                  {(parsedHistoryNote.reference || parsedHistoryNote.note) ? (
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      {parsedHistoryNote.reference ? (
+                        <div className="rounded-[14px] border border-[#efe3d8] bg-[#fff9f4] px-3 py-2.5">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a78772]">
+                            Transfer Reference
+                          </p>
+                          <p className="mt-1 break-words text-[13px] font-semibold text-[#201815]">
+                            {parsedHistoryNote.reference}
+                          </p>
+                        </div>
+                      ) : null}
+                      {parsedHistoryNote.note ? (
+                        <div className="rounded-[14px] border border-[#efe3d8] bg-[#fff9f4] px-3 py-2.5">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a78772]">
+                            Verification Note
+                          </p>
+                          <p className="mt-1 break-words text-[13px] font-semibold leading-6 text-[#201815]">
+                            {parsedHistoryNote.note}
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
                   ) : null}
                 </div>
-                <p className="mt-3 text-[14px] font-semibold text-[#2a201a]">
-                  {formatHistoryActor(item)}
-                </p>
-              </div>
-
-              <div className="rounded-full bg-[#fbf5ef] px-3 py-1.5 text-[11px] font-semibold text-[#8f8177]">
-                {item.createdAtLabel}
-              </div>
+              ) : null}
             </div>
-
-            {item.note ? (
-              <div className="rounded-[16px] border border-[#f1e4da] bg-white/85 px-4 py-3">
-                <p className="text-[13px] leading-6 text-[#4d433d]">{item.note}</p>
-              </div>
-            ) : null}
-          </div>
-        </article>
-      ))}
+          </article>
+        );
+      })}
     </div>
   );
 }
@@ -155,12 +214,33 @@ export default function PaymentFinanceContractCard({ payout }) {
                 <InfoRow label="Payment Date" value={invoice.paymentReport.paymentDate} />
                 <InfoRow label="Reported At" value={invoice.paymentReport.reportedAtLabel} />
                 <InfoRow label="Transfer Reference" value={invoice.paymentReport.transferReference} />
-                <InfoRow label="Receipt URL" value={invoice.paymentReport.receiptUrl} />
+                <InfoRow
+                  label="Receipt File"
+                  value={
+                    invoice.paymentReport.receiptUrl && invoice.paymentReport.receiptUrl !== "Not available" ? (
+                      <a
+                        className="inline-flex items-center rounded-full border border-[#edc7b2] bg-[#fff4ec] px-3 py-1.5 text-[13px] font-semibold text-[#c45f2f] transition hover:border-[#d7a98d] hover:text-[#ab5228]"
+                        href={invoice.paymentReport.receiptUrl}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        Open uploaded receipt
+                      </a>
+                    ) : (
+                      "Not available"
+                    )
+                  }
+                />
               </div>
               {invoice.paymentReport.note ? (
-                <p className="mt-3 text-[13px] leading-6 text-[#5b4f48]">
-                  {invoice.paymentReport.note}
-                </p>
+                <div className="mt-3 rounded-[14px] border border-[#efe3d8] bg-white/85 px-4 py-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a78772]">
+                    Customer Note
+                  </p>
+                  <p className="mt-1 text-[13px] leading-6 text-[#5b4f48]">
+                    {invoice.paymentReport.note}
+                  </p>
+                </div>
               ) : null}
               <ReceiptPreview url={invoice.paymentReport.receiptUrl} />
             </div>

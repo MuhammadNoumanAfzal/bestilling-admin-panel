@@ -466,6 +466,13 @@ function normalizeOrderRow(item) {
   const customerName = item?.customer?.fullName || "Unknown customer";
   const vendorName = item?.vendor?.businessName || "Unknown vendor";
   const currency = item?.amount?.currency || "NOK";
+  const eventLabel =
+    `${item?.eventName ?? item?.eventType ?? item?.delivery?.type ?? ""}`.trim() ||
+    "Not specified";
+  const guestCount =
+    item?.guestCount === 0 || item?.guestCount
+      ? Number(item.guestCount)
+      : 0;
 
   return {
     id: item?.id || "",
@@ -480,8 +487,8 @@ function normalizeOrderRow(item) {
     vendorCity: item?.vendor?.city || item?.delivery?.city || "",
     vendorAvatar: toInitials(vendorName),
     vendorAvatarUrl: item?.vendor?.avatarUrl || "",
-    eventType: item?.eventType || "Not specified",
-    guestCount: 0,
+    eventType: eventLabel,
+    guestCount,
     placedAt: item?.placedAt || "",
     dateTime: formatDateTimeLabel(item?.placedAt),
     amount: formatMoney(item?.amount?.total, currency),

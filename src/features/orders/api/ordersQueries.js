@@ -6,6 +6,8 @@ export const ADMIN_ORDERS_QUERY = `
         orderNumber
         status
         paymentStatus
+        eventType
+        guestCount
         placedAt
         amount {
           currency

@@ -409,70 +409,97 @@ function normalizeContractHistory(items) {
     : [];
 }
 
-function normalizeContractInvoice(invoice) {
-  if (!invoice?.id) {
+function normalizeUnifiedSettlementHistory(items) {
+  return Array.isArray(items)
+    ? items.map((item) => ({
+        id: item?.id || `${item?.type || "history"}-${item?.createdAt || ""}`,
+        action: item?.title || item?.type || "Activity",
+        actorType: item?.actorType || "",
+        actorId: item?.actorId || "",
+        actorName: item?.actorName || "",
+        fromStatus: "",
+        toStatus: "",
+        note: item?.note || "",
+        createdAt: item?.createdAt || "",
+        createdAtLabel: formatDateTimeLabel(item?.createdAt),
+        description: item?.description || "",
+        transferReference: item?.transferReference || "",
+        receiptUrl: item?.receiptUrl || "",
+        paymentDate: item?.paymentDate || "",
+      }))
+    : [];
+}
+
+function normalizeContractInvoice(contract) {
+  if (!contract?.id) {
     return null;
   }
 
-  const settlement = invoice?.settlement || null;
-  const commissionRecord = settlement?.commissionRecord || null;
+  const vendorName = contract?.vendor?.businessName || contract?.vendor?.name || "Unknown vendor";
+  const settlementHistory = normalizeUnifiedSettlementHistory(contract?.settlementHistory);
 
   return {
-    paymentStatus: normalizeInvoiceContractStatus(invoice.paymentStatus),
-    paymentStatusRaw: invoice.paymentStatus || "",
-    paymentMethod: invoice.paymentMethod || "Not available",
-    paymentReference: invoice.paymentReference || invoice.invoiceNumber || "Not available",
-    issuedAtLabel: formatDateTimeLabel(invoice.issuedAt),
-    dueDateLabel: formatDateLabel(invoice.dueDate),
-    paidAtLabel: formatDateTimeLabel(invoice.paidAt),
-    verifiedAtLabel: formatDateTimeLabel(invoice.verifiedAt),
-    rejectedAtLabel: formatDateTimeLabel(invoice.rejectedAt),
-    paymentReport: invoice.paymentReport
+    id: contract.id || "",
+    invoiceId: contract.invoiceId || contract.id || "",
+    payoutId: contract.payoutId || "",
+    payoutNumber: contract.payoutNumber || "",
+    settlementNumber: contract.settlementNumber || "Not available",
+    paymentStatus: normalizeInvoiceContractStatus(contract.paymentStatus),
+    paymentStatusRaw: contract.paymentStatus || "",
+    payoutStatus: normalizePaymentStatus(contract.payoutStatus || contract.settlementStatus),
+    settlementStatus: normalizeSettlementStatus(contract.settlementStatus),
+    paymentMethod: contract.paymentMethod || "Not available",
+    paymentReference: contract.transferReference || contract.invoiceNumber || "Not available",
+    issuedAtLabel: formatDateTimeLabel(contract.paymentReportedAt),
+    dueDateLabel: "Not available",
+    paidAtLabel: formatDateTimeLabel(contract.paidAt),
+    verifiedAtLabel: formatDateTimeLabel(contract.paymentApprovedAt),
+    rejectedAtLabel: formatDateTimeLabel(contract.paymentRejectedAt),
+    appliedRuleLabel: contract.appliedRuleLabel || "",
+    appliedRuleDescription: contract.appliedRuleDescription || "",
+    paymentReport: contract.receiptUrl || contract.transferReference || contract.paymentDate || contract.verificationNote
       ? {
-          paymentDate: invoice.paymentReport.paymentDate || "Not available",
-          transferReference: invoice.paymentReport.transferReference || "Not available",
-          note: invoice.paymentReport.note || "",
-          receiptUrl: invoice.paymentReport.receiptUrl || "Not available",
-          reportedAtLabel: formatDateTimeLabel(invoice.paymentReport.reportedAt),
+          paymentDate: contract.paymentDate || "Not available",
+          transferReference: contract.transferReference || "Not available",
+          note: contract.verificationNote || contract.note || "",
+          receiptUrl: contract.receiptUrl || "Not available",
+          reportedAtLabel: formatDateTimeLabel(contract.paymentReportedAt),
         }
       : null,
-    paymentHistory: normalizeContractHistory(invoice.paymentHistory),
-    settlement: settlement
-      ? {
-          id: settlement.id || "",
-          settlementNumber: settlement.settlementNumber || "Not available",
-          status: settlement.status || "Not available",
-          statusLabel: normalizeSettlementStatus(settlement.status),
-          grossOrderAmount: formatMoneyLabel(settlement.grossOrderAmount),
-          taxAmount: formatMoneyLabel(settlement.taxAmount),
-          deliveryFee: formatMoneyLabel(settlement.deliveryFee),
-          serviceFee: formatMoneyLabel(settlement.serviceFee),
-          vendorPayable: formatMoneyLabel(settlement.vendorPayable),
-          fundedAtLabel: formatDateTimeLabel(settlement.fundedAt),
-          readyForPayoutAtLabel: formatDateTimeLabel(settlement.readyForPayoutAt),
-          settledAtLabel: formatDateTimeLabel(settlement.settledAt),
-          payoutId: settlement.payoutId || "",
-          history: normalizeContractHistory(settlement.history),
-          commission: commissionRecord
-            ? {
-                id: commissionRecord.id || "",
-                status: commissionRecord.status || "Not available",
-                model: commissionRecord.commissionModel || "Not available",
-                ratePercentLabel:
-                  commissionRecord.ratePercent === 0 || commissionRecord.ratePercent
-                    ? `${commissionRecord.ratePercent}%`
-                    : "Not available",
-                grossCommission: formatMoneyLabel(commissionRecord.grossCommission),
-                totalCommission: formatMoneyLabel(commissionRecord.totalCommission),
-                fixedFee: formatMoneyLabel(commissionRecord.fixedFee),
-                vatOnCommission: formatMoneyLabel(commissionRecord.vatOnCommission),
-                note: commissionRecord.note || "",
-                lockedAtLabel: formatDateTimeLabel(commissionRecord.lockedAt),
-                adjustedAtLabel: formatDateTimeLabel(commissionRecord.adjustedAt),
-              }
-            : null,
-        }
-      : null,
+    paymentHistory: settlementHistory,
+    settlement: {
+      id: contract.id || "",
+      settlementNumber: contract.settlementNumber || "Not available",
+      status: contract.settlementStatus || "Not available",
+      statusLabel: normalizeSettlementStatus(contract.settlementStatus),
+      grossOrderAmount: formatMoneyLabel(contract.grossAmount),
+      taxAmount: formatMoneyLabel(contract.taxAmount),
+      deliveryFee: formatMoneyLabel(contract.deliveryFee),
+      serviceFee: formatMoneyLabel(contract.serviceFee),
+      vendorPayable: formatMoneyLabel(contract.vendorPayable || contract.netAmount),
+      fundedAtLabel: formatDateTimeLabel(contract.fundedAt),
+      readyForPayoutAtLabel: formatDateTimeLabel(contract.readyForPayoutAt),
+      settledAtLabel: formatDateTimeLabel(contract.settledAt),
+      payoutId: contract.payoutId || "",
+      history: settlementHistory,
+      commission: {
+        id: contract.id || "",
+        status: contract.commissionSource || contract.settlementStatus || "Not available",
+        model: contract.commissionModel || "Not available",
+        ratePercentLabel:
+          contract.commissionRate === 0 || contract.commissionRate
+            ? `${contract.commissionRate}%`
+            : "Not available",
+        grossCommission: formatMoneyLabel(contract.grossCommission),
+        totalCommission: formatMoneyLabel(contract.totalCommission),
+        fixedFee: formatMoneyLabel(contract.fixedFee),
+        vatOnCommission: formatMoneyLabel(contract.vatOnCommission),
+        note: contract.commissionOverrideName || contract.adjustmentReason || contract.note || "",
+        lockedAtLabel: formatDateTimeLabel(contract.lockedAt),
+        adjustedAtLabel: formatDateTimeLabel(contract.adjustedAt),
+      },
+    },
+    vendorName,
   };
 }
 
@@ -547,79 +574,89 @@ function normalizePaymentRow(item, contractInvoice = null) {
 }
 
 function normalizePaymentDetail(payment, contractInvoice = null) {
-  if (!payment?.id) {
+  if (!payment?.id && !contractInvoice?.id) {
     return null;
   }
 
-  const customerName = payment.customer?.fullName || "Unknown customer";
-  const vendorName = payment.vendor?.name || "Unknown vendor";
+  const rawPayment = payment || {};
+  const customerName =
+    rawPayment.customer?.fullName ||
+    contractInvoice?.customerName ||
+    "Unknown customer";
+  const vendorName =
+    rawPayment.vendor?.name ||
+    contractInvoice?.vendorName ||
+    "Unknown vendor";
   const customerPaymentStatus =
-    contractInvoice?.paymentStatus || deriveCustomerPaymentStatusFromDetail(payment);
+    contractInvoice?.paymentStatus || deriveCustomerPaymentStatusFromDetail(rawPayment);
   const vendorPayoutStatus =
-    contractInvoice?.settlement?.statusLabel || deriveVendorPayoutStatusFromDetail(payment);
+    contractInvoice?.settlement?.statusLabel || deriveVendorPayoutStatusFromDetail(rawPayment);
   const orderStatus =
-    payment.order?.delivery?.deliveredAt ||
-    payment.order?.deliveredAt
+    rawPayment.order?.delivery?.deliveredAt ||
+    rawPayment.order?.deliveredAt
       ? "Delivered"
       : normalizeOrderStatus(
-          payment.order?.delivery?.status ||
-          payment.order?.fulfillmentStatus ||
-          payment.order?.status,
+          rawPayment.order?.delivery?.status ||
+          rawPayment.order?.fulfillmentStatus ||
+          rawPayment.order?.status,
         );
 
   return {
-    id: payment.id,
-    invoiceNumber: payment.invoiceNumber || "Not available",
-    notes: payment.notes || "",
-    createdAt: payment.createdAt || "",
-    updatedAt: payment.updatedAt || "",
-    createdAtLabel: formatDateTimeLabel(payment.createdAt),
-    updatedAtLabel: formatDateTimeLabel(payment.updatedAt),
+    id: contractInvoice?.invoiceId || rawPayment.id,
+    invoiceId: contractInvoice?.invoiceId || rawPayment.id || "",
+    payoutId: contractInvoice?.payoutId || "",
+    payoutNumber: contractInvoice?.payoutNumber || "",
+    invoiceNumber: rawPayment.invoiceNumber || contractInvoice?.paymentReference || "Not available",
+    notes: rawPayment.notes || contractInvoice?.settlement?.commission?.note || "",
+    createdAt: rawPayment.createdAt || "",
+    updatedAt: rawPayment.updatedAt || contractInvoice?.settlement?.settledAtLabel || "",
+    createdAtLabel: formatDateTimeLabel(rawPayment.createdAt || rawPayment.order?.createdAt),
+    updatedAtLabel: rawPayment.updatedAt ? formatDateTimeLabel(rawPayment.updatedAt) : formatDateTimeLabel(rawPayment.createdAt || rawPayment.order?.createdAt),
     order: {
-      id: payment.order?.id || "",
+      id: rawPayment.order?.id || "",
       status: orderStatus,
-      createdAt: payment.order?.createdAt || "",
-      createdAtLabel: formatDateTimeLabel(payment.order?.createdAt),
+      createdAt: rawPayment.order?.createdAt || "",
+      createdAtLabel: formatDateTimeLabel(rawPayment.order?.createdAt),
     },
     customer: {
-      id: payment.customer?.id || "",
+      id: rawPayment.customer?.id || "",
       fullName: customerName,
-      email: payment.customer?.email || "",
+      email: rawPayment.customer?.email || "",
       avatar: toInitials(customerName),
-      avatarUrl: payment.customer?.avatarUrl || "",
+      avatarUrl: rawPayment.customer?.avatarUrl || "",
     },
     vendor: {
-      id: payment.vendor?.id || "",
+      id: rawPayment.vendor?.id || "",
       name: vendorName,
-      city: payment.vendor?.city || "",
+      city: rawPayment.vendor?.city || "",
       avatar: toInitials(vendorName),
-      avatarUrl: payment.vendor?.avatarUrl || "",
-      contactName: payment.vendor?.contactName || "",
+      avatarUrl: rawPayment.vendor?.avatarUrl || "",
+      contactName: rawPayment.vendor?.contactName || "",
     },
     financials: {
       orderAmount: resolvePreferredMoneyLabel(
-        payment.financials?.orderAmount,
+        rawPayment.financials?.orderAmount,
         contractInvoice?.settlement?.grossOrderAmount,
       ) || "NOK 0.00",
       platformCommission: resolvePreferredMoneyLabel(
-        payment.financials?.platformCommission,
+        rawPayment.financials?.platformCommission,
         contractInvoice?.settlement?.commission?.totalCommission,
       ) || "NOK 0.00",
       vendorAmount:
         resolveVendorReceivesLabel({
-          primaryVendorAmount: payment.financials?.vendorAmount,
+          primaryVendorAmount: rawPayment.financials?.vendorAmount,
           fallbackVendorPayable: contractInvoice?.settlement?.vendorPayable,
           orderAmount:
-            payment.financials?.orderAmount ||
+            rawPayment.financials?.orderAmount ||
             contractInvoice?.settlement?.grossOrderAmount,
           commissionAmount:
-            payment.financials?.platformCommission ||
+            rawPayment.financials?.platformCommission ||
             contractInvoice?.settlement?.commission?.totalCommission,
         }) || "NOK 0.00",
-      refundAmount: payment.financials?.refundAmount?.formatted || "NOK 0.00",
+      refundAmount: rawPayment.financials?.refundAmount?.formatted || "NOK 0.00",
       taxAmount:
         resolvePreferredMoneyLabel(
-          payment.financials?.taxAmount,
+          rawPayment.financials?.taxAmount,
           contractInvoice?.settlement?.taxAmount,
         ) ||
         "NOK 0.00",
@@ -630,14 +667,14 @@ function normalizePaymentDetail(payment, contractInvoice = null) {
       orderStatus,
     },
     lifecycle: {
-      paymentReceivedAt: payment.lifecycle?.paymentReceivedAt || contractInvoice?.paidAtLabel || "",
+      paymentReceivedAt: rawPayment.lifecycle?.paymentReceivedAt || contractInvoice?.paidAtLabel || "",
       payoutScheduledAt:
-        payment.lifecycle?.payoutScheduledAt || contractInvoice?.settlement?.readyForPayoutAtLabel || "",
+        rawPayment.lifecycle?.payoutScheduledAt || contractInvoice?.settlement?.readyForPayoutAtLabel || "",
       payoutReleasedAt:
-        payment.lifecycle?.payoutReleasedAt || contractInvoice?.settlement?.readyForPayoutAtLabel || "",
+        rawPayment.lifecycle?.payoutReleasedAt || contractInvoice?.settlement?.readyForPayoutAtLabel || "",
       payoutCompletedAt:
-        payment.lifecycle?.payoutCompletedAt || contractInvoice?.settlement?.settledAtLabel || "",
-      cancelledAt: payment.lifecycle?.cancelledAt || "",
+        rawPayment.lifecycle?.payoutCompletedAt || contractInvoice?.settlement?.settledAtLabel || "",
+      cancelledAt: rawPayment.lifecycle?.cancelledAt || "",
     },
     contractInvoice,
     settlement: contractInvoice?.settlement || null,
@@ -650,7 +687,8 @@ function normalizePaymentDetail(payment, contractInvoice = null) {
           ? "Customer payment has been marked as received."
           : "Waiting for customer payment confirmation.",
         timestamp: formatDateTimeLabel(payment.lifecycle?.paymentReceivedAt),
-        isComplete: Boolean(payment.lifecycle?.paymentReceivedAt),
+        timestamp: formatDateTimeLabel(rawPayment.lifecycle?.paymentReceivedAt || contractInvoice?.paidAtLabel),
+        isComplete: Boolean(rawPayment.lifecycle?.paymentReceivedAt || contractInvoice?.paidAtLabel),
       },
       {
         id: "payout-scheduled",
@@ -658,8 +696,8 @@ function normalizePaymentDetail(payment, contractInvoice = null) {
         helperText: payment.lifecycle?.payoutScheduledAt
           ? "Vendor payout has been scheduled."
           : "Vendor payout has not been scheduled yet.",
-        timestamp: formatDateTimeLabel(payment.lifecycle?.payoutScheduledAt),
-        isComplete: Boolean(payment.lifecycle?.payoutScheduledAt),
+        timestamp: formatDateTimeLabel(rawPayment.lifecycle?.payoutScheduledAt || contractInvoice?.settlement?.readyForPayoutAtLabel),
+        isComplete: Boolean(rawPayment.lifecycle?.payoutScheduledAt || contractInvoice?.settlement?.readyForPayoutAtLabel),
       },
       {
         id: "payout-released",
@@ -667,8 +705,8 @@ function normalizePaymentDetail(payment, contractInvoice = null) {
         helperText: payment.lifecycle?.payoutReleasedAt
           ? "Funds were released for vendor payout."
           : "Funds have not been released yet.",
-        timestamp: formatDateTimeLabel(payment.lifecycle?.payoutReleasedAt),
-        isComplete: Boolean(payment.lifecycle?.payoutReleasedAt),
+        timestamp: formatDateTimeLabel(rawPayment.lifecycle?.payoutReleasedAt),
+        isComplete: Boolean(rawPayment.lifecycle?.payoutReleasedAt),
       },
       {
         id: "payout-completed",
@@ -676,24 +714,24 @@ function normalizePaymentDetail(payment, contractInvoice = null) {
         helperText: payment.lifecycle?.payoutCompletedAt
           ? "Vendor payout was marked as completed."
           : "Vendor payout is still pending completion.",
-        timestamp: formatDateTimeLabel(payment.lifecycle?.payoutCompletedAt),
-        isComplete: Boolean(payment.lifecycle?.payoutCompletedAt),
+        timestamp: formatDateTimeLabel(rawPayment.lifecycle?.payoutCompletedAt || contractInvoice?.settlement?.settledAtLabel),
+        isComplete: Boolean(rawPayment.lifecycle?.payoutCompletedAt || contractInvoice?.settlement?.settledAtLabel),
       },
-      ...(payment.lifecycle?.cancelledAt
+      ...(rawPayment.lifecycle?.cancelledAt
         ? [
             {
               id: "cancelled",
               title: "Payment Cancelled",
               helperText: "This payment was cancelled and no further transitions are expected.",
-              timestamp: formatDateTimeLabel(payment.lifecycle.cancelledAt),
+              timestamp: formatDateTimeLabel(rawPayment.lifecycle.cancelledAt),
               isComplete: true,
             },
           ]
         : []),
     ],
     activityItems: [
-      ...(Array.isArray(payment.activityLog)
-        ? payment.activityLog.map((item) => ({
+      ...(Array.isArray(rawPayment.activityLog)
+        ? rawPayment.activityLog.map((item) => ({
           id: item?.id || `${item?.title || "activity"}-${item?.createdAt || ""}`,
           title: item?.title || "Activity",
           helperText:
@@ -714,6 +752,20 @@ function normalizePaymentDetail(payment, contractInvoice = null) {
           ]
             .filter(Boolean)
             .join(" - ") || "Recorded in invoice payment history.",
+        timestamp: item.createdAtLabel,
+        isComplete: true,
+      })),
+      ...normalizeUnifiedSettlementHistory(contractInvoice?.settlement?.history).map((item) => ({
+        id: `settlement-history-${item.id}`,
+        title: item.action,
+        helperText:
+          [
+            item.description,
+            item.transferReference ? `Reference: ${item.transferReference}` : "",
+            item.note,
+          ]
+            .filter(Boolean)
+            .join(" - ") || "Recorded in settlement history.",
         timestamp: item.createdAtLabel,
         isComplete: true,
       })),
@@ -753,7 +805,11 @@ export async function getAdminPaymentsRequest(filters) {
   }
 
   const contractInvoicesById = new Map();
-  const responseItems = Array.isArray(response.items) ? response.items : [];
+  const responseItems = Array.isArray(response.items)
+    ? response.items
+    : Array.isArray(response.edges)
+      ? response.edges.map((edge) => edge?.node).filter(Boolean)
+      : [];
 
   await Promise.all(
     responseItems.map(async (item) => {
@@ -766,9 +822,9 @@ export async function getAdminPaymentsRequest(filters) {
       try {
         const contractData = await executeProtectedGraphqlRequest(
           ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY,
-          { invoiceId },
+          { id: invoiceId },
         );
-        const contractInvoice = normalizeContractInvoice(contractData?.invoice);
+        const contractInvoice = normalizeContractInvoice(contractData?.adminPaymentFinanceContract);
 
         if (contractInvoice) {
           contractInvoicesById.set(invoiceId, contractInvoice);
@@ -786,8 +842,11 @@ export async function getAdminPaymentsRequest(filters) {
     pageInfo: {
       page: Number(response.pageInfo?.page ?? filters?.page ?? 1),
       pageSize: Number(response.pageInfo?.pageSize ?? filters?.pageSize ?? 10),
-      totalItems: Number(response.pageInfo?.totalItems ?? 0),
-      totalPages: Number(response.pageInfo?.totalPages ?? 1),
+      totalItems: Number(response.pageInfo?.totalItems ?? response.totalCount ?? 0),
+      totalPages: Number(
+        response.pageInfo?.totalPages ??
+          Math.max(1, Math.ceil(Number(response.totalCount ?? 0) / Number(filters?.pageSize || 10))),
+      ),
       hasNextPage: Boolean(response.pageInfo?.hasNextPage),
       hasPreviousPage: Boolean(response.pageInfo?.hasPreviousPage),
     },
@@ -798,7 +857,21 @@ export async function getAdminPaymentsRequest(filters) {
       ),
     ),
     filterOptions: {
-      vendors: Array.isArray(response.filterOptions?.vendors) ? response.filterOptions.vendors : [],
+      vendors: Array.isArray(response.filterOptions?.vendors)
+        ? response.filterOptions.vendors
+        : Array.from(
+            new Map(
+              responseItems
+                .filter((item) => item?.vendor?.id)
+                .map((item) => [
+                  item.vendor.id,
+                  {
+                    id: item.vendor.id,
+                    name: item.vendor.businessName || item.vendor.name || "Unknown vendor",
+                  },
+                ]),
+            ).values(),
+          ),
       statuses: [],
     },
   };
@@ -807,11 +880,11 @@ export async function getAdminPaymentsRequest(filters) {
 export async function getAdminPaymentDetailRequest(id) {
   const [data, contractData] = await Promise.all([
     executeProtectedGraphqlRequest(ADMIN_PAYMENT_DETAIL_QUERY, { id }),
-    executeProtectedGraphqlRequest(ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY, { invoiceId: id }).catch(
+    executeProtectedGraphqlRequest(ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY, { id }).catch(
       () => null,
     ),
   ]);
-  const contractInvoice = normalizeContractInvoice(contractData?.invoice);
+  const contractInvoice = normalizeContractInvoice(contractData?.adminPaymentFinanceContract);
   const payment = normalizePaymentDetail(data?.adminPayment, contractInvoice);
 
   if (!payment?.id) {
@@ -938,6 +1011,7 @@ export async function markVendorPayoutPaidRequest(id, { reference = "", note = "
       payoutId: id,
       input: {
         payoutReference: reference || null,
+        transferReference: reference || null,
         note: note || null,
       },
     },

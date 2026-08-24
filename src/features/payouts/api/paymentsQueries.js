@@ -187,19 +187,93 @@ export const ADMIN_PAYMENT_DETAIL_QUERY = `
 `;
 
 export const ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY = `
-  query AdminPaymentFinanceContract($invoiceId: ID!) {
-    invoice(id: $invoiceId) {
+  query AdminPaymentFinanceContract($id: ID!) {
+    adminPaymentFinanceContract(id: $id) {
       id
+      invoiceId
       invoiceNumber
+      payoutId
+      payoutNumber
+      settlementNumber
       paymentStatus
-      paymentMethod
-      paymentReference
-      issuedAt
-      dueDate
+      payoutStatus
+      settlementStatus
+      fundedAt
+      readyForPayoutAt
+      lockedAt
+      adjustedAt
+      settledAt
+      releasedAt
       paidAt
-      verifiedAt
-      rejectedAt
-      subtotal {
+      paymentReceivedAt
+      paymentReportedAt
+      paymentApprovedAt
+      paymentRejectedAt
+      payoutReference
+      transferReference
+      adjustmentReason
+      note
+      paymentMethod
+      provider
+      paymentDate
+      receiptUrl
+      receiptFileName
+      receiptContentType
+      rejectionReason
+      verificationNote
+      appliedRuleLabel
+      appliedRuleDescription
+      commissionSource
+      commissionOverrideName
+      order {
+        id
+        orderNumber
+        status
+        fulfillmentStatus
+        placedAt
+        acceptedAt
+        preparedAt
+        outForDeliveryAt
+        deliveredAt
+        canceledAt
+        eventType
+        eventName
+        guestCount
+        specialInstructions
+        deliveryType
+        recipientName
+        recipientPhone
+        createdAt
+        updatedAt
+        delivery {
+          status
+          scheduledAt
+          deliveredAt
+          address
+        }
+      }
+      customer {
+        id
+        fullName
+        firstName
+        lastName
+        email
+        phone
+      }
+      vendor {
+        id
+        businessName
+        email
+        phone
+        city
+        address
+      }
+      grossAmount {
+        amount
+        currency
+        formatted
+      }
+      subtotalAmount {
         amount
         currency
         formatted
@@ -219,113 +293,86 @@ export const ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY = `
         currency
         formatted
       }
-      grandTotal {
+      tipAmount {
         amount
         currency
         formatted
       }
-      amountPaid {
+      discountAmount {
         amount
         currency
         formatted
       }
-      amountDue {
+      refundedAmount {
         amount
         currency
         formatted
       }
-      paymentReport {
-        paymentDate
-        transferReference
-        note
-        receiptUrl
-        reportedAt
-        reportedByCustomerId
+      commissionModel
+      commissionRate
+      grossCommission {
+        amount
+        currency
+        formatted
       }
-      paymentHistory {
+      fixedFee {
+        amount
+        currency
+        formatted
+      }
+      vatOnCommission {
+        amount
+        currency
+        formatted
+      }
+      totalCommission {
+        amount
+        currency
+        formatted
+      }
+      vendorPayable {
+        amount
+        currency
+        formatted
+      }
+      vendorReceivable {
+        amount
+        currency
+        formatted
+      }
+      netAmount {
+        amount
+        currency
+        formatted
+      }
+      lineItems {
         id
-        action
+        title
+        quantity
+        unitPrice {
+          amount
+          currency
+          formatted
+        }
+        totalPrice {
+          amount
+          currency
+          formatted
+        }
+      }
+      settlementHistory {
+        id
+        type
+        title
+        description
         actorType
         actorId
         actorName
-        fromStatus
-        toStatus
         note
+        transferReference
+        receiptUrl
+        paymentDate
         createdAt
-      }
-      settlement {
-        id
-        settlementNumber
-        status
-        fundedAt
-        readyForPayoutAt
-        settledAt
-        payoutId
-        grossOrderAmount {
-          amount
-          currency
-          formatted
-        }
-        taxAmount {
-          amount
-          currency
-          formatted
-        }
-        deliveryFee {
-          amount
-          currency
-          formatted
-        }
-        serviceFee {
-          amount
-          currency
-          formatted
-        }
-        vendorPayable {
-          amount
-          currency
-          formatted
-        }
-        history {
-          id
-          action
-          actorType
-          actorId
-          actorName
-          fromStatus
-          toStatus
-          note
-          createdAt
-        }
-        commissionRecord {
-          id
-          status
-          commissionModel
-          ratePercent
-          grossCommission {
-            amount
-            currency
-            formatted
-          }
-          totalCommission {
-            amount
-            currency
-            formatted
-          }
-          fixedFee {
-            amount
-            currency
-            formatted
-          }
-          vatOnCommission {
-            amount
-            currency
-            formatted
-          }
-          note
-          lockedAt
-          adjustedAt
-        }
       }
     }
   }

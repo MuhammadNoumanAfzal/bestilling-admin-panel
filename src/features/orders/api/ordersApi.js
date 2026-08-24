@@ -531,11 +531,18 @@ function normalizeOrderDetail(order) {
       tax: formatMoney(order?.amount?.tax, currency),
       deliveryFee: formatMoney(order?.amount?.deliveryFee, currency),
       serviceFee: formatMoney(order?.amount?.serviceFee, currency),
+      tip: formatMoney(order?.amount?.tip, currency),
       discount: formatMoney(order?.amount?.discount, currency),
-      refundAmount: formatMoney(order?.amount?.refundAmount, currency),
-      total: formatMoney(order?.amount?.total, currency),
+      refundAmount: formatMoney(
+        order?.amount?.refunded ?? order?.amount?.refundAmount,
+        currency,
+      ),
+      total:
+        order?.amount?.formattedTotal ||
+        formatMoney(order?.amount?.total, currency),
       balanceDue: formatMoney(
-        Number(order?.amount?.total ?? 0) - Number(order?.amount?.refundAmount ?? 0),
+        Number(order?.amount?.total ?? 0) -
+          Number(order?.amount?.refunded ?? order?.amount?.refundAmount ?? 0),
         currency,
       ),
     },
@@ -606,6 +613,15 @@ function normalizeOrderDetail(order) {
           unitPrice: formatMoney(item?.unitPrice, currency),
           totalPrice: formatMoney(item?.totalPrice, currency),
           notes: item?.notes || "",
+          options: Array.isArray(item?.options)
+            ? item.options
+                .map((option) =>
+                  option?.name && option?.value
+                    ? `${option.name}: ${option.value}`
+                    : "",
+                )
+                .filter(Boolean)
+            : [],
           addons: Array.isArray(item?.addons)
             ? item.addons.map((addon) => ({
                 id: addon?.id || "",
@@ -701,8 +717,10 @@ export async function getAdminOrderCategoryBreakdownRequest(filters) {
 }
 
 export async function getAdminOrderDetailRequest(orderId) {
-  const data = await executeProtectedGraphqlRequest(ADMIN_ORDER_DETAIL_QUERY, { orderId });
-  const detail = normalizeOrderDetail(data?.adminOrderDetail);
+  const data = await executeProtectedGraphqlRequest(ADMIN_ORDER_DETAIL_QUERY, {
+    id: orderId,
+  });
+  const detail = normalizeOrderDetail(data?.adminOrder);
 
   if (!detail) {
     throw new Error("Unable to load order details.");

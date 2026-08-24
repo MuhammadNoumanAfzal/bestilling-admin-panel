@@ -47,8 +47,8 @@ export const ADMIN_ORDERS_QUERY = `
 `;
 
 export const ADMIN_ORDER_DETAIL_QUERY = `
-  query AdminOrderDetail($orderId: ID!) {
-    adminOrderDetail(orderId: $orderId) {
+  query AdminOrderDetail($id: ID!) {
+    adminOrder(id: $id) {
       id
       orderNumber
       status
@@ -73,9 +73,12 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
         tax
         deliveryFee
         serviceFee
+        tip
         discount
         refundAmount
+        refunded
         total
+        formattedTotal
       }
       customer {
         id
@@ -144,6 +147,10 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
         totalPrice
         notes
         imageUrl
+        options {
+          name
+          value
+        }
         addons {
           id
           name
@@ -154,8 +161,8 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
       }
       payment {
         method
-        transactionId
         provider
+        transactionId
         providerReference
         capturedAt
         refundedAt

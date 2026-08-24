@@ -19,6 +19,10 @@ export default function OrderSummaryCard({ amount, payment }) {
           <span className="font-bold text-[#18120f]">{amount.deliveryFee}</span>
         </div>
         <div className="flex items-center justify-between text-[13px]">
+          <span className="font-semibold text-[#8c8077]">Tip</span>
+          <span className="font-bold text-[#18120f]">{amount.tip}</span>
+        </div>
+        <div className="flex items-center justify-between text-[13px]">
           <span className="font-semibold text-[#8c8077]">Tax</span>
           <span className="font-bold text-[#18120f]">{amount.tax}</span>
         </div>

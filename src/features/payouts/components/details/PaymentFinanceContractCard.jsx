@@ -9,6 +9,26 @@ function InfoRow({ label, value }) {
   );
 }
 
+function formatHistoryAction(action) {
+  return String(action || "Activity")
+    .toLowerCase()
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatHistoryActor(item) {
+  const actorName = String(item?.actorName || "").trim();
+  const actorType = String(item?.actorType || "").trim();
+
+  if (actorName && actorType) {
+    return `${actorName} · ${actorType}`;
+  }
+
+  return actorName || actorType || "System";
+}
+
 function HistoryList({ items }) {
   if (!Array.isArray(items) || items.length === 0) {
     return (
@@ -23,24 +43,37 @@ function HistoryList({ items }) {
       {items.map((item) => (
         <article
           key={item.id}
-          className="rounded-[14px] border border-[#eee3db] bg-white px-4 py-3"
+          className="overflow-hidden rounded-[20px] border border-[#eee1d7] bg-[linear-gradient(180deg,#ffffff_0%,#fffaf6_100%)] shadow-[0_10px_24px_rgba(51,31,17,0.05)]"
         >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[14px] font-semibold text-[#1d1612]">
-                {item.action}
-              </p>
-              <p className="mt-1 text-[13px] text-[#6e625b]">
-                {[item.actorName, item.actorType].filter(Boolean).join(" | ") || "System"}
-              </p>
+          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center rounded-full border border-[#f2d3c1] bg-[linear-gradient(135deg,#fff4ec_0%,#ffe9dc_100%)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#bf6737]">
+                    {formatHistoryAction(item.action)}
+                  </span>
+                  {(item.fromStatus || item.toStatus) ? (
+                    <span className="inline-flex items-center rounded-full bg-[#f6f1ec] px-3 py-1 text-[11px] font-semibold text-[#74675f]">
+                      {(item.fromStatus || "Unknown")} to {(item.toStatus || "Unknown")}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-3 text-[14px] font-semibold text-[#2a201a]">
+                  {formatHistoryActor(item)}
+                </p>
+              </div>
+
+              <div className="rounded-full bg-[#fbf5ef] px-3 py-1.5 text-[11px] font-semibold text-[#8f8177]">
+                {item.createdAtLabel}
+              </div>
             </div>
-            <p className="text-[12px] font-medium text-[#8f8279]">
-              {item.createdAtLabel}
-            </p>
+
+            {item.note ? (
+              <div className="rounded-[16px] border border-[#f1e4da] bg-white/85 px-4 py-3">
+                <p className="text-[13px] leading-6 text-[#4d433d]">{item.note}</p>
+              </div>
+            ) : null}
           </div>
-          {item.note ? (
-            <p className="mt-2 text-[13px] leading-6 text-[#4d433d]">{item.note}</p>
-          ) : null}
         </article>
       ))}
     </div>

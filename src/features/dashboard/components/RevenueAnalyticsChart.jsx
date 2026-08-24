@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 function formatMetricValue(metric, value) {
   if (metric === "REVENUE") {
@@ -76,9 +77,12 @@ export default function RevenueAnalyticsChart({ timeframe, chart, isLoading = fa
       </div>
 
       {isLoading ? (
-        <div className="flex h-[280px] items-center justify-center text-[15px] font-medium text-[#6f645d]">
-          Loading analytics...
-        </div>
+        <AdminLoadingState
+          title="Loading analytics snapshot"
+          description="Updating revenue and order performance for the selected reporting window."
+          showTable={false}
+          className="rounded-[14px]"
+        />
       ) : points.length === 0 ? (
         <div className="flex h-[280px] items-center justify-center rounded-[14px] border border-dashed border-[#e5dad2] text-[15px] font-medium text-[#6f645d]">
           No analytics data available for this time range.

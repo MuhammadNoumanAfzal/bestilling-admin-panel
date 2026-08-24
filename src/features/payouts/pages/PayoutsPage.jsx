@@ -7,6 +7,7 @@ import CommissionBreakdownCard from "../components/CommissionBreakdownCard.jsx";
 import PayoutOverviewCard from "../components/PayoutOverviewCard.jsx";
 import PayoutsTable from "../components/PayoutsTable.jsx";
 import PayoutToolbar from "../components/PayoutToolbar.jsx";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 const PAGE_SIZE = 10;
 const STATIC_STATUS_OPTIONS = [
@@ -203,9 +204,12 @@ export default function PayoutsPage() {
             vendorOptions={filterOptions.vendors}
           />
           {isLoading ? (
-            <div className="px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
-              Loading payments...
-            </div>
+            <AdminLoadingState
+              title="Loading payout records"
+              description="Preparing settlements, vendor amounts, commission totals, and payout actions for this date range."
+              rows={5}
+              columns={8}
+            />
           ) : (
             <PayoutsTable
               currentPage={pageInfo.page}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 export default function TopCateringCategoriesChart({ items, isLoading = false }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -27,9 +28,12 @@ export default function TopCateringCategoriesChart({ items, isLoading = false })
       </div>
 
       {isLoading ? (
-        <div className="flex h-[260px] items-center justify-center text-[15px] font-medium text-[#6f645d]">
-          Loading chart...
-        </div>
+        <AdminLoadingState
+          title="Loading category mix"
+          description="Calculating category contribution, revenue share, and order count trends."
+          showTable={false}
+          className="rounded-[14px]"
+        />
       ) : chartItems.length === 0 ? (
         <div className="flex h-[260px] items-center justify-center rounded-[14px] border border-dashed border-[#e5dad2] text-[15px] font-medium text-[#6f645d]">
           No category data available for this filter set.

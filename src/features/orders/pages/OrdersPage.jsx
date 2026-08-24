@@ -15,6 +15,7 @@ import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 import OrdersToolbar from "../components/OrdersToolbar.jsx";
 import OrdersTable from "../components/OrdersTable.jsx";
 import TopCateringCategoriesChart from "../components/TopCateringCategoriesChart.jsx";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 import {
   cancelOrderRequest,
   exportAdminOrdersRequest,
@@ -407,9 +408,12 @@ export default function OrdersPage() {
         />
 
         {isLoading ? (
-          <div className="px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
-            Loading orders...
-          </div>
+          <AdminLoadingState
+            title="Loading order activity"
+            description="Gathering customer, vendor, event, payment, and fulfillment records for the selected filters."
+            rows={5}
+            columns={8}
+          />
         ) : (
           <div className="p-3 sm:p-4">
             <OrdersTable

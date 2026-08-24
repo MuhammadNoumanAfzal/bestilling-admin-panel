@@ -6,6 +6,7 @@ import CustomersTable from "../components/CustomersTable.jsx";
 import CustomersToolbar from "../components/CustomersToolbar.jsx";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 const PAGE_SIZE = 10;
 const ALL_DATES_FILTER = "All Dates";
@@ -242,9 +243,12 @@ export default function CustomersPage() {
           onResetFilters={handleResetFilters}
         />
         {isLoading ? (
-          <div className="px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
-            Loading customers...
-          </div>
+          <AdminLoadingState
+            title="Loading customer records"
+            description="Fetching account details, status filters, recent registrations, and customer activity."
+            rows={5}
+            columns={6}
+          />
         ) : (
           <CustomersTable
             currentPage={pageInfo.page}

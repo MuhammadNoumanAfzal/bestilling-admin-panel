@@ -269,9 +269,11 @@ export const ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY = `
         address
         payoutProfile {
           id
+          vendorId
           payoutMethod
           bankDetailsVerified
           verificationStatus
+          verificationNote
           accountHolderName
           bankName
           accountNumber
@@ -284,6 +286,8 @@ export const ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY = `
           city
           postalCode
           country
+          createdAt
+          updatedAt
         }
       }
       grossAmount {
@@ -396,6 +400,33 @@ export const ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY = `
   }
 `;
 
+export const ADMIN_VENDOR_PAYOUT_PROFILE_QUERY = `
+  query AdminVendorPayoutProfile($vendorId: ID!) {
+    adminVendorPayoutProfile(vendorId: $vendorId) {
+      id
+      vendorId
+      payoutMethod
+      bankDetailsVerified
+      verificationStatus
+      verificationNote
+      accountHolderName
+      bankName
+      accountNumber
+      iban
+      swiftBic
+      routingNumber
+      branchName
+      branchCode
+      billingAddress
+      city
+      postalCode
+      country
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
 export const MARK_CUSTOMER_PAYMENT_RECEIVED_MUTATION = `
   mutation MarkCustomerPaymentReceived($id: ID!, $reference: String, $note: String) {
     markCustomerPaymentReceived(id: $id, reference: $reference, note: $note) {
@@ -500,6 +531,40 @@ export const MARK_VENDOR_PAYOUT_PAID_MUTATION = `
         settledAt
         transferReference
         note
+      }
+    }
+  }
+`;
+
+export const APPROVE_VENDOR_PAYOUT_PROFILE_MUTATION = `
+  mutation ApproveVendorPayoutProfile($input: ApproveVendorPayoutProfileInput!) {
+    approveVendorPayoutProfile(input: $input) {
+      success
+      message
+      payoutProfile {
+        id
+        vendorId
+        bankDetailsVerified
+        verificationStatus
+        verificationNote
+        updatedAt
+      }
+    }
+  }
+`;
+
+export const REQUEST_VENDOR_PAYOUT_PROFILE_CHANGES_MUTATION = `
+  mutation RequestVendorPayoutProfileChanges($input: RequestVendorPayoutProfileChangesInput!) {
+    requestVendorPayoutProfileChanges(input: $input) {
+      success
+      message
+      payoutProfile {
+        id
+        vendorId
+        bankDetailsVerified
+        verificationStatus
+        verificationNote
+        updatedAt
       }
     }
   }

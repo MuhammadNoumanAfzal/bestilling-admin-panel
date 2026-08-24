@@ -1,4 +1,4 @@
-import { Building2, Landmark, ShieldCheck } from "lucide-react";
+import { Building2, CheckCircle2, Landmark, MessageSquareWarning, ShieldCheck } from "lucide-react";
 
 function DetailCell({ label, value }) {
   return (
@@ -13,9 +13,12 @@ function DetailCell({ label, value }) {
 
 function StatusPill({ verified, verificationStatus }) {
   const label = verificationStatus || (verified ? "Verified" : "Pending review");
+  const normalized = `${verificationStatus || ""}`.trim().toLowerCase();
   const tone = verified
     ? "border-[#cde8d4] bg-[#effaf2] text-[#208348]"
-    : "border-[#f3d8c7] bg-[#fff5ee] text-[#c96533]";
+    : normalized === "changes requested"
+      ? "border-[#f2cfcf] bg-[#fff1f1] text-[#be4141]"
+      : "border-[#f3d8c7] bg-[#fff5ee] text-[#c96533]";
 
   return (
     <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-bold ${tone}`}>
@@ -25,7 +28,37 @@ function StatusPill({ verified, verificationStatus }) {
   );
 }
 
-export default function VendorBankDetailsCard({ payout }) {
+function ActionButton({
+  disabled = false,
+  icon: Icon,
+  label,
+  onClick,
+  secondary = false,
+}) {
+  return (
+    <button
+      className={
+        secondary
+          ? "inline-flex h-11 items-center justify-center gap-2 rounded-[14px] border border-[#ead5c8] bg-white px-4 text-[13px] font-semibold text-[#5a4b43] transition hover:-translate-y-[1px] hover:border-[#d8b8a4] hover:bg-[#fffaf6] disabled:cursor-not-allowed disabled:opacity-60"
+          : "inline-flex h-11 items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(135deg,#d97342_0%,#c65b2d_100%)] px-4 text-[13px] font-semibold text-white shadow-[0_14px_28px_rgba(198,91,45,0.22)] transition hover:-translate-y-[1px] hover:shadow-[0_18px_34px_rgba(198,91,45,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
+      }
+      disabled={disabled}
+      onClick={onClick}
+      type="button"
+    >
+      <Icon size={15} />
+      <span>{label}</span>
+    </button>
+  );
+}
+
+export default function VendorBankDetailsCard({
+  isApproving = false,
+  isRequestingChanges = false,
+  onApprove,
+  onRequestChanges,
+  payout,
+}) {
   const payoutProfile = payout?.vendor?.payoutProfile;
 
   if (!payoutProfile) {
@@ -75,6 +108,30 @@ export default function VendorBankDetailsCard({ payout }) {
           </div>
         </div>
 
+        <div className="flex flex-col gap-3 rounded-[18px] border border-[#ece1d7] bg-[#fcfaf8] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[14px] font-semibold text-[#211915]">Admin verification</p>
+            <p className="mt-1 text-[13px] leading-6 text-[#665850]">
+              Approve valid payout details, or request corrections before payout release.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <ActionButton
+              disabled={isApproving || isRequestingChanges || payoutProfile.bankDetailsVerified}
+              icon={CheckCircle2}
+              label={payoutProfile.bankDetailsVerified ? "Already verified" : isApproving ? "Approving..." : "Approve bank details"}
+              onClick={onApprove}
+            />
+            <ActionButton
+              disabled={isApproving || isRequestingChanges}
+              icon={MessageSquareWarning}
+              label={isRequestingChanges ? "Sending..." : "Request changes"}
+              onClick={onRequestChanges}
+              secondary
+            />
+          </div>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <DetailCell label="Account Holder" value={payoutProfile.accountHolderName} />
           <DetailCell label="Bank Name" value={payoutProfile.bankName} />
@@ -92,13 +149,16 @@ export default function VendorBankDetailsCard({ payout }) {
           <DetailCell label="Vendor" value={payout?.vendor?.name} />
           <DetailCell label="Vendor Contact" value={payout?.vendor?.contactName} />
           <DetailCell label="Vendor City" value={payout?.vendor?.city} />
+          <DetailCell label="Verification Note" value={payoutProfile.verificationNote} />
+          <DetailCell label="Created" value={payoutProfile.createdAtLabel} />
+          <DetailCell label="Last Updated" value={payoutProfile.updatedAtLabel} />
         </div>
 
         <div className="flex items-start gap-3 rounded-[18px] border border-[#e8ddd5] bg-[#fcfaf8] px-4 py-4 text-[13px] leading-6 text-[#665850]">
           <Building2 size={16} className="mt-0.5 shrink-0 text-[#cf6e38]" />
           <p>
-            There is no separate admin approval mutation wired for bank detail verification yet. For now, this screen
-            gives operations the exact payout data to review and use before releasing or marking payouts as paid.
+            Payout release should only happen after the bank profile is verified. If changes are requested, the vendor
+            is notified and should update these details from vendor settings before you continue.
           </p>
         </div>
       </div>

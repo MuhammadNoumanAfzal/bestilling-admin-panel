@@ -1,12 +1,15 @@
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
 import {
+  ADMIN_VENDOR_PAYOUT_PROFILE_QUERY,
   ADMIN_PAYMENT_DETAIL_QUERY,
   ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY,
   ADMIN_PAYMENTS_QUERY,
+  APPROVE_VENDOR_PAYOUT_PROFILE_MUTATION,
   APPROVE_INVOICE_PAYMENT_MUTATION,
   MARK_INVOICE_PAID_MUTATION,
   MARK_CUSTOMER_PAYMENT_RECEIVED_MUTATION,
   MARK_VENDOR_PAYOUT_PAID_MUTATION,
+  REQUEST_VENDOR_PAYOUT_PROFILE_CHANGES_MUTATION,
   REJECT_INVOICE_PAYMENT_MUTATION,
   RELEASE_VENDOR_PAYOUT_MUTATION,
 } from "./paymentsQueries.js";
@@ -156,6 +159,21 @@ function normalizeSettlementStatus(status) {
       return "Canceled";
     default:
       return "Pending";
+  }
+}
+
+function normalizePayoutProfileStatus(status, isVerified = false) {
+  const normalized = `${status ?? ""}`.trim().toUpperCase();
+
+  switch (normalized) {
+    case "VERIFIED":
+      return "Verified";
+    case "CHANGES_REQUESTED":
+      return "Changes requested";
+    case "PENDING":
+      return "Pending review";
+    default:
+      return isVerified ? "Verified" : "Pending review";
   }
 }
 
@@ -440,9 +458,15 @@ function normalizeContractInvoice(contract) {
   const vendorPayoutProfile = contract?.vendor?.payoutProfile
     ? {
         id: contract.vendor.payoutProfile.id || "",
+        vendorId: contract.vendor.payoutProfile.vendorId || contract.vendor.id || "",
         payoutMethod: contract.vendor.payoutProfile.payoutMethod || "BANK_TRANSFER",
         bankDetailsVerified: Boolean(contract.vendor.payoutProfile.bankDetailsVerified),
-        verificationStatus: contract.vendor.payoutProfile.verificationStatus || "Pending review",
+        verificationStatus: normalizePayoutProfileStatus(
+          contract.vendor.payoutProfile.verificationStatus,
+          contract.vendor.payoutProfile.bankDetailsVerified,
+        ),
+        verificationStatusRaw: contract.vendor.payoutProfile.verificationStatus || "",
+        verificationNote: contract.vendor.payoutProfile.verificationNote || "",
         accountHolderName: contract.vendor.payoutProfile.accountHolderName || "",
         bankName: contract.vendor.payoutProfile.bankName || "",
         accountNumber: contract.vendor.payoutProfile.accountNumber || "",
@@ -455,6 +479,10 @@ function normalizeContractInvoice(contract) {
         city: contract.vendor.payoutProfile.city || "",
         postalCode: contract.vendor.payoutProfile.postalCode || "",
         country: contract.vendor.payoutProfile.country || "",
+        createdAt: contract.vendor.payoutProfile.createdAt || "",
+        updatedAt: contract.vendor.payoutProfile.updatedAt || "",
+        createdAtLabel: formatDateTimeLabel(contract.vendor.payoutProfile.createdAt),
+        updatedAtLabel: formatDateTimeLabel(contract.vendor.payoutProfile.updatedAt),
       }
     : null;
 
@@ -521,6 +549,41 @@ function normalizeContractInvoice(contract) {
     },
     vendorName,
     vendorPayoutProfile,
+  };
+}
+
+function normalizeAdminVendorPayoutProfile(profile, fallbackVendorId = "") {
+  if (!profile?.id) {
+    return null;
+  }
+
+  return {
+    id: profile.id || "",
+    vendorId: profile.vendorId || fallbackVendorId || "",
+    payoutMethod: profile.payoutMethod || "BANK_TRANSFER",
+    bankDetailsVerified: Boolean(profile.bankDetailsVerified),
+    verificationStatus: normalizePayoutProfileStatus(
+      profile.verificationStatus,
+      profile.bankDetailsVerified,
+    ),
+    verificationStatusRaw: profile.verificationStatus || "",
+    verificationNote: profile.verificationNote || "",
+    accountHolderName: profile.accountHolderName || "",
+    bankName: profile.bankName || "",
+    accountNumber: profile.accountNumber || "",
+    iban: profile.iban || "",
+    swiftBic: profile.swiftBic || "",
+    routingNumber: profile.routingNumber || "",
+    branchName: profile.branchName || "",
+    branchCode: profile.branchCode || "",
+    billingAddress: profile.billingAddress || "",
+    city: profile.city || "",
+    postalCode: profile.postalCode || "",
+    country: profile.country || "",
+    createdAt: profile.createdAt || "",
+    updatedAt: profile.updatedAt || "",
+    createdAtLabel: formatDateTimeLabel(profile.createdAt),
+    updatedAtLabel: formatDateTimeLabel(profile.updatedAt),
   };
 }
 
@@ -907,13 +970,82 @@ export async function getAdminPaymentDetailRequest(id) {
     ),
   ]);
   const contractInvoice = normalizeContractInvoice(contractData?.adminPaymentFinanceContract);
+  const vendorId =
+    contractData?.adminPaymentFinanceContract?.vendor?.id ||
+    data?.adminPayment?.vendor?.id ||
+    contractInvoice?.vendorPayoutProfile?.vendorId ||
+    "";
+  let adminPayoutProfile = null;
+
+  if (vendorId) {
+    const payoutProfileData = await executeProtectedGraphqlRequest(
+      ADMIN_VENDOR_PAYOUT_PROFILE_QUERY,
+      { vendorId },
+    ).catch(() => null);
+    adminPayoutProfile = normalizeAdminVendorPayoutProfile(
+      payoutProfileData?.adminVendorPayoutProfile,
+      vendorId,
+    );
+  }
+
   const payment = normalizePaymentDetail(data?.adminPayment, contractInvoice);
 
   if (!payment?.id) {
     throw new Error("Unable to load this payment.");
   }
 
+  if (adminPayoutProfile) {
+    payment.vendor = {
+      ...payment.vendor,
+      payoutProfile: adminPayoutProfile,
+    };
+  }
+
   return payment;
+}
+
+export async function approveVendorPayoutProfileRequest(vendorId, { verificationNote = "" } = {}) {
+  const data = await executeProtectedGraphqlRequest(
+    APPROVE_VENDOR_PAYOUT_PROFILE_MUTATION,
+    {
+      input: {
+        vendorId,
+        verificationNote: verificationNote || null,
+      },
+    },
+  );
+  const result = data?.approveVendorPayoutProfile;
+
+  if (!result?.success || !result?.payoutProfile?.id) {
+    throw new Error(getErrorMessage(result, "Unable to approve vendor bank details."));
+  }
+
+  return {
+    message: result.message || "Vendor bank details approved.",
+    payoutProfile: normalizeAdminVendorPayoutProfile(result.payoutProfile, vendorId),
+  };
+}
+
+export async function requestVendorPayoutProfileChangesRequest(vendorId, { reason = "" } = {}) {
+  const data = await executeProtectedGraphqlRequest(
+    REQUEST_VENDOR_PAYOUT_PROFILE_CHANGES_MUTATION,
+    {
+      input: {
+        vendorId,
+        reason: reason || null,
+      },
+    },
+  );
+  const result = data?.requestVendorPayoutProfileChanges;
+
+  if (!result?.success || !result?.payoutProfile?.id) {
+    throw new Error(getErrorMessage(result, "Unable to request changes for vendor bank details."));
+  }
+
+  return {
+    message: result.message || "Requested changes for vendor bank details.",
+    payoutProfile: normalizeAdminVendorPayoutProfile(result.payoutProfile, vendorId),
+  };
 }
 
 export async function markCustomerPaymentReceivedRequest(id, { reference = "", note = "" } = {}) {

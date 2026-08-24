@@ -82,6 +82,8 @@ export default function PaymentStatusCards({
 }) {
   const customerStatus = payout.statuses.customerPaymentStatus;
   const payoutStatus = payout.statuses.vendorPayoutStatus;
+  const payoutProfile = payout.vendor?.payoutProfile;
+  const isBankProfileVerified = Boolean(payoutProfile?.bankDetailsVerified);
   const isReported = customerStatus === "Reported";
   const isPaid = customerStatus === "Paid";
   const isRejected = customerStatus === "Rejected";
@@ -201,7 +203,8 @@ export default function PaymentStatusCards({
             : isReleasingVendorPayout ||
               payoutStatus === "Released" ||
               payoutStatus === "Paid" ||
-              !isPaid
+              !isPaid ||
+              !isBankProfileVerified
         }
         icon={CreditCard}
         onClick={isReported ? onRejectInvoice : onReleasePayout}

@@ -3,11 +3,13 @@ import { Navigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { ArrowLeft, Download, RefreshCw } from "lucide-react";
 import {
+  approveVendorPayoutProfileRequest,
   approveInvoicePaymentRequest,
   getAdminPaymentDetailRequest,
   markInvoicePaidRequest,
   markCustomerPaymentReceivedRequest,
   markVendorPayoutPaidRequest,
+  requestVendorPayoutProfileChangesRequest,
   rejectInvoicePaymentRequest,
   releaseVendorPayoutRequest,
 } from "../api/paymentsApi.js";
@@ -59,6 +61,8 @@ export default function PaymentDetailsPage() {
   const [isRejectingInvoice, setIsRejectingInvoice] = useState(false);
   const [isMarkingInvoicePaid, setIsMarkingInvoicePaid] = useState(false);
   const [isReleasingVendorPayout, setIsReleasingVendorPayout] = useState(false);
+  const [isApprovingVendorBank, setIsApprovingVendorBank] = useState(false);
+  const [isRequestingVendorBankChanges, setIsRequestingVendorBankChanges] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -417,6 +421,121 @@ export default function PaymentDetailsPage() {
     }
   }
 
+  async function handleApproveVendorBankDetails() {
+    const vendorId = paymentDetail?.vendor?.id;
+
+    if (!vendorId || paymentDetail?.vendor?.payoutProfile?.bankDetailsVerified) {
+      return;
+    }
+
+    const prompt = await Swal.fire({
+      title: "Approve vendor bank details",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <div>
+            <label for="vendor-bank-approve-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Verification note</label>
+            <textarea id="vendor-bank-approve-note" class="swal2-textarea" placeholder="Bank details verified and matched with vendor records." style="margin:0;width:100%;min-height:110px;"></textarea>
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Approve bank details",
+      confirmButtonColor: "#cf6e38",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => ({
+        verificationNote:
+          document.getElementById("vendor-bank-approve-note")?.value?.trim() || "",
+      }),
+    });
+
+    if (!prompt.isConfirmed) {
+      return;
+    }
+
+    try {
+      setIsApprovingVendorBank(true);
+      const result = await approveVendorPayoutProfileRequest(vendorId, prompt.value || {});
+      await refreshPaymentDetail();
+      await Swal.fire({
+        icon: "success",
+        title: "Bank details approved",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to approve bank details",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsApprovingVendorBank(false);
+    }
+  }
+
+  async function handleRequestVendorBankChanges() {
+    const vendorId = paymentDetail?.vendor?.id;
+
+    if (!vendorId) {
+      return;
+    }
+
+    const prompt = await Swal.fire({
+      title: "Request vendor bank detail changes",
+      html: `
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+          <div>
+            <label for="vendor-bank-change-reason" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Reason</label>
+            <textarea id="vendor-bank-change-reason" class="swal2-textarea" placeholder="Explain what the vendor needs to correct before payout can be released." style="margin:0;width:100%;min-height:120px;"></textarea>
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Request changes",
+      confirmButtonColor: "#cf6e38",
+      cancelButtonColor: "#c8b9aa",
+      preConfirm: () => {
+        const reason =
+          document.getElementById("vendor-bank-change-reason")?.value?.trim() || "";
+
+        if (!reason) {
+          Swal.showValidationMessage("Please add a reason for the requested changes.");
+          return null;
+        }
+
+        return { reason };
+      },
+    });
+
+    if (!prompt.isConfirmed || !prompt.value?.reason) {
+      return;
+    }
+
+    try {
+      setIsRequestingVendorBankChanges(true);
+      const result = await requestVendorPayoutProfileChangesRequest(vendorId, prompt.value);
+      await refreshPaymentDetail();
+      await Swal.fire({
+        icon: "success",
+        title: "Changes requested",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to request changes",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsRequestingVendorBankChanges(false);
+    }
+  }
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -508,7 +627,13 @@ export default function PaymentDetailsPage() {
         <div className="space-y-4">
           <PaymentDetailsInfoCard payout={paymentDetail} />
           <PaymentLifecycleCard payout={paymentDetail} />
-          <VendorBankDetailsCard payout={paymentDetail} />
+          <VendorBankDetailsCard
+            isApproving={isApprovingVendorBank}
+            isRequestingChanges={isRequestingVendorBankChanges}
+            onApprove={handleApproveVendorBankDetails}
+            onRequestChanges={handleRequestVendorBankChanges}
+            payout={paymentDetail}
+          />
           <PaymentFinanceContractCard payout={paymentDetail} />
           <PaymentStatusCards
             isApprovingInvoice={isApprovingInvoice}

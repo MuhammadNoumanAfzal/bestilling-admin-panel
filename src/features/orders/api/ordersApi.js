@@ -134,6 +134,54 @@ function normalizePaymentStatus(value) {
   }
 }
 
+function normalizeLifecycleStatusCode(value) {
+  const normalized = `${value ?? ""}`.trim().toUpperCase().replace(/[\s-]+/g, "_");
+
+  switch (normalized) {
+    case "CONFIRMED":
+      return "ACCEPTED";
+    case "FOOD_READY":
+    case "READY":
+      return "PREPARING";
+    case "IN_TRANSIT":
+      return "OUT_FOR_DELIVERY";
+    case "COMPLETED":
+      return "DELIVERED";
+    case "CANCELLED":
+      return "CANCELED";
+    default:
+      return normalized;
+  }
+}
+
+function getLifecycleStatusRank(value) {
+  switch (normalizeLifecycleStatusCode(value)) {
+    case "PENDING":
+    case "PLACED":
+      return 0;
+    case "ACCEPTED":
+      return 1;
+    case "PREPARING":
+      return 2;
+    case "OUT_FOR_DELIVERY":
+      return 3;
+    case "DELIVERED":
+      return 4;
+    case "CANCELED":
+      return 5;
+    default:
+      return -1;
+  }
+}
+
+function resolveMostAdvancedLifecycleStatus(...values) {
+  return values.reduce((best, candidate) => {
+    const candidateRank = getLifecycleStatusRank(candidate);
+    const bestRank = getLifecycleStatusRank(best);
+    return candidateRank > bestRank ? normalizeLifecycleStatusCode(candidate) : best;
+  }, "");
+}
+
 function deriveAdminOrderPaymentStatus(order) {
   const rawPaymentStatus = `${order?.paymentStatus ?? ""}`.trim().toUpperCase();
   const capturedAt = order?.payment?.capturedAt || "";
@@ -773,20 +821,34 @@ export async function getAdminOrderDetailRequest(orderId) {
     fallbackData?.adminPayments?.items,
     rawOrder?.id || orderId,
   );
+  const resolvedStatus = resolveMostAdvancedLifecycleStatus(
+    rawOrder?.status,
+    rawOrder?.fulfillmentStatus,
+    rawOrder?.delivery?.status,
+    fallbackStatus,
+  );
 
   const enrichedOrder =
-    rawOrder && fallbackStatus
+    rawOrder && resolvedStatus
       ? {
           ...rawOrder,
-          status: rawOrder.status || fallbackStatus,
-          fulfillmentStatus:
-            rawOrder.fulfillmentStatus ||
-            rawOrder.delivery?.status ||
+          status: resolvedStatus,
+          fulfillmentStatus: resolveMostAdvancedLifecycleStatus(
+            rawOrder.fulfillmentStatus,
+            rawOrder.delivery?.status,
+            rawOrder.status,
             fallbackStatus,
+          ) || resolvedStatus,
           delivery: rawOrder.delivery
             ? {
                 ...rawOrder.delivery,
-                status: rawOrder.delivery.status || fallbackStatus,
+                status:
+                  resolveMostAdvancedLifecycleStatus(
+                    rawOrder.delivery.status,
+                    rawOrder.fulfillmentStatus,
+                    rawOrder.status,
+                    fallbackStatus,
+                  ) || resolvedStatus,
               }
             : rawOrder.delivery,
         }

@@ -7,6 +7,7 @@ import {
   ADMIN_ORDER_ALLOWED_ACTIONS_QUERY,
   ADMIN_ORDER_AUDIT_LOGS_QUERY,
   ADMIN_ORDER_CATEGORY_BREAKDOWN_QUERY,
+  COMMISSION_PREVIEW_FOR_ORDER_QUERY,
   ADMIN_ORDER_DETAIL_QUERY,
   ADMIN_ORDER_INVOICE_QUERY,
   ADMIN_ORDER_PAYMENT_RECONCILIATION_QUERY,
@@ -754,6 +755,30 @@ function normalizeOrderDetail(order) {
   };
 }
 
+function normalizeCommissionPreview(preview) {
+  if (!preview?.orderId) {
+    return null;
+  }
+
+  return {
+    orderId: preview.orderId || "",
+    appliedRuleType: preview.appliedRuleType || "Not available",
+    appliedRuleId: preview.appliedRuleId || "",
+    appliedRuleLabel: preview.appliedRuleLabel || "Not available",
+    commissionModel: preview.commissionModel || "Not available",
+    ratePercent:
+      preview.ratePercent === 0 || preview.ratePercent
+        ? `${preview.ratePercent}%`
+        : "Not available",
+    grossOrderAmount: formatMoney(preview.grossOrderAmount),
+    grossCommission: formatMoney(preview.grossCommission),
+    fixedFee: formatMoney(preview.fixedFee),
+    vatOnCommission: formatMoney(preview.vatOnCommission),
+    totalCommission: formatMoney(preview.totalCommission),
+    vendorPayable: formatMoney(preview.vendorPayable),
+  };
+}
+
 function findFallbackPaymentOrderStatus(fallbackItems, orderId) {
   if (!Array.isArray(fallbackItems) || !orderId) {
     return "";
@@ -868,6 +893,14 @@ export async function getAdminOrderDetailRequest(orderId) {
   }
 
   return detail;
+}
+
+export async function getCommissionPreviewForOrderRequest(orderId) {
+  const data = await executeProtectedGraphqlRequest(COMMISSION_PREVIEW_FOR_ORDER_QUERY, {
+    orderId,
+  });
+
+  return normalizeCommissionPreview(data?.commissionPreviewForOrder);
 }
 
 export async function getAdminOrderAllowedActionsRequest(orderId) {

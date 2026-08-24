@@ -23,6 +23,7 @@ import OrderSummaryCard from "../components/details/OrderSummaryCard.jsx";
 import {
   addOrderNoteRequest,
   cancelOrderRequest,
+  getCommissionPreviewForOrderRequest,
   getAdminOrderDetailRequest,
   getAdminOrderInvoiceRequest,
   refundOrderRequest,
@@ -74,10 +75,54 @@ function OverviewCard({ icon: Icon, label, value, valueClassName = "text-[#22191
   );
 }
 
+function CommissionPreviewCard({ preview }) {
+  if (!preview) {
+    return null;
+  }
+
+  const rows = [
+    { label: "Applied Rule", value: preview.appliedRuleLabel },
+    { label: "Rule Type", value: preview.appliedRuleType },
+    { label: "Commission Model", value: preview.commissionModel },
+    { label: "Commission Rate", value: preview.ratePercent },
+    { label: "Gross Order Amount", value: preview.grossOrderAmount },
+    { label: "Gross Commission", value: preview.grossCommission },
+    { label: "Fixed Fee", value: preview.fixedFee },
+    { label: "VAT on Commission", value: preview.vatOnCommission },
+    { label: "Total Commission", value: preview.totalCommission },
+    { label: "Vendor Payable", value: preview.vendorPayable },
+  ];
+
+  return (
+    <article className="h-full rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
+      <header className="mb-4 border-b border-[#eee4dd] pb-3">
+        <h3 className="text-[18px] font-bold text-[#18120f]">Commission Preview</h3>
+        <p className="mt-1 text-[13px] leading-6 text-[#7a6d66]">
+          Live commission resolution for this order before payout settlement.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+        {rows.map((item) => (
+          <div key={item.label} className="space-y-1">
+            <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
+              {item.label}
+            </span>
+            <span className="block text-[13px] font-semibold leading-5 text-[#18120f]">
+              {item.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
 export default function OrderDetailPage() {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
+  const [commissionPreview, setCommissionPreview] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [isWorking, setIsWorking] = useState(false);
@@ -100,7 +145,11 @@ export default function OrderDetailPage() {
     }
 
     try {
-      const detail = await getAdminOrderDetailRequest(decodeURIComponent(orderId));
+      const decodedId = decodeURIComponent(orderId);
+      const [detail, preview] = await Promise.all([
+        getAdminOrderDetailRequest(decodedId),
+        getCommissionPreviewForOrderRequest(decodedId).catch(() => null),
+      ]);
 
       setOrder((current) => {
         if (
@@ -124,6 +173,7 @@ export default function OrderDetailPage() {
 
         return detail;
       });
+      setCommissionPreview(preview);
     } catch (error) {
       if (!silent) {
         setLoadError(error instanceof Error ? error.message : "Unable to load order details.");
@@ -527,6 +577,10 @@ export default function OrderDetailPage() {
       <section className="grid gap-6 grid-cols-1 md:grid-cols-2">
         <EventInfoCard order={order} />
         <OrderSummaryCard amount={order.amount} payment={order.payment} />
+      </section>
+
+      <section>
+        <CommissionPreviewCard preview={commissionPreview} />
       </section>
 
       <section className="grid gap-6 grid-cols-1 xl:grid-cols-2">

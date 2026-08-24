@@ -409,3 +409,46 @@ export const ADMIN_ORDER_CATEGORY_BREAKDOWN_QUERY = `
     }
   }
 `;
+
+export const COMMISSION_PREVIEW_FOR_ORDER_QUERY = `
+  query CommissionPreviewForOrder($orderId: ID!) {
+    commissionPreviewForOrder(orderId: $orderId) {
+      orderId
+      appliedRuleType
+      appliedRuleId
+      appliedRuleLabel
+      commissionModel
+      ratePercent
+      grossOrderAmount {
+        amount
+        currency
+        formatted
+      }
+      grossCommission {
+        amount
+        currency
+        formatted
+      }
+      fixedFee {
+        amount
+        currency
+        formatted
+      }
+      vatOnCommission {
+        amount
+        currency
+        formatted
+      }
+      totalCommission {
+        amount
+        currency
+        formatted
+      }
+      vendorPayable {
+        amount
+        currency
+        formatted
+      }
+    }
+  }
+`;

@@ -43,7 +43,7 @@ function VendorShareRow({ avatar, avatarUrl, name, share }) {
   );
 }
 
-export default function CommissionBreakdownCard({ regions, vendors }) {
+export default function CommissionBreakdownCard({ globalCommissionLabel, globalCommissionRate, regions, vendors }) {
   const navigate = useNavigate();
   const hasRegions = regions.length > 0;
   const hasVendors = vendors.length > 0;
@@ -59,9 +59,11 @@ export default function CommissionBreakdownCard({ regions, vendors }) {
         </div>
 
         <div className="rounded-[16px] border border-[#f2d7c7] bg-white px-4 py-2.5 shadow-[0_8px_20px_rgba(59,33,18,0.05)]">
-          <p className="text-[13px] font-bold text-[#cf6e38]">Platform Default Commission</p>
+          <p className="text-[13px] font-bold text-[#cf6e38]">
+            {globalCommissionLabel || "Platform Default Commission"}
+          </p>
           <span className="mt-1 block text-[26px] font-bold tracking-[-0.03em] text-[#18120f]">
-            {regions[0]?.value || "0%"}
+            {globalCommissionRate || "0%"}
           </span>
         </div>
       </div>

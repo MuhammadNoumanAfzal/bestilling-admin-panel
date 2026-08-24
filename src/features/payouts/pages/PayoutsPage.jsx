@@ -56,6 +56,8 @@ export default function PayoutsPage() {
     vendors: [],
   });
   const [commissionBreakdown, setCommissionBreakdown] = useState({
+    globalLabel: "Platform Default Commission",
+    globalRate: "0%",
     regions: [],
     vendors: [],
   });
@@ -110,6 +112,8 @@ export default function PayoutsPage() {
           })),
         });
         setCommissionBreakdown({
+          globalLabel: commissionResponse.globalSettings.label || "Platform Default Commission",
+          globalRate: commissionResponse.globalSettings.currentRate || "0%",
           regions: commissionResponse.areaRows.map((row) => ({
             id: row.id,
             label: row.area,
@@ -213,7 +217,12 @@ export default function PayoutsPage() {
           )}
         </div>
 
-        <CommissionBreakdownCard regions={commissionBreakdown.regions} vendors={commissionBreakdown.vendors} />
+        <CommissionBreakdownCard
+          globalCommissionLabel={commissionBreakdown.globalLabel}
+          globalCommissionRate={commissionBreakdown.globalRate}
+          regions={commissionBreakdown.regions}
+          vendors={commissionBreakdown.vendors}
+        />
       </section>
     </div>
   );

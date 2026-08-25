@@ -563,7 +563,7 @@ function renderFieldInput({ field, value, onChange }) {
 function StatCard({ icon: Icon, label, onClick, value, hint, toneClasses }) {
   return (
     <button
-      className="rounded-[20px] border border-[#eadfd6] bg-white p-4 text-left shadow-[0_18px_45px_rgba(49,30,19,0.05)] transition hover:-translate-y-0.5 hover:border-[#e0cdbf] hover:shadow-[0_22px_50px_rgba(49,30,19,0.08)]"
+      className="w-full rounded-[20px] border border-[#eadfd6] bg-white p-4 text-left shadow-[0_18px_45px_rgba(49,30,19,0.05)] transition hover:-translate-y-0.5 hover:border-[#e0cdbf] hover:shadow-[0_22px_50px_rgba(49,30,19,0.08)]"
       onClick={onClick}
       type="button"
     >
@@ -572,12 +572,12 @@ function StatCard({ icon: Icon, label, onClick, value, hint, toneClasses }) {
           <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#9a8576]">
             {label}
           </p>
-          <p className="mt-2 text-[30px] font-black tracking-[-0.05em] text-[#18120f]">{value}</p>
+          <p className="mt-2 text-[26px] font-black tracking-[-0.05em] text-[#18120f] sm:text-[30px]">{value}</p>
           <p className="mt-1 text-[12px] leading-5 text-[#786d66]">{hint}</p>
         </div>
         <span
           className={[
-            "inline-flex h-12 w-12 items-center justify-center rounded-[16px] text-white",
+            "inline-flex h-11 w-11 items-center justify-center rounded-[14px] text-white sm:h-12 sm:w-12 sm:rounded-[16px]",
             toneClasses,
           ].join(" ")}
         >
@@ -607,18 +607,18 @@ function SectionCard({
 
   return (
     <section className="overflow-hidden rounded-[24px] border border-[#e6dad0] bg-white shadow-[0_20px_55px_rgba(49,30,19,0.06)]">
-      <div className={`bg-gradient-to-br ${section.color} px-5 py-5`}>
+      <div className={`bg-gradient-to-br ${section.color} px-4 py-4 sm:px-5 sm:py-5`}>
         <div className="flex items-start gap-4">
           <span
             className={[
-              "inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] text-white shadow-[0_12px_30px_rgba(49,30,19,0.14)]",
+              "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] text-white shadow-[0_12px_30px_rgba(49,30,19,0.14)] sm:h-12 sm:w-12 sm:rounded-[16px]",
               section.accent,
             ].join(" ")}
           >
             <Icon size={18} />
           </span>
           <div className="min-w-0">
-            <h2 className="text-[19px] font-black tracking-[-0.03em] text-[#201712]">
+            <h2 className="text-[17px] font-black tracking-[-0.03em] text-[#201712] sm:text-[19px]">
               {section.title}
             </h2>
             <p className="mt-1 max-w-[640px] text-[13px] leading-6 text-[#6f625b]">
@@ -627,9 +627,9 @@ function SectionCard({
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {section.fields.map((field) => (
-            <div className={field.type === "checkbox" ? "md:self-end" : ""} key={field.key}>
+            <div className={field.type === "checkbox" ? "sm:self-end" : ""} key={field.key}>
               {renderFieldInput({
                 field,
                 value: draftValues[field.key],
@@ -639,9 +639,9 @@ function SectionCard({
           ))}
         </div>
 
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-stretch sm:justify-end">
           <button
-            className="inline-flex h-12 min-w-[156px] cursor-pointer items-center justify-center rounded-[14px] bg-[#1f1712] px-5 text-[13px] font-bold text-white transition hover:bg-[#34251d] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-12 w-full min-w-[156px] cursor-pointer items-center justify-center rounded-[14px] bg-[#1f1712] px-5 text-[13px] font-bold text-white transition hover:bg-[#34251d] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             disabled={isSavingCreate}
             onClick={() => onCreate(section)}
             type="button"
@@ -651,7 +651,7 @@ function SectionCard({
         </div>
       </div>
 
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         {items.length ? (
           <div className="grid gap-3 md:grid-cols-2">
             {items.map((item) => {
@@ -667,7 +667,7 @@ function SectionCard({
                 >
                   {isEditing ? (
                     <div className="space-y-3">
-                      <div className="grid gap-3 md:grid-cols-2">
+                      <div className="grid gap-3 sm:grid-cols-2">
                         {section.fields.map((field) => (
                           <div key={field.key}>
                             {renderFieldInput({
@@ -697,7 +697,7 @@ function SectionCard({
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="truncate text-[15px] font-bold text-[#251b15]">
@@ -711,9 +711,9 @@ function SectionCard({
                         </div>
                         <p className="mt-1 text-[12px] leading-5 text-[#86786f]">{item.meta}</p>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2 self-stretch sm:self-auto">
                         <button
-                          className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[10px] border border-[#dfd2c8] bg-white px-3 text-[12px] font-bold text-[#3e332c] transition hover:bg-[#faf6f2]"
+                          className="inline-flex h-9 flex-1 cursor-pointer items-center justify-center rounded-[10px] border border-[#dfd2c8] bg-white px-3 text-[12px] font-bold text-[#3e332c] transition hover:bg-[#faf6f2] sm:flex-none"
                           onClick={() => onStartEdit(section.key, item)}
                           type="button"
                         >
@@ -1095,15 +1095,15 @@ export default function VendorSettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="overflow-hidden rounded-[28px] border border-[#eaded3] bg-[linear-gradient(135deg,#fff6ef_0%,#fffdfa_50%,#f8fbff_100%)] p-6 shadow-[0_24px_60px_rgba(49,30,19,0.06)]">
+    <div className="space-y-5 overflow-x-hidden">
+      <section className="overflow-hidden rounded-[24px] border border-[#eaded3] bg-[linear-gradient(135deg,#fff6ef_0%,#fffdfa_50%,#f8fbff_100%)] p-4 shadow-[0_24px_60px_rgba(49,30,19,0.06)] sm:rounded-[28px] sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-[820px]">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#eed7c8] bg-white/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#bf6739]">
               <Sparkles size={12} />
               Vendor panel data controls
             </div>
-            <h1 className="mt-4 text-[34px] font-black tracking-[-0.05em] text-[#1b140f]">
+            <h1 className="mt-4 text-[28px] font-black tracking-[-0.05em] text-[#1b140f] sm:text-[34px]">
               Vendor Settings Master Data
             </h1>
             <p className="mt-2 text-[15px] leading-7 text-[#6f645d]">
@@ -1124,7 +1124,7 @@ export default function VendorSettingsPage() {
           </button>
         </div>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((item) => (
             <StatCard
               key={item.id}
@@ -1147,11 +1147,11 @@ export default function VendorSettingsPage() {
       ) : (
         SECTION_GROUPS.map((group) => (
           <section
-            className="rounded-[26px] border border-[#e7ddd4] bg-[#fffdfb] p-5 shadow-[0_20px_55px_rgba(49,30,19,0.05)]"
+            className="rounded-[22px] border border-[#e7ddd4] bg-[#fffdfb] p-4 shadow-[0_20px_55px_rgba(49,30,19,0.05)] sm:rounded-[26px] sm:p-5"
             key={group.key}
           >
-            <div className="mb-5">
-              <h2 className="text-[24px] font-black tracking-[-0.04em] text-[#1d1510]">
+            <div className="mb-4 sm:mb-5">
+              <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#1d1510] sm:text-[24px]">
                 {group.title}
               </h2>
               <p className="mt-1 text-[14px] leading-6 text-[#72675f]">{group.subtitle}</p>
@@ -1199,11 +1199,11 @@ export default function VendorSettingsPage() {
         ))
       )}
 
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
+      <div className="fixed bottom-20 right-4 z-40 flex flex-col gap-3 sm:bottom-6 sm:right-6">
         {showScrollTop ? (
           <button
             aria-label="Back to top"
-            className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#d16737] text-white shadow-[0_18px_36px_rgba(209,103,55,0.28)] transition hover:-translate-y-0.5 hover:bg-[#bd592b]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#d16737] text-white shadow-[0_18px_36px_rgba(209,103,55,0.28)] transition hover:-translate-y-0.5 hover:bg-[#bd592b] sm:h-12 sm:w-12"
             onClick={scrollToTop}
             type="button"
           >
@@ -1214,7 +1214,7 @@ export default function VendorSettingsPage() {
         {showScrollDown ? (
           <button
             aria-label="Scroll down"
-            className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#d16737] text-white shadow-[0_18px_36px_rgba(209,103,55,0.28)] transition hover:translate-y-0.5 hover:bg-[#bd592b]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#d16737] text-white shadow-[0_18px_36px_rgba(209,103,55,0.28)] transition hover:translate-y-0.5 hover:bg-[#bd592b] sm:h-12 sm:w-12"
             onClick={scrollDown}
             type="button"
           >

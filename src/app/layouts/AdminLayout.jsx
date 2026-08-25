@@ -558,8 +558,8 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#211f1f] text-[#201813]">
-      <div className="mx-auto min-h-screen max-w-[1440px] bg-[#f4f1ee] lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">
+    <div className="min-h-screen overflow-x-hidden bg-[#211f1f] text-[#201813]">
+      <div className="mx-auto min-h-screen max-w-[1440px] overflow-x-clip bg-[#f4f1ee] lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">
         {isMobileNavOpen ? (
           <button
             aria-label="Close navigation overlay"
@@ -617,9 +617,9 @@ export default function AdminLayout() {
           </div>
         </aside>
 
-        <div className="min-h-screen bg-[#f7f5f3]">
+        <div className="min-h-screen overflow-x-hidden bg-[#f7f5f3]">
           <header className="sticky top-0 z-30 border-b border-[#ebe4de] bg-white/92 backdrop-blur-xl">
-            <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-5">
+            <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6 lg:flex-nowrap lg:px-5">
               <button
                 className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#2f241c] transition hover:bg-[#f5f1ed] lg:hidden"
                 onClick={() => setIsMobileNavOpen(true)}
@@ -628,43 +628,15 @@ export default function AdminLayout() {
                 <Menu size={18} />
               </button>
 
-              <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center">
+              <div className="min-w-0 flex-1">
                 <div className="min-w-0 lg:hidden">
                   <p className="truncate text-[22px] font-bold tracking-[-0.03em] text-[#1f1711] lg:hidden">
                     {meta.title}
                   </p>
                 </div>
-
-                <form
-                  className="relative w-full max-w-[520px]"
-                  onSubmit={handleSearchSubmit}
-                  ref={searchRef}
-                >
-                  <label className="relative block">
-                    <input
-                      className="h-11 w-full rounded-full border border-transparent bg-[#f1f4f8] px-4 pl-11 pr-4 text-[12px] text-[#231913] outline-none transition placeholder:text-[#a9afba] focus:border-[#ebddd1] focus:bg-white focus:shadow-[0_0_0_4px_rgba(206,105,56,0.11)]"
-                      onChange={(event) => setSearchQuery(event.target.value)}
-                      onFocus={() => setIsSearchFocused(true)}
-                      placeholder="Search pages, settings, vendors, orders, or reports..."
-                      type="search"
-                      value={searchQuery}
-                    />
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#adb3bd]">
-                      <Search size={15} />
-                    </span>
-                  </label>
-
-                  {shouldShowSearchResults ? (
-                    <SearchResults
-                      onSelect={handleSearchSelect}
-                      query={searchQuery}
-                      results={filteredNavigation}
-                    />
-                  ) : null}
-                </form>
               </div>
 
-              <div className="flex items-center gap-2 border-l border-[#ebe4de] pl-3">
+              <div className="ml-auto flex items-center gap-2 border-l border-[#ebe4de] pl-3">
                 <button
                   aria-label="Open notifications"
                   className="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#2f241c] transition hover:bg-[#f5f1ed]"
@@ -739,10 +711,38 @@ export default function AdminLayout() {
                   </div>
                 ) : null}
               </div>
+
+              <form
+                className="relative order-4 w-full lg:order-none lg:max-w-[520px]"
+                onSubmit={handleSearchSubmit}
+                ref={searchRef}
+              >
+                <label className="relative block">
+                  <input
+                    className="h-11 w-full rounded-full border border-transparent bg-[#f1f4f8] px-4 pl-11 pr-4 text-[12px] text-[#231913] outline-none transition placeholder:text-[#a9afba] focus:border-[#ebddd1] focus:bg-white focus:shadow-[0_0_0_4px_rgba(206,105,56,0.11)]"
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    onFocus={() => setIsSearchFocused(true)}
+                    placeholder="Search pages, settings, vendors, orders, or reports..."
+                    type="search"
+                    value={searchQuery}
+                  />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#adb3bd]">
+                    <Search size={15} />
+                  </span>
+                </label>
+
+                {shouldShowSearchResults ? (
+                  <SearchResults
+                    onSelect={handleSearchSelect}
+                    query={searchQuery}
+                    results={filteredNavigation}
+                  />
+                ) : null}
+              </form>
             </div>
           </header>
 
-          <main className="px-4 py-5 pb-24 sm:px-6 lg:px-5 lg:py-5 lg:pb-8">
+          <main className="overflow-x-hidden px-3 py-4 pb-24 sm:px-6 lg:px-5 lg:py-5 lg:pb-8">
             <div className="mb-5 hidden lg:block">
               <h1 className="text-[34px] font-bold tracking-[-0.04em] text-[#18120f]">{meta.title}</h1>
               <p className="mt-1 text-[15px] leading-7 text-[#6f645d]">{meta.subtitle}</p>

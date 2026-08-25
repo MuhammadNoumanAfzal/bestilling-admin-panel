@@ -10,8 +10,6 @@ const initialFormState = {
   postalCode: "",
   areaName: "",
   status: "Active",
-  lat: "",
-  lng: "",
   estimatedDeliveryMinutes: "",
 };
 
@@ -35,8 +33,6 @@ function PostalCodeTableAction({ children, tone = "default", onClick }) {
 export default function DeliveryPostalAreasCard({
   areaId,
   areaName,
-  defaultLat = "",
-  defaultLng = "",
   rows,
   isSubmitting = false,
   onCreate,
@@ -75,11 +71,7 @@ export default function DeliveryPostalAreasCard({
   }
 
   function handleOpenCreate() {
-    setForm({
-      ...initialFormState,
-      lat: defaultLat == null ? "" : `${defaultLat}`,
-      lng: defaultLng == null ? "" : `${defaultLng}`,
-    });
+    setForm(initialFormState);
     setModalMode("create");
     setModalOpen(true);
   }
@@ -90,8 +82,6 @@ export default function DeliveryPostalAreasCard({
       postalCode: row.postalCode,
       areaName: row.areaName,
       status: row.status,
-      lat: row.lat,
-      lng: row.lng,
       estimatedDeliveryMinutes: row.estimatedDeliveryMinutes,
     });
     setModalMode("edit");
@@ -106,10 +96,8 @@ export default function DeliveryPostalAreasCard({
   async function handleSubmit() {
     const trimmedPostalCode = form.postalCode.trim();
     const trimmedAreaName = form.areaName.trim();
-    const trimmedLat = `${form.lat ?? ""}`.trim();
-    const trimmedLng = `${form.lng ?? ""}`.trim();
 
-    if (!trimmedPostalCode || !trimmedAreaName || !trimmedLat || !trimmedLng) {
+    if (!trimmedPostalCode || !trimmedAreaName) {
       return;
     }
 

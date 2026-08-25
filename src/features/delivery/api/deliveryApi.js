@@ -99,8 +99,6 @@ function normalizePostalArea(postalArea) {
     areaName: postalArea?.areaName || "",
     status: normalizeStatus(postalArea?.status),
     vendors: Number(postalArea?.vendors ?? 0),
-    lat: postalArea?.lat == null ? "" : `${postalArea.lat}`,
-    lng: postalArea?.lng == null ? "" : `${postalArea.lng}`,
     deliveryFeeOverride: `${postalArea?.deliveryFeeOverride ?? ""}`,
     minimumOrderAmountOverride: `${postalArea?.minimumOrderAmountOverride ?? ""}`,
     estimatedDeliveryMinutes: `${postalArea?.estimatedDeliveryMinutes ?? ""}`,
@@ -110,15 +108,12 @@ function normalizePostalArea(postalArea) {
 function normalizeAreaListItem(item) {
   return {
     id: item?.id || "",
-    name: item?.name || [item?.city, item?.region].filter(Boolean).join(" ") || "",
     city: item?.city || "",
     region: item?.region || "",
     country: item?.country || "",
     status: normalizeStatus(item?.status),
     activePostalCodes: Number(item?.activePostalCodes ?? 0),
     vendors: Number(item?.vendors ?? 0),
-    updatedAt: formatDisplayDate(item?.updatedAt),
-    createdAt: formatDisplayDate(item?.createdAt),
     country: item?.country || "",
     maxDeliveryRadius: Number(item?.maxDeliveryRadius ?? 0),
     leadTimeDays: Number(item?.leadTimeDays ?? 0),
@@ -133,7 +128,6 @@ function normalizeAreaDetail(area) {
 
   return {
     id: area.id,
-    name: area.name || [area.city, area.region].filter(Boolean).join(" ") || "",
     city: area.city || "",
     region: area.region || "",
     country: area.country || "",
@@ -141,8 +135,6 @@ function normalizeAreaDetail(area) {
     rawStatus: `${area.status ?? ""}`.trim().toUpperCase() || "ACTIVE",
     activePostalCodes: Number(area.activePostalCodes ?? 0),
     vendors: Number(area.vendors ?? 0),
-    updatedAt: formatDisplayDate(area.updatedAt),
-    createdAt: formatDisplayDate(area.createdAt),
     maxDeliveryRadius: Number(area.maxDeliveryRadius ?? 0),
     leadTimeDays: Number(area.leadTimeDays ?? 0),
     coverageType: normalizeCoverageType(area.coverageType),
@@ -157,24 +149,7 @@ function normalizeAreaDetail(area) {
         "SELECTED_POSTAL_CODES_ONLY",
       minimumOrderAmount: `${area.settings?.minimumOrderAmount ?? ""}`,
       deliveryFee: `${area.settings?.deliveryFee ?? ""}`,
-      isRestricted: Boolean(area.settings?.isRestricted),
-      isExpressEnabled: Boolean(area.settings?.isExpressEnabled),
       notes: area.settings?.notes || "",
-    },
-    map: {
-      center: {
-        lat: area.map?.center?.lat ?? null,
-        lng: area.map?.center?.lng ?? null,
-      },
-      zoom: Number(area.map?.zoom ?? 10),
-      bounds: {
-        north: area.map?.bounds?.north ?? null,
-        south: area.map?.bounds?.south ?? null,
-        east: area.map?.bounds?.east ?? null,
-        west: area.map?.bounds?.west ?? null,
-      },
-      polygons: Array.isArray(area.map?.polygons) ? area.map.polygons : [],
-      markers: Array.isArray(area.map?.markers) ? area.map.markers : [],
     },
     postalAreas: Array.isArray(area.postalAreas)
       ? area.postalAreas.map(normalizePostalArea)
@@ -257,13 +232,6 @@ export async function getAdminDeliverySummaryRequest() {
       accent: "warm",
     },
     {
-      id: "restricted",
-      label: "Restricted Areas",
-      value: String(summary.restrictedAreas ?? 0),
-      subtitle: "Areas with delivery restrictions enabled",
-      accent: "neutral",
-    },
-    {
       id: "coverage",
       label: "Platform Coverage",
       value: formatCoveragePercent(summary.platformCoveragePercent),
@@ -285,8 +253,6 @@ export async function getAdminDeliveryAreasRequest(filters) {
     city: filters?.city || null,
     page: filters?.page || 1,
     pageSize: filters?.pageSize || 10,
-    sortBy: filters?.sortBy || "city",
-    sortOrder: filters?.sortOrder || "ASC",
   });
 
   const response = data?.adminDeliveryAreas;
@@ -372,8 +338,6 @@ export async function updateDeliveryAreaRequest(id, input) {
       coverageType: getDefaultCoverageType(input?.coverageType),
       minimumOrderAmount: parseDecimalOrNull(input?.minimumOrderAmount),
       deliveryFee: parseDecimalOrNull(input?.deliveryFee),
-      isRestricted: Boolean(input?.isRestricted),
-      isExpressEnabled: Boolean(input?.isExpressEnabled),
       notes: `${input?.notes ?? ""}`.trim() || null,
     },
   });
@@ -427,8 +391,6 @@ export async function addDeliveryPostalAreaRequest(deliveryAreaId, input) {
       postalCode: `${input?.postalCode ?? ""}`.trim(),
       areaName: `${input?.areaName ?? ""}`.trim(),
       status: normalizeStatusInput(input?.status),
-      lat: parseNumberOrNull(input?.lat),
-      lng: parseNumberOrNull(input?.lng),
       deliveryFeeOverride: parseDecimalOrNull(input?.deliveryFeeOverride),
       minimumOrderAmountOverride: parseDecimalOrNull(input?.minimumOrderAmountOverride),
       estimatedDeliveryMinutes: parseNumberOrNull(input?.estimatedDeliveryMinutes),
@@ -453,8 +415,6 @@ export async function updateDeliveryPostalAreaRequest(id, input) {
       postalCode: `${input?.postalCode ?? ""}`.trim(),
       areaName: `${input?.areaName ?? ""}`.trim(),
       status: normalizeStatusInput(input?.status),
-      lat: parseNumberOrNull(input?.lat),
-      lng: parseNumberOrNull(input?.lng),
       deliveryFeeOverride: parseDecimalOrNull(input?.deliveryFeeOverride),
       minimumOrderAmountOverride: parseDecimalOrNull(input?.minimumOrderAmountOverride),
       estimatedDeliveryMinutes: parseNumberOrNull(input?.estimatedDeliveryMinutes),

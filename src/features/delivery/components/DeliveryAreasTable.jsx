@@ -97,7 +97,7 @@ export default function DeliveryAreasTable({ currentPage, onPageChange, pageSize
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Active Postal Codes</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Registered Vendors</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Coverage Status</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Last Updated</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Coverage Type</th>
               <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
             </tr>
           </thead>
@@ -124,7 +124,7 @@ export default function DeliveryAreasTable({ currentPage, onPageChange, pageSize
                   <td className="px-3 py-4">
                     <StatusBadge status={row.status} />
                   </td>
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.updatedAt}</td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.coverageType}</td>
                   <td className="px-4 py-4 text-right">
                     <button
                       className="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap text-[14px] font-semibold text-[#cf6e38] transition hover:text-[#b75d31]"

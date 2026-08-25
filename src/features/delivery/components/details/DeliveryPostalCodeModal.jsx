@@ -22,7 +22,7 @@ export default function DeliveryPostalCodeModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#211713]/50 px-4 py-4 backdrop-blur-[4px]">
-      <div className="flex max-h-[84vh] w-full max-w-[620px] flex-col overflow-hidden rounded-[24px] border border-[#ecdccf] bg-[linear-gradient(180deg,#fffdfa_0%,#fff7f1_100%)] shadow-[0_30px_80px_rgba(28,18,12,0.22)]">
+      <div className="flex max-h-[84vh] w-full max-w-[680px] flex-col overflow-hidden rounded-[26px] border border-[#ecdccf] bg-[linear-gradient(180deg,#fffdfa_0%,#fff7f1_100%)] shadow-[0_30px_80px_rgba(28,18,12,0.22)]">
         <div className="flex items-start justify-between gap-4 border-b border-[#f1e2d8] px-5 py-4">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#cf6e38]">Postal Code</p>
@@ -44,18 +44,18 @@ export default function DeliveryPostalCodeModal({
         </div>
 
         <div className="overflow-y-auto px-5 py-5">
-          <div className="rounded-[18px] border border-[#eee3db] bg-white p-4 shadow-[0_10px_24px_rgba(55,31,13,0.04)]">
+          <div className="rounded-[20px] border border-[#eee3db] bg-white p-5 shadow-[0_10px_24px_rgba(55,31,13,0.04)]">
             <div className="mb-4 flex items-center gap-2">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#fff1e7] text-[#cf6e38]">
                 <MapPinned size={17} />
               </span>
               <div>
                 <p className="text-[16px] font-bold text-[#18120f]">Coverage Details</p>
-                <p className="text-[13px] text-[#7b6f68]">Set the postal code, local area, and service status.</p>
+                <p className="text-[13px] text-[#7b6f68]">Set the postal code, local area, and delivery status.</p>
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               <AddDeliveryAreaField
                 disabled={mode === "edit"}
                 label="Postal Code"
@@ -76,25 +76,7 @@ export default function DeliveryPostalCodeModal({
                 options={statusOptions}
                 value={form.status}
               />
-              <AddDeliveryAreaField
-                label="Latitude"
-                onChange={(event) => onChange("lat", event.target.value)}
-                placeholder="59.9139"
-                type="number"
-                value={form.lat}
-              />
-              <AddDeliveryAreaField
-                label="Longitude"
-                onChange={(event) => onChange("lng", event.target.value)}
-                placeholder="10.7522"
-                type="number"
-                value={form.lng}
-              />
             </div>
-
-            <p className="mt-3 text-[12px] leading-5 text-[#8a7d75]">
-              Latitude and longitude are required by the backend for each postal area.
-            </p>
           </div>
         </div>
 

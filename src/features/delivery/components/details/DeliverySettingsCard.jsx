@@ -1,14 +1,5 @@
 import DeliveryStatusPill from "./DeliveryStatusPill.jsx";
 
-function ToggleField({ checked, label, onChange }) {
-  return (
-    <label className="flex items-center justify-between rounded-[12px] border border-[#e6dbd3] bg-[#f8f4f1] px-4 py-3">
-      <span className="text-[14px] font-medium text-[#18120f]">{label}</span>
-      <input checked={checked} className="h-4 w-4 accent-[#cf6e38]" onChange={onChange} type="checkbox" />
-    </label>
-  );
-}
-
 function TextField({
   label,
   value,
@@ -56,32 +47,45 @@ function TextField({
 
 export default function DeliverySettingsCard({ area, form, onChange }) {
   return (
-    <section className="rounded-[18px] border border-[#ddd4cd] bg-white p-5 shadow-[0_10px_24px_rgba(55,31,13,0.05)]">
+    <section className="rounded-[22px] border border-[#ddd4cd] bg-[linear-gradient(180deg,#fffdfa_0%,#fff7f1_100%)] p-6 shadow-[0_16px_34px_rgba(55,31,13,0.06)]">
       <div className="mb-5 flex items-center justify-between gap-3">
         <div>
           <h2 className="text-[24px] font-bold tracking-[-0.03em] text-[#18120f]">General Settings</h2>
-          <p className="mt-2 text-[15px] leading-6 text-[#6f645d]">Edit city metadata and service controls for this delivery area.</p>
+          <p className="mt-2 text-[15px] leading-6 text-[#6f645d]">
+            Review the main delivery-area details and internal notes for this city.
+          </p>
         </div>
         <DeliveryStatusPill status={area.status} />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField label="City Name" onChange={() => {}} readOnly value={area.city} />
-        <TextField label="Region" onChange={() => {}} readOnly value={area.region} />
-        <TextField label="Country" onChange={() => {}} readOnly value={area.country} />
-        <TextField label="Created At" onChange={() => {}} readOnly value={area.createdAt} />
-        <div className="space-y-4">
-          <ToggleField
-            checked={form.isRestricted}
-            label="Restricted Area"
-            onChange={(event) => onChange("isRestricted", event.target.checked)}
-          />
-          <ToggleField
-            checked={form.isExpressEnabled}
-            label="Express Delivery Enabled"
-            onChange={(event) => onChange("isExpressEnabled", event.target.checked)}
-          />
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextField label="City Name" onChange={() => {}} readOnly value={area.city} />
+          <TextField label="Region" onChange={() => {}} readOnly value={area.region} />
+          <TextField label="Country" onChange={() => {}} readOnly value={area.country} />
+          <TextField label="Coverage Type" onChange={() => {}} readOnly value={area.coverageType} />
         </div>
+
+        <div className="rounded-[18px] border border-[#eadfd6] bg-white px-4 py-4">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">
+            Delivery Overview
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[14px] border border-[#f1e5dd] bg-[#fff9f5] px-3 py-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#a39388]">Coverage Type</p>
+              <p className="mt-2 text-[14px] font-semibold text-[#18120f]">{area.coverageType}</p>
+            </div>
+            <div className="rounded-[14px] border border-[#f1e5dd] bg-[#fff9f5] px-3 py-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#a39388]">Postal Codes</p>
+              <p className="mt-2 text-[14px] font-semibold text-[#18120f]">{area.activePostalCodes}</p>
+            </div>
+            <div className="rounded-[14px] border border-[#f1e5dd] bg-[#fff9f5] px-3 py-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#a39388]">Linked Vendors</p>
+              <p className="mt-2 text-[14px] font-semibold text-[#18120f]">{area.linkedVendors.length}</p>
+            </div>
+          </div>
+        </div>
+
         <div className="sm:col-span-2">
           <TextField
             as="textarea"

@@ -44,8 +44,6 @@ export default function DeliveryPage() {
       status: statusFilter ? statusFilter.toUpperCase() : null,
       region: regionFilter || null,
       city: cityFilter || null,
-      sortBy: "city",
-      sortOrder: "ASC",
     }),
     [cityFilter, currentPage, regionFilter, searchTerm, statusFilter],
   );

@@ -6,8 +6,6 @@ export const ADMIN_DELIVERY_AREAS_QUERY = `
     $city: String
     $page: Int!
     $pageSize: Int!
-    $sortBy: String
-    $sortOrder: String
   ) {
     adminDeliveryAreas(
       search: $search
@@ -16,12 +14,9 @@ export const ADMIN_DELIVERY_AREAS_QUERY = `
       city: $city
       page: $page
       pageSize: $pageSize
-      sortBy: $sortBy
-      sortOrder: $sortOrder
     ) {
       items {
         id
-        name
         city
         region
         country
@@ -29,10 +24,18 @@ export const ADMIN_DELIVERY_AREAS_QUERY = `
         maxDeliveryRadius
         leadTimeDays
         coverageType
+        minimumOrderAmount
+        deliveryFee
         vendors
         activePostalCodes
-        updatedAt
-        createdAt
+        settings {
+          maxDeliveryRadius
+          leadTimeDays
+          coverageType
+          minimumOrderAmount
+          deliveryFee
+          notes
+        }
       }
       pageInfo {
         page
@@ -57,7 +60,6 @@ export const ADMIN_DELIVERY_SUMMARY_QUERY = `
     adminDeliverySummary {
       activeCities
       activePostalCodes
-      restrictedAreas
       platformCoveragePercent
       platformCoverageSubtitle
       coveredCities
@@ -76,7 +78,6 @@ export const ADMIN_DELIVERY_AREA_QUERY = `
   query AdminDeliveryArea($id: ID!) {
     adminDeliveryArea(id: $id) {
       id
-      name
       city
       region
       country
@@ -84,47 +85,17 @@ export const ADMIN_DELIVERY_AREA_QUERY = `
       maxDeliveryRadius
       leadTimeDays
       coverageType
+      minimumOrderAmount
+      deliveryFee
       vendors
       activePostalCodes
-      updatedAt
-      createdAt
       settings {
         maxDeliveryRadius
         leadTimeDays
         coverageType
         minimumOrderAmount
         deliveryFee
-        isRestricted
-        isExpressEnabled
         notes
-      }
-      map {
-        center {
-          lat
-          lng
-        }
-        zoom
-        bounds {
-          north
-          south
-          east
-          west
-        }
-        polygons {
-          id
-          label
-          points {
-            lat
-            lng
-          }
-        }
-        markers {
-          id
-          lat
-          lng
-          label
-          type
-        }
       }
       postalAreas {
         id
@@ -132,8 +103,6 @@ export const ADMIN_DELIVERY_AREA_QUERY = `
         areaName
         status
         vendors
-        lat
-        lng
         deliveryFeeOverride
         minimumOrderAmountOverride
         estimatedDeliveryMinutes
@@ -191,8 +160,6 @@ export const UPDATE_DELIVERY_AREA_MUTATION = `
           coverageType
           minimumOrderAmount
           deliveryFee
-          isRestricted
-          isExpressEnabled
           notes
         }
         updatedAt
@@ -244,8 +211,6 @@ export const ADD_DELIVERY_POSTAL_AREA_MUTATION = `
         areaName
         status
         vendors
-        lat
-        lng
         deliveryFeeOverride
         minimumOrderAmountOverride
         estimatedDeliveryMinutes
@@ -265,8 +230,6 @@ export const UPDATE_DELIVERY_POSTAL_AREA_MUTATION = `
         areaName
         status
         vendors
-        lat
-        lng
         deliveryFeeOverride
         minimumOrderAmountOverride
         estimatedDeliveryMinutes

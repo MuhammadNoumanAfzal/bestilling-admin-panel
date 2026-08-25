@@ -11,7 +11,6 @@ import {
   updateDeliveryAreaStatusRequest,
   updateDeliveryPostalAreaRequest,
 } from "../api/deliveryApi.js";
-import DeliveryMapCard from "../components/details/DeliveryMapCard.jsx";
 import DeliveryPostalAreasCard from "../components/details/DeliveryPostalAreasCard.jsx";
 import DeliverySettingsCard from "../components/details/DeliverySettingsCard.jsx";
 import DeliveryStatusPill from "../components/details/DeliveryStatusPill.jsx";
@@ -23,8 +22,6 @@ function createInitialSettingsForm(area) {
     leadTimeDays: area?.settings?.leadTimeDays || "",
     minimumOrderAmount: area?.settings?.minimumOrderAmount || "",
     deliveryFee: area?.settings?.deliveryFee || "",
-    isRestricted: Boolean(area?.settings?.isRestricted),
-    isExpressEnabled: Boolean(area?.settings?.isExpressEnabled),
     notes: area?.settings?.notes || "",
   };
 }
@@ -297,14 +294,14 @@ export default function DeliveryAreaDetailPage() {
         <div className="flex flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-2 rounded-full bg-[#fff4ea] px-3 py-1.5 text-[12px] font-bold text-[#cf6e38]">
             <MapPin size={14} />
-            {area.name || area.city}
+            {area.city}
           </span>
           <DeliveryStatusPill status={area.status} />
         </div>
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-[38px] font-bold tracking-[-0.04em] text-[#18120f]">{area.name || area.city}</h1>
+            <h1 className="text-[38px] font-bold tracking-[-0.04em] text-[#18120f]">{area.city}</h1>
             <p className="text-[18px] leading-7 ">
               View postal code coverage, service controls, and local delivery configuration.
             </p>
@@ -342,9 +339,8 @@ export default function DeliveryAreaDetailPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <div className="grid gap-4">
         <DeliverySettingsCard area={area} form={settingsForm} onChange={updateSettingsField} />
-        <DeliveryMapCard area={area} />
       </div>
 
       <section className="rounded-[18px] border border-[#ddd4cd] bg-white p-5 shadow-[0_10px_24px_rgba(55,31,13,0.05)]">
@@ -382,8 +378,6 @@ export default function DeliveryAreaDetailPage() {
       <DeliveryPostalAreasCard
         areaId={area.id}
         areaName={area.city}
-        defaultLat={area.map?.center?.lat}
-        defaultLng={area.map?.center?.lng}
         isSubmitting={isSubmittingPostalArea}
         onCreate={handleCreatePostalArea}
         onDelete={handleDeletePostalArea}

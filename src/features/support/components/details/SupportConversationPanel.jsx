@@ -1,4 +1,4 @@
-import { MessageSquareReply, Paperclip, SendHorizonal, Shield, X } from "lucide-react";
+import { ExternalLink, Image as ImageIcon, MessageSquareReply, Paperclip, SendHorizonal, Shield, X } from "lucide-react";
 import { formatReadableDate } from "../../supportUtils.js";
 
 const URL_PATTERN = /(https?:\/\/[^\s]+)/giu;
@@ -30,10 +30,99 @@ function parseMessageContent(message) {
   };
 }
 
+function getAttachmentFileNameFromUrl(url) {
+  try {
+    const parsedUrl = new URL(url);
+    const pathnameParts = parsedUrl.pathname.split("/").filter(Boolean);
+    return pathnameParts[pathnameParts.length - 1] || "Attachment";
+  } catch {
+    const pathnameParts = String(url || "").split("/").filter(Boolean);
+    return pathnameParts[pathnameParts.length - 1] || "Attachment";
+  }
+}
+
+function isImageAttachment(url = "", mimeType = "") {
+  return /^image\//i.test(String(mimeType || "")) || /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(String(url || ""));
+}
+
+function normalizeUrlAttachments(urls = []) {
+  return urls.map((url, index) => ({
+    id: `inline-url-${index + 1}-${url}`,
+    fileName: getAttachmentFileNameFromUrl(url),
+    url,
+    mimeType: "",
+    size: 0,
+  }));
+}
+
+function AttachmentPreviewCard({ attachment, isRight }) {
+  const imageAttachment = isImageAttachment(attachment.url, attachment.mimeType);
+
+  return (
+    <a
+      className={[
+        "group flex w-full max-w-[230px] flex-col overflow-hidden rounded-[16px] border no-underline shadow-[0_10px_22px_rgba(46,26,14,0.08)] transition hover:-translate-y-0.5",
+        isRight
+          ? "border-white/18 bg-white/12 hover:bg-white/16"
+          : "border-[#eaded6] bg-[#fff8f3] hover:border-[#cf6e38]/35 hover:bg-[#fff1e6]",
+      ].join(" ")}
+      href={attachment.url}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      {imageAttachment ? (
+        <img
+          alt={attachment.fileName}
+          className="h-[120px] w-full object-cover"
+          src={attachment.url}
+        />
+      ) : (
+        <div
+          className={[
+            "flex h-[96px] items-center justify-center",
+            isRight ? "bg-white/8 text-white" : "bg-[#fff2e8] text-[#cf6e38]",
+          ].join(" ")}
+        >
+          <Paperclip size={28} />
+        </div>
+      )}
+
+      <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+        <div className="min-w-0">
+          <p className={["truncate text-[12px] font-bold", isRight ? "text-white" : "text-[#2f241d]"].join(" ")}>
+            {imageAttachment ? "Open image" : "Open attachment"}
+          </p>
+          <p className={["truncate text-[11px]", isRight ? "text-white/78" : "text-[#8d8077]"].join(" ")}>
+            {attachment.fileName}
+          </p>
+        </div>
+        <span
+          className={[
+            "inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold",
+            isRight ? "bg-white/16 text-white" : "bg-white text-[#cf6e38]",
+          ].join(" ")}
+        >
+          View
+          <ExternalLink size={12} />
+        </span>
+      </div>
+    </a>
+  );
+}
+
 function MessageBubble({ message, requesterAvatarUrl }) {
   const isRight = message.side === "admin";
   const isInternal = message.author?.role?.toLowerCase().includes("admin") && message.side === "admin";
   const { text, urls } = parseMessageContent(message.message);
+  const urlAttachments = normalizeUrlAttachments(urls);
+  const explicitAttachments = Array.isArray(message.attachments) ? message.attachments : [];
+  const mergedAttachments = [...explicitAttachments];
+
+  urlAttachments.forEach((attachment) => {
+    if (!mergedAttachments.some((item) => item.url === attachment.url)) {
+      mergedAttachments.push(attachment);
+    }
+  });
 
   return (
     <div className={["flex gap-3", isRight ? "justify-end" : "justify-start"].join(" ")}>
@@ -72,43 +161,18 @@ function MessageBubble({ message, requesterAvatarUrl }) {
           ].join(" ")}
         >
           {text ? <span className="whitespace-pre-line">{text}</span> : null}
-          {urls.length ? (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {urls.map((url, index) => (
-                <a
-                  key={`${message.id}-url-${index}`}
-                  className={[
-                    "inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-[11px] font-semibold no-underline transition",
-                    isRight
-                      ? "bg-white/15 text-white hover:bg-white/20"
-                      : "border border-[#eaded6] bg-[#fff3ea] text-[#c45f30] hover:border-[#cf6e38]/35 hover:bg-[#ffe7d8]",
-                  ].join(" ")}
-                  href={url}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  Open attachment
-                </a>
+          {mergedAttachments.length ? (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {mergedAttachments.map((attachment) => (
+                <AttachmentPreviewCard
+                  key={attachment.id || attachment.url}
+                  attachment={attachment}
+                  isRight={isRight}
+                />
               ))}
             </div>
           ) : null}
         </div>
-
-        {message.attachments?.length ? (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {message.attachments.map((attachment) => (
-              <a
-                key={attachment.id}
-                className="inline-flex cursor-pointer items-center rounded-full border border-[#eaded6] bg-[#f6f1ed] px-3 py-1 text-[11px] font-medium text-[#7c6f67] transition hover:border-[#cf6e38]/35 hover:bg-[#fff5ef]"
-                href={attachment.url}
-                rel="noreferrer"
-                target="_blank"
-              >
-                {attachment.fileName}
-              </a>
-            ))}
-          </div>
-        ) : null}
       </div>
 
       {isRight ? (

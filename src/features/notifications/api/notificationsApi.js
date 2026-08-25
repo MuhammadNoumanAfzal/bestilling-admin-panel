@@ -68,6 +68,31 @@ function sortNotificationsByCreatedAtDesc(items) {
   });
 }
 
+function getNotificationDedupKey(item) {
+  const entityType = String(item?.entityType || item?.metadata?.type || "").trim().toUpperCase();
+  const entityId = String(item?.entityId || item?.orderId || item?.payoutId || item?.invoiceId || "").trim();
+  const createdAt = String(item?.createdAt || "").trim();
+  const title = String(item?.title || "").trim().toLowerCase();
+  const message = String(item?.message || "").trim().toLowerCase();
+
+  return [entityType, entityId, createdAt, title, message].join("|");
+}
+
+function dedupeNotifications(items = []) {
+  const seenKeys = new Set();
+
+  return items.filter((item) => {
+    const key = getNotificationDedupKey(item);
+
+    if (seenKeys.has(key)) {
+      return false;
+    }
+
+    seenKeys.add(key);
+    return true;
+  });
+}
+
 function formatRelativeTime(value) {
   if (!value) {
     return "Just now";
@@ -309,16 +334,14 @@ async function fetchCombinedAdminNotifications({ first = 50, status = null } = {
   const orderItems = Array.isArray(orderConnection?.edges)
     ? orderConnection.edges.map((edge) => normalizeOrderNotification(edge?.node)).filter(Boolean)
     : [];
-  const items = sortNotificationsByCreatedAtDesc([...financeItems, ...orderItems]);
+  const dedupedItems = dedupeNotifications([...financeItems, ...orderItems]);
+  const items = sortNotificationsByCreatedAtDesc(dedupedItems);
+  const unreadCount = items.filter((item) => !item.isRead && !item.isArchived).length;
 
   return {
     items,
-    unreadCount:
-      (Number(financeConnection?.unreadCount ?? 0) || 0) +
-      (Number(orderConnection?.unreadCount ?? 0) || 0),
-    totalCount:
-      (Number(financeConnection?.totalCount ?? 0) || financeItems.length) +
-      (Number(orderConnection?.totalCount ?? 0) || orderItems.length),
+    unreadCount,
+    totalCount: items.length,
   };
 }
 

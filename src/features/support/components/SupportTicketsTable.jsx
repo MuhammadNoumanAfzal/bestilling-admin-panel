@@ -96,6 +96,70 @@ function PriorityBadge({ priority }) {
   );
 }
 
+function MobileTicketCard({ row, onOpen }) {
+  return (
+    <article
+      className="rounded-[18px] border border-[#eaded5] bg-[linear-gradient(180deg,#fffdfa_0%,#fff8f2_100%)] p-4 shadow-[0_10px_22px_rgba(56,33,17,0.05)]"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar label={row.avatarInitials} src={row.avatarUrl} />
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Ticket #{row.id}</p>
+            <p className="truncate text-[15px] font-bold text-[#18120f]">{row.user}</p>
+            <p className="truncate text-[12px] text-[#7a6d66]">{row.email || "No email"}</p>
+          </div>
+        </div>
+        <StatusBadge status={row.status} />
+      </div>
+
+      <div className="mt-3 space-y-3">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Subject</p>
+          <p className="mt-1 text-[14px] font-semibold leading-6 text-[#241a15]">{row.subject}</p>
+          {row.unreadAdminCount ? (
+            <p className="mt-1 text-[11px] font-semibold text-[#cf6e38]">
+              {row.unreadAdminCount} unread for admin
+            </p>
+          ) : null}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">User Type</p>
+            <p className="mt-1 text-[13px] font-semibold text-[#241a15]">{formatUserTypeLabel(row.type)}</p>
+          </div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Category</p>
+            <p className="mt-1 break-words text-[13px] font-semibold text-[#241a15]">{row.category}</p>
+          </div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Priority</p>
+            <div className="mt-1">
+              <PriorityBadge priority={row.priority} />
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Last Activity</p>
+            <p className="mt-1 text-[13px] font-semibold text-[#241a15]">
+              {row.lastMessageAt ? formatReadableDate(row.lastMessageAt) : row.created}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <button
+        className="mt-4 inline-flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-[12px] border border-[#e1d3c8] bg-white text-[13px] font-bold text-[#241a15] transition hover:border-[#cf6e38]/40 hover:bg-[#fff8f2] hover:text-[#cf6e38]"
+        onClick={onOpen}
+        type="button"
+      >
+        <Eye size={15} />
+        View Ticket
+      </button>
+    </article>
+  );
+}
+
 function buildPaginationItems(currentPage, totalPages) {
   if (totalPages <= 5) {
     return Array.from({ length: totalPages }, (_, index) => index + 1);
@@ -128,7 +192,23 @@ export default function SupportTicketsTable({
 
   return (
     <div className="m-2 overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]">
-      <div className="w-full overflow-x-auto lg:overflow-x-visible">
+      <div className="space-y-3 p-3 md:hidden">
+        {rows.length === 0 ? (
+          <div className="rounded-[16px] border border-dashed border-[#e3d7cf] bg-[#fcfaf8] px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]">
+            No support tickets match the current filters.
+          </div>
+        ) : (
+          rows.map((row) => (
+            <MobileTicketCard
+              key={row.id}
+              row={row}
+              onOpen={() => navigate(`/support/${row.id}`)}
+            />
+          ))
+        )}
+      </div>
+
+      <div className="hidden w-full overflow-x-auto md:block lg:overflow-x-visible">
         <table className="w-full table-fixed border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
@@ -212,7 +292,7 @@ export default function SupportTicketsTable({
           Showing {start} - {end} of {totalItems} Tickets
         </p>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
           <PaginationIconButton disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)}>
             <ChevronLeft size={15} />
           </PaginationIconButton>

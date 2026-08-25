@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { BadgeCent, Clock3, Globe2, KeyRound, RefreshCcw } from "lucide-react";
+import { BadgeCent, Banknote, Clock3, Globe2, KeyRound, Languages, RefreshCcw, Trash2 } from "lucide-react";
 import Swal from "sweetalert2";
 import { getAdminDisplayName, validateAdminPassword } from "../../auth/authConfig.js";
 import { useAuth } from "../../auth/hooks/useAuth.js";
@@ -16,24 +16,16 @@ import SettingsField from "../components/SettingsField.jsx";
 import SettingsSectionHeader from "../components/SettingsSectionHeader.jsx";
 import SettingsShellCard from "../components/SettingsShellCard.jsx";
 import SettingsStatusCard from "../components/SettingsStatusCard.jsx";
-
-const CURRENCY_OPTIONS = [
-  { value: "NOK", label: "NOK - Norwegian Krone" },
-  { value: "EUR", label: "EUR - Euro" },
-  { value: "USD", label: "USD - US Dollar" },
-];
-
-const TIMEZONE_OPTIONS = [
-  { value: "Europe/Oslo", label: "Europe/Oslo" },
-  { value: "Europe/Berlin", label: "Europe/Berlin" },
-  { value: "America/New_York", label: "America/New_York" },
-];
-
-const LOCALE_OPTIONS = [
-  { value: "no", label: "Norwegian (no)" },
-  { value: "en", label: "English (en)" },
-  { value: "de", label: "German (de)" },
-];
+import {
+  deleteCurrencyRequest,
+  deleteLanguageRequest,
+  deleteTimeZoneRequest,
+  getVendorSettingsTaxonomyRequest,
+  saveCurrencyRequest,
+  saveLanguageRequest,
+  saveTimeZoneRequest,
+} from "../../vendor-settings/api/vendorSettingsApi.js";
+import { mapVendorSettingsTaxonomy } from "../../vendor-settings/api/vendorSettingsMappers.js";
 
 function SaveButton({ children, className = "", disabled = false, type = "button", onClick }) {
   return (
@@ -49,6 +41,154 @@ function SaveButton({ children, className = "", disabled = false, type = "button
       {children}
     </button>
   );
+}
+
+const MASTER_DATA_CONFIG = [
+  {
+    key: "currencies",
+    title: "Currencies",
+    singularLabel: "currency",
+    icon: Banknote,
+    save: saveCurrencyRequest,
+    remove: deleteCurrencyRequest,
+    deleteKey: "code",
+    fields: [
+      { key: "code", label: "Code", placeholder: "NOK", required: true },
+      { key: "label", label: "Label", placeholder: "Norwegian Krone", required: true },
+      { key: "symbol", label: "Symbol", placeholder: "kr", required: false },
+      { key: "sortOrder", label: "Sort Order", placeholder: "0", required: false, type: "number" },
+      { key: "isActive", label: "Active", type: "checkbox" },
+    ],
+  },
+  {
+    key: "languages",
+    title: "Locales",
+    singularLabel: "locale",
+    icon: Languages,
+    save: saveLanguageRequest,
+    remove: deleteLanguageRequest,
+    deleteKey: "code",
+    fields: [
+      { key: "code", label: "Code", placeholder: "no", required: true },
+      { key: "label", label: "Label", placeholder: "Norwegian", required: true },
+      { key: "sortOrder", label: "Sort Order", placeholder: "0", required: false, type: "number" },
+      { key: "isActive", label: "Active", type: "checkbox" },
+    ],
+  },
+  {
+    key: "timeZones",
+    title: "Time Zones",
+    singularLabel: "time zone",
+    icon: Clock3,
+    save: saveTimeZoneRequest,
+    remove: deleteTimeZoneRequest,
+    deleteKey: "value",
+    fields: [
+      { key: "value", label: "Value", placeholder: "Europe/Oslo", required: true },
+      { key: "label", label: "Label", placeholder: "(GMT+01:00) Europe/Oslo", required: true },
+      { key: "utcOffset", label: "UTC Offset", placeholder: "+01:00", required: false },
+      { key: "sortOrder", label: "Sort Order", placeholder: "0", required: false, type: "number" },
+      { key: "isActive", label: "Active", type: "checkbox" },
+    ],
+  },
+];
+
+const MASTER_DATA_MAP = MASTER_DATA_CONFIG.reduce((accumulator, section) => {
+  accumulator[section.key] = section;
+  return accumulator;
+}, {});
+
+function normalizeText(value) {
+  return String(value || "").trim();
+}
+
+function createEmptyMasterDataDraft(section) {
+  return section.fields.reduce((accumulator, field) => {
+    accumulator[field.key] = field.type === "checkbox" ? true : "";
+    return accumulator;
+  }, {});
+}
+
+function createMasterDataDraftState() {
+  return MASTER_DATA_CONFIG.reduce((accumulator, section) => {
+    accumulator[section.key] = createEmptyMasterDataDraft(section);
+    return accumulator;
+  }, {});
+}
+
+function getMasterDataValues(section, item) {
+  const raw = item?.raw || {};
+
+  return section.fields.reduce((accumulator, field) => {
+    accumulator[field.key] =
+      field.type === "checkbox" ? Boolean(raw[field.key]) : raw[field.key] == null ? "" : String(raw[field.key]);
+    return accumulator;
+  }, {});
+}
+
+function validateMasterDataValues(section, values) {
+  const missingField = section.fields.find(
+    (field) => field.required && field.type !== "checkbox" && !normalizeText(values[field.key]),
+  );
+
+  return missingField ? missingField.label : "";
+}
+
+function buildMasterDataPayload(section, values, item) {
+  const payload = {};
+
+  section.fields.forEach((field) => {
+    const rawValue = values[field.key];
+
+    if (field.type === "checkbox") {
+      payload[field.key] = Boolean(rawValue);
+      return;
+    }
+
+    if (field.type === "number") {
+      payload[field.key] = normalizeText(rawValue) ? Number(rawValue) : 0;
+      return;
+    }
+
+    payload[field.key] = normalizeText(rawValue);
+  });
+
+  if (item?.raw?.id) {
+    payload.id = item.raw.id;
+  }
+
+  return payload;
+}
+
+function buildSelectOptions(items, type) {
+  const normalizedItems = Array.isArray(items) ? items : [];
+
+  if (type === "currencies") {
+    return normalizedItems.map((item) => ({
+      value: item.raw?.code || "",
+      label: [item.raw?.code || "", item.raw?.label || item.name || ""].filter(Boolean).join(" - "),
+    }));
+  }
+
+  if (type === "languages") {
+    return normalizedItems.map((item) => ({
+      value: item.raw?.code || "",
+      label: item.raw?.code ? `${item.raw?.label || item.name} (${item.raw.code})` : item.raw?.label || item.name,
+    }));
+  }
+
+  return normalizedItems.map((item) => ({
+    value: item.raw?.value || "",
+    label: item.raw?.label || item.raw?.value || item.name || "",
+  }));
+}
+
+function withSelectedFallback(options, value) {
+  if (!value || options.some((option) => option.value === value)) {
+    return options;
+  }
+
+  return [{ value, label: value }, ...options];
 }
 
 function parseName(profile) {
@@ -220,10 +360,17 @@ function ProfileInformationCard({
 
 function PreferencesCard({
   preferences,
+  currencies,
+  locales,
+  timeZones,
   onFieldChange,
   onSave,
   isSaving,
 }) {
+  const currencyOptions = withSelectedFallback(buildSelectOptions(currencies, "currencies"), preferences.defaultCurrency);
+  const localeOptions = withSelectedFallback(buildSelectOptions(locales, "languages"), preferences.locale);
+  const timeZoneOptions = withSelectedFallback(buildSelectOptions(timeZones, "timeZones"), preferences.timezone);
+
   return (
     <SettingsShellCard>
       <SettingsSectionHeader icon={BadgeCent} title="Platform Preferences" />
@@ -234,10 +381,12 @@ function PreferencesCard({
             <span className="text-[12px] font-bold text-[#2f241d]">Default Currency</span>
             <select
               className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
+              disabled={!currencyOptions.length}
               onChange={onFieldChange("defaultCurrency")}
               value={preferences.defaultCurrency}
             >
-              {CURRENCY_OPTIONS.map((option) => (
+              <option value="">Select currency</option>
+              {currencyOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -249,10 +398,12 @@ function PreferencesCard({
             <span className="text-[12px] font-bold text-[#2f241d]">Timezone</span>
             <select
               className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
+              disabled={!timeZoneOptions.length}
               onChange={onFieldChange("timezone")}
               value={preferences.timezone}
             >
-              {TIMEZONE_OPTIONS.map((option) => (
+              <option value="">Select time zone</option>
+              {timeZoneOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -264,10 +415,12 @@ function PreferencesCard({
             <span className="text-[12px] font-bold text-[#2f241d]">Locale</span>
             <select
               className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
+              disabled={!localeOptions.length}
               onChange={onFieldChange("locale")}
               value={preferences.locale}
             >
-              {LOCALE_OPTIONS.map((option) => (
+              <option value="">Select locale</option>
+              {localeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -283,6 +436,149 @@ function PreferencesCard({
         <SaveButton className="mt-6 h-10 px-6" disabled={isSaving} onClick={onSave}>
           {isSaving ? "Updating..." : "Update Preferences"}
         </SaveButton>
+      </div>
+    </SettingsShellCard>
+  );
+}
+
+function MasterDataField({ field, value, onChange }) {
+  if (field.type === "checkbox") {
+    return (
+      <label className="flex h-12 items-center gap-3 rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] font-semibold text-[#2a1f19]">
+        <input
+          checked={Boolean(value)}
+          className="h-4 w-4 accent-[#ce6938]"
+          onChange={(event) => onChange(field.key, event.target.checked)}
+          type="checkbox"
+        />
+        <span>{field.label}</span>
+      </label>
+    );
+  }
+
+  return (
+    <SettingsField
+      label={field.label}
+      onChange={(event) => onChange(field.key, event.target.value)}
+      placeholder={field.placeholder}
+      type={field.type || "text"}
+      value={value}
+    />
+  );
+}
+
+function MasterDataManagerCard({
+  section,
+  items,
+  draftValues,
+  editingState,
+  savingKey,
+  onDraftChange,
+  onCreate,
+  onStartEdit,
+  onEditChange,
+  onCancelEdit,
+  onSaveEdit,
+  onDelete,
+}) {
+  const Icon = section.icon;
+
+  return (
+    <SettingsShellCard className="rounded-[16px]">
+      <SettingsSectionHeader icon={Icon} title={section.title} />
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        {section.fields.map((field) => (
+          <MasterDataField
+            field={field}
+            key={field.key}
+            onChange={(fieldKey, value) => onDraftChange(section.key, fieldKey, value)}
+            value={draftValues[field.key]}
+          />
+        ))}
+      </div>
+      <div className="mt-4 flex justify-end">
+        <SaveButton
+          className="h-10 px-4"
+          disabled={savingKey === `${section.key}:create`}
+          onClick={() => onCreate(section)}
+        >
+          {savingKey === `${section.key}:create` ? "Saving..." : `Add ${section.singularLabel}`}
+        </SaveButton>
+      </div>
+
+      <div className="mt-5 space-y-3 border-t border-[#eee5de] pt-4">
+        {items.length ? (
+          items.map((item) => {
+            const isEditing =
+              editingState.sectionKey === section.key && editingState.itemId === item.id;
+
+            return (
+              <div
+                className="rounded-[14px] border border-[#eadfd6] bg-[#fcfaf8] p-4"
+                key={item.id}
+              >
+                {isEditing ? (
+                  <>
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                      {section.fields.map((field) => (
+                        <MasterDataField
+                          field={field}
+                          key={field.key}
+                          onChange={onEditChange}
+                          value={editingState.values[field.key]}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <SaveButton
+                        className="h-10 px-4"
+                        disabled={savingKey === `${section.key}:edit:${item.id}`}
+                        onClick={() => onSaveEdit(section, item)}
+                      >
+                        {savingKey === `${section.key}:edit:${item.id}` ? "Updating..." : "Save"}
+                      </SaveButton>
+                      <button
+                        className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[#d9d1ca] bg-white px-4 text-[12px] font-bold text-[#3f3530] transition hover:bg-[#faf6f2]"
+                        onClick={onCancelEdit}
+                        type="button"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-bold text-[#2a1f18]">{item.name}</p>
+                      <p className="mt-1 text-[12px] leading-5 text-[#85786f]">{item.meta || "API-managed option"}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#d9d1ca] bg-white px-3 text-[12px] font-bold text-[#3f3530] transition hover:bg-[#faf6f2]"
+                        onClick={() => onStartEdit(section.key, item)}
+                        type="button"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#f0d6d0] bg-[#fff6f4] text-[#c35d4c] transition hover:bg-[#ffece7] disabled:opacity-60"
+                        disabled={savingKey === `${section.key}:delete:${item.id}`}
+                        onClick={() => onDelete(section, item)}
+                        type="button"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        ) : (
+          <div className="rounded-[12px] border border-dashed border-[#e6d8ce] bg-[#fffcfa] px-4 py-6 text-center text-[13px] text-[#7c6f66]">
+            No {section.title.toLowerCase()} configured yet.
+          </div>
+        )}
       </div>
     </SettingsShellCard>
   );
@@ -304,6 +600,11 @@ function LoadingCard() {
 export default function SettingsPage() {
   const { updateSessionUser } = useAuth();
   const [settingsUser, setSettingsUser] = useState(null);
+  const [masterData, setMasterData] = useState({
+    currencies: [],
+    languages: [],
+    timeZones: [],
+  });
   const [profileForm, setProfileForm] = useState({
     firstName: "",
     lastName: "",
@@ -316,9 +617,15 @@ export default function SettingsPage() {
     confirmPassword: "",
   });
   const [preferencesForm, setPreferencesForm] = useState({
-    defaultCurrency: "NOK",
+    defaultCurrency: "",
     timezone: "",
     locale: "",
+  });
+  const [masterDataDrafts, setMasterDataDrafts] = useState(createMasterDataDraftState);
+  const [editingMasterData, setEditingMasterData] = useState({
+    sectionKey: "",
+    itemId: "",
+    values: {},
   });
   const [isPasswordFormOpen, setIsPasswordFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -326,6 +633,7 @@ export default function SettingsPage() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
+  const [masterDataSavingKey, setMasterDataSavingKey] = useState("");
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
   const [avatarInputKey, setAvatarInputKey] = useState(0);
 
@@ -338,7 +646,7 @@ export default function SettingsPage() {
       phone: user?.phone || "",
     });
     setPreferencesForm({
-      defaultCurrency: user?.preferences?.defaultCurrency || "NOK",
+      defaultCurrency: user?.preferences?.defaultCurrency || "",
       timezone: user?.preferences?.timezone || "",
       locale: user?.preferences?.locale || "",
     });
@@ -352,8 +660,18 @@ export default function SettingsPage() {
     }
 
     try {
-      const user = await getAdminSettingsRequest();
+      const [user, taxonomyResult] = await Promise.all([
+        getAdminSettingsRequest(),
+        getVendorSettingsTaxonomyRequest(),
+      ]);
+
       setSettingsUser(user);
+      const taxonomy = mapVendorSettingsTaxonomy(taxonomyResult);
+      setMasterData({
+        currencies: taxonomy.currencies,
+        languages: taxonomy.languages,
+        timeZones: taxonomy.timeZones,
+      });
       syncForms(user);
       updateSessionUser({
         firstName: user.firstName,
@@ -404,6 +722,34 @@ export default function SettingsPage() {
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
+    });
+  }
+
+  function updateMasterDataDraft(sectionKey, fieldKey, value) {
+    setMasterDataDrafts((current) => ({
+      ...current,
+      [sectionKey]: {
+        ...current[sectionKey],
+        [fieldKey]: value,
+      },
+    }));
+  }
+
+  function startMasterDataEdit(sectionKey, item) {
+    const section = MASTER_DATA_MAP[sectionKey];
+
+    setEditingMasterData({
+      sectionKey,
+      itemId: item.id,
+      values: getMasterDataValues(section, item),
+    });
+  }
+
+  function cancelMasterDataEdit() {
+    setEditingMasterData({
+      sectionKey: "",
+      itemId: "",
+      values: {},
     });
   }
 
@@ -557,6 +903,124 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleCreateMasterData(section) {
+    const values = masterDataDrafts[section.key];
+    const missingField = validateMasterDataValues(section, values);
+
+    if (missingField) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Missing value",
+        text: `Please complete ${missingField} before creating a new ${section.singularLabel}.`,
+        confirmButtonColor: "#cf6e38",
+      });
+      return;
+    }
+
+    try {
+      setMasterDataSavingKey(`${section.key}:create`);
+      await section.save(buildMasterDataPayload(section, values));
+      setMasterDataDrafts((current) => ({
+        ...current,
+        [section.key]: createEmptyMasterDataDraft(section),
+      }));
+      await loadSettings({ silent: true });
+      await Swal.fire({
+        icon: "success",
+        title: `${section.title} updated`,
+        text: `The new ${section.singularLabel} is now available through the API.`,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: `Unable to create ${section.singularLabel}`,
+        text: error?.message || "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setMasterDataSavingKey("");
+    }
+  }
+
+  async function handleSaveMasterDataEdit(section, item) {
+    const values = editingMasterData.values;
+    const missingField = validateMasterDataValues(section, values);
+
+    if (missingField) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Missing value",
+        text: `Please complete ${missingField} before saving your changes.`,
+        confirmButtonColor: "#cf6e38",
+      });
+      return;
+    }
+
+    try {
+      setMasterDataSavingKey(`${section.key}:edit:${item.id}`);
+      await section.save(buildMasterDataPayload(section, values, item));
+      cancelMasterDataEdit();
+      await loadSettings({ silent: true });
+      await Swal.fire({
+        icon: "success",
+        title: "Updated",
+        text: `${section.singularLabel} updated successfully.`,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to update item",
+        text: error?.message || "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setMasterDataSavingKey("");
+    }
+  }
+
+  async function handleDeleteMasterData(section, item) {
+    const result = await Swal.fire({
+      title: `Delete ${item.name}?`,
+      text: "This removes it from future admin and vendor selections.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d96834",
+      cancelButtonColor: "#c6b7aa",
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    try {
+      setMasterDataSavingKey(`${section.key}:delete:${item.id}`);
+      await section.remove(item?.raw?.[section.deleteKey] || item.id);
+      if (editingMasterData.itemId === item.id) {
+        cancelMasterDataEdit();
+      }
+      await loadSettings({ silent: true });
+      await Swal.fire({
+        icon: "success",
+        title: "Deleted",
+        text: `${item.name} has been removed.`,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to delete item",
+        text: error?.message || "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setMasterDataSavingKey("");
+    }
+  }
+
   async function handleAvatarFileChange(event) {
     const file = event.target.files?.[0];
     setAvatarInputKey((current) => current + 1);
@@ -684,7 +1148,9 @@ export default function SettingsPage() {
           <LoadingCard />
         ) : (
           <PreferencesCard
+            currencies={masterData.currencies}
             isSaving={isSavingPreferences}
+            locales={masterData.languages}
             onFieldChange={(field) => (event) =>
               setPreferencesForm((current) => ({
                 ...current,
@@ -693,8 +1159,39 @@ export default function SettingsPage() {
             }
             onSave={handleSavePreferences}
             preferences={preferencesForm}
+            timeZones={masterData.timeZones}
           />
         )}
+      </div>
+
+      <div className="grid gap-5">
+        {isLoading
+          ? MASTER_DATA_CONFIG.map((section) => <LoadingCard key={section.key} />)
+          : MASTER_DATA_CONFIG.map((section) => (
+              <MasterDataManagerCard
+                draftValues={masterDataDrafts[section.key]}
+                editingState={editingMasterData}
+                items={masterData[section.key]}
+                key={section.key}
+                onCancelEdit={cancelMasterDataEdit}
+                onCreate={handleCreateMasterData}
+                onDelete={handleDeleteMasterData}
+                onDraftChange={updateMasterDataDraft}
+                onEditChange={(fieldKey, value) =>
+                  setEditingMasterData((current) => ({
+                    ...current,
+                    values: {
+                      ...current.values,
+                      [fieldKey]: value,
+                    },
+                  }))
+                }
+                onSaveEdit={handleSaveMasterDataEdit}
+                onStartEdit={startMasterDataEdit}
+                savingKey={masterDataSavingKey}
+                section={section}
+              />
+            ))}
       </div>
     </div>
   );

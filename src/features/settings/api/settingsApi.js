@@ -39,7 +39,7 @@ function normalizeSettingsUser(user) {
       twoFactorEnabled: Boolean(user.security?.twoFactorEnabled),
     },
     preferences: {
-      defaultCurrency: user.preferences?.defaultCurrency ?? "NOK",
+      defaultCurrency: user.preferences?.defaultCurrency ?? "",
       timezone: user.preferences?.timezone ?? "",
       locale: user.preferences?.locale ?? "",
     },
@@ -119,7 +119,7 @@ export async function updatePlatformPreferencesRequest(input) {
   return {
     message: result.message || "Preferences updated successfully.",
     preferences: {
-      defaultCurrency: result.preferences.defaultCurrency ?? "NOK",
+      defaultCurrency: result.preferences.defaultCurrency ?? "",
       timezone: result.preferences.timezone ?? "",
       locale: result.preferences.locale ?? "",
     },

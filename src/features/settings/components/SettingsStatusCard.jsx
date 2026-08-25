@@ -31,11 +31,7 @@ export default function SettingsStatusCard({ user }) {
         </p>
       </div>
       <div className="mt-2.5 space-y-2 text-[12px] leading-6 text-[#5f687a]">
-        <p>
-          {user?.isVerified
-            ? "Your admin account is verified and ready for operational changes."
-            : "Your account is active, but email verification is still pending."}
-        </p>
+        <p>Your admin account is ready for operational changes.</p>
         <p>Last sign-in: {formatTimestamp(user?.security?.lastLoginAt)}</p>
         <p>Last password change: {formatTimestamp(user?.security?.lastPasswordChangeAt)}</p>
       </div>

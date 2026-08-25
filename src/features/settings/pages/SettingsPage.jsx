@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { BadgeCent, Clock3, Globe2, KeyRound, RefreshCcw, ShieldCheck } from "lucide-react";
+import { BadgeCent, Clock3, Globe2, KeyRound, RefreshCcw } from "lucide-react";
 import Swal from "sweetalert2";
 import { getAdminDisplayName, validateAdminPassword } from "../../auth/authConfig.js";
 import { useAuth } from "../../auth/hooks/useAuth.js";
@@ -442,9 +442,7 @@ export default function SettingsPage() {
       await Swal.fire({
         icon: "success",
         title: "Profile updated",
-        text: result.requiresEmailVerification
-          ? `${result.message} Please verify the new email address.`
-          : result.message,
+        text: result.message,
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
@@ -625,13 +623,6 @@ export default function SettingsPage() {
         label: "Locale",
         value: settingsUser.preferences?.locale || "Locale pending",
         tone: settingsUser.preferences?.locale ? "success" : "neutral",
-      },
-      {
-        id: "verification",
-        icon: ShieldCheck,
-        label: "Verification",
-        value: settingsUser.isVerified ? "Verified account" : "Verification pending",
-        tone: settingsUser.isVerified ? "success" : "warm",
       },
     ];
   }, [settingsUser]);

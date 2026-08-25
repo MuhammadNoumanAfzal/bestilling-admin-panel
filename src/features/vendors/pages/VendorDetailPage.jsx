@@ -290,22 +290,78 @@ export default function VendorDetailPage() {
       return;
     }
 
+    const payoutProfile = vendor.payoutProfile;
     const result = await Swal.fire({
-      title: "Approve bank details",
       html: `
-        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
-          <div>
-            <label for="vendor-payout-approve-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Verification note</label>
-            <textarea id="vendor-payout-approve-note" class="swal2-textarea" placeholder="Bank details verified and matched with company records." style="margin:0;width:100%;min-height:110px;"></textarea>
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;color:#241a15;padding:0;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <span style="display:inline-flex;align-self:flex-start;align-items:center;gap:8px;border:1px solid #efcfbd;background:#fff4ec;color:#c96533;border-radius:999px;padding:7px 12px;font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;">
+              High priority review
+            </span>
+            <div>
+              <h2 style="margin:0;font-size:18px;font-weight:800;line-height:1.2;">Approve bank details</h2>
+              <p style="margin:6px 0 0 0;font-size:13px;line-height:1.6;color:#6d5b51;">
+                Confirm these payout details only after they match the vendor business records. This approval unlocks finance payout processing.
+              </p>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;">
+            <div style="border:1px solid #efdfd3;border-radius:18px;padding:10px 12px;background:linear-gradient(180deg,#ffffff 0%,#fcfaf8 100%);">
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a18f84;">Account holder</div>
+              <div style="margin-top:6px;font-size:14px;font-weight:700;color:#1f1713;line-height:1.45;">${payoutProfile.accountHolderName || "Not provided"}</div>
+            </div>
+            <div style="border:1px solid #efdfd3;border-radius:18px;padding:10px 12px;background:linear-gradient(180deg,#ffffff 0%,#fcfaf8 100%);">
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a18f84;">Bank name</div>
+              <div style="margin-top:6px;font-size:14px;font-weight:700;color:#1f1713;line-height:1.45;">${payoutProfile.bankName || "Not provided"}</div>
+            </div>
+            <div style="border:1px solid #efdfd3;border-radius:18px;padding:10px 12px;background:linear-gradient(180deg,#ffffff 0%,#fcfaf8 100%);">
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a18f84;">Status</div>
+              <div style="margin-top:6px;font-size:14px;font-weight:700;color:#c96533;line-height:1.45;">${payoutProfile.verificationStatus || "Pending review"}</div>
+            </div>
+          </div>
+
+          <div style="border:1px solid #efdfd3;border-radius:22px;background:linear-gradient(180deg,#fffaf6 0%,#ffffff 100%);padding:12px;">
+            <label for="vendor-payout-approve-note" style="display:block;margin-bottom:6px;font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a57b64;">Verification note</label>
+            <textarea id="vendor-payout-approve-note" class="swal2-textarea" placeholder="Example: Details matched company records and are approved for payout release." style="margin:0;width:100%;min-height:102px;border-radius:16px;border:1px solid #ead7ca;box-shadow:none;padding:12px 14px;"></textarea>
           </div>
         </div>
       `,
       focusConfirm: false,
       showCancelButton: true,
+      width: 760,
       confirmButtonText: "Approve bank details",
       cancelButtonText: "Cancel",
       confirmButtonColor: "#cf6e38",
       cancelButtonColor: "#c8b9aa",
+      customClass: {
+        popup: "w-[calc(100%-24px)] max-w-[760px] rounded-[28px] px-3 py-2 sm:px-4 sm:py-4",
+        htmlContainer: "!mx-0 !px-0 !pb-0 !pt-0",
+        actions: "!mt-1 flex w-full flex-col gap-2 px-2 pb-1 sm:flex-row sm:justify-center sm:px-0 sm:pb-0",
+        confirmButton:
+          "!m-0 !inline-flex !h-12 !w-full !items-center !justify-center !rounded-[16px] !bg-[linear-gradient(135deg,#d97342_0%,#c65b2d_100%)] !px-6 !text-[14px] !font-semibold !shadow-[0_16px_30px_rgba(198,91,45,0.24)] sm:!w-auto sm:!min-w-[190px]",
+        cancelButton:
+          "!m-0 !inline-flex !h-12 !w-full !items-center !justify-center !rounded-[16px] !border !border-[#e3d2c4] !bg-[#f8f1eb] !px-6 !text-[14px] !font-semibold !text-[#5f5149] sm:!w-auto sm:!min-w-[120px]",
+      },
+      didOpen: () => {
+        const popup = Swal.getPopup();
+        const textarea = document.getElementById("vendor-payout-approve-note");
+
+        if (popup) {
+          popup.style.padding = "0";
+        }
+
+        if (window.innerWidth < 640) {
+          const cards = popup?.querySelectorAll("[style*='grid-template-columns']");
+          cards?.forEach((card) => {
+            card.style.gridTemplateColumns = "1fr";
+          });
+        }
+
+        if (textarea) {
+          textarea.style.fontSize = "16px";
+        }
+      },
       preConfirm: () => ({
         verificationNote:
           document.getElementById("vendor-payout-approve-note")?.value?.trim() || "",

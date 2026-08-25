@@ -444,15 +444,18 @@ function PreferencesCard({
 function MasterDataField({ field, value, onChange }) {
   if (field.type === "checkbox") {
     return (
-      <label className="flex h-12 items-center gap-3 rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] font-semibold text-[#2a1f19]">
-        <input
-          checked={Boolean(value)}
-          className="h-4 w-4 accent-[#ce6938]"
-          onChange={(event) => onChange(field.key, event.target.checked)}
-          type="checkbox"
-        />
-        <span>{field.label}</span>
-      </label>
+      <div className="flex flex-col gap-1.5">
+        <span className="text-[12px] font-bold text-[#2f241d]">{field.label}</span>
+        <label className="flex h-12 items-center justify-between rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] font-semibold text-[#2a1f19] transition hover:border-[#ce6938] hover:bg-white">
+          <span className="text-[#5f5148]">Enabled</span>
+          <input
+            checked={Boolean(value)}
+            className="h-4 w-4 accent-[#ce6938]"
+            onChange={(event) => onChange(field.key, event.target.checked)}
+            type="checkbox"
+          />
+        </label>
+      </div>
     );
   }
 
@@ -484,9 +487,9 @@ function MasterDataManagerCard({
   const Icon = section.icon;
 
   return (
-    <SettingsShellCard className="rounded-[16px]">
+    <SettingsShellCard className="rounded-[18px] border-[#eadfd6] px-5 py-5">
       <SettingsSectionHeader icon={Icon} title={section.title} />
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid items-end gap-3 md:grid-cols-2 xl:grid-cols-5">
         {section.fields.map((field) => (
           <MasterDataField
             field={field}
@@ -496,9 +499,9 @@ function MasterDataManagerCard({
           />
         ))}
       </div>
-      <div className="mt-4 flex justify-end">
+      <div className="mt-5 flex justify-end">
         <SaveButton
-          className="h-10 px-4"
+          className="h-11 min-w-[160px] px-5"
           disabled={savingKey === `${section.key}:create`}
           onClick={() => onCreate(section)}
         >
@@ -506,7 +509,7 @@ function MasterDataManagerCard({
         </SaveButton>
       </div>
 
-      <div className="mt-5 space-y-3 border-t border-[#eee5de] pt-4">
+      <div className="mt-6 space-y-3 border-t border-[#eee5de] pt-5">
         {items.length ? (
           items.map((item) => {
             const isEditing =
@@ -514,12 +517,12 @@ function MasterDataManagerCard({
 
             return (
               <div
-                className="rounded-[14px] border border-[#eadfd6] bg-[#fcfaf8] p-4"
+                className="rounded-[16px] border border-[#eadfd6] bg-[linear-gradient(180deg,#fffdfa_0%,#fcfaf8_100%)] p-4 shadow-[0_8px_18px_rgba(49,30,19,0.03)]"
                 key={item.id}
               >
                 {isEditing ? (
                   <>
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                    <div className="grid items-end gap-3 md:grid-cols-2 xl:grid-cols-5">
                       {section.fields.map((field) => (
                         <MasterDataField
                           field={field}
@@ -550,7 +553,9 @@ function MasterDataManagerCard({
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-[14px] font-bold text-[#2a1f18]">{item.name}</p>
-                      <p className="mt-1 text-[12px] leading-5 text-[#85786f]">{item.meta || "API-managed option"}</p>
+                      <p className="mt-1 text-[12px] leading-5 text-[#85786f]">
+                        {item.meta || "API-managed option"}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button

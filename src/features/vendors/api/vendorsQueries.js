@@ -219,9 +219,11 @@ export const ADMIN_VENDOR_DETAIL_QUERY = `
       }
       documents {
         id
+        type
         title
         subtitle
         status
+        isCurrent
         fileUrl
         fileName
         mimeType
@@ -380,6 +382,7 @@ export const ADMIN_VENDOR_APPLICATION_REVIEW_QUERY = `
         title
         subtitle
         status
+        isCurrent
         fileUrl
         fileName
         mimeType
@@ -532,9 +535,11 @@ export const ADMIN_VENDOR_DOCUMENTS_QUERY = `
   query AdminVendorDocuments($vendorId: ID!) {
     adminVendorDocuments(vendorId: $vendorId) {
       id
+      type
       title
       subtitle
       status
+      isCurrent
       fileUrl
       fileName
       mimeType

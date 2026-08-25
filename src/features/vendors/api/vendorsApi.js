@@ -286,6 +286,7 @@ function normalizeVendorDocument(document) {
     subtitle: document?.subtitle || "",
     status: normalizeDocumentStatus(document?.status),
     rawStatus: `${document?.status ?? ""}`.trim().toUpperCase() || "PENDING",
+    isCurrent: document?.isCurrent !== false,
     fileUrl: document?.fileUrl || "",
     fileName: document?.fileName || "",
     mimeType: document?.mimeType || "",

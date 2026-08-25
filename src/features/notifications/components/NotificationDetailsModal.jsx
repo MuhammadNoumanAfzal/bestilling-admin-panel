@@ -294,16 +294,6 @@ export default function NotificationDetailsModal({ notification, onClose, onOpen
               </div>
             </div>
 
-            {notification.actionUrl ? (
-              <button
-                className="inline-flex min-h-[48px] w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] bg-[#cf6e38] px-4 py-3 text-center text-[14px] font-bold text-white transition hover:bg-[#bc6030]"
-                onClick={() => onOpenAction?.(notification)}
-                type="button"
-              >
-                <ExternalLink size={16} />
-                <span>Open Linked Resource</span>
-              </button>
-            ) : null}
           </div>
         </div>
       </div>

@@ -1,11 +1,17 @@
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
+export function hasAdminUploadConfiguration() {
+  return Boolean(CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET);
+}
+
+export function getAdminUploadConfigurationMessage() {
+  return "Avatar uploads are unavailable because Cloudinary is not configured for this environment.";
+}
+
 export async function uploadAdminFile(file, resourceType = "image") {
-  if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-    throw new Error(
-      "Missing Cloudinary configuration. Add VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.",
-    );
+  if (!hasAdminUploadConfiguration()) {
+    throw new Error(getAdminUploadConfigurationMessage());
   }
 
   const formData = new FormData();

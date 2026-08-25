@@ -10,7 +10,11 @@ import {
   updateAdminProfileRequest,
   updatePlatformPreferencesRequest,
 } from "../api/settingsApi.js";
-import { uploadAdminAvatar } from "../api/settingsUploadApi.js";
+import {
+  getAdminUploadConfigurationMessage,
+  hasAdminUploadConfiguration,
+  uploadAdminAvatar,
+} from "../api/settingsUploadApi.js";
 import SettingsAvatarUploader from "../components/SettingsAvatarUploader.jsx";
 import SettingsField from "../components/SettingsField.jsx";
 import SettingsSectionHeader from "../components/SettingsSectionHeader.jsx";
@@ -248,6 +252,8 @@ function ProfileInformationCard({
   onSaveProfile,
   onSavePassword,
   onUpdateAvatar,
+  isAvatarUploadAvailable,
+  avatarUploadUnavailableMessage,
 }) {
   return (
     <SettingsShellCard className="rounded-[16px] px-5 py-5">
@@ -256,7 +262,9 @@ function ProfileInformationCard({
       <div className="mt-4 flex flex-col gap-5 md:flex-row">
         <SettingsAvatarUploader
           avatarUrl={user?.avatar?.url || ""}
+          disabledMessage={avatarUploadUnavailableMessage}
           initials={getInitials(user)}
+          isDisabled={!isAvatarUploadAvailable}
           isUpdating={isUpdatingAvatar}
           onClick={onUpdateAvatar}
         />
@@ -604,6 +612,8 @@ function LoadingCard() {
 
 export default function SettingsPage() {
   const { updateSessionUser } = useAuth();
+  const isAvatarUploadAvailable = hasAdminUploadConfiguration();
+  const avatarUploadUnavailableMessage = getAdminUploadConfigurationMessage();
   const [settingsUser, setSettingsUser] = useState(null);
   const [masterData, setMasterData] = useState({
     currencies: [],
@@ -1034,6 +1044,16 @@ export default function SettingsPage() {
       return;
     }
 
+    if (!isAvatarUploadAvailable) {
+      await Swal.fire({
+        icon: "info",
+        title: "Avatar upload unavailable",
+        text: avatarUploadUnavailableMessage,
+        confirmButtonColor: "#cf6e38",
+      });
+      return;
+    }
+
     if (!file.type.startsWith("image/")) {
       await Swal.fire({
         icon: "warning",
@@ -1129,6 +1149,8 @@ export default function SettingsPage() {
           <LoadingCard />
         ) : (
           <ProfileInformationCard
+            avatarUploadUnavailableMessage={avatarUploadUnavailableMessage}
+            isAvatarUploadAvailable={isAvatarUploadAvailable}
             isPasswordFormOpen={isPasswordFormOpen}
             isSavingPassword={isSavingPassword}
             isSavingProfile={isSavingProfile}

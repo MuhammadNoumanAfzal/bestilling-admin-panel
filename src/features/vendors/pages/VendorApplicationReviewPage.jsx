@@ -252,45 +252,73 @@ export default function VendorApplicationReviewPage() {
   }
 
   async function handleReviewDocument(document) {
+    const currentStatusLabel =
+      document.rawStatus === "VERIFIED"
+        ? "Verified"
+        : document.rawStatus === "REJECTED"
+          ? "Rejected"
+          : "Pending";
+
     const result = await Swal.fire({
       html: `
-        <div class="flex flex-col gap-5 px-6 pb-2 pt-6 text-center sm:px-8">
-          <div class="flex flex-col items-center gap-2">
-            <div>
-              <span class="block text-[12px] font-medium text-[#6f6761]">Document review</span>
-              <h2 class="mt-1 text-[20px] font-semibold text-[#4a4a4a] sm:text-[22px]">Review vendor document</h2>
-              <p class="mx-auto mt-1 max-w-[540px] text-[14px] leading-7 text-[#5d5d5d] sm:text-[15px]">
-                Update the review result for <strong>${document.title}</strong> and leave a clear note for the audit trail.
+        <div class="flex flex-col gap-3.5 px-5 pb-0 pt-4 text-left sm:px-6">
+          <div class="overflow-hidden rounded-[24px] border border-[#f0dfd3] bg-[linear-gradient(135deg,#fff9f4_0%,#fffdfb_58%,#fff7ef_100%)]">
+            <div class="border-b border-[#f3e4d9] px-5 py-3.5 sm:px-6">
+              <div class="inline-flex items-center gap-2 rounded-full border border-[#efcfbe] bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#cf6e38]">
+                <span class="inline-flex h-2 w-2 rounded-full bg-[#cf6e38]"></span>
+                Document review
+              </div>
+              <h2 class="mt-2.5 text-[21px] font-black tracking-[-0.03em] text-[#1f1712] sm:text-[24px]">Review vendor document</h2>
+              <p class="mt-1.5 max-w-[560px] text-[14px] leading-6 text-[#6a5a50] sm:text-[15px]">
+                Update the review result for <strong class="text-[#2b211b]">${document.title}</strong> and leave a clear note for the audit trail.
               </p>
+            </div>
+
+            <div class="grid gap-2.5 px-5 py-2.5 sm:grid-cols-3 sm:px-6">
+              <div class="rounded-[18px] border border-[#ecdccf] bg-white px-4 py-2 shadow-[0_8px_18px_rgba(49,30,19,0.04)]">
+                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9a8678]">Document</p>
+                <p class="mt-1 text-[14px] font-bold text-[#1f1712]">${document.title}</p>
+              </div>
+              <div class="rounded-[18px] border border-[#ecdccf] bg-white px-4 py-2 shadow-[0_8px_18px_rgba(49,30,19,0.04)]">
+                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9a8678]">Uploaded</p>
+                <p class="mt-1 text-[14px] font-bold text-[#1f1712]">${document.uploadedAtLabel || "Not available"}</p>
+              </div>
+              <div class="rounded-[18px] border border-[#ecdccf] bg-white px-4 py-2 shadow-[0_8px_18px_rgba(49,30,19,0.04)]">
+                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9a8678]">Current state</p>
+                <p class="mt-1 text-[14px] font-bold text-[#1f1712]">${currentStatusLabel}</p>
+              </div>
             </div>
           </div>
 
-          <div class="space-y-5">
-            <div class="space-y-1 text-center">
-              <div class="text-[13px] text-[#66615b]">Uploaded <strong class="text-[15px] font-semibold text-[#434343]">${document.uploadedAtLabel || "Not available"}</strong></div>
-              <div class="text-[13px] text-[#66615b]">Current state <strong class="text-[15px] font-semibold text-[#434343]">${document.status || "Pending"}</strong></div>
-            </div>
-
-            <div class="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)] md:items-start">
+          <div class="grid gap-3.5 lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start">
+            <div class="rounded-[20px] border border-[#eadfd7] bg-[#fcfaf8] p-3.5">
               <label class="flex flex-col gap-2 text-left" for="vendor-document-status">
-                <span class="text-[13px] font-medium text-[#56504a]">Status</span>
-                <select id="vendor-document-status" class="swal2-select !m-0 !flex !h-[50px] !w-full !rounded-[12px] !border !border-[#e1d7cf] !bg-white !px-4 !text-[15px] !font-medium !text-[#4e4943] !shadow-none focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]">
+                <span class="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7d6d62]">Status</span>
+                <select id="vendor-document-status" class="swal2-select !m-0 !flex !h-[50px] !w-full !rounded-[14px] !border !border-[#e5d8cf] !bg-white !px-4 !text-[15px] !font-semibold !text-[#352a24] !shadow-none focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]">
                   <option value="VERIFIED">Verified</option>
                   <option value="PENDING">Pending</option>
                   <option value="REJECTED">Rejected</option>
                 </select>
               </label>
-
-              <label class="flex flex-col gap-2 text-left" for="vendor-document-note">
-                <span class="text-[13px] font-medium text-[#56504a]">Review note</span>
-                <textarea id="vendor-document-note" class="swal2-textarea !m-0 !min-h-[136px] !w-full !resize-none !rounded-[12px] !border !border-[#e1d7cf] !bg-white !px-4 !py-3 !text-[15px] !leading-7 !text-[#413b36] !shadow-none placeholder:!text-[#c3beb8] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]" placeholder="Add a helpful note about what was checked or what still needs attention"></textarea>
-              </label>
+              <p class="mt-2 text-[12px] leading-5 text-[#8b7d73]">
+                Choose the outcome that best reflects the current review decision.
+              </p>
             </div>
 
-            <label class="hidden flex-col gap-2 text-left" id="vendor-document-reason-field" for="vendor-document-reason">
-              <span class="text-[13px] font-medium text-[#56504a]">Rejection reason</span>
-              <input id="vendor-document-reason" class="swal2-input !m-0 !flex !h-[50px] !w-full !rounded-[12px] !border !border-[#e1d7cf] !bg-white !px-4 !text-[14px] !font-medium !text-[#413b36] !shadow-none placeholder:!text-[#b8afa7] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]" placeholder="Required only when the document is rejected" />
-            </label>
+            <div class="space-y-3.5">
+              <div class="rounded-[20px] border border-[#eadfd7] bg-white p-3.5 shadow-[0_10px_22px_rgba(49,30,19,0.04)]">
+              <label class="flex flex-col gap-2 text-left" for="vendor-document-note">
+                  <span class="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7d6d62]">Review note</span>
+                  <textarea id="vendor-document-note" class="swal2-textarea !m-0 !min-h-[104px] !w-full !resize-none !rounded-[14px] !border !border-[#e5d8cf] !bg-[#fffdfa] !px-4 !py-3 !text-[15px] !leading-6 !text-[#413b36] !shadow-none placeholder:!text-[#c3beb8] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]" placeholder="Summarize what was checked, what looks correct, or what still needs attention"></textarea>
+              </label>
+              </div>
+
+              <label class="hidden flex-col gap-2 rounded-[20px] border border-[#f0d5d2] bg-[#fff7f7] p-3.5 text-left" id="vendor-document-reason-field" for="vendor-document-reason">
+                <span class="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#9b4d4d]">Rejection reason</span>
+                <input id="vendor-document-reason" class="swal2-input !m-0 !flex !h-[50px] !w-full !rounded-[14px] !border !border-[#e6d4d0] !bg-white !px-4 !text-[14px] !font-medium !text-[#413b36] !shadow-none placeholder:!text-[#b8afa7] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]" placeholder="Required only when the document is rejected" />
+                <p class="text-[12px] leading-5 text-[#8d6a6a]">Be specific so the vendor and internal team understand what blocked approval.</p>
+              </label>
+            </div>
           </div>
         </div>
       `,
@@ -302,15 +330,15 @@ export default function VendorApplicationReviewPage() {
       width: 720,
       customClass: {
         popup:
-          "vendor-document-review-modal__popup !overflow-hidden !rounded-[18px] !border !border-[#eadfd7] !bg-white !p-0 shadow-[0_30px_80px_rgba(37,22,12,0.18)]",
+          "vendor-document-review-modal__popup !overflow-hidden !rounded-[28px] !border !border-[#eadfd7] !bg-white !p-0 shadow-[0_36px_90px_rgba(37,22,12,0.20)]",
         htmlContainer: "vendor-document-review-modal__content !m-0 !p-0",
-        actions: "vendor-document-review-modal__actions !mt-0 !gap-2 !px-6 !pb-6 !pt-0",
+        actions: "vendor-document-review-modal__actions !mt-0 !gap-3 !px-6 !pb-5 !pt-0",
         confirmButton:
-          "vendor-document-review-modal__confirm !m-0 !h-11 !rounded-[10px] !bg-[#db6d34] !px-5 !text-[13px] !font-bold !text-white !shadow-none hover:!bg-[#c9602c]",
+          "vendor-document-review-modal__confirm !m-0 !h-12 !rounded-[14px] !bg-[linear-gradient(135deg,#db6d34_0%,#c85a2d_100%)] !px-6 !text-[13px] !font-extrabold !text-white !shadow-[0_12px_24px_rgba(217,110,57,0.24)] hover:!bg-[#c9602c]",
         cancelButton:
-          "vendor-document-review-modal__cancel !m-0 !h-11 !rounded-[10px] !border-0 !bg-[#cbb8a3] !px-5 !text-[13px] !font-bold !text-white !shadow-none hover:!bg-[#b8a38e]",
+          "vendor-document-review-modal__cancel !m-0 !h-12 !rounded-[14px] !border !border-[#ded2c8] !bg-[#f7f2ed] !px-6 !text-[13px] !font-extrabold !text-[#4c4038] !shadow-none hover:!bg-[#efe7df]",
         validationMessage:
-          "vendor-document-review-modal__validation !mx-6 !mb-4 !mt-0 !rounded-[12px] !bg-[#fff1ef] !px-4 !py-3 !text-[13px] !font-semibold !text-[#c83d31]",
+          "vendor-document-review-modal__validation !mx-8 !mb-5 !mt-0 !rounded-[14px] !bg-[#fff1ef] !px-4 !py-3 !text-[13px] !font-semibold !text-[#c83d31]",
       },
       preConfirm: () => {
         const status = window.document.getElementById("vendor-document-status")?.value || "";

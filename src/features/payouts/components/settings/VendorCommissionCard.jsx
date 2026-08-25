@@ -18,6 +18,45 @@ function VendorAvatar({ label, src }) {
   );
 }
 
+function MobileVendorCommissionCard({ row, onDelete, onEdit }) {
+  return (
+    <article className="rounded-[16px] border border-[#eadfd6] bg-[linear-gradient(180deg,#fffdfa_0%,#fff8f2_100%)] p-4 shadow-[0_10px_20px_rgba(56,33,17,0.05)]">
+      <div className="flex items-start gap-3">
+        <VendorAvatar label={row.avatar} src={row.avatarUrl} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-bold text-[#18120f]">{row.vendor}</p>
+          <p className="mt-1 text-[12px] text-[#7d7068]">{row.area}</p>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Commission</p>
+          <p className="mt-1 text-[14px] font-semibold text-[#18120f]">{row.currentCommission}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center gap-2">
+        <button
+          className="inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-[#dfd2ca] bg-white px-3 text-[12px] font-bold text-[#3a2f28] transition hover:bg-[#faf6f2]"
+          onClick={() => onEdit(row)}
+          type="button"
+        >
+          <Pencil size={14} />
+          Edit
+        </button>
+        <button
+          className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-[10px] border border-[#f0d6d0] bg-[#fff6f4] text-[#d15b42] transition hover:bg-[#fff0ec]"
+          onClick={() => onDelete(row)}
+          type="button"
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+    </article>
+  );
+}
+
 export default function VendorCommissionCard({ onAdd, onDelete, onEdit, rows }) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -41,15 +80,15 @@ export default function VendorCommissionCard({ onAdd, onDelete, onEdit, rows }) 
     <section className="overflow-hidden rounded-[16px] border border-[#d8ccc2] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]">
       <div className="flex items-center justify-between gap-3 px-4 py-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-[22px] font-bold text-[#221914]">Vendor Commission</h2>
+          <h2 className="text-[20px] font-bold text-[#221914] sm:text-[22px]">Vendor Commission</h2>
           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ffd7c1] px-1 text-[10px] font-bold text-[#cf6e38]">
             {rows.length}
           </span>
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 px-4 pb-3">
-        <label className="relative w-full max-w-[240px]">
+      <div className="flex flex-col gap-3 px-4 pb-3 sm:flex-row sm:items-center sm:justify-between">
+        <label className="relative w-full sm:max-w-[240px]">
           <input
             className="h-10 w-full rounded-full border border-[#ebe2db] bg-[#f6f4f2] pl-9 pr-3 text-[14px] font-medium text-[#2a1f19] outline-none transition placeholder:text-[#b3aaa2] focus:border-[#cf6e38] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
             onChange={(event) => setSearchTerm(event.target.value)}
@@ -63,7 +102,7 @@ export default function VendorCommissionCard({ onAdd, onDelete, onEdit, rows }) 
         </label>
 
         <button
-          className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-[8px] border border-[#ddd2ca] bg-white px-3 text-[12px] font-semibold text-[#2f241d] transition hover:border-[#cf6e38]/35 hover:bg-[#fff9f5]"
+          className="inline-flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border border-[#ddd2ca] bg-white px-3 text-[12px] font-semibold text-[#2f241d] transition hover:border-[#cf6e38]/35 hover:bg-[#fff9f5] sm:h-9 sm:w-auto sm:rounded-[8px]"
           onClick={onAdd}
           type="button"
         >
@@ -72,7 +111,24 @@ export default function VendorCommissionCard({ onAdd, onDelete, onEdit, rows }) 
         </button>
       </div>
 
-      <div className="border-t border-[#eee4dd]">
+      <div className="space-y-3 border-t border-[#eee4dd] p-3 md:hidden">
+        {filteredRows.length === 0 ? (
+          <div className="rounded-[14px] border border-dashed border-[#e2d7cf] bg-[#fcfaf8] px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]">
+            No vendor commissions match the current search.
+          </div>
+        ) : (
+          filteredRows.map((row) => (
+            <MobileVendorCommissionCard
+              key={row.id}
+              row={row}
+              onDelete={onDelete}
+              onEdit={onEdit}
+            />
+          ))
+        )}
+      </div>
+
+      <div className="hidden border-t border-[#eee4dd] md:block">
         <table className="w-full table-fixed border-collapse">
           <thead className="bg-[#fcfbfa]">
             <tr className="text-left">

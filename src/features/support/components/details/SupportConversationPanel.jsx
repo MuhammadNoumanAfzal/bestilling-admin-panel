@@ -61,7 +61,7 @@ function AttachmentPreviewCard({ attachment, isRight }) {
   return (
     <a
       className={[
-        "group flex w-full max-w-[230px] flex-col overflow-hidden rounded-[16px] border no-underline shadow-[0_10px_22px_rgba(46,26,14,0.08)] transition hover:-translate-y-0.5",
+        "group flex w-full max-w-[172px] flex-col overflow-hidden rounded-[16px] border no-underline shadow-[0_10px_22px_rgba(46,26,14,0.08)] transition hover:-translate-y-0.5",
         isRight
           ? "border-white/18 bg-white/12 hover:bg-white/16"
           : "border-[#eaded6] bg-[#fff8f3] hover:border-[#cf6e38]/35 hover:bg-[#fff1e6]",
@@ -73,13 +73,13 @@ function AttachmentPreviewCard({ attachment, isRight }) {
       {imageAttachment ? (
         <img
           alt={attachment.fileName}
-          className="h-[120px] w-full object-cover"
+          className="h-[118px] w-full object-cover"
           src={attachment.url}
         />
       ) : (
         <div
           className={[
-            "flex h-[96px] items-center justify-center",
+            "flex h-[92px] items-center justify-center",
             isRight ? "bg-white/8 text-white" : "bg-[#fff2e8] text-[#cf6e38]",
           ].join(" ")}
         >
@@ -87,18 +87,18 @@ function AttachmentPreviewCard({ attachment, isRight }) {
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2 px-2.5 py-2">
         <div className="min-w-0">
-          <p className={["truncate text-[12px] font-bold", isRight ? "text-white" : "text-[#2f241d]"].join(" ")}>
-            {imageAttachment ? "Open image" : "Open attachment"}
-          </p>
-          <p className={["truncate text-[11px]", isRight ? "text-white/78" : "text-[#8d8077]"].join(" ")}>
+          <p className={["truncate text-[11px] font-bold", isRight ? "text-white" : "text-[#2f241d]"].join(" ")}>
             {attachment.fileName}
+          </p>
+          <p className={["truncate text-[10px]", isRight ? "text-white/72" : "text-[#8d8077]"].join(" ")}>
+            {imageAttachment ? "Image attachment" : "File attachment"}
           </p>
         </div>
         <span
           className={[
-            "inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold",
+            "inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold",
             isRight ? "bg-white/16 text-white" : "bg-white text-[#cf6e38]",
           ].join(" ")}
         >
@@ -162,7 +162,7 @@ function MessageBubble({ message, requesterAvatarUrl }) {
         >
           {text ? <span className="whitespace-pre-line">{text}</span> : null}
           {mergedAttachments.length ? (
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="mt-3 flex flex-wrap gap-3">
               {mergedAttachments.map((attachment) => (
                 <AttachmentPreviewCard
                   key={attachment.id || attachment.url}

@@ -25,6 +25,9 @@ function PaymentActionCard({
   disabled = false,
   icon: Icon,
   onClick,
+  secondaryButtonLabel = "",
+  secondaryDisabled = false,
+  onSecondaryClick,
   status,
   title,
 }) {
@@ -52,15 +55,27 @@ function PaymentActionCard({
         </div>
       </div>
 
-      <button
-        className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-[#ef9f7f] bg-white px-3 text-[13px] font-semibold text-[#cf6e38] transition hover:-translate-y-[1px] hover:bg-[#fff5ef] disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={disabled}
-        onClick={onClick}
-        type="button"
-      >
-        <BadgeCheck size={15} />
-        <span>{buttonLabel}</span>
-      </button>
+      <div className="mt-4 flex flex-col gap-2">
+        <button
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-[#ef9f7f] bg-white px-3 text-[13px] font-semibold text-[#cf6e38] transition hover:-translate-y-[1px] hover:bg-[#fff5ef] disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={disabled}
+          onClick={onClick}
+          type="button"
+        >
+          <BadgeCheck size={15} />
+          <span>{buttonLabel}</span>
+        </button>
+        {secondaryButtonLabel ? (
+          <button
+            className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-[12px] border border-[#eadccd] bg-[#fffaf6] px-3 text-[12px] font-semibold text-[#8a5b16] transition hover:bg-[#fff2e7] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={secondaryDisabled}
+            onClick={onSecondaryClick}
+            type="button"
+          >
+            <span>{secondaryButtonLabel}</span>
+          </button>
+        ) : null}
+      </div>
     </section>
   );
 }
@@ -88,128 +103,98 @@ export default function PaymentStatusCards({
   const isPaid = customerStatus === "Paid";
   const isRejected = customerStatus === "Rejected";
   const isPendingCustomerPayment = customerStatus === "Pending";
+  const canManualMarkInvoicePaid = !isReported && !isPaid && !isRejected && !isPendingCustomerPayment;
+  const customerPrimaryLabel = isReported
+    ? isApprovingInvoice
+      ? "Approving..."
+      : "Approve Reported Payment"
+    : isPendingCustomerPayment
+      ? isUpdatingCustomerPayment
+        ? "Updating..."
+        : "Mark as Received"
+      : isPaid
+        ? "Already Paid"
+        : isRejected
+          ? "Waiting for Resubmission"
+          : isMarkingInvoicePaid
+            ? "Updating..."
+            : "Mark Invoice Paid";
+  const customerPrimaryAction = isReported
+    ? onApproveInvoice
+    : isPendingCustomerPayment
+      ? onMarkReceived
+      : onMarkInvoicePaid;
+  const vendorPrimaryLabel =
+    payoutStatus === "Paid"
+      ? "Already Paid"
+      : payoutStatus === "Released"
+        ? isUpdatingVendorPayout
+          ? "Updating..."
+          : "Mark as Paid"
+        : isReleasingVendorPayout
+          ? "Releasing..."
+          : "Release Payout";
+  const vendorPrimaryAction =
+    payoutStatus === "Released" || payoutStatus === "Paid" ? onMarkPaid : onReleasePayout;
+  const vendorPrimaryDisabled =
+    payoutStatus === "Paid"
+      ? true
+      : payoutStatus === "Released"
+        ? isUpdatingVendorPayout
+        : isReleasingVendorPayout || !isPaid || !isBankProfileVerified;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <PaymentActionCard
-        buttonLabel={
-          customerStatus === "Paid"
-            ? "Already Received"
-            : isUpdatingCustomerPayment
-              ? "Updating..."
-              : "Mark as Received"
+        buttonLabel={customerPrimaryLabel}
+        description={
+          isReported
+            ? "Review the reported payment and confirm it against the bank statement."
+            : isPendingCustomerPayment
+              ? "Customer payment is still waiting for manual confirmation."
+              : isRejected
+                ? "The reported payment was rejected and is waiting for corrected resubmission."
+                : "Use this card to confirm customer-side invoice payment activity."
         }
-        description="Customer pays manually by bank transfer against the invoice reference."
         details={[
           { label: "Invoice", value: payout.invoiceNumber },
           { label: "Customer", value: payout.customer.fullName },
         ]}
-        disabled={isUpdatingCustomerPayment || customerStatus === "Paid"}
+        disabled={
+          isReported
+            ? isApprovingInvoice
+            : isPendingCustomerPayment
+              ? isUpdatingCustomerPayment
+              : isPaid
+                ? true
+                : isRejected
+                  ? true
+                  : isMarkingInvoicePaid || !canManualMarkInvoicePaid
+        }
         icon={FileText}
-        onClick={onMarkReceived}
+        onClick={customerPrimaryAction}
+        onSecondaryClick={isReported ? onRejectInvoice : undefined}
+        secondaryButtonLabel={isReported ? (isRejectingInvoice ? "Rejecting..." : "Reject Report") : ""}
+        secondaryDisabled={isRejectingInvoice}
         status={customerStatus}
-        title="Customer Payment"
+        title="Customer / Invoice Payment"
       />
       <PaymentActionCard
-        buttonLabel={
-          payoutStatus === "Paid"
-            ? "Already Paid"
-            : isUpdatingVendorPayout
-              ? "Updating..."
-              : "Mark as Paid"
+        buttonLabel={vendorPrimaryLabel}
+        description={
+          payoutStatus === "Released"
+            ? "The payout is already released. Use this to confirm the outbound transfer is completed."
+            : "Release the vendor payout after customer payment is approved, then mark it paid once the transfer is sent."
         }
-        description="Admin sends the vendor payout manually after customer payment is confirmed."
         details={[
           { label: "Vendor", value: payout.vendor.name },
           { label: "Payout", value: payout.financials.vendorAmount },
         ]}
-        disabled={
-          isUpdatingVendorPayout ||
-          payoutStatus === "Paid" ||
-          customerStatus !== "Paid"
-        }
+        disabled={vendorPrimaryDisabled}
         icon={CreditCard}
-        onClick={onMarkPaid}
+        onClick={vendorPrimaryAction}
         status={payoutStatus}
         title="Vendor Payout"
-      />
-      <PaymentActionCard
-        buttonLabel={
-          isReported
-            ? isApprovingInvoice
-              ? "Approving..."
-              : "Approve Reported Payment"
-            : isPaid
-              ? "Already Approved"
-              : isPendingCustomerPayment
-                ? "Awaiting Customer Payment"
-                : isRejected
-                  ? "Waiting for Resubmission"
-                  : isMarkingInvoicePaid
-                    ? "Updating..."
-                    : "Mark Invoice Paid"
-        }
-        description={
-          isReported
-            ? "Review the customer payment report and confirm it against the bank statement."
-            : isPendingCustomerPayment
-              ? "This invoice is still waiting for the customer to pay or submit a payment report."
-              : isRejected
-                ? "The previous payment report was rejected. Wait for the customer to submit a corrected report."
-                : "Manually confirm the invoice payment from the bank statement when needed."
-        }
-        details={[
-          { label: "Invoice", value: payout.invoiceNumber },
-          { label: "Customer status", value: customerStatus },
-        ]}
-        disabled={
-          isApprovingInvoice ||
-          isMarkingInvoicePaid ||
-          isPaid ||
-          isRejected ||
-          isPendingCustomerPayment
-        }
-        icon={BadgeCheck}
-        onClick={isReported ? onApproveInvoice : onMarkInvoicePaid}
-        status={customerStatus}
-        title={isReported ? "Invoice Review" : "Invoice Payment"}
-      />
-      <PaymentActionCard
-        buttonLabel={
-          payoutStatus === "Released"
-            ? "Already Released"
-            : payoutStatus === "Paid"
-              ? "Already Paid"
-              : isReleasingVendorPayout
-                ? "Releasing..."
-                : isReported
-                  ? isRejectingInvoice
-                    ? "Rejecting..."
-                    : "Reject Invoice Report"
-                  : "Release Payout"
-        }
-        description={
-          isReported
-            ? "Reject the reported customer payment if the transfer proof or reference does not match."
-            : "Release the vendor payout once the customer payment has been verified."
-        }
-        details={[
-          { label: isReported ? "Invoice" : "Vendor" , value: isReported ? payout.invoiceNumber : payout.vendor.name },
-          { label: isReported ? "Current status" : "Payout", value: isReported ? customerStatus : payout.financials.vendorAmount },
-        ]}
-        disabled={
-          isReported
-            ? isRejectingInvoice || isPaid
-            : isReleasingVendorPayout ||
-              payoutStatus === "Released" ||
-              payoutStatus === "Paid" ||
-              !isPaid ||
-              !isBankProfileVerified
-        }
-        icon={CreditCard}
-        onClick={isReported ? onRejectInvoice : onReleasePayout}
-        status={isReported ? customerStatus : payoutStatus}
-        title={isReported ? "Reject Report" : "Release Payout"}
       />
     </div>
   );

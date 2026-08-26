@@ -110,7 +110,15 @@ function PersonCell({ name, src, subtitle, avatar }) {
   );
 }
 
-export default function PayoutsTable({ currentPage, onPageChange, pageSize, rows, totalItems }) {
+export default function PayoutsTable({
+  activeActionKey = "",
+  currentPage,
+  onPageChange,
+  onQuickAction,
+  pageSize,
+  rows,
+  totalItems,
+}) {
   const navigate = useNavigate();
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
@@ -129,7 +137,7 @@ export default function PayoutsTable({ currentPage, onPageChange, pageSize, rows
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Amount</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Status</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Platform Comm.</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Payment</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Payment Status</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor Amount</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Payout Status</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Date</th>
@@ -145,7 +153,15 @@ export default function PayoutsTable({ currentPage, onPageChange, pageSize, rows
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
+              rows.map((row) => {
+                const canApproveReportedPayment =
+                  row.customerPaymentStatus === "Reported" && Boolean(row.invoiceId);
+                const canMarkCustomerReceived =
+                  row.customerPaymentStatus === "Pending" && Boolean(row.invoiceId);
+                const canMarkVendorPaid =
+                  row.vendorPayoutStatus === "Released" && Boolean(row.payoutId);
+
+                return (
                 <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
                   <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.invoiceNumber}</td>
                   <td className="px-3 py-4">
@@ -178,16 +194,49 @@ export default function PayoutsTable({ currentPage, onPageChange, pageSize, rows
                   </td>
                   <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.date}</td>
                   <td className="px-4 py-4 text-right">
-                    <button
-                      className="inline-flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-[13px] font-semibold text-[#18120f] transition hover:text-[#cf6e38]"
-                      onClick={() => navigate(`/payouts/${encodeURIComponent(row.id)}`)}
-                      type="button"
-                    >
-                      View Details
-                    </button>
+                    <div className="ml-auto flex w-[132px] flex-col items-stretch gap-1.5">
+                      {canApproveReportedPayment ? (
+                        <button
+                          className="inline-flex min-h-[34px] w-full items-center justify-center rounded-[10px] border border-[#cfe6d8] bg-[#edf8f1] px-2.5 text-center text-[10px] font-bold leading-4 text-[#2b9e62] transition hover:bg-[#e2f3e9] disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={activeActionKey === `${row.id}:approveInvoice`}
+                          onClick={() => onQuickAction?.(row, "approveInvoice")}
+                          type="button"
+                        >
+                          {activeActionKey === `${row.id}:approveInvoice` ? "Approving..." : "Approve Payment"}
+                        </button>
+                      ) : null}
+                      {canMarkCustomerReceived ? (
+                        <button
+                          className="inline-flex min-h-[34px] w-full items-center justify-center rounded-[10px] border border-[#eadccd] bg-[#fff8f1] px-2.5 text-center text-[10px] font-bold leading-4 text-[#c8881b] transition hover:bg-[#fff2de] disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={activeActionKey === `${row.id}:markReceived`}
+                          onClick={() => onQuickAction?.(row, "markReceived")}
+                          type="button"
+                        >
+                          {activeActionKey === `${row.id}:markReceived` ? "Updating..." : "Mark Received"}
+                        </button>
+                      ) : null}
+                      {canMarkVendorPaid ? (
+                        <button
+                          className="inline-flex min-h-[34px] w-full items-center justify-center rounded-[10px] border border-[#d8dff0] bg-[#eef4ff] px-2.5 text-center text-[10px] font-bold leading-4 text-[#4b74c6] transition hover:bg-[#e4ecff] disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={activeActionKey === `${row.id}:markVendorPaid`}
+                          onClick={() => onQuickAction?.(row, "markVendorPaid")}
+                          type="button"
+                        >
+                          {activeActionKey === `${row.id}:markVendorPaid` ? "Updating..." : "Mark Payout Paid"}
+                        </button>
+                      ) : null}
+                      <button
+                        className="inline-flex min-h-[32px] w-full items-center justify-center rounded-[10px] border border-[#e6dad1] bg-white px-2.5 text-center text-[10px] font-bold leading-4 text-[#18120f] transition hover:border-[#efd8ca] hover:bg-[#fff7f2] hover:text-[#cf6e38]"
+                        onClick={() => navigate(`/payouts/${encodeURIComponent(row.id)}`)}
+                        type="button"
+                      >
+                        View Details
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              ))
+              );
+            })
             )}
           </tbody>
         </table>

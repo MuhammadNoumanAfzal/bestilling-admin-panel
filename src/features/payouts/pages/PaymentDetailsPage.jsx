@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
-import { ArrowLeft, Download, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import {
   approveInvoicePaymentRequest,
   getAdminPaymentDetailRequest,
@@ -59,6 +59,7 @@ export default function PaymentDetailsPage() {
   const [isRejectingInvoice, setIsRejectingInvoice] = useState(false);
   const [isMarkingInvoicePaid, setIsMarkingInvoicePaid] = useState(false);
   const [isReleasingVendorPayout, setIsReleasingVendorPayout] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -95,6 +96,28 @@ export default function PaymentDetailsPage() {
     const detail = await getAdminPaymentDetailRequest(decodeURIComponent(payoutId || ""));
     setPaymentDetail(detail);
     return detail;
+  }
+
+  async function handleRefreshDetails() {
+    try {
+      setIsRefreshing(true);
+      await refreshPaymentDetail();
+      await Swal.fire({
+        icon: "success",
+        title: "Details refreshed",
+        text: "The latest payment detail has been loaded.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Refresh failed",
+        text: error instanceof Error ? error.message : "Unable to refresh payment details.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   }
 
   async function handleMarkReceived() {
@@ -477,22 +500,15 @@ export default function PaymentDetailsPage() {
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:w-[320px] xl:grid-cols-1">
+          <div className="grid gap-3 xl:w-[320px] xl:grid-cols-1">
             <button
               className="inline-flex h-12 items-center justify-center gap-2 rounded-[16px] bg-[linear-gradient(135deg,#d97342_0%,#c65b2d_100%)] px-4 text-[14px] font-semibold text-white shadow-[0_16px_34px_rgba(198,91,45,0.24)] transition hover:-translate-y-[1px] hover:shadow-[0_20px_40px_rgba(198,91,45,0.3)]"
-              onClick={() => refreshPaymentDetail()}
+              disabled={isRefreshing}
+              onClick={handleRefreshDetails}
               type="button"
             >
               <RefreshCw size={16} />
-              <span>Refresh details</span>
-            </button>
-            <button
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-[16px] border border-[#e4d5ca] bg-white px-4 text-[14px] font-semibold text-[#2f251f] shadow-[0_10px_24px_rgba(51,30,17,0.05)] transition hover:-translate-y-[1px] hover:border-[#d3b6a3] hover:bg-[#fffaf6]"
-              onClick={() => window.print()}
-              type="button"
-            >
-              <Download size={16} />
-              <span>Save / Print</span>
+              <span>{isRefreshing ? "Refreshing..." : "Refresh details"}</span>
             </button>
           </div>
         </div>

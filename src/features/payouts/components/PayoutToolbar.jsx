@@ -1,38 +1,58 @@
-import { ChevronDown, RotateCw, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Search, RotateCw, ChevronDown } from "lucide-react";
 
-function FilterSelect({ onChange, options, value }) {
+function Dropdown({
+  isOpen,
+  label,
+  onToggle,
+  options,
+  selectedValue,
+  defaultLabel,
+  clearLabel,
+  onSelect,
+}) {
   return (
     <div className="relative">
-      <select
-        className="h-10 cursor-pointer appearance-none rounded-[10px] border border-[#ddd2ca] bg-white pl-3.5 pr-9 text-[13px] font-semibold text-[#3f3530] outline-none transition hover:border-[#cf6e38]/50 focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
-        onChange={onChange}
-        value={value}
+      <button
+        className="inline-flex h-10 w-full items-center justify-between gap-2 rounded-[10px] border border-[#d8ccc2] bg-white px-3 text-[13px] font-semibold text-[#4d423b] transition hover:bg-[#faf9f8] sm:w-auto"
+        onClick={onToggle}
+        type="button"
       >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#8d8077]" size={14} />
-    </div>
-  );
-}
+        <span>{label || defaultLabel}</span>
+        <ChevronDown size={14} className="text-[#8c8077]" />
+      </button>
 
-function AllButton({ isActive, onClick }) {
-  return (
-    <button
-      className={[
-        "inline-flex h-10 cursor-pointer items-center rounded-[10px] border px-4 text-[13px] font-semibold transition",
-        isActive
-          ? "border-[#cf6e38] bg-[#cf6e38] text-white"
-          : "border-[#ddd2ca] bg-white text-[#3f3530] hover:border-[#cf6e38]/50 hover:bg-[#fff9f5]",
-      ].join(" ")}
-      onClick={onClick}
-      type="button"
-    >
-      All
-    </button>
+      {isOpen ? (
+        <div className="absolute left-0 z-30 mt-1 w-full min-w-[12rem] rounded-[10px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] sm:w-48">
+          <button
+            className={`block w-full px-3.5 py-2 text-left text-[12px] font-semibold transition ${
+              !selectedValue
+                ? "bg-[#fff3ec] text-[#d96834]"
+                : "text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
+            }`}
+            onClick={() => onSelect("all")}
+            type="button"
+          >
+            {clearLabel || defaultLabel}
+          </button>
+
+          {options.map((option) => (
+            <button
+              key={option.value}
+              className={`block w-full px-3.5 py-2 text-left text-[12px] font-semibold transition ${
+                selectedValue === option.value
+                  ? "bg-[#fff3ec] text-[#d96834]"
+                  : "text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
+              }`}
+              onClick={() => onSelect(option.value)}
+              type="button"
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -47,58 +67,76 @@ export default function PayoutToolbar({
   vendorOptions = [],
   vendorFilter,
 }) {
+  const [activeDropdown, setActiveDropdown] = useState("");
+  const toolbarRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (toolbarRef.current && !toolbarRef.current.contains(event.target)) {
+        setActiveDropdown("");
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  function handleSelect(callback, value) {
+    callback(value);
+    setActiveDropdown("");
+  }
+
   return (
-    <div className="flex flex-col gap-5 border-b border-[#e7ddd5] px-4 py-4 pb-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <label className="relative w-full max-w-[360px]">
-          <input
-            className="h-10 w-full rounded-full border border-[#ebe2db] bg-[#f6f4f2] pl-10 pr-4 text-[14px] font-medium text-[#18120f] outline-none transition placeholder:text-[#b3aaa2] focus:border-[#cf6e38] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search by order ID, customer or vendor..."
-            type="search"
-            value={searchTerm}
-          />
-          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#b2a9a1]">
-            <Search size={14} />
-          </span>
-        </label>
+    <div
+      ref={toolbarRef}
+      className="flex flex-col gap-3 border-b border-[#eee4dd] bg-[#fcfbfa] p-4 lg:flex-row lg:items-center"
+    >
+      <div className="relative flex-1 min-w-0">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="Search by order ID, customer, or vendor..."
+          className="h-10 w-full rounded-[10px] border border-[#ddd4cb] bg-white pl-10 pr-4 text-[13px] text-[#231913] outline-none transition placeholder:text-[#baaea0] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]"
+        />
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#baaea0]">
+          <Search size={15} />
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
+        <Dropdown
+          clearLabel="Any payment status"
+          defaultLabel="Payment Status"
+          isOpen={activeDropdown === "status"}
+          label={statusOptions.find((option) => option.value === statusFilter)?.label}
+          onSelect={(value) => handleSelect(onStatusFilterChange, value)}
+          onToggle={() => setActiveDropdown((current) => (current === "status" ? "" : "status"))}
+          options={statusOptions}
+          selectedValue={statusFilter === "all" ? "" : statusFilter}
+        />
+
+        <Dropdown
+          clearLabel="Any vendor"
+          defaultLabel="Vendor"
+          isOpen={activeDropdown === "vendor"}
+          label={vendorOptions.find((option) => option.value === vendorFilter)?.label}
+          onSelect={(value) => handleSelect(onVendorFilterChange, value)}
+          onToggle={() => setActiveDropdown((current) => (current === "vendor" ? "" : "vendor"))}
+          options={vendorOptions}
+          selectedValue={vendorFilter === "all" ? "" : vendorFilter}
+        />
 
         <button
-          className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-[10px] border border-[#ddd2ca] bg-white text-[#6f645d] transition hover:border-[#cf6e38]/40 hover:bg-[#fff9f5] hover:text-[#cf6e38]"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-[10px] border border-[#e0d4cb] bg-white px-3 text-[12px] font-semibold text-[#6f655e] transition hover:bg-[#faf5f1] hover:text-[#cf6e38]"
           onClick={onResetFilters}
           type="button"
         >
           <RotateCw size={14} />
+          Clear Filters
         </button>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <AllButton
-          isActive={statusFilter === "all" && vendorFilter === "all" && searchTerm === ""}
-          onClick={onResetFilters}
-        />
-        <FilterSelect
-          onChange={(event) => onStatusFilterChange(event.target.value)}
-          options={[
-            { value: "all", label: "Status" },
-            ...statusOptions.map((option) => ({
-              value: option.value,
-              label: option.label,
-            })),
-          ]}
-          value={statusFilter}
-        />
-        <FilterSelect
-          onChange={(event) => onVendorFilterChange(event.target.value)}
-          options={[
-            { value: "all", label: "Vendor" },
-            ...vendorOptions.map((option) => ({
-              value: option.value,
-              label: option.label,
-            })),
-          ]}
-          value={vendorFilter}
-        />
       </div>
     </div>
   );

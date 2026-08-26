@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import { getAdminCommissionSettingsRequest } from "../api/commissionApi.js";
-import { getAdminPaymentsRequest } from "../api/paymentsApi.js";
+import {
+  approveInvoicePaymentRequest,
+  getAdminPaymentsRequest,
+  markCustomerPaymentReceivedRequest,
+  markVendorPayoutPaidRequest,
+} from "../api/paymentsApi.js";
 import CommissionBreakdownCard from "../components/CommissionBreakdownCard.jsx";
 import PayoutOverviewCard from "../components/PayoutOverviewCard.jsx";
 import PayoutsTable from "../components/PayoutsTable.jsx";
@@ -66,6 +72,8 @@ export default function PayoutsPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+  const [activeActionKey, setActiveActionKey] = useState("");
 
   const dateRange = useMemo(
     () => getDateRangeForFilter(timeframe, customStart, customEnd),
@@ -146,7 +154,7 @@ export default function PayoutsPage() {
     return () => {
       isMounted = false;
     };
-  }, [normalizedFilters]);
+  }, [normalizedFilters, reloadKey]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -166,6 +174,116 @@ export default function PayoutsPage() {
     setCustomStart(start);
     setCustomEnd(end);
     setCurrentPage(1);
+  }
+
+  function refreshPaymentsPage() {
+    setReloadKey((current) => current + 1);
+  }
+
+  async function handleQuickAction(row, action) {
+    const actionKey = `${row.id}:${action}`;
+
+    try {
+      setActiveActionKey(actionKey);
+
+      if (action === "approveInvoice") {
+        const prompt = await Swal.fire({
+          title: "Approve customer payment?",
+          input: "textarea",
+          inputLabel: "Verification note",
+          inputPlaceholder: "Optional note for finance records",
+          showCancelButton: true,
+          confirmButtonText: "Approve payment",
+          confirmButtonColor: "#cf6e38",
+          cancelButtonColor: "#c8b9aa",
+        });
+
+        if (!prompt.isConfirmed) {
+          return;
+        }
+
+        const result = await approveInvoicePaymentRequest(row.invoiceId, {
+          note: prompt.value || "",
+        });
+
+        await Swal.fire({
+          icon: "success",
+          title: "Payment approved",
+          text: result.message,
+          confirmButtonColor: "#cf6e38",
+        });
+        refreshPaymentsPage();
+        return;
+      }
+
+      if (action === "markReceived") {
+        const prompt = await Swal.fire({
+          title: "Mark customer payment received?",
+          input: "textarea",
+          inputLabel: "Internal note",
+          inputPlaceholder: "Optional note for manual payment receipt",
+          showCancelButton: true,
+          confirmButtonText: "Mark received",
+          confirmButtonColor: "#cf6e38",
+          cancelButtonColor: "#c8b9aa",
+        });
+
+        if (!prompt.isConfirmed) {
+          return;
+        }
+
+        const result = await markCustomerPaymentReceivedRequest(row.invoiceId, {
+          note: prompt.value || "",
+        });
+
+        await Swal.fire({
+          icon: "success",
+          title: "Customer payment updated",
+          text: result.message,
+          confirmButtonColor: "#cf6e38",
+        });
+        refreshPaymentsPage();
+        return;
+      }
+
+      if (action === "markVendorPaid") {
+        const prompt = await Swal.fire({
+          title: "Mark vendor payout paid?",
+          input: "textarea",
+          inputLabel: "Internal note",
+          inputPlaceholder: "Optional note or transfer reference",
+          showCancelButton: true,
+          confirmButtonText: "Mark payout paid",
+          confirmButtonColor: "#cf6e38",
+          cancelButtonColor: "#c8b9aa",
+        });
+
+        if (!prompt.isConfirmed) {
+          return;
+        }
+
+        const result = await markVendorPayoutPaidRequest(row.payoutId, {
+          note: prompt.value || "",
+        });
+
+        await Swal.fire({
+          icon: "success",
+          title: "Vendor payout updated",
+          text: result.message,
+          confirmButtonColor: "#cf6e38",
+        });
+        refreshPaymentsPage();
+      }
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Action failed",
+        text: error instanceof Error ? error.message : "Unable to update payment.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setActiveActionKey("");
+    }
   }
 
   function handleSummaryCardClick(cardId) {
@@ -235,8 +353,10 @@ export default function PayoutsPage() {
             />
           ) : (
             <PayoutsTable
+              activeActionKey={activeActionKey}
               currentPage={pageInfo.page}
               onPageChange={setCurrentPage}
+              onQuickAction={handleQuickAction}
               pageSize={pageInfo.pageSize}
               rows={rows}
               totalItems={pageInfo.totalItems}

@@ -605,6 +605,8 @@ function normalizePaymentRow(item, contractInvoice = null) {
 
   return {
     id: item?.id || "",
+    invoiceId: contractInvoice?.invoiceId || item?.id || "",
+    payoutId: contractInvoice?.payoutId || item?.payoutId || "",
     invoiceNumber: item?.invoiceNumber || "Not available",
     orderId: item?.order?.id || "",
     orderStatus: resolvedOrderStatus,

@@ -18,6 +18,15 @@ function normalizeLabel(value) {
   return String(value || "").trim();
 }
 
+const ALLOWED_LANGUAGE_DEFINITIONS = [
+  { code: "en", label: "English" },
+  { code: "no", label: "Norwegian" },
+];
+
+const ALLOWED_CURRENCY_DEFINITIONS = [
+  { code: "NOK", label: "Norwegian Krone", symbol: "kr" },
+];
+
 function mapTaxonomyItem(item, fallbackMeta) {
   return {
     id: item.id || item.slug || item.name,
@@ -27,6 +36,9 @@ function mapTaxonomyItem(item, fallbackMeta) {
 }
 
 export function mapVendorSettingsTaxonomy(data) {
+  const languageItems = getCollectionItems(data?.languages);
+  const currencyItems = getCollectionItems(data?.currencies);
+
   const categories = getEdgeNodes(data?.categories).map((item) => ({
     id: item.id || item.name,
     name: normalizeLabel(item.name),
@@ -70,20 +82,43 @@ export function mapVendorSettingsTaxonomy(data) {
       ...mapTaxonomyItem(item, "Shown in vendor business-type selectors"),
       raw: item,
     })),
-    languages: getCollectionItems(data?.languages).map((item) => ({
-      id: item.code || item.label,
-      name: normalizeLabel(item.label) || normalizeLabel(item.code),
-      meta: item.code ? `Code: ${item.code}` : "Shown in vendor language selectors",
-      raw: item,
-    })),
-    currencies: getCollectionItems(data?.currencies).map((item) => ({
-      id: item.code || item.label,
-      name: normalizeLabel(item.label) || normalizeLabel(item.code),
-      meta: [item.code ? `Code: ${item.code}` : "", item.symbol ? `Symbol: ${item.symbol}` : ""]
-        .filter(Boolean)
-        .join(" • "),
-      raw: item,
-    })),
+    languages: ALLOWED_LANGUAGE_DEFINITIONS.map((definition, index) => {
+      const matchedItem = languageItems.find(
+        (item) => normalizeLabel(item?.code).toLowerCase() === definition.code,
+      );
+
+      return {
+        id: definition.code,
+        name: definition.label,
+        meta: `Code: ${definition.code}`,
+        raw: {
+          code: definition.code,
+          label: definition.label,
+          isActive: matchedItem?.isActive ?? true,
+          sortOrder: matchedItem?.sortOrder ?? index,
+        },
+      };
+    }),
+    currencies: ALLOWED_CURRENCY_DEFINITIONS.map((definition, index) => {
+      const matchedItem = currencyItems.find(
+        (item) => normalizeLabel(item?.code).toUpperCase() === definition.code,
+      );
+
+      return {
+        id: definition.code,
+        name: definition.label,
+        meta: [definition.code ? `Code: ${definition.code}` : "", definition.symbol ? `Symbol: ${definition.symbol}` : ""]
+          .filter(Boolean)
+          .join(" • "),
+        raw: {
+          code: definition.code,
+          label: definition.label,
+          symbol: definition.symbol,
+          isActive: matchedItem?.isActive ?? true,
+          sortOrder: matchedItem?.sortOrder ?? index,
+        },
+      };
+    }),
     timeZones: getCollectionItems(data?.timeZones).map((item) => ({
       id: item.value || item.label,
       name: normalizeLabel(item.label) || normalizeLabel(item.value),

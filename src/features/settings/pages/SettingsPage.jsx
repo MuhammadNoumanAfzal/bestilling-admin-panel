@@ -56,6 +56,9 @@ const MASTER_DATA_CONFIG = [
     save: saveCurrencyRequest,
     remove: deleteCurrencyRequest,
     deleteKey: "code",
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
     fields: [
       { key: "code", label: "Code", placeholder: "NOK", required: true },
       { key: "label", label: "Label", placeholder: "Norwegian Krone", required: true },
@@ -72,6 +75,9 @@ const MASTER_DATA_CONFIG = [
     save: saveLanguageRequest,
     remove: deleteLanguageRequest,
     deleteKey: "code",
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
     fields: [
       { key: "code", label: "Code", placeholder: "no", required: true },
       { key: "label", label: "Label", placeholder: "Norwegian", required: true },
@@ -375,9 +381,15 @@ function PreferencesCard({
   onSave,
   isSaving,
 }) {
-  const currencyOptions = withSelectedFallback(buildSelectOptions(currencies, "currencies"), preferences.defaultCurrency);
-  const localeOptions = withSelectedFallback(buildSelectOptions(locales, "languages"), preferences.locale);
+  const currencyOptions = buildSelectOptions(currencies, "currencies");
+  const localeOptions = buildSelectOptions(locales, "languages");
   const timeZoneOptions = withSelectedFallback(buildSelectOptions(timeZones, "timeZones"), preferences.timezone);
+  const selectedCurrency = currencyOptions.some((option) => option.value === preferences.defaultCurrency)
+    ? preferences.defaultCurrency
+    : "";
+  const selectedLocale = localeOptions.some((option) => option.value === preferences.locale)
+    ? preferences.locale
+    : "";
 
   return (
     <SettingsShellCard>
@@ -391,7 +403,7 @@ function PreferencesCard({
               className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
               disabled={!currencyOptions.length}
               onChange={onFieldChange("defaultCurrency")}
-              value={preferences.defaultCurrency}
+              value={selectedCurrency}
             >
               <option value="">Select currency</option>
               {currencyOptions.map((option) => (
@@ -425,7 +437,7 @@ function PreferencesCard({
               className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
               disabled={!localeOptions.length}
               onChange={onFieldChange("locale")}
-              value={preferences.locale}
+              value={selectedLocale}
             >
               <option value="">Select locale</option>
               {localeOptions.map((option) => (
@@ -497,25 +509,33 @@ function MasterDataManagerCard({
   return (
     <SettingsShellCard className="rounded-[18px] border-[#eadfd6] px-5 py-5">
       <SettingsSectionHeader icon={Icon} title={section.title} />
-      <div className="grid items-end gap-3 md:grid-cols-2 xl:grid-cols-5">
-        {section.fields.map((field) => (
-          <MasterDataField
-            field={field}
-            key={field.key}
-            onChange={(fieldKey, value) => onDraftChange(section.key, fieldKey, value)}
-            value={draftValues[field.key]}
-          />
-        ))}
-      </div>
-      <div className="mt-5 flex justify-end">
-        <SaveButton
-          className="h-11 min-w-[160px] px-5"
-          disabled={savingKey === `${section.key}:create`}
-          onClick={() => onCreate(section)}
-        >
-          {savingKey === `${section.key}:create` ? "Saving..." : `Add ${section.singularLabel}`}
-        </SaveButton>
-      </div>
+      {section.canCreate !== false ? (
+        <>
+          <div className="grid items-end gap-3 md:grid-cols-2 xl:grid-cols-5">
+            {section.fields.map((field) => (
+              <MasterDataField
+                field={field}
+                key={field.key}
+                onChange={(fieldKey, value) => onDraftChange(section.key, fieldKey, value)}
+                value={draftValues[field.key]}
+              />
+            ))}
+          </div>
+          <div className="mt-5 flex justify-end">
+            <SaveButton
+              className="h-11 min-w-[160px] px-5"
+              disabled={savingKey === `${section.key}:create`}
+              onClick={() => onCreate(section)}
+            >
+              {savingKey === `${section.key}:create` ? "Saving..." : `Add ${section.singularLabel}`}
+            </SaveButton>
+          </div>
+        </>
+      ) : (
+        <div className="rounded-[12px] border border-[#eadfd6] bg-[#fcf8f5] px-4 py-3 text-[12px] leading-5 text-[#7b6d63]">
+          This list is intentionally locked to platform-approved options only.
+        </div>
+      )}
 
       <div className="mt-6 space-y-3 border-t border-[#eee5de] pt-5">
         {items.length ? (
@@ -566,21 +586,29 @@ function MasterDataManagerCard({
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button
-                        className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#d9d1ca] bg-white px-3 text-[12px] font-bold text-[#3f3530] transition hover:bg-[#faf6f2]"
-                        onClick={() => onStartEdit(section.key, item)}
-                        type="button"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#f0d6d0] bg-[#fff6f4] text-[#c35d4c] transition hover:bg-[#ffece7] disabled:opacity-60"
-                        disabled={savingKey === `${section.key}:delete:${item.id}`}
-                        onClick={() => onDelete(section, item)}
-                        type="button"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      {section.canEdit !== false ? (
+                        <button
+                          className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#d9d1ca] bg-white px-3 text-[12px] font-bold text-[#3f3530] transition hover:bg-[#faf6f2]"
+                          onClick={() => onStartEdit(section.key, item)}
+                          type="button"
+                        >
+                          Edit
+                        </button>
+                      ) : (
+                        <span className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#e7ddd5] bg-[#faf7f4] px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b7b70]">
+                          Locked
+                        </span>
+                      )}
+                      {section.canDelete !== false ? (
+                        <button
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#f0d6d0] bg-[#fff6f4] text-[#c35d4c] transition hover:bg-[#ffece7] disabled:opacity-60"
+                          disabled={savingKey === `${section.key}:delete:${item.id}`}
+                          onClick={() => onDelete(section, item)}
+                          type="button"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 )}

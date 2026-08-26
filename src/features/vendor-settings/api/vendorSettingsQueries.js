@@ -269,7 +269,7 @@ export const CREATE_TIME_ZONE_MUTATION = `
 
 export const DELETE_VENDOR_CATEGORY_MUTATION = `
   mutation DeleteVendorCategory($id: ID!) {
-    vendorCategoryDeleteMutation(id: $id) {
+    vendorCategoryDelete(id: $id) {
       success
       message
     }

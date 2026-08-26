@@ -269,14 +269,16 @@ const SECTION_CONFIG = [
     key: "languages",
     singularLabel: "language",
     title: "Languages",
-    subtitle: "Controls which language options are available in vendor language settings.",
+    subtitle: "Restricted to English and Norwegian to keep vendor-side language handling consistent.",
     icon: Languages,
-    emptyLabel: "No languages yet.",
+    emptyLabel: "No supported languages configured yet.",
     addLabel: "Add language",
     save: saveLanguageRequest,
     remove: deleteLanguageRequest,
     deleteKey: "code",
-    canDelete: true,
+    canDelete: false,
+    canCreate: false,
+    canEdit: false,
     color: "from-[#eefbf8] to-[#fcfffe]",
     accent: "bg-[#33a08b]",
     fields: [
@@ -313,14 +315,16 @@ const SECTION_CONFIG = [
     key: "currencies",
     singularLabel: "currency",
     title: "Currencies",
-    subtitle: "Controls which currency options vendors can select for their region preferences.",
+    subtitle: "Restricted to NOK so pricing, payouts, and reporting stay operationally consistent.",
     icon: Banknote,
-    emptyLabel: "No currencies yet.",
+    emptyLabel: "No supported currencies configured yet.",
     addLabel: "Add currency",
     save: saveCurrencyRequest,
     remove: deleteCurrencyRequest,
     deleteKey: "code",
-    canDelete: true,
+    canDelete: false,
+    canCreate: false,
+    canEdit: false,
     color: "from-[#fff4ea] to-[#fffdf8]",
     accent: "bg-[#d67d43]",
     fields: [
@@ -627,28 +631,36 @@ function SectionCard({
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {section.fields.map((field) => (
-            <div className={field.type === "checkbox" ? "sm:self-end" : ""} key={field.key}>
-              {renderFieldInput({
-                field,
-                value: draftValues[field.key],
-                onChange: (fieldKey, value) => onDraftChange(section.key, fieldKey, value),
-              })}
+        {section.canCreate !== false ? (
+          <>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {section.fields.map((field) => (
+                <div className={field.type === "checkbox" ? "sm:self-end" : ""} key={field.key}>
+                  {renderFieldInput({
+                    field,
+                    value: draftValues[field.key],
+                    onChange: (fieldKey, value) => onDraftChange(section.key, fieldKey, value),
+                  })}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <div className="mt-4 flex justify-stretch sm:justify-end">
-          <button
-            className="inline-flex h-12 w-full min-w-[156px] cursor-pointer items-center justify-center rounded-[14px] bg-[#1f1712] px-5 text-[13px] font-bold text-white transition hover:bg-[#34251d] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-            disabled={isSavingCreate}
-            onClick={() => onCreate(section)}
-            type="button"
-          >
-            {isSavingCreate ? "Saving..." : section.addLabel}
-          </button>
-        </div>
+            <div className="mt-4 flex justify-stretch sm:justify-end">
+              <button
+                className="inline-flex h-12 w-full min-w-[156px] cursor-pointer items-center justify-center rounded-[14px] bg-[#1f1712] px-5 text-[13px] font-bold text-white transition hover:bg-[#34251d] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                disabled={isSavingCreate}
+                onClick={() => onCreate(section)}
+                type="button"
+              >
+                {isSavingCreate ? "Saving..." : section.addLabel}
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="mt-5 rounded-[14px] border border-[#eadfd6] bg-white/80 px-4 py-3 text-[12px] leading-5 text-[#786b63]">
+            This list is intentionally locked. Vendors can only use the approved platform options shown below.
+          </div>
+        )}
       </div>
 
       <div className="p-4 sm:p-5">
@@ -712,13 +724,19 @@ function SectionCard({
                         <p className="mt-1 text-[12px] leading-5 text-[#86786f]">{item.meta}</p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2 self-stretch sm:self-auto">
-                        <button
-                          className="inline-flex h-9 flex-1 cursor-pointer items-center justify-center rounded-[10px] border border-[#dfd2c8] bg-white px-3 text-[12px] font-bold text-[#3e332c] transition hover:bg-[#faf6f2] sm:flex-none"
-                          onClick={() => onStartEdit(section.key, item)}
-                          type="button"
-                        >
-                          Edit
-                        </button>
+                        {section.canEdit !== false ? (
+                          <button
+                            className="inline-flex h-9 flex-1 cursor-pointer items-center justify-center rounded-[10px] border border-[#dfd2c8] bg-white px-3 text-[12px] font-bold text-[#3e332c] transition hover:bg-[#faf6f2] sm:flex-none"
+                            onClick={() => onStartEdit(section.key, item)}
+                            type="button"
+                          >
+                            Edit
+                          </button>
+                        ) : (
+                          <span className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#e8ddd5] bg-[#faf7f4] px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#8d7d72]">
+                            Locked
+                          </span>
+                        )}
                         {section.canDelete ? (
                           <button
                             className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-[10px] border border-[#f0d6d0] bg-[#fff6f4] text-[#c35d4c] transition hover:bg-[#ffece7] disabled:cursor-not-allowed disabled:opacity-60"
@@ -744,8 +762,9 @@ function SectionCard({
 
         {!section.canDelete ? (
           <p className="mt-4 text-[12px] leading-5 text-[#a0715b]">
-            Allergens can be added and renamed here. Delete is hidden because the current backend
-            API does not expose an allergen delete mutation.
+            {section.key === "allergens"
+              ? "Allergens can be added and renamed here. Delete is hidden because the current backend API does not expose an allergen delete mutation."
+              : "This master data is intentionally locked so only approved platform options stay available to vendors."}
           </p>
         ) : null}
       </div>

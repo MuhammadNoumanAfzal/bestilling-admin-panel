@@ -224,7 +224,7 @@ export async function deleteVendorCategoryRequest(id) {
   const result = await executeProtectedGraphqlRequest(DELETE_VENDOR_CATEGORY_MUTATION, { id });
   return unwrapSuccessfulResult(
     result,
-    "vendorCategoryDeleteMutation",
+    "vendorCategoryDelete",
     "Unable to delete the vendor category.",
   );
 }

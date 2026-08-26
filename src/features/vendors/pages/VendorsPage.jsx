@@ -269,6 +269,28 @@ export default function VendorsPage() {
     setCurrentPage(1);
   }
 
+  function handleStatCardClick(cardId) {
+    switch (cardId) {
+      case "total":
+        handleTabChange("All");
+        break;
+      case "active":
+        handleTabChange("Active");
+        break;
+      case "pending":
+        handleTabChange("Pending Approval");
+        break;
+      case "suspended":
+        handleTabChange("Suspended");
+        break;
+      case "revenue":
+        handleTabChange("Top Performing");
+        break;
+      default:
+        break;
+    }
+  }
+
   function handleResetFilters() {
     setSearchTerm("");
     setCityFilter("");
@@ -369,6 +391,7 @@ export default function VendorsPage() {
             title={stat.title}
             value={stat.value}
             icon={iconMap[stat.id] || CircleAlert}
+            onClick={() => handleStatCardClick(stat.id)}
           />
         ))}
       </section>

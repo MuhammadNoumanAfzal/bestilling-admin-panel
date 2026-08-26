@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   ShoppingBag,
@@ -47,6 +48,7 @@ const presetByFilter = {
 };
 
 export default function OrdersPage() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [vendorFilter, setVendorFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -165,6 +167,39 @@ export default function OrdersPage() {
     setCustomStart("");
     setCustomEnd("");
     setCurrentPage(1);
+  }
+
+  function handleSummaryCardClick(cardId) {
+    switch (cardId) {
+      case "total":
+        handleResetFilters();
+        break;
+      case "paid":
+        setPaymentFilter("Paid");
+        setStatusFilter("");
+        setCurrentPage(1);
+        break;
+      case "pending":
+        setStatusFilter("Pending");
+        setPaymentFilter("");
+        setCurrentPage(1);
+        break;
+      case "review":
+        setStatusFilter("Refunded");
+        setPaymentFilter("Refunded");
+        setCurrentPage(1);
+        break;
+      case "delivered":
+        setStatusFilter("Delivered");
+        setPaymentFilter("");
+        setCurrentPage(1);
+        break;
+      case "revenue":
+        navigate("/reports");
+        break;
+      default:
+        break;
+    }
   }
 
   async function handleExport() {
@@ -387,6 +422,7 @@ export default function OrdersPage() {
             title={stat.title}
             value={stat.value}
             icon={iconMap[stat.id] || ShoppingBag}
+            onClick={() => handleSummaryCardClick(stat.id)}
           />
         ))}
       </section>

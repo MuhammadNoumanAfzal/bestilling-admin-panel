@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import { getAdminCommissionSettingsRequest } from "../api/commissionApi.js";
@@ -35,6 +36,7 @@ function mapPaymentStatusFilter(value) {
 }
 
 export default function PayoutsPage() {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -166,6 +168,27 @@ export default function PayoutsPage() {
     setCurrentPage(1);
   }
 
+  function handleSummaryCardClick(cardId) {
+    switch (cardId) {
+      case "total":
+        handleResetFilters();
+        break;
+      case "commission":
+        navigate("/payouts/commission-settings");
+        break;
+      case "pending":
+        setStatusFilter("PENDING");
+        setCurrentPage(1);
+        break;
+      case "completed":
+        setStatusFilter("RELEASED");
+        setCurrentPage(1);
+        break;
+      default:
+        break;
+    }
+  }
+
   return (
     <div className="space-y-5">
       <section className="flex justify-end">
@@ -186,7 +209,7 @@ export default function PayoutsPage() {
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {summaryCards.map((item) => (
-          <PayoutOverviewCard key={item.id} {...item} />
+          <PayoutOverviewCard key={item.id} {...item} onClick={() => handleSummaryCardClick(item.id)} />
         ))}
       </section>
 

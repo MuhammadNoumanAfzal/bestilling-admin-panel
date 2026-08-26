@@ -329,12 +329,36 @@ export default function NotificationsPage() {
     navigate(target);
   }
 
+  function handleSummaryCardClick(cardId) {
+    switch (cardId) {
+      case "total":
+        setSearchTerm("");
+        setAudienceFilter("");
+        setTypeFilter("");
+        setStatusFilter("");
+        setCurrentPage(1);
+        break;
+      case "sent":
+        setStatusFilter("UNREAD");
+        setCurrentPage(1);
+        break;
+      case "scheduled":
+        setCurrentPage(1);
+        break;
+      case "drafts":
+        setCurrentPage(1);
+        break;
+      default:
+        break;
+    }
+  }
+
   return (
     <>
       <div className="space-y-5">
         <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           {notificationSummary.map((item) => (
-            <NotificationOverviewCard key={item.id} {...item} />
+            <NotificationOverviewCard key={item.id} {...item} onClick={() => handleSummaryCardClick(item.id)} />
           ))}
         </section>
 

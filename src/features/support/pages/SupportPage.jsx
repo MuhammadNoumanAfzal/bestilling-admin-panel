@@ -231,6 +231,29 @@ export default function SupportPage() {
     setCustomEnd(end);
   }
 
+  function handleSummaryCardClick(cardId) {
+    switch (cardId) {
+      case "total":
+        setStatusFilter("");
+        setCurrentPage(1);
+        break;
+      case "open":
+        setStatusFilter("OPEN");
+        setCurrentPage(1);
+        break;
+      case "progress":
+        setStatusFilter("IN_PROGRESS");
+        setCurrentPage(1);
+        break;
+      case "resolved":
+        setStatusFilter("RESOLVED");
+        setCurrentPage(1);
+        break;
+      default:
+        break;
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex justify-start sm:justify-end">
@@ -245,7 +268,7 @@ export default function SupportPage() {
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {supportSummary.map((item) => (
-          <SupportOverviewCard key={item.id} {...item} />
+          <SupportOverviewCard key={item.id} {...item} onClick={() => handleSummaryCardClick(item.id)} />
         ))}
       </section>
 

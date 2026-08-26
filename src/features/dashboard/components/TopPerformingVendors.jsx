@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function formatRevenue(value) {
   return `NOK ${Number(value ?? 0).toLocaleString("en-GB", {
@@ -8,9 +9,17 @@ function formatRevenue(value) {
 }
 
 export default function TopPerformingVendors({ vendors = [] }) {
+  const navigate = useNavigate();
+
   return (
     <article className="flex flex-1 flex-col rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
-      <h2 className="mb-4 text-[18px] font-bold text-[#18120f]">Top Performing Vendors</h2>
+      <button
+        className="mb-4 text-left"
+        onClick={() => navigate("/vendors?tab=Top%20Performing")}
+        type="button"
+      >
+        <h2 className="text-[18px] font-bold text-[#18120f]">Top Performing Vendors</h2>
+      </button>
 
       <div className="flex-1 space-y-3">
         {vendors.length === 0 ? (
@@ -19,9 +28,11 @@ export default function TopPerformingVendors({ vendors = [] }) {
           </div>
         ) : (
           vendors.map((vendor) => (
-            <div
+            <button
               key={vendor.id}
-              className="rounded-[10px] border border-[#f1e9e2] bg-[#fcfbfa] p-3 transition hover:border-[#cf6e38]"
+              className="w-full rounded-[10px] border border-[#f1e9e2] bg-[#fcfbfa] p-3 text-left transition hover:border-[#cf6e38]"
+              onClick={() => navigate(`/vendors/${encodeURIComponent(vendor.id)}`)}
+              type="button"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -54,7 +65,7 @@ export default function TopPerformingVendors({ vendors = [] }) {
                 <span>Revenue: <strong className="text-[#18120f]">{formatRevenue(vendor.totalRevenue)}</strong></span>
                 <span>Completion: <strong className="text-[#18120f]">{vendor.completionRate}%</strong></span>
               </div>
-            </div>
+            </button>
           ))
         )}
       </div>

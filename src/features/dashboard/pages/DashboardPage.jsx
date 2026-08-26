@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   DollarSign,
@@ -36,6 +37,7 @@ const statIcons = {
 };
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [timeframe, setTimeframe] = useState("Last 7 days");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
@@ -105,6 +107,32 @@ export default function DashboardPage() {
   function handleCustomDateChange(start, end) {
     setCustomStart(start);
     setCustomEnd(end);
+  }
+
+  function handleStatCardNavigate(statId) {
+    switch (statId) {
+      case "REVENUE":
+        navigate("/reports");
+        break;
+      case "ORDERS":
+        navigate("/orders");
+        break;
+      case "ACTIVE_VENDORS":
+        navigate("/vendors?tab=Active");
+        break;
+      case "CUSTOMERS":
+        navigate("/customers");
+        break;
+      case "PENDING_APPROVALS":
+        navigate("/vendors?tab=Pending%20Approval");
+        break;
+      case "OPEN_SUPPORT":
+        navigate("/support");
+        break;
+      default:
+        navigate("/dashboard");
+        break;
+    }
   }
 
   async function handleUpdateStatus(approval, nextStatus) {
@@ -232,6 +260,7 @@ export default function DashboardPage() {
             note={stat.note}
             trend={stat.trend}
             icon={statIcons[stat.id]}
+            onClick={() => handleStatCardNavigate(stat.id)}
           />
         ))}
       </section>

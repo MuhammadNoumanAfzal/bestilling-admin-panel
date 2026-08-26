@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { blockCustomerRequest, getAdminCustomersRequest, unblockCustomerRequest } from "../api/customersApi.js";
 import CustomerOverviewCard from "../components/CustomerOverviewCard.jsx";
@@ -23,6 +24,7 @@ function toDisplayStatus(status) {
 }
 
 export default function CustomersPage() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
@@ -127,6 +129,32 @@ export default function CustomersPage() {
     setCurrentPage(1);
   }
 
+  function handleSummaryCardClick(cardId) {
+    switch (cardId) {
+      case "total":
+        handleResetFilters();
+        break;
+      case "active":
+        setStatusFilter("Active");
+        setCurrentPage(1);
+        break;
+      case "new":
+        setTimeframe("Last Month");
+        setStatusFilter("");
+        setCurrentPage(1);
+        break;
+      case "orders":
+        navigate("/orders");
+        break;
+      case "average":
+      case "spending":
+        navigate("/reports");
+        break;
+      default:
+        break;
+    }
+  }
+
   async function handleToggleStatus(row) {
     const isBlocked = row.status === "Blocked";
 
@@ -226,7 +254,7 @@ export default function CustomersPage() {
 
       <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         {summaryCards.map((item) => (
-          <CustomerOverviewCard key={item.id} {...item} />
+          <CustomerOverviewCard key={item.id} {...item} onClick={() => handleSummaryCardClick(item.id)} />
         ))}
       </section>
 

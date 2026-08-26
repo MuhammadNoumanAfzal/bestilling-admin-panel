@@ -127,6 +127,26 @@ export default function DeliveryPage() {
     }
   }
 
+  function handleSummaryCardClick(cardId) {
+    switch (cardId) {
+      case "restricted":
+        setStatusFilter("Inactive");
+        setCurrentPage(1);
+        break;
+      case "cities":
+      case "postalCodes":
+      case "coverage":
+        setSearchTerm("");
+        setStatusFilter("");
+        setRegionFilter("");
+        setCityFilter("");
+        setCurrentPage(1);
+        break;
+      default:
+        break;
+    }
+  }
+
   return (
     <>
       <div className="space-y-5">
@@ -138,7 +158,7 @@ export default function DeliveryPage() {
 
         <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           {summaryCards.map((item) => (
-            <DeliveryOverviewCard key={item.id} {...item} />
+            <DeliveryOverviewCard key={item.id} {...item} onClick={() => handleSummaryCardClick(item.id)} />
           ))}
         </section>
 

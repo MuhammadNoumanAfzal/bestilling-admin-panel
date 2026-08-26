@@ -505,6 +505,8 @@ function normalizeOrderRow(item) {
     rawDeliveryStatus: `${item?.delivery?.status ?? item?.fulfillmentStatus ?? item?.status ?? ""}`.trim().toUpperCase(),
     scheduledAt: item?.placedAt || "",
     deliveredAt: item?.delivery?.deliveredAt || item?.deliveredAt || "",
+    invoiceUrl: item?.payment?.invoiceUrl || "",
+    receiptUrl: item?.payment?.receiptUrl || "",
     flags: {
       canMarkDelivered: Boolean(item?.flags?.canMarkDelivered),
       canCancel: Boolean(item?.flags?.canCancel),
@@ -517,7 +519,7 @@ function normalizeOrderRow(item) {
       canMarkPaid: Boolean(item?.flags?.canUpdatePaymentStatus),
       canMarkDelivered: Boolean(item?.flags?.canMarkDelivered),
       canAssignVendor: false,
-      canDownloadInvoice: true,
+      canDownloadInvoice: Boolean(item?.payment?.invoiceUrl || item?.payment?.receiptUrl),
     },
   };
 }

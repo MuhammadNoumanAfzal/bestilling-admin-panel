@@ -393,9 +393,9 @@ export default function OrderDetailPage() {
 
   const statusColors = {
     Delivered: "text-[#2b9e62]",
-    Pending: "text-[#c8881b]",
-    Accepted: "text-[#c8881b]",
-    Preparing: "text-[#cf6e38]",
+    Pending: "text-[#b45309]",
+    Accepted: "text-[#b45309]",
+    Preparing: "text-[#c2410c]",
     "Out for delivery": "text-[#296db8]",
     Canceled: "text-[#d83f3f]",
     Refunded: "text-[#7a51b3]",
@@ -403,7 +403,8 @@ export default function OrderDetailPage() {
 
   const paymentColors = {
     Paid: "text-[#2b9e62]",
-    Pending: "text-[#c8881b]",
+    Pending: "text-[#b45309]",
+    Reported: "text-[#296db8]",
     Failed: "text-[#d83f3f]",
     Refunded: "text-[#7a51b3]",
     "Partially refunded": "text-[#b5751a]",

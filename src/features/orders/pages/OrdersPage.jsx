@@ -7,7 +7,6 @@ import {
   Clock3,
   AlertCircle,
   CheckCircle2,
-  Download,
 } from "lucide-react";
 
 import StatCard from "../../dashboard/components/StatCard.jsx";
@@ -367,7 +366,7 @@ export default function OrdersPage() {
 
       if (action === "downloadInvoice") {
         const invoice = await getAdminOrderInvoiceRequest(row.id);
-        const targetUrl = invoice.pdfUrl || invoice.invoiceUrl;
+        const targetUrl = row.invoiceUrl || row.receiptUrl || invoice.pdfUrl || invoice.invoiceUrl;
 
         if (!targetUrl) {
           throw new Error("No invoice file is available for this order yet.");
@@ -390,16 +389,6 @@ export default function OrdersPage() {
   return (
     <div className="space-y-6">
       <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-        <button
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] bg-[#cf6e38] px-4 text-[14px] font-semibold text-white transition hover:bg-[#b95c29] disabled:cursor-not-allowed disabled:opacity-70"
-          disabled={isExporting}
-          onClick={handleExport}
-          type="button"
-        >
-          <Download size={16} />
-          {isExporting ? "Exporting..." : "Export Orders"}
-        </button>
-
         <DateFilterDropdown
           selectedFilter={timeframe}
           onChangeFilter={setTimeframe}

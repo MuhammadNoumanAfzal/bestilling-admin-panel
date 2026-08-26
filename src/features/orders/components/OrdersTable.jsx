@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
 
 const statusClasses = {
-  Accepted: "bg-[#fff3d9] text-[#9c6a00]",
-  Preparing: "bg-[#fff0e7] text-[#cf6e38]",
+  Accepted: "bg-[#fffbeb] text-[#b45309]",
+  Preparing: "bg-[#fff7ed] text-[#c2410c]",
   "Out for delivery": "bg-[#edf5ff] text-[#296db8]",
   Delivered: "bg-[#edf8f1] text-[#2b9e62]",
   Canceled: "bg-[#feecec] text-[#d83f3f]",
   Refunded: "bg-[#f3eefb] text-[#7a51b3]",
-  Pending: "bg-[#f4efe9] text-[#7a6d66]",
+  Pending: "bg-[#fffbeb] text-[#b45309]",
 };
 
 const paymentClasses = {
@@ -17,7 +17,8 @@ const paymentClasses = {
   Failed: "text-[#d83f3f]",
   Refunded: "text-[#7a51b3]",
   "Partially refunded": "text-[#b5751a]",
-  Pending: "text-[#8c8077]",
+  Pending: "text-[#b45309]",
+  Reported: "text-[#296db8]",
 };
 
 function buildPaginationItems(currentPage, totalPages) {

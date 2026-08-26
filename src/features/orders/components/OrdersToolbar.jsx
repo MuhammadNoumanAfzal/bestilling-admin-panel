@@ -8,6 +8,7 @@ function Dropdown({
   options,
   selectedValue,
   defaultLabel,
+  clearLabel,
   onSelect,
 }) {
   return (
@@ -32,7 +33,7 @@ function Dropdown({
             onClick={() => onSelect("")}
             type="button"
           >
-            {defaultLabel}
+            {clearLabel || defaultLabel}
           </button>
 
           {options.map((option) => {
@@ -116,7 +117,8 @@ export default function OrdersToolbar({
 
       <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
         <Dropdown
-          defaultLabel="All Vendors"
+          clearLabel="Any vendor"
+          defaultLabel="Vendor"
           isOpen={activeDropdown === "vendor"}
           label={vendors.find((item) => item.id === vendorFilter)?.label}
           onSelect={(value) => handleSelect(onVendorFilterChange, value)}
@@ -128,7 +130,8 @@ export default function OrdersToolbar({
         />
 
         <Dropdown
-          defaultLabel="All Statuses"
+          clearLabel="Any order status"
+          defaultLabel="Order Status"
           isOpen={activeDropdown === "status"}
           label={statusFilter}
           onSelect={(value) => handleSelect(onStatusFilterChange, value)}
@@ -140,7 +143,8 @@ export default function OrdersToolbar({
         />
 
         <Dropdown
-          defaultLabel="All Payments"
+          clearLabel="Any payment status"
+          defaultLabel="Payment Status"
           isOpen={activeDropdown === "payment"}
           label={paymentFilter}
           onSelect={(value) => handleSelect(onPaymentFilterChange, value)}
@@ -157,7 +161,7 @@ export default function OrdersToolbar({
           type="button"
         >
           <RotateCw size={14} />
-          Reset
+          Clear Filters
         </button>
       </div>
     </div>

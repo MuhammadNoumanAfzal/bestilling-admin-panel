@@ -22,12 +22,91 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import { executeProtectedGraphqlRequest } from "../api/protectedGraphqlClient.js";
 import { getAdminDisplayName, getAdminRoleLabel } from "../../features/auth/authConfig.js";
 import {
   getMyNotificationsRequest,
   getMyNotificationUnreadCountRequest,
 } from "../../features/notifications/api/notificationsApi.js";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
+
+const GLOBAL_ORDER_SEARCH_QUERY = `
+  query AdminLayoutOrderSearch($search: String, $page: Int!, $pageSize: Int!) {
+    adminOrders(
+      input: {
+        search: $search
+        page: $page
+        limit: $pageSize
+        sortField: PLACED_AT
+        sortDirection: DESC
+      }
+    ) {
+      items {
+        id
+        orderNumber
+        status
+        customer {
+          fullName
+        }
+        vendor {
+          businessName
+        }
+      }
+    }
+  }
+`;
+
+const GLOBAL_CUSTOMER_SEARCH_QUERY = `
+  query AdminLayoutCustomerSearch(
+    $search: String
+    $page: Int!
+    $pageSize: Int!
+  ) {
+    adminCustomers(
+      search: $search
+      page: $page
+      pageSize: $pageSize
+      sortBy: "JOINED_AT"
+      sortOrder: "DESC"
+    ) {
+      items {
+        id
+        fullName
+        email
+        city
+      }
+    }
+  }
+`;
+
+const GLOBAL_VENDOR_SEARCH_QUERY = `
+  query AdminLayoutVendorSearch(
+    $search: String
+    $page: Int!
+    $pageSize: Int!
+  ) {
+    adminVendors(
+      filters: {
+        search: $search
+      }
+      pagination: {
+        page: $page
+        pageSize: $pageSize
+      }
+      sort: {
+        field: JOINED_AT
+        order: DESC
+      }
+    ) {
+      items {
+        id
+        name
+        businessType
+        city
+      }
+    }
+  }
+`;
 
 const navigation = [
   {
@@ -301,14 +380,18 @@ function NavItem({ item, pathname, onNavigate }) {
   );
 }
 
-function SearchResults({ results, onSelect, query }) {
+function SearchResults({ results, isLoading, onSelect, query }) {
   if (!query.trim()) {
     return null;
   }
 
   return (
     <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-40 overflow-hidden rounded-[18px] border border-[#e8dfd8] bg-white shadow-[0_24px_60px_rgba(45,28,16,0.14)]">
-      {results.length ? (
+      {isLoading ? (
+        <div className="px-4 py-5 text-[12px] text-[#8c7f75]">
+          Searching orders, customers, and vendors...
+        </div>
+      ) : results.length ? (
         <div className="max-h-[320px] overflow-y-auto p-2">
           {results.map((item) => {
             const Icon = item.icon;
@@ -353,6 +436,8 @@ export default function AdminLayout() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [globalSearchResults, setGlobalSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
   const profileMenuRef = useRef(null);
   const searchRef = useRef(null);
@@ -386,6 +471,18 @@ export default function AdminLayout() {
       return haystack.includes(normalizedQuery);
     });
   }, [searchQuery]);
+
+  const mergedSearchResults = useMemo(() => {
+    const seenKeys = new Set();
+    return [...globalSearchResults, ...filteredNavigation].filter((item) => {
+      const key = `${item.to}|${item.label}`;
+      if (seenKeys.has(key)) {
+        return false;
+      }
+      seenKeys.add(key);
+      return true;
+    });
+  }, [filteredNavigation, globalSearchResults]);
 
   const shouldShowSearchResults = isSearchFocused && searchQuery.trim().length > 0;
 
@@ -422,6 +519,107 @@ export default function AdminLayout() {
   useEffect(() => {
     document.title = `${meta.title} | Bestilling Admin`;
   }, [meta.title]);
+
+  useEffect(() => {
+    let isCancelled = false;
+    const normalizedQuery = searchQuery.trim();
+
+    if (!normalizedQuery) {
+      setGlobalSearchResults([]);
+      setIsSearching(false);
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(async () => {
+      setIsSearching(true);
+
+      try {
+        const [ordersData, customersData, vendorsData] = await Promise.all([
+          executeProtectedGraphqlRequest(GLOBAL_ORDER_SEARCH_QUERY, {
+            search: normalizedQuery,
+            page: 1,
+            pageSize: 4,
+          }).catch(() => null),
+          executeProtectedGraphqlRequest(GLOBAL_CUSTOMER_SEARCH_QUERY, {
+            search: normalizedQuery,
+            page: 1,
+            pageSize: 4,
+          }).catch(() => null),
+          executeProtectedGraphqlRequest(GLOBAL_VENDOR_SEARCH_QUERY, {
+            search: normalizedQuery,
+            page: 1,
+            pageSize: 4,
+          }).catch(() => null),
+        ]);
+
+        if (isCancelled) {
+          return;
+        }
+
+        const orderResults = Array.isArray(ordersData?.adminOrders?.items)
+          ? ordersData.adminOrders.items
+              .filter((item) => item?.id)
+              .map((item) => ({
+                to: `/orders/${encodeURIComponent(item.id)}`,
+                label: item.orderNumber || `Order ${item.id}`,
+                description: [
+                  "Order",
+                  item.customer?.fullName ? `Customer: ${item.customer.fullName}` : "",
+                  item.vendor?.businessName ? `Vendor: ${item.vendor.businessName}` : "",
+                ]
+                  .filter(Boolean)
+                  .join(" • "),
+                icon: ShoppingBag,
+              }))
+          : [];
+
+        const customerResults = Array.isArray(customersData?.adminCustomers?.items)
+          ? customersData.adminCustomers.items
+              .filter((item) => item?.id)
+              .map((item) => ({
+                to: `/customers/${encodeURIComponent(item.id)}`,
+                label: item.fullName || item.email || `Customer ${item.id}`,
+                description: [
+                  "Customer",
+                  item.email || "",
+                  item.city || "",
+                ]
+                  .filter(Boolean)
+                  .join(" • "),
+                icon: Users,
+              }))
+          : [];
+
+        const vendorResults = Array.isArray(vendorsData?.adminVendors?.items)
+          ? vendorsData.adminVendors.items
+              .filter((item) => item?.id)
+              .map((item) => ({
+                to: `/vendors/${encodeURIComponent(item.id)}`,
+                label: item.name || `Vendor ${item.id}`,
+                description: [
+                  "Vendor",
+                  item.businessType || "",
+                  item.city || "",
+                ]
+                  .filter(Boolean)
+                  .join(" • "),
+                icon: Store,
+              }))
+          : [];
+
+        setGlobalSearchResults([...orderResults, ...customerResults, ...vendorResults]);
+      } finally {
+        if (!isCancelled) {
+          setIsSearching(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      isCancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchQuery]);
 
   useEffect(() => {
     let isMounted = true;
@@ -542,18 +740,21 @@ export default function AdminLayout() {
   function handleSearchSubmit(event) {
     event.preventDefault();
 
-    if (!filteredNavigation.length) {
+    if (!mergedSearchResults.length) {
       return;
     }
 
-    const firstResult = filteredNavigation[0];
+    const firstResult = mergedSearchResults[0];
     navigate(firstResult.to);
     setSearchQuery("");
+    setGlobalSearchResults([]);
+    setIsSearchFocused(false);
   }
 
   function handleSearchSelect(item) {
     navigate(item.to);
     setSearchQuery("");
+    setGlobalSearchResults([]);
     setIsSearchFocused(false);
   }
 
@@ -628,13 +829,42 @@ export default function AdminLayout() {
                 <Menu size={18} />
               </button>
 
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 lg:hidden">
                 <div className="min-w-0 lg:hidden">
                   <p className="truncate text-[22px] font-bold tracking-[-0.03em] text-[#1f1711] lg:hidden">
                     {meta.title}
                   </p>
                 </div>
               </div>
+
+              <form
+                className="relative order-4 w-full lg:order-none lg:max-w-[520px] lg:flex-1"
+                onSubmit={handleSearchSubmit}
+                ref={searchRef}
+              >
+                <label className="relative block">
+                  <input
+                    className="h-11 w-full rounded-full border border-transparent bg-[#f1f4f8] px-4 pl-11 pr-4 text-[12px] text-[#231913] outline-none transition placeholder:text-[#a9afba] focus:border-[#ebddd1] focus:bg-white focus:shadow-[0_0_0_4px_rgba(206,105,56,0.11)]"
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    onFocus={() => setIsSearchFocused(true)}
+                    placeholder="Search orders, customers, vendors, IDs, or admin pages..."
+                    type="search"
+                    value={searchQuery}
+                  />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#adb3bd]">
+                    <Search size={15} />
+                  </span>
+                </label>
+
+                {shouldShowSearchResults ? (
+                  <SearchResults
+                    isLoading={isSearching}
+                    onSelect={handleSearchSelect}
+                    query={searchQuery}
+                    results={mergedSearchResults}
+                  />
+                ) : null}
+              </form>
 
               <div className="ml-auto flex items-center gap-2 border-l border-[#ebe4de] pl-3">
                 <button
@@ -711,34 +941,6 @@ export default function AdminLayout() {
                   </div>
                 ) : null}
               </div>
-
-              <form
-                className="relative order-4 w-full lg:order-none lg:max-w-[520px]"
-                onSubmit={handleSearchSubmit}
-                ref={searchRef}
-              >
-                <label className="relative block">
-                  <input
-                    className="h-11 w-full rounded-full border border-transparent bg-[#f1f4f8] px-4 pl-11 pr-4 text-[12px] text-[#231913] outline-none transition placeholder:text-[#a9afba] focus:border-[#ebddd1] focus:bg-white focus:shadow-[0_0_0_4px_rgba(206,105,56,0.11)]"
-                    onChange={(event) => setSearchQuery(event.target.value)}
-                    onFocus={() => setIsSearchFocused(true)}
-                    placeholder="Search pages, settings, vendors, orders, or reports..."
-                    type="search"
-                    value={searchQuery}
-                  />
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#adb3bd]">
-                    <Search size={15} />
-                  </span>
-                </label>
-
-                {shouldShowSearchResults ? (
-                  <SearchResults
-                    onSelect={handleSearchSelect}
-                    query={searchQuery}
-                    results={filteredNavigation}
-                  />
-                ) : null}
-              </form>
             </div>
           </header>
 

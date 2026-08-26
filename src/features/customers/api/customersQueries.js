@@ -27,6 +27,7 @@ export const ADMIN_CUSTOMERS_QUERY = `
         email
         phone
         city
+        defaultAddressCity
         totalOrders
         totalSpend {
           amount
@@ -84,6 +85,7 @@ export const ADMIN_CUSTOMER_DETAIL_QUERY = `
       email
       phone
       city
+      defaultAddressCity
       status
       avatarUrl
       joinedAt

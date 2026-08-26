@@ -96,7 +96,7 @@ function formatDateTimeLabel(value) {
 function normalizeCustomerRow(item) {
   const fullName = item?.fullName || "Unknown customer";
   const resolvedCity =
-    `${item?.city ?? ""}`.trim() || `${item?.defaultAddress?.city ?? ""}`.trim() || "Not provided";
+    `${item?.city ?? ""}`.trim() || `${item?.defaultAddressCity ?? ""}`.trim() || "Not provided";
 
   return {
     id: item?.id || "",
@@ -105,6 +105,7 @@ function normalizeCustomerRow(item) {
     email: item?.email || "",
     phone: item?.phone || "",
     city: resolvedCity,
+    defaultAddressCity: `${item?.defaultAddressCity ?? ""}`.trim(),
     totalOrders: Number(item?.totalOrders ?? 0),
     amount: item?.totalSpend?.formatted || "NOK 0.00",
     averageOrderValue: item?.averageOrderValue?.formatted || "NOK 0.00",
@@ -165,6 +166,8 @@ function normalizeCustomerDetail(customer) {
   }
 
   const fullName = customer.fullName || [customer.firstName, customer.lastName].filter(Boolean).join(" ") || "Unknown customer";
+  const resolvedCity =
+    `${customer?.city ?? ""}`.trim() || `${customer?.defaultAddressCity ?? ""}`.trim();
 
   return {
     id: customer.id,
@@ -174,7 +177,8 @@ function normalizeCustomerDetail(customer) {
     lastName: customer.lastName || "",
     email: customer.email || "",
     phone: customer.phone || "",
-    city: customer.city || "",
+    city: resolvedCity,
+    defaultAddressCity: `${customer?.defaultAddressCity ?? ""}`.trim(),
     status: normalizeStatus(customer.status),
     rawStatus: `${customer.status ?? ""}`.trim().toUpperCase() || "ACTIVE",
     createdAt: customer.createdAt || "",

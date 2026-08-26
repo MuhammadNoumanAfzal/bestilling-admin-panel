@@ -3,14 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   ChevronLeft,
-  Printer,
   DollarSign,
   Calendar,
   CheckCircle,
   CreditCard,
   XCircle,
   Clock,
-  MessageSquarePlus,
   BadgeCheck,
 } from "lucide-react";
 
@@ -21,10 +19,8 @@ import OrderItemsTable from "../components/details/OrderItemsTable.jsx";
 import EventInfoCard from "../components/details/EventInfoCard.jsx";
 import OrderSummaryCard from "../components/details/OrderSummaryCard.jsx";
 import {
-  addOrderNoteRequest,
   getCommissionPreviewForOrderRequest,
   getAdminOrderDetailRequest,
-  getAdminOrderInvoiceRequest,
   refundOrderRequest,
   updateOrderPaymentStatusRequest,
 } from "../api/ordersApi.js";
@@ -302,79 +298,6 @@ export default function OrderDetailPage() {
     });
   }
 
-  async function handleAddNote() {
-    const notePrompt = await Swal.fire({
-      title: "Add internal note",
-      input: "textarea",
-      inputPlaceholder: "Write a note visible to admin operations only",
-      showCancelButton: true,
-      confirmButtonText: "Save note",
-      confirmButtonColor: "#cf6e38",
-      cancelButtonColor: "#c8b9aa",
-      inputValidator: (value) => (!value ? "A note is required." : undefined),
-    });
-
-    if (!notePrompt.isConfirmed) {
-      return;
-    }
-
-    try {
-      setIsWorking(true);
-      const response = await addOrderNoteRequest({
-        orderId: order.id,
-        message: notePrompt.value,
-      });
-
-      setOrder((current) =>
-        current
-          ? {
-              ...current,
-              notes: [response.note, ...current.notes],
-            }
-          : current,
-      );
-
-      await Swal.fire({
-        icon: "success",
-        title: "Note added",
-        text: response.message,
-        confirmButtonColor: "#cf6e38",
-      });
-    } catch (error) {
-      await Swal.fire({
-        icon: "error",
-        title: "Unable to add note",
-        text: error instanceof Error ? error.message : "Please try again.",
-        confirmButtonColor: "#cf6e38",
-      });
-    } finally {
-      setIsWorking(false);
-    }
-  }
-
-  async function handleInvoiceDownload() {
-    try {
-      setIsWorking(true);
-      const invoice = await getAdminOrderInvoiceRequest(order.id);
-      const targetUrl = invoice.pdfUrl || invoice.invoiceUrl || order.payment.invoiceUrl;
-
-      if (!targetUrl) {
-        throw new Error("No invoice file is available for this order yet.");
-      }
-
-      window.open(targetUrl, "_blank", "noopener,noreferrer");
-    } catch (error) {
-      await Swal.fire({
-        icon: "error",
-        title: "Unable to open invoice",
-        text: error instanceof Error ? error.message : "Please try again.",
-        confirmButtonColor: "#cf6e38",
-      });
-    } finally {
-      setIsWorking(false);
-    }
-  }
-
   if (isLoading) {
     return (
       <div className="rounded-[16px] border border-[#e7ddd6] bg-white px-5 py-14 text-center text-[15px] font-medium text-[#6f645d]">
@@ -436,28 +359,6 @@ export default function OrderDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <button
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] border border-[#e6dad1] bg-white px-4 text-[13px] font-semibold text-[#4d423b] transition hover:bg-[#faf5f1] disabled:cursor-not-allowed disabled:opacity-70"
-              disabled={isWorking}
-              onClick={handleAddNote}
-              type="button"
-            >
-              <MessageSquarePlus size={15} />
-              Add Note
-            </button>
-
-            {order.actions.canDownloadInvoice ? (
-              <button
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] border border-[#e6dad1] bg-white px-4 text-[13px] font-semibold text-[#4d423b] transition hover:bg-[#faf5f1] disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={isWorking}
-                onClick={handleInvoiceDownload}
-                type="button"
-              >
-                <Printer size={15} />
-                Download Invoice
-              </button>
-            ) : null}
-
             {order.actions.canMarkPaid ? (
               <button
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] bg-[#2b9e62] px-4 text-[13px] font-semibold text-white transition hover:bg-[#238251] disabled:cursor-not-allowed disabled:opacity-70"

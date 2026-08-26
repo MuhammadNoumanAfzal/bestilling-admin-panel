@@ -1,3 +1,43 @@
+function PaginationControls({ currentPage, onPageChange, totalItems, itemsPerPage }) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  return (
+    <div className="mt-5 flex flex-col gap-3 border-t border-[#f0e6df] pt-4 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-[12px] font-medium text-[#7c7068]">
+        Showing {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
+      </p>
+
+      <div className="flex items-center gap-2">
+        <button
+          className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#dfd3ca] bg-white px-3 text-[12px] font-bold text-[#3d312a] transition hover:bg-[#faf6f2] disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={currentPage === 1}
+          onClick={() => onPageChange(currentPage - 1)}
+          type="button"
+        >
+          Prev
+        </button>
+
+        <span className="inline-flex h-9 items-center justify-center rounded-[10px] bg-[#fff4ec] px-3 text-[12px] font-bold text-[#cf6e38]">
+          {currentPage} / {totalPages}
+        </span>
+
+        <button
+          className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#dfd3ca] bg-white px-3 text-[12px] font-bold text-[#3d312a] transition hover:bg-[#faf6f2] disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={currentPage >= totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
+          type="button"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SearchResultCard({ item, itemType, onAdd }) {
   const secondaryText =
     itemType === "product"
@@ -77,7 +117,11 @@ export default function CurationCollectionSection({
   title,
   subtitle,
   items,
+  itemsPage,
+  onItemsPageChange,
   filteredOptions,
+  optionsPage,
+  onOptionsPageChange,
   searchValue,
   searchPlaceholder,
   onSearchChange,
@@ -87,6 +131,17 @@ export default function CurationCollectionSection({
   emptyState,
   removeLabel,
 }) {
+  const SEARCH_RESULTS_PER_PAGE = 4;
+  const SELECTED_ITEMS_PER_PAGE = 6;
+  const paginatedOptions = filteredOptions.slice(
+    (optionsPage - 1) * SEARCH_RESULTS_PER_PAGE,
+    optionsPage * SEARCH_RESULTS_PER_PAGE,
+  );
+  const paginatedItems = items.slice(
+    (itemsPage - 1) * SELECTED_ITEMS_PER_PAGE,
+    itemsPage * SELECTED_ITEMS_PER_PAGE,
+  );
+
   return (
     <section className="overflow-hidden rounded-[24px] border border-[#e6dad0] bg-white shadow-[0_20px_55px_rgba(49,30,19,0.06)]">
       <div className="border-b border-[#efe4dc] bg-[linear-gradient(135deg,#fff8f1_0%,#fffdfb_100%)] px-5 py-5">
@@ -101,9 +156,10 @@ export default function CurationCollectionSection({
         />
 
         {searchValue.trim() ? (
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <div className="mt-4">
+            <div className="grid gap-3 md:grid-cols-2">
             {filteredOptions.length ? (
-              filteredOptions.map((item) => (
+              paginatedOptions.map((item) => (
                 <SearchResultCard
                   item={item}
                   itemType={itemType}
@@ -116,14 +172,25 @@ export default function CurationCollectionSection({
                 No matching results found for this search.
               </div>
             )}
+            </div>
+
+            {filteredOptions.length ? (
+              <PaginationControls
+                currentPage={optionsPage}
+                itemsPerPage={SEARCH_RESULTS_PER_PAGE}
+                onPageChange={onOptionsPageChange}
+                totalItems={filteredOptions.length}
+              />
+            ) : null}
           </div>
         ) : null}
       </div>
 
       <div className="p-5">
         {items.length ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {items.map((item) => (
+          <div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {paginatedItems.map((item) => (
               <SelectedItemCard
                 item={item}
                 itemType={itemType}
@@ -132,6 +199,14 @@ export default function CurationCollectionSection({
                 removeLabel={removeLabel}
               />
             ))}
+            </div>
+
+            <PaginationControls
+              currentPage={itemsPage}
+              itemsPerPage={SELECTED_ITEMS_PER_PAGE}
+              onPageChange={onItemsPageChange}
+              totalItems={items.length}
+            />
           </div>
         ) : (
           <div className="rounded-[18px] border border-dashed border-[#e5d7ce] bg-[#fffdfa] px-4 py-10 text-center text-[14px] font-semibold text-[#726760]">

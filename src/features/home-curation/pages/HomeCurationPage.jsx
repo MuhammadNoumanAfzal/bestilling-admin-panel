@@ -27,6 +27,12 @@ const initialSearch = {
   popularProducts: "",
 };
 
+const initialPagination = {
+  popularVendors: { itemsPage: 1, optionsPage: 1 },
+  featuredVendors: { itemsPage: 1, optionsPage: 1 },
+  popularProducts: { itemsPage: 1, optionsPage: 1 },
+};
+
 function matchesSearch(item, searchValue, kind) {
   const normalized = `${searchValue || ""}`.trim().toLowerCase();
 
@@ -55,6 +61,7 @@ export default function HomeCurationPage() {
   const [collections, setCollections] = useState(initialCollections);
   const [options, setOptions] = useState(initialOptions);
   const [searchState, setSearchState] = useState(initialSearch);
+  const [paginationState, setPaginationState] = useState(initialPagination);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [busyKey, setBusyKey] = useState("");
@@ -74,6 +81,7 @@ export default function HomeCurationPage() {
       const mapped = mapHomeCurationPage(response);
       setCollections(mapped.curated);
       setOptions(mapped.options);
+      setPaginationState(initialPagination);
     } catch (error) {
       await Swal.fire({
         icon: "error",
@@ -188,7 +196,7 @@ export default function HomeCurationPage() {
     return options.vendors
       .filter((item) => !selectedIds.has(item.id))
       .filter((item) => matchesSearch(item, searchState.popularVendors, "vendor"))
-      .slice(0, 8);
+      .sort((left, right) => Number(right.rating || 0) - Number(left.rating || 0));
   }, [collections.popularVendors, options.vendors, searchState.popularVendors]);
 
   const filteredFeaturedVendorOptions = useMemo(() => {
@@ -196,7 +204,7 @@ export default function HomeCurationPage() {
     return options.vendors
       .filter((item) => !selectedIds.has(item.id))
       .filter((item) => matchesSearch(item, searchState.featuredVendors, "vendor"))
-      .slice(0, 8);
+      .sort((left, right) => Number(right.rating || 0) - Number(left.rating || 0));
   }, [collections.featuredVendors, options.vendors, searchState.featuredVendors]);
 
   const filteredPopularProductOptions = useMemo(() => {
@@ -205,8 +213,38 @@ export default function HomeCurationPage() {
       .filter(isActiveProduct)
       .filter((item) => !selectedIds.has(item.id))
       .filter((item) => matchesSearch(item, searchState.popularProducts, "product"))
-      .slice(0, 8);
   }, [collections.popularProducts, options.products, searchState.popularProducts]);
+
+  function updateSearch(sectionKey, value) {
+    setSearchState((current) => ({ ...current, [sectionKey]: value }));
+    setPaginationState((current) => ({
+      ...current,
+      [sectionKey]: {
+        ...current[sectionKey],
+        optionsPage: 1,
+      },
+    }));
+  }
+
+  function updateItemsPage(sectionKey, nextPage) {
+    setPaginationState((current) => ({
+      ...current,
+      [sectionKey]: {
+        ...current[sectionKey],
+        itemsPage: nextPage,
+      },
+    }));
+  }
+
+  function updateOptionsPage(sectionKey, nextPage) {
+    setPaginationState((current) => ({
+      ...current,
+      [sectionKey]: {
+        ...current[sectionKey],
+        optionsPage: nextPage,
+      },
+    }));
+  }
 
   async function handleAddPopularVendor(item) {
     try {
@@ -464,16 +502,18 @@ export default function HomeCurationPage() {
               emptyState="No vendors are currently marked as popular."
               filteredOptions={filteredPopularVendorOptions}
               itemType="vendor"
+              itemsPage={paginationState.popularVendors.itemsPage}
               items={collections.popularVendors}
               onAdd={handleAddPopularVendor}
+              onItemsPageChange={(page) => updateItemsPage("popularVendors", page)}
+              onOptionsPageChange={(page) => updateOptionsPage("popularVendors", page)}
               onRemove={handleRemovePopularVendor}
-              onSearchChange={(value) =>
-                setSearchState((current) => ({ ...current, popularVendors: value }))
-              }
+              onSearchChange={(value) => updateSearch("popularVendors", value)}
+              optionsPage={paginationState.popularVendors.optionsPage}
               removeLabel={busyKey ? "Update flag" : "Remove Popular"}
               searchPlaceholder="Search vendors to add into Popular Vendors"
               searchValue={searchState.popularVendors}
-              subtitle="These vendors feed the Popular Vendors row on the client homepage."
+              subtitle="These vendors feed the Popular Vendors row on the client homepage. Best practice is to drive this shelf from performance, not manual preference."
               title="Popular Vendors"
             />
           </div>
@@ -488,16 +528,18 @@ export default function HomeCurationPage() {
               emptyState="No vendors are currently marked as featured."
               filteredOptions={filteredFeaturedVendorOptions}
               itemType="vendor"
+              itemsPage={paginationState.featuredVendors.itemsPage}
               items={collections.featuredVendors}
               onAdd={handleAddFeaturedVendor}
+              onItemsPageChange={(page) => updateItemsPage("featuredVendors", page)}
+              onOptionsPageChange={(page) => updateOptionsPage("featuredVendors", page)}
               onRemove={handleRemoveFeaturedVendor}
-              onSearchChange={(value) =>
-                setSearchState((current) => ({ ...current, featuredVendors: value }))
-              }
+              onSearchChange={(value) => updateSearch("featuredVendors", value)}
+              optionsPage={paginationState.featuredVendors.optionsPage}
               removeLabel={busyKey ? "Update flag" : "Remove Featured"}
               searchPlaceholder="Search vendors to add into Featured Vendors"
               searchValue={searchState.featuredVendors}
-              subtitle="These vendors feed the Featured Vendors row on the client homepage."
+              subtitle="These vendors feed the Featured Vendors row on the client homepage. Use this as a manual editorial shelf for campaigns or strategic visibility."
               title="Featured Vendors"
             />
           </div>
@@ -512,12 +554,14 @@ export default function HomeCurationPage() {
               emptyState="No products are currently marked as popular."
               filteredOptions={filteredPopularProductOptions}
               itemType="product"
+              itemsPage={paginationState.popularProducts.itemsPage}
               items={collections.popularProducts}
               onAdd={handleAddPopularProduct}
+              onItemsPageChange={(page) => updateItemsPage("popularProducts", page)}
+              onOptionsPageChange={(page) => updateOptionsPage("popularProducts", page)}
               onRemove={handleRemovePopularProduct}
-              onSearchChange={(value) =>
-                setSearchState((current) => ({ ...current, popularProducts: value }))
-              }
+              onSearchChange={(value) => updateSearch("popularProducts", value)}
+              optionsPage={paginationState.popularProducts.optionsPage}
               removeLabel={busyKey ? "Update flag" : "Remove Popular"}
               searchPlaceholder="Search products to add into Popular Products"
               searchValue={searchState.popularProducts}

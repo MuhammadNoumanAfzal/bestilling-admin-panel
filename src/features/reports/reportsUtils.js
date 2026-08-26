@@ -56,12 +56,30 @@ function getNumberValue(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function getChartItemValue(item) {
+  return getNumberValue(
+    item?.value ??
+      item?.amount ??
+      item?.count ??
+      item?.total ??
+      item?.metricValue ??
+      0,
+  );
+}
+
 function createChartScale(scale, bars) {
-  if (Array.isArray(scale) && scale.length) {
-    return scale.map((item) => getNumberValue(item));
+  if (Array.isArray(scale) && scale.length > 1) {
+    const normalizedScale = scale
+      .map((item) => getNumberValue(item))
+      .filter((item, index, values) => Number.isFinite(item) && values.indexOf(item) === index)
+      .sort((left, right) => left - right);
+
+    if (normalizedScale.length > 1) {
+      return normalizedScale;
+    }
   }
 
-  const maxValue = Math.max(...bars.map((item) => getNumberValue(item.value)), 0);
+  const maxValue = Math.max(...bars.map((item) => getChartItemValue(item)), 0);
   const step = maxValue > 0 ? Math.ceil(maxValue / 4) : 1;
   return [0, step, step * 2, step * 3, step * 4];
 }
@@ -81,7 +99,7 @@ function normalizeMoney(value) {
 function normalizeChart(analytics, options = {}) {
   const bars = (analytics?.bars || []).map((item) => ({
     label: item?.label || "",
-    value: getNumberValue(item?.value),
+    value: getChartItemValue(item),
   }));
 
   return {

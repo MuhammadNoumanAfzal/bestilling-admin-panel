@@ -27,6 +27,7 @@ import { getAdminDisplayName, getAdminRoleLabel } from "../../features/auth/auth
 import {
   getMyNotificationsRequest,
   getMyNotificationUnreadCountRequest,
+  resolveAdminNotificationTarget,
 } from "../../features/notifications/api/notificationsApi.js";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
 
@@ -506,12 +507,12 @@ export default function AdminLayout() {
       showCloseButton: true,
       didOpen: (toast) => {
         toast.addEventListener("click", () => {
-          navigate("/notifications");
+          navigate(resolveAdminNotificationTarget(notification));
         });
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        navigate("/notifications");
+        navigate(resolveAdminNotificationTarget(notification));
       }
     });
   }

@@ -6,6 +6,7 @@ import {
   getMyNotificationsRequest,
   markAllNotificationsReadRequest,
   markNotificationReadRequest,
+  resolveAdminNotificationTarget,
 } from "../api/notificationsApi.js";
 import NotificationDetailsModal from "../components/NotificationDetailsModal.jsx";
 import NotificationOverviewCard from "../components/NotificationOverviewCard.jsx";
@@ -13,47 +14,6 @@ import NotificationsTable from "../components/NotificationsTable.jsx";
 import NotificationsToolbar from "../components/NotificationsToolbar.jsx";
 
 const PAGE_SIZE = 10;
-
-function resolveNotificationTarget(notification) {
-  const actionUrl = String(notification?.actionUrl || "").trim();
-  const entityId = String(notification?.entityId || "").trim();
-  const entityType = String(notification?.entityType || "").trim().toUpperCase();
-  const type = String(notification?.type || "").trim().toUpperCase();
-
-  if (/^https?:\/\//i.test(actionUrl)) {
-    return actionUrl;
-  }
-
-  if (actionUrl) {
-    let normalizedPath = actionUrl.replace(/^\/admin\b/i, "");
-
-    if (entityId && normalizedPath.includes(":id")) {
-      normalizedPath = normalizedPath.replace(":id", entityId);
-    }
-
-    if (normalizedPath && normalizedPath !== "/" && !normalizedPath.includes(":")) {
-      return normalizedPath;
-    }
-  }
-
-  if (entityType === "SUPPORT_TICKET" || type === "SUPPORT_REPLY" || type === "SUPPORT_TICKET_UPDATED") {
-    return entityId ? `/support/${entityId}` : "/support";
-  }
-
-  if (entityType === "ORDER" || type === "ORDER_UPDATED" || type === "ORDER_CANCELLED") {
-    return entityId ? `/orders/${entityId}` : "/orders";
-  }
-
-  if (entityType === "PAYOUT" || type === "PAYOUT_UPDATED") {
-    return entityId ? `/payouts/${entityId}` : "/payouts";
-  }
-
-  if (entityType === "VENDOR" || type === "VENDOR_APPROVED") {
-    return entityId ? `/vendors/${entityId}` : "/vendors";
-  }
-
-  return "/notifications";
-}
 
 function buildSummary(pageInfo, visibleCount) {
   return [
@@ -319,7 +279,7 @@ export default function NotificationsPage() {
   }
 
   function handleOpenAction(notification) {
-    const target = resolveNotificationTarget(notification);
+    const target = resolveAdminNotificationTarget(notification);
 
     if (/^https?:\/\//i.test(target)) {
       window.location.assign(target);
@@ -396,6 +356,7 @@ export default function NotificationsPage() {
             <NotificationsTable
               currentPage={currentPage}
               onArchive={handleArchive}
+              onOpenRow={handleOpenAction}
               onPageChange={handlePageChange}
               onViewDetails={handleViewDetails}
               pageSize={pageInfo.pageSize || PAGE_SIZE}

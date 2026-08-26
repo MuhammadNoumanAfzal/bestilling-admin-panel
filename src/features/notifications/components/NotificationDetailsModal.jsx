@@ -295,6 +295,24 @@ export default function NotificationDetailsModal({ notification, onClose, onOpen
             </div>
 
           </div>
+
+          <div className="flex flex-wrap justify-end gap-3 border-t border-[#f1e2d8] px-4 py-4 sm:px-5">
+            <button
+              className="inline-flex h-11 items-center justify-center rounded-[12px] border border-[#dfd3ca] bg-white px-4 text-[13px] font-bold text-[#3d322b] transition hover:bg-[#faf6f2]"
+              onClick={onClose}
+              type="button"
+            >
+              Close
+            </button>
+            <button
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] bg-[#cf6e38] px-4 text-[13px] font-bold text-white shadow-[0_12px_24px_rgba(207,110,56,0.22)] transition hover:bg-[#bc6030]"
+              onClick={() => onOpenAction(notification)}
+              type="button"
+            >
+              Open Destination
+              <ExternalLink size={15} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

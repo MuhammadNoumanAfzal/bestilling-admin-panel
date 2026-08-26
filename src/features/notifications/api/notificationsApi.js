@@ -9,6 +9,22 @@ import {
 
 const ADMIN_FINANCE_AUDIENCE = "ADMIN";
 
+function appendNotificationContext(path, notification) {
+  const normalizedPath = String(path || "").trim();
+
+  if (!normalizedPath || /^https?:\/\//i.test(normalizedPath)) {
+    return normalizedPath;
+  }
+
+  const notificationId = String(notification?.id || "").trim();
+  if (!notificationId) {
+    return normalizedPath;
+  }
+
+  const separator = normalizedPath.includes("?") ? "&" : "?";
+  return `${normalizedPath}${separator}notificationId=${encodeURIComponent(notificationId)}`;
+}
+
 function formatDisplayDate(value, options = {}) {
   if (!value) {
     return "Not available";
@@ -126,18 +142,94 @@ function formatRelativeTime(value) {
 
 function buildAdminNotificationTarget(item) {
   if (item?.payoutId) {
-    return `/payouts/${encodeURIComponent(item.payoutId)}`;
+    return appendNotificationContext(
+      `/payouts/${encodeURIComponent(item.payoutId)}`,
+      item,
+    );
   }
 
   if (item?.orderId) {
-    return `/orders/${encodeURIComponent(item.orderId)}`;
+    return appendNotificationContext(
+      `/orders/${encodeURIComponent(item.orderId)}`,
+      item,
+    );
   }
 
   if (item?.invoiceId) {
-    return `/payouts/${encodeURIComponent(item.invoiceId)}`;
+    return appendNotificationContext(
+      `/payouts?invoiceId=${encodeURIComponent(item.invoiceId)}`,
+      item,
+    );
   }
 
-  return "/notifications";
+  return appendNotificationContext("/notifications", item);
+}
+
+export function resolveAdminNotificationTarget(notification) {
+  const actionUrl = String(notification?.actionUrl || "").trim();
+  const entityId = String(notification?.entityId || "").trim();
+  const entityType = String(notification?.entityType || "").trim().toUpperCase();
+  const type = String(notification?.type || "").trim().toUpperCase();
+
+  if (/^https?:\/\//i.test(actionUrl)) {
+    return actionUrl;
+  }
+
+  if (actionUrl) {
+    let normalizedPath = actionUrl.replace(/^\/admin\b/i, "");
+
+    if (entityId && normalizedPath.includes(":id")) {
+      normalizedPath = normalizedPath.replace(":id", encodeURIComponent(entityId));
+    }
+
+    if (normalizedPath && normalizedPath !== "/" && !normalizedPath.includes(":")) {
+      return appendNotificationContext(normalizedPath, notification);
+    }
+  }
+
+  if (entityType === "SUPPORT_TICKET" || type === "SUPPORT_REPLY" || type === "SUPPORT_TICKET_UPDATED") {
+    return appendNotificationContext(
+      entityId ? `/support/${encodeURIComponent(entityId)}` : "/support",
+      notification,
+    );
+  }
+
+  if (entityType === "ORDER" || type === "ORDER_UPDATED" || type === "ORDER_CANCELLED") {
+    return appendNotificationContext(
+      entityId ? `/orders/${encodeURIComponent(entityId)}` : "/orders",
+      notification,
+    );
+  }
+
+  if (entityType === "PAYOUT" || type === "PAYOUT_UPDATED") {
+    return appendNotificationContext(
+      entityId ? `/payouts/${encodeURIComponent(entityId)}` : "/payouts",
+      notification,
+    );
+  }
+
+  if (entityType === "INVOICE") {
+    return appendNotificationContext(
+      entityId ? `/payouts?invoiceId=${encodeURIComponent(entityId)}` : "/payouts",
+      notification,
+    );
+  }
+
+  if (entityType === "VENDOR" || type === "VENDOR_APPROVED") {
+    return appendNotificationContext(
+      entityId ? `/vendors/${encodeURIComponent(entityId)}` : "/vendors",
+      notification,
+    );
+  }
+
+  if (entityType === "CUSTOMER") {
+    return appendNotificationContext(
+      entityId ? `/customers/${encodeURIComponent(entityId)}` : "/customers",
+      notification,
+    );
+  }
+
+  return appendNotificationContext("/notifications", notification);
 }
 
 function buildMetadata(item) {

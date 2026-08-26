@@ -111,6 +111,7 @@ function PaginationIconButton({ children, disabled = false, onClick }) {
 export default function NotificationsTable({
   currentPage,
   onArchive,
+  onOpenRow,
   onPageChange,
   onViewDetails,
   pageSize,
@@ -158,7 +159,11 @@ export default function NotificationsTable({
               </tr>
             ) : (
               rows.map((row) => (
-                <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
+                <tr
+                  key={row.id}
+                  className="cursor-pointer border-b border-[#f1e9e2] transition hover:bg-[#fffaf6] last:border-b-0"
+                  onClick={() => onOpenRow(row)}
+                >
                   <td className="px-4 py-4 align-middle">
                     <p className="max-w-[360px] text-[16px] font-semibold leading-6 text-[#18120f]">{row.title}</p>
                   </td>
@@ -178,7 +183,10 @@ export default function NotificationsTable({
                     <div className="flex justify-end gap-4">
                       <button
                         className="inline-flex cursor-pointer items-center gap-1.5 text-[15px] font-semibold text-[#18120f] transition hover:text-[#cf6e38]"
-                        onClick={() => onViewDetails(row)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onViewDetails(row);
+                        }}
                         type="button"
                       >
                         <Eye size={15} />
@@ -188,7 +196,10 @@ export default function NotificationsTable({
                       {row.status !== "ARCHIVED" ? (
                         <button
                           className="inline-flex cursor-pointer items-center gap-1.5 text-[15px] font-semibold text-[#8f4f36] transition hover:text-[#cf6e38]"
-                          onClick={() => onArchive(row)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onArchive(row);
+                          }}
                           type="button"
                         >
                           <Archive size={15} />

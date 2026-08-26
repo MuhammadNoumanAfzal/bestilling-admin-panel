@@ -25,33 +25,6 @@ import {
   updateOrderPaymentStatusRequest,
 } from "../api/ordersApi.js";
 
-function NotesCard({ notes }) {
-  return (
-    <article className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
-      <header className="mb-4 flex items-center gap-2 border-b border-[#eee4dd] pb-3">
-        <MessageSquarePlus size={18} className="text-[#cf6432]" />
-        <h3 className="text-[18px] font-bold text-[#18120f]">Admin Notes</h3>
-      </header>
-
-      <div className="space-y-3">
-        {notes.length === 0 ? (
-          <p className="text-[14px] text-[#7a6d66]">No internal notes added yet.</p>
-        ) : (
-          notes.map((note) => (
-            <div key={note.id} className="rounded-[12px] border border-[#eee4dd] bg-[#fcfbfa] px-4 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[13px] font-bold text-[#18120f]">{note.createdBy}</p>
-                <span className="text-[11px] text-[#8c8077]">{note.createdAtLabel}</span>
-              </div>
-              <p className="mt-2 text-[13px] leading-6 text-[#4d423b]">{note.message}</p>
-            </div>
-          ))
-        )}
-      </div>
-    </article>
-  );
-}
-
 function OverviewCard({ icon: Icon, label, value, valueClassName = "text-[#221914]", children }) {
   return (
     <article className="flex flex-col gap-4 rounded-[14px] border border-[#ece4de] bg-white px-4 py-4 shadow-[0_8px_20px_rgba(55,31,13,0.07)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(55,31,13,0.09)]">
@@ -298,6 +271,30 @@ export default function OrderDetailPage() {
     });
   }
 
+  function handleViewCustomerProfile() {
+    if (!order?.customer?.id) {
+      return;
+    }
+
+    navigate(`/customers/${encodeURIComponent(order.customer.id)}`);
+  }
+
+  function handleViewVendorProfile() {
+    if (!order?.vendor?.id) {
+      return;
+    }
+
+    navigate(`/vendors/${encodeURIComponent(order.vendor.id)}`);
+  }
+
+  function handleViewItemSource() {
+    if (!order?.vendor?.id) {
+      return;
+    }
+
+    navigate(`/vendors/${encodeURIComponent(order.vendor.id)}#menus`);
+  }
+
   if (isLoading) {
     return (
       <div className="rounded-[16px] border border-[#e7ddd6] bg-white px-5 py-14 text-center text-[15px] font-medium text-[#6f645d]">
@@ -407,13 +404,13 @@ export default function OrderDetailPage() {
       </section>
 
       <section className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-        <CustomerInfoCard customer={order.customer} />
-        <VendorInfoCard vendor={order.vendor} />
+        <CustomerInfoCard customer={order.customer} onViewProfile={handleViewCustomerProfile} />
+        <VendorInfoCard vendor={order.vendor} onViewProfile={handleViewVendorProfile} />
         <OrderTimelineCard timeline={order.timeline} />
       </section>
 
       <section>
-        <OrderItemsTable items={order.items} />
+        <OrderItemsTable items={order.items} onViewItemSource={handleViewItemSource} />
       </section>
 
       <section className="grid gap-6 grid-cols-1 md:grid-cols-2">
@@ -425,15 +422,13 @@ export default function OrderDetailPage() {
         <CommissionPreviewCard preview={commissionPreview} />
       </section>
 
-      <section className="grid gap-6 grid-cols-1 xl:grid-cols-2">
-        <NotesCard notes={order.notes} />
-
+      <section>
         <article className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
           <header className="mb-4 border-b border-[#eee4dd] pb-3">
             <h3 className="text-[18px] font-bold text-[#18120f]">Payment & Delivery Meta</h3>
           </header>
 
-          <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
+          <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 xl:grid-cols-3">
             <div>
               <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
                 Transaction ID

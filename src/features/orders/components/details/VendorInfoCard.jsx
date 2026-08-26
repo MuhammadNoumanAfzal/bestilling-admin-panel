@@ -1,4 +1,4 @@
-import { Store, Star } from "lucide-react";
+import { ArrowUpRight, Store, Star } from "lucide-react";
 
 function displayValue(value, fallback = "Not available") {
   if (value === null || value === undefined) {
@@ -9,12 +9,24 @@ function displayValue(value, fallback = "Not available") {
   return normalized || fallback;
 }
 
-export default function VendorInfoCard({ vendor }) {
+export default function VendorInfoCard({ vendor, onViewProfile }) {
   return (
     <article className="h-full rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
-      <header className="mb-4 flex items-center gap-2 border-b border-[#eee4dd] pb-3">
-        <Store size={18} className="text-[#cf6432]" />
-        <h3 className="text-[18px] font-bold text-[#18120f]">Vendor Information</h3>
+      <header className="mb-4 flex items-center justify-between gap-3 border-b border-[#eee4dd] pb-3">
+        <div className="flex items-center gap-2">
+          <Store size={18} className="text-[#cf6432]" />
+          <h3 className="text-[18px] font-bold text-[#18120f]">Vendor Information</h3>
+        </div>
+        {onViewProfile ? (
+          <button
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#efcfbf] bg-[linear-gradient(180deg,#fff8f3_0%,#fff1e8_100%)] px-3.5 py-2 text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#c86434] shadow-[0_8px_18px_rgba(207,110,56,0.12)] transition hover:-translate-y-0.5 hover:border-[#cf6e38] hover:bg-[linear-gradient(180deg,#fff3ec_0%,#ffe7d8_100%)] hover:text-[#a94f24]"
+            onClick={onViewProfile}
+            type="button"
+          >
+            <span>View Profile</span>
+            <ArrowUpRight size={12} />
+          </button>
+        ) : null}
       </header>
 
       <div className="mb-5 flex items-center gap-3">

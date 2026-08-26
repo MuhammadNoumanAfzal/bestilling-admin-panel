@@ -92,6 +92,22 @@ export default function VendorDetailPage() {
     };
   }, [vendorId]);
 
+  useEffect(() => {
+    if (!vendor) {
+      return;
+    }
+
+    if (window.location.hash === "#menus") {
+      window.setTimeout(() => {
+        sectionRefs.current.menus?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+        setActiveSection("menus");
+      }, 0);
+    }
+  }, [vendor]);
+
   function handleSectionChange(sectionId) {
     setActiveSection(sectionId);
     sectionRefs.current[sectionId]?.scrollIntoView({

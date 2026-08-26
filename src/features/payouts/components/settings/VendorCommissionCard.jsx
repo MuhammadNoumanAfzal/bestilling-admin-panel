@@ -102,11 +102,13 @@ export default function VendorCommissionCard({ onAdd, onDelete, onEdit, rows }) 
         </label>
 
         <button
-          className="inline-flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border border-[#ddd2ca] bg-white px-3 text-[12px] font-semibold text-[#2f241d] transition hover:border-[#cf6e38]/35 hover:bg-[#fff9f5] sm:h-9 sm:w-auto sm:rounded-[8px]"
+          className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(135deg,#d86f39_0%,#c45b2d_100%)] px-4 py-3 text-center text-[13px] font-semibold text-white shadow-[0_14px_30px_rgba(207,110,56,0.24)] transition hover:-translate-y-[1px] hover:shadow-[0_18px_36px_rgba(207,110,56,0.28)] focus:outline-none focus:ring-4 focus:ring-[#cf6e38]/20 sm:min-h-10 sm:w-auto sm:rounded-[12px] sm:px-4 sm:py-2.5"
           onClick={onAdd}
           type="button"
         >
-          <Plus size={13} />
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/16">
+            <Plus size={14} />
+          </span>
           <span>Assign Vendor Commission</span>
         </button>
       </div>

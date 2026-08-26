@@ -307,16 +307,16 @@ export default function DeliveryAreaDetailPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="grid w-full gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap lg:justify-end">
             <button
-              className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[8px] border border-[#f0b8ab] bg-white px-3.5 text-[12px] font-bold text-[#d15b42] transition hover:bg-[#fff4f1]"
+              className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-[12px] border border-[#f0b8ab] bg-white px-4 py-2.5 text-[13px] font-bold text-[#d15b42] transition hover:bg-[#fff4f1] sm:min-h-10 lg:w-auto"
               onClick={handleDeleteArea}
               type="button"
             >
               Delete Area
             </button>
             <button
-              className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[8px] border border-[#f0b8ab] bg-white px-3.5 text-[12px] font-bold text-[#d15b42] transition hover:bg-[#fff4f1] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-[12px] border border-[#e8d5ca] bg-white px-4 py-2.5 text-[13px] font-bold text-[#7a5d4b] transition hover:bg-[#fbf5ef] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-10 lg:w-auto"
               disabled={isUpdatingStatus}
               onClick={handleToggleStatus}
               type="button"
@@ -328,7 +328,7 @@ export default function DeliveryAreaDetailPage() {
                   : "Activate Area"}
             </button>
             <button
-              className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[8px] bg-[#cf6e38] px-3.5 text-[12px] font-bold text-white transition hover:bg-[#bc6030] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-[12px] bg-[linear-gradient(135deg,#d86f39_0%,#c45b2d_100%)] px-4 py-2.5 text-[13px] font-bold text-white shadow-[0_14px_28px_rgba(207,110,56,0.2)] transition hover:-translate-y-[1px] hover:shadow-[0_18px_34px_rgba(207,110,56,0.26)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-10 lg:w-auto"
               disabled={isSaving}
               onClick={handleSaveChanges}
               type="button"

@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, ChevronDown, Star } from "lucide-react";
+import { Search, ChevronDown, Star, MapPin } from "lucide-react";
 
 export default function VendorsToolbar({
   searchTerm,
   onSearchChange,
-  vendorFilter,
-  onVendorFilterChange,
   cityFilter,
   onCityFilterChange,
   ratingFilter,
@@ -15,7 +13,6 @@ export default function VendorsToolbar({
   activeTab,
   onTabChange,
   onResetFilters,
-  vendors,
   cities,
 }) {
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -33,11 +30,6 @@ export default function VendorsToolbar({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  const handleSelectVendor = (val) => {
-    onVendorFilterChange(val);
-    setActiveDropdown(null);
-  };
 
   const handleSelectCity = (val) => {
     onCityFilterChange(val);
@@ -86,7 +78,7 @@ export default function VendorsToolbar({
             type="text"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by vendor..."
+            placeholder="Search by vendor, cuisine, or city..."
             className="h-9 w-full rounded-[8px] border border-[#ddd4cb] bg-white pl-9 pr-4 text-[13px] text-[#231913] outline-none transition placeholder:text-[#baaea0] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]"
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#baaea0]">
@@ -96,91 +88,25 @@ export default function VendorsToolbar({
 
         {/* Dropdowns */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Vendor Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setActiveDropdown(activeDropdown === "vendor" ? null : "vendor")}
-              className="inline-flex h-9 items-center justify-between gap-1.5 rounded-[8px] border border-[#d8ccc2] bg-white px-3 text-[12px] font-semibold text-[#4d423b] outline-none transition hover:bg-[#faf9f8] cursor-pointer"
-              type="button"
-            >
-              <span>
-                {vendors.find((vendor) => vendor.id === vendorFilter)?.name || "All Vendors"}
-              </span>
-              <ChevronDown size={13} className="text-[#8c8077]" />
-            </button>
-
-            {activeDropdown === "vendor" && (
-              <div className="absolute left-0 mt-1 z-30 w-44 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
-                <button
-                  onClick={() => handleSelectVendor("")}
-                  className={`block w-full px-3.5 py-1.5 text-left text-[12px] font-semibold transition cursor-pointer ${
-                    !vendorFilter
-                      ? "bg-[#fff3ec] text-[#d96834] font-bold"
-                      : "text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
-                  }`}
-                  type="button"
-                >
-                  All Vendors
-                </button>
-                {vendors.map((vendor) => (
-                  <button
-                    key={vendor.id}
-                    onClick={() => handleSelectVendor(vendor.id)}
-                    className={`block w-full px-3.5 py-1.5 text-left text-[12px] font-semibold transition cursor-pointer ${
-                      vendorFilter === vendor.id
-                        ? "bg-[#fff3ec] text-[#d96834] font-bold"
-                        : "text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
-                    }`}
-                    type="button"
-                  >
-                    {vendor.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* City Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setActiveDropdown(activeDropdown === "city" ? null : "city")}
-              className="inline-flex h-9 items-center justify-between gap-1.5 rounded-[8px] border border-[#d8ccc2] bg-white px-3 text-[12px] font-semibold text-[#4d423b] outline-none transition hover:bg-[#faf9f8] cursor-pointer"
-              type="button"
-            >
-              <span>{cityFilter ? `City: ${cityFilter}` : "All Cities"}</span>
-              <ChevronDown size={13} className="text-[#8c8077]" />
-            </button>
-
-            {activeDropdown === "city" && (
-              <div className="absolute left-0 mt-1 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
-                <button
-                  onClick={() => handleSelectCity("")}
-                  className={`block w-full px-3.5 py-1.5 text-left text-[12px] font-semibold transition cursor-pointer ${
-                    !cityFilter
-                      ? "bg-[#fff3ec] text-[#d96834] font-bold"
-                      : "text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
-                  }`}
-                  type="button"
-                >
-                  All Cities
-                </button>
-                {cities.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => handleSelectCity(c)}
-                    className={`block w-full px-3.5 py-1.5 text-left text-[12px] font-semibold transition cursor-pointer ${
-                      cityFilter === c
-                        ? "bg-[#fff3ec] text-[#d96834] font-bold"
-                        : "text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
-                    }`}
-                    type="button"
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <label className="relative min-w-[180px]">
+            <span className="sr-only">Filter by city</span>
+            <input
+              list="vendor-city-filter-options"
+              type="text"
+              value={cityFilter}
+              onChange={(event) => handleSelectCity(event.target.value)}
+              placeholder="Filter by city..."
+              className="h-9 w-full rounded-[8px] border border-[#ddd4cb] bg-white pl-9 pr-4 text-[12px] font-semibold text-[#231913] outline-none transition placeholder:text-[#baaea0] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]"
+            />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#baaea0]">
+              <MapPin size={13} />
+            </span>
+            <datalist id="vendor-city-filter-options">
+              {cities.map((city) => (
+                <option key={city} value={city} />
+              ))}
+            </datalist>
+          </label>
 
           {/* Rating Dropdown */}
           <div className="relative">

@@ -81,9 +81,6 @@ function withinDateRange(value, dateRange) {
 
 function buildFilterOptions(rows) {
   return {
-    vendors: rows
-      .map((row) => ({ id: row.id, name: row.name }))
-      .sort((left, right) => left.name.localeCompare(right.name)),
     cities: [...new Set(rows.map((row) => row.city).filter(Boolean))].sort((left, right) =>
       left.localeCompare(right),
     ),
@@ -122,7 +119,6 @@ async function getAllAdminVendors(baseFilters) {
 export default function VendorsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
-  const [vendorFilter, setVendorFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "All");
@@ -133,7 +129,6 @@ export default function VendorsPage() {
   const [stats, setStats] = useState([]);
   const [allRows, setAllRows] = useState([]);
   const [filterOptions, setFilterOptions] = useState({
-    vendors: [],
     cities: [],
     statuses: [],
   });
@@ -162,14 +157,15 @@ export default function VendorsPage() {
             row.businessType.toLowerCase().includes(searchValue) ||
             row.city.toLowerCase().includes(searchValue);
 
-          const matchesVendor = !vendorFilter || row.id === vendorFilter;
-          const matchesCity = !cityFilter || row.city === cityFilter;
+          const normalizedCityFilter = cityFilter.trim().toLowerCase();
+          const matchesCity =
+            !normalizedCityFilter ||
+            row.city.toLowerCase().includes(normalizedCityFilter);
           const matchesRating = !ratingFilter || row.ratingValue >= Number(ratingFilter);
           const matchesDate = withinDateRange(row.joinDateValue, dateRange);
 
           return (
             matchesSearch &&
-            matchesVendor &&
             matchesCity &&
             matchesRating &&
             matchesDate &&
@@ -178,7 +174,7 @@ export default function VendorsPage() {
         }),
         activeTab,
       ),
-    [activeTab, allRows, cityFilter, dateRange, ratingFilter, searchTerm, vendorFilter],
+    [activeTab, allRows, cityFilter, dateRange, ratingFilter, searchTerm],
   );
 
   const paginatedRows = useMemo(() => {
@@ -251,7 +247,7 @@ export default function VendorsPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, vendorFilter, cityFilter, ratingFilter, activeTab, timeframe, customStart, customEnd]);
+  }, [searchTerm, cityFilter, ratingFilter, activeTab, timeframe, customStart, customEnd]);
 
   function handleCustomDateChange(start, end) {
     setCustomStart(start);
@@ -275,7 +271,6 @@ export default function VendorsPage() {
 
   function handleResetFilters() {
     setSearchTerm("");
-    setVendorFilter("");
     setCityFilter("");
     setRatingFilter("");
     setActiveTab("All");
@@ -382,8 +377,6 @@ export default function VendorsPage() {
         <VendorsToolbar
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
-          vendorFilter={vendorFilter}
-          onVendorFilterChange={setVendorFilter}
           cityFilter={cityFilter}
           onCityFilterChange={setCityFilter}
           ratingFilter={ratingFilter}
@@ -393,7 +386,6 @@ export default function VendorsPage() {
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onResetFilters={handleResetFilters}
-          vendors={filterOptions.vendors}
           cities={filterOptions.cities}
         />
 

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-export default function TopPerformingVendorsCard({ vendors = [] }) {
+export default function TopPerformingVendorsCard({ vendors = [], onViewAll }) {
   const navigate = useNavigate();
   const topPerformingVendors = [...vendors]
     .sort((left, right) => right.revenueValue - left.revenueValue)
@@ -50,7 +50,14 @@ export default function TopPerformingVendorsCard({ vendors = [] }) {
       </div>
 
       <button
-        onClick={() => navigate("/vendors?tab=Top%20Performing")}
+        onClick={() => {
+          if (onViewAll) {
+            onViewAll();
+            return;
+          }
+
+          navigate("/vendors?tab=Top%20Performing");
+        }}
         className="mt-6 w-full text-center text-[12px] font-bold text-[#cf6e38] hover:underline cursor-pointer outline-none"
         type="button"
       >

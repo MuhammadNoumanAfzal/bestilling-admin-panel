@@ -10,7 +10,6 @@ import {
   getAdminVendorsRequest,
   updateVendorStatusRequest,
 } from "../api/vendorsApi.js";
-import RecentVendorRequestsCard from "../components/RecentVendorRequestsCard.jsx";
 import TopPerformingVendorsCard from "../components/TopPerformingVendorsCard.jsx";
 import VendorsTable from "../components/VendorsTable.jsx";
 import VendorsToolbar from "../components/VendorsToolbar.jsx";
@@ -193,12 +192,9 @@ export default function VendorsPage() {
   }, [currentPage, filteredRows.length]);
 
   useEffect(() => {
-    const tabFromUrl = searchParams.get("tab");
-    if ((tabFromUrl || "All") !== activeTab) {
-      setActiveTab(tabFromUrl || "All");
-      setCurrentPage(1);
-    }
-  }, [activeTab, searchParams]);
+    const tabFromUrl = searchParams.get("tab") || "All";
+    setActiveTab(tabFromUrl);
+  }, [searchParams]);
 
   useEffect(() => {
     let isMounted = true;
@@ -367,17 +363,6 @@ export default function VendorsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="flex justify-end">
-        <DateFilterDropdown
-          selectedFilter={timeframe}
-          onChangeFilter={setTimeframe}
-          startDate={customStart}
-          endDate={customEnd}
-          onCustomDateChange={handleCustomDateChange}
-          clearFilterValue={ALL_DATES_FILTER}
-        />
-      </section>
-
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
           {loadError}
@@ -406,6 +391,9 @@ export default function VendorsPage() {
           onRatingFilterChange={setRatingFilter}
           timeframeFilter={timeframe}
           onTimeframeFilterChange={setTimeframe}
+          customStart={customStart}
+          customEnd={customEnd}
+          onCustomDateChange={handleCustomDateChange}
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onResetFilters={handleResetFilters}
@@ -431,9 +419,11 @@ export default function VendorsPage() {
         </div>
       </section>
 
-      <section className="grid gap-6 grid-cols-1 md:grid-cols-3">
-        <TopPerformingVendorsCard vendors={sidePanels.topPerformers} />
-        <RecentVendorRequestsCard vendors={sidePanels.recentRequests} />
+      <section className="grid gap-6 grid-cols-1 xl:grid-cols-[minmax(0,1.4fr)_360px]">
+        <TopPerformingVendorsCard
+          onViewAll={() => handleTabChange("Top Performing")}
+          vendors={sidePanels.topPerformers}
+        />
         <VendorStatusOverviewCard breakdown={sidePanels.statusBreakdown} vendors={filteredRows} />
       </section>
     </div>

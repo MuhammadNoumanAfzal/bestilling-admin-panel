@@ -1,4 +1,5 @@
-import { ClipboardList, Users } from "lucide-react";
+import { ClipboardList, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { useMemo, useState } from "react";
 
 const statusClasses = {
   Delivered: "border-[#bfe5cc] bg-[#f3fbf6] text-[#228653]",
@@ -9,7 +10,35 @@ const statusClasses = {
   Canceled: "border-[#d8d2cc] bg-[#f7f4f2] text-[#6f645d]",
 };
 
+const PAGE_SIZE = 5;
+
+function PaginationButton({ children, disabled = false, onClick }) {
+  return (
+    <button
+      className={[
+        "inline-flex h-8 min-w-8 items-center justify-center rounded-[8px] border px-2 text-[12px] font-semibold transition",
+        disabled
+          ? "cursor-not-allowed border-[#ebe1d9] bg-[#f7f3f0] text-[#c4b8b0]"
+          : "border-[#e6dad1] bg-white text-[#635751] hover:bg-[#faf6f2]",
+      ].join(" ")}
+      disabled={disabled}
+      onClick={onClick}
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function VendorRecentOrdersSection({ orders }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalItems = orders.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return orders.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [currentPage, orders]);
+
   return (
     <section className="space-y-4">
       <div className="flex items-center gap-2 px-1">
@@ -35,7 +64,7 @@ export default function VendorRecentOrdersSection({ orders }) {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
+              {paginatedOrders.map((order) => (
                 <tr key={`${order.id}-${order.customer}-${order.event}`} className="border-b border-[#ece4dd] last:border-b-0">
                   <td className="px-5 py-4 text-[15px] font-extrabold text-[#1f1711]">{order.id}</td>
                   <td className="px-5 py-4 text-[15px] font-medium text-[#1f1711]">{order.customer}</td>
@@ -64,6 +93,26 @@ export default function VendorRecentOrdersSection({ orders }) {
             </tbody>
           </table>
         </div>
+
+        {totalItems > PAGE_SIZE ? (
+          <div className="flex flex-col gap-3 border-t border-[#ece4dd] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[13px] text-[#6f645d]">
+              Showing {(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, totalItems)} of {totalItems} orders
+            </p>
+
+            <div className="flex items-center gap-2">
+              <PaginationButton disabled={currentPage === 1} onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}>
+                <ChevronLeft size={14} />
+              </PaginationButton>
+              <span className="inline-flex h-8 items-center justify-center rounded-[8px] bg-[#fff4ec] px-3 text-[12px] font-bold text-[#cf6e38]">
+                {currentPage} / {totalPages}
+              </span>
+              <PaginationButton disabled={currentPage === totalPages} onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}>
+                <ChevronRight size={14} />
+              </PaginationButton>
+            </div>
+          </div>
+        ) : null}
       </div>
     </section>
   );

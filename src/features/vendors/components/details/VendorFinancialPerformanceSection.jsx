@@ -1,10 +1,12 @@
 import { BadgeDollarSign, CalendarDays, CircleAlert } from "lucide-react";
 
 function RevenueChart({ series }) {
-  const maxValue = Math.max(...series.map((item) => item.value), 1);
+  const safeSeries = Array.isArray(series) ? series : [];
+  const maxValue = Math.max(...safeSeries.map((item) => Number(item?.value ?? 0)), 1);
   const chartHeight = 180;
-  const chartWidth = 360;
-  const ticks = [10000, 7500, 5000, 2500, 0];
+  const chartWidth = Math.max(safeSeries.length * 52, 360);
+  const tickStep = maxValue > 0 ? Math.ceil(maxValue / 4) : 1;
+  const ticks = [tickStep * 4, tickStep * 3, tickStep * 2, tickStep, 0];
 
   function buildBarPath(x, y, width, height, radius) {
     const safeRadius = Math.min(radius, width / 2, height);
@@ -23,15 +25,16 @@ function RevenueChart({ series }) {
   }
 
   return (
-    <div className="grid grid-cols-[42px_minmax(0,1fr)] gap-3">
+    <div className="grid min-w-0 grid-cols-[52px_minmax(0,1fr)] gap-3">
       <div className="flex h-[180px] flex-col justify-between">
         {ticks.map((tick) => (
           <span key={tick} className="text-[10px] font-medium text-[#7a6e67]">
-            ${tick}
+            NOK {tick.toLocaleString("en-GB")}
           </span>
         ))}
       </div>
-      <div className="grid grid-rows-[180px_auto]">
+      <div className="min-w-0 overflow-x-auto">
+        <div className="grid min-w-[360px] grid-rows-[180px_auto]">
         <svg aria-hidden="true" className="h-[180px] w-full" preserveAspectRatio="none" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
           {ticks.map((tick, index) => {
             const y = (chartHeight / (ticks.length - 1)) * index;
@@ -48,21 +51,22 @@ function RevenueChart({ series }) {
               />
             );
           })}
-          {series.map((item, index) => {
-            const step = chartWidth / series.length;
+          {safeSeries.map((item, index) => {
+            const step = chartWidth / Math.max(safeSeries.length, 1);
             const width = 32;
-            const height = Math.max((item.value / maxValue) * (chartHeight - 10), 16);
+            const height = Math.max(((Number(item?.value ?? 0)) / maxValue) * (chartHeight - 10), 16);
             const x = step * index + (step - width) / 2;
             const y = chartHeight - height;
             return <path key={item.label} d={buildBarPath(x, y, width, height, 10)} fill="#d46a37" />;
           })}
         </svg>
         <div className="flex gap-3 pt-2">
-          {series.map((item) => (
+          {safeSeries.map((item) => (
             <div key={item.label} className="flex flex-1 justify-center">
               <span className="text-[10px] font-semibold text-[#5c5048]">{item.label}</span>
             </div>
           ))}
+        </div>
         </div>
       </div>
     </div>

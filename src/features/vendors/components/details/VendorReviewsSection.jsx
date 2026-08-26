@@ -1,5 +1,7 @@
-import { ChevronDown, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { useMemo, useState } from "react";
+import DateFilterDropdown from "../../../dashboard/components/DateFilterDropdown.jsx";
+import { getDateRangeForFilter } from "../../../dashboard/data/dashboardData.js";
 
 function StarRow({ item }) {
   return (
@@ -51,24 +53,31 @@ function ReviewCard({ review }) {
 
 export default function VendorReviewsSection({ summary }) {
   const [activeFilter, setActiveFilter] = useState(summary.activeFilter || "All");
-  const [periodFilter, setPeriodFilter] = useState(summary.periodFilter || "Last 30 days");
+  const [periodFilter, setPeriodFilter] = useState(summary.periodFilter || "Last Month");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
 
   const filteredReviews = useMemo(() => {
+    const dateRange =
+      periodFilter === "All time"
+        ? null
+        : getDateRangeForFilter(periodFilter, customStart, customEnd);
+
     return summary.reviewEntries.filter((review) => {
       const matchesRating = activeFilter === "All" || review.rating === Number(activeFilter);
       const reviewDate = new Date(review.createdAt || 0);
-      const now = new Date("2026-07-27T12:00:00Z");
-
-      let matchesPeriod = true;
-      if (periodFilter === "Last 7 days") {
-        matchesPeriod = now.getTime() - reviewDate.getTime() <= 7 * 24 * 60 * 60 * 1000;
-      } else if (periodFilter === "Last 30 days") {
-        matchesPeriod = now.getTime() - reviewDate.getTime() <= 30 * 24 * 60 * 60 * 1000;
-      }
+      const reviewTime = reviewDate.getTime();
+      const startTime = dateRange?.start ? new Date(dateRange.start).getTime() : null;
+      const endTime = dateRange?.end ? new Date(dateRange.end).getTime() : null;
+      const matchesPeriod =
+        !dateRange ||
+        (!Number.isNaN(reviewTime) &&
+          (startTime == null || reviewTime >= startTime) &&
+          (endTime == null || reviewTime <= endTime));
 
       return matchesRating && matchesPeriod;
     });
-  }, [activeFilter, periodFilter, summary.reviewEntries]);
+  }, [activeFilter, customEnd, customStart, periodFilter, summary.reviewEntries]);
 
   return (
     <section className="space-y-4">
@@ -132,27 +141,25 @@ export default function VendorReviewsSection({ summary }) {
               </button>
             ))}
           </div>
-          <div className="flex gap-2">
-            <button
-              className="inline-flex items-center gap-1 rounded-[8px] border border-[#ddd4cb] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#4d423b] shadow-[0_2px_6px_rgba(53,34,20,0.03)]"
-              onClick={() =>
-                setPeriodFilter((current) =>
-                  current === "Last 30 days"
-                    ? "Last 7 days"
-                    : current === "Last 7 days"
-                      ? "All time"
-                      : "Last 30 days")
-              }
-              type="button"
-            >
-              {periodFilter}
-              <ChevronDown size={13} />
-            </button>
+          <div className="flex flex-wrap gap-2">
+            <DateFilterDropdown
+              clearFilterValue="All time"
+              endDate={customEnd}
+              onChangeFilter={setPeriodFilter}
+              onCustomDateChange={(start, end) => {
+                setCustomStart(start);
+                setCustomEnd(end);
+              }}
+              selectedFilter={periodFilter}
+              startDate={customStart}
+            />
             <button
               className="rounded-[8px] border border-[#ddd4cb] bg-[#faf7f4] px-3 py-1.5 text-[12px] font-semibold text-[#4d423b] shadow-[0_2px_6px_rgba(53,34,20,0.03)]"
               onClick={() => {
                 setActiveFilter("All");
-                setPeriodFilter(summary.periodFilter || "Last 30 days");
+                setPeriodFilter(summary.periodFilter || "Last Month");
+                setCustomStart("");
+                setCustomEnd("");
               }}
               type="button"
             >

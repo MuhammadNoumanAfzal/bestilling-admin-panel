@@ -593,25 +593,6 @@ function normalizePaymentRow(item, contractInvoice = null) {
   const orderAmountSource = item?.orderAmount || contractInvoice?.settlement?.grossOrderAmount;
   const commissionSource =
     item?.platformCommission || contractInvoice?.settlement?.commission?.totalCommission;
-  const vendorAmountSource = item?.vendorAmount || contractInvoice?.settlement?.vendorPayable;
-  const orderAmountNumber = parseMoneyAmount(orderAmountSource);
-  const commissionAmountNumber = parseMoneyAmount(commissionSource);
-  const vendorAmountNumber = parseMoneyAmount(item?.vendorAmount);
-  const computedVendorNet =
-    Number.isFinite(orderAmountNumber) &&
-    Number.isFinite(commissionAmountNumber) &&
-    commissionAmountNumber > 0
-      ? Math.max(orderAmountNumber - commissionAmountNumber, 0)
-      : Number.NaN;
-  const shouldUseComputedVendorNet =
-    Number.isFinite(computedVendorNet) &&
-    (!Number.isFinite(vendorAmountNumber) ||
-      Math.abs(vendorAmountNumber - orderAmountNumber) < 0.01);
-  const rowCurrency =
-    item?.vendorAmount?.currency ||
-    item?.orderAmount?.currency ||
-    item?.platformCommission?.currency ||
-    "NOK";
   const resolvedOrderStatus =
     item?.order?.delivery?.deliveredAt ||
     item?.order?.deliveredAt
@@ -644,10 +625,13 @@ function normalizePaymentRow(item, contractInvoice = null) {
         item?.platformCommission,
         contractInvoice?.settlement?.commission?.totalCommission,
       ) || "NOK 0.00",
-    vendorAmount: shouldUseComputedVendorNet
-      ? formatComputedMoney(computedVendorNet, rowCurrency)
-      : resolvePreferredMoneyLabel(item?.vendorAmount, contractInvoice?.settlement?.vendorPayable) ||
-        "NOK 0.00",
+    vendorAmount:
+      resolveVendorReceivesLabel({
+        primaryVendorAmount: item?.vendorAmount,
+        fallbackVendorPayable: contractInvoice?.settlement?.vendorPayable,
+        orderAmount: orderAmountSource,
+        commissionAmount: commissionSource,
+      }) || "NOK 0.00",
     customerPaymentStatus: deriveCustomerPaymentStatus(item),
     vendorPayoutStatus: deriveVendorPayoutStatus(item),
     createdAt: item?.createdAt || "",

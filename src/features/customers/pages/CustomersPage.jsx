@@ -89,7 +89,7 @@ export default function CustomersPage() {
         setPageInfo(response.pageInfo);
         setFilterOptions({
           cities: response.filterOptions.cities,
-          statuses: response.filterOptions.statuses.map(toDisplayStatus),
+          statuses: [...new Set(response.filterOptions.statuses.map(toDisplayStatus).filter(Boolean))],
         });
       } catch (error) {
         if (isMounted) {
@@ -158,17 +158,18 @@ export default function CustomersPage() {
   async function handleToggleStatus(row) {
     const isBlocked = row.status === "Blocked";
 
-    const confirmation = await Swal.fire({
-      icon: "warning",
-      title: isBlocked ? "Unblock customer?" : "Block customer?",
-      text: isBlocked
-        ? `Restore access for ${row.name}?`
-        : `Block ${row.name} from logging in and placing new orders?`,
-      showCancelButton: true,
-      confirmButtonText: isBlocked ? "Yes, unblock" : "Yes, block",
-      cancelButtonText: "Cancel",
-      confirmButtonColor: isBlocked ? "#2b9e62" : "#d83f3f",
-      cancelButtonColor: "#c8b9aa",
+      const confirmation = await Swal.fire({
+        icon: "warning",
+        title: isBlocked ? "Unblock customer?" : "Block customer?",
+        text: isBlocked
+          ? `Restore access for ${row.name}?`
+          : `Block ${row.name} from logging in and placing new orders?`,
+        width: "min(32rem, calc(100vw - 2rem))",
+        showCancelButton: true,
+        confirmButtonText: isBlocked ? "Yes, unblock" : "Yes, block",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: isBlocked ? "#2b9e62" : "#d83f3f",
+        cancelButtonColor: "#c8b9aa",
     });
 
     if (!confirmation.isConfirmed) {
@@ -183,6 +184,7 @@ export default function CustomersPage() {
         input: "text",
         inputLabel: "Optional reason",
         inputPlaceholder: "Add a note for why this customer is being blocked",
+        width: "min(32rem, calc(100vw - 2rem))",
         showCancelButton: true,
         confirmButtonText: "Continue",
         cancelButtonText: "Cancel",

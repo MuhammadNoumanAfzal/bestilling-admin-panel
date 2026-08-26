@@ -95,6 +95,8 @@ function formatDateTimeLabel(value) {
 
 function normalizeCustomerRow(item) {
   const fullName = item?.fullName || "Unknown customer";
+  const resolvedCity =
+    `${item?.city ?? ""}`.trim() || `${item?.defaultAddress?.city ?? ""}`.trim() || "Not provided";
 
   return {
     id: item?.id || "",
@@ -102,7 +104,7 @@ function normalizeCustomerRow(item) {
     fullName,
     email: item?.email || "",
     phone: item?.phone || "",
-    city: item?.city || "Unknown",
+    city: resolvedCity,
     totalOrders: Number(item?.totalOrders ?? 0),
     amount: item?.totalSpend?.formatted || "NOK 0.00",
     averageOrderValue: item?.averageOrderValue?.formatted || "NOK 0.00",
@@ -238,6 +240,7 @@ function normalizeCustomerDetail(customer) {
             content: item?.content || "",
             avatarUrl: item?.vendor?.avatarUrl || "",
             createdAt: item?.createdAt ? formatDateLabel(item.createdAt) : "",
+            createdAtValue: item?.createdAt || "",
           }))
         : [],
     },

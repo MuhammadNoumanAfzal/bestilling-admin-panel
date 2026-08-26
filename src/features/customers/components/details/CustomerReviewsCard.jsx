@@ -1,13 +1,21 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, MessageSquare, Star } from "lucide-react";
+import { MessageSquare, Star } from "lucide-react";
+import DateFilterDropdown from "../../../dashboard/components/DateFilterDropdown.jsx";
+import { getDateRangeForFilter } from "../../../dashboard/data/dashboardData.js";
 
-const TIMEFRAMES = ["Last 30 days", "Last 3 Months", "All time"];
+const ALL_DATES_FILTER = "All Dates";
 
 export default function CustomerReviewsCard({ reviewsData = [] }) {
   const [ratingFilter, setRatingFilter] = useState("All");
-  const [timeframe, setTimeframe] = useState("Last 30 days");
-  const [dropOpen, setDropOpen] = useState(false);
+  const [timeframe, setTimeframe] = useState(ALL_DATES_FILTER);
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
   const [showAll, setShowAll] = useState(false);
+
+  const dateRange = useMemo(
+    () => (timeframe === ALL_DATES_FILTER ? null : getDateRangeForFilter(timeframe, customStart, customEnd)),
+    [customEnd, customStart, timeframe],
+  );
 
   const filteredReviews = useMemo(() => {
     let result = [...reviewsData];
@@ -16,8 +24,20 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
       result = result.filter((review) => review.rating === Number.parseInt(ratingFilter, 10));
     }
 
+    if (dateRange?.start || dateRange?.end) {
+      result = result.filter((review) => {
+        const createdAt = review.createdAtValue ? new Date(review.createdAtValue) : null;
+
+        if (!createdAt || Number.isNaN(createdAt.getTime())) {
+          return false;
+        }
+
+        return createdAt >= dateRange.start && createdAt <= dateRange.end;
+      });
+    }
+
     return result;
-  }, [ratingFilter, reviewsData]);
+  }, [dateRange, ratingFilter, reviewsData]);
 
   const displayedReviews = useMemo(() => {
     if (showAll) {
@@ -29,8 +49,14 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
 
   function handleResetFilters() {
     setRatingFilter("All");
-    setTimeframe("Last 30 days");
-    setDropOpen(false);
+    setTimeframe(ALL_DATES_FILTER);
+    setCustomStart("");
+    setCustomEnd("");
+  }
+
+  function handleCustomDateChange(start, end) {
+    setCustomStart(start);
+    setCustomEnd(end);
   }
 
   return (
@@ -74,41 +100,14 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
           </div>
 
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-end">
-            <div className="relative">
-              <button
-                onClick={() => setDropOpen((current) => !current)}
-                type="button"
-                className="inline-flex h-9 w-full cursor-pointer items-center justify-between gap-1.5 rounded-[10px] border border-[#e0d5cc] bg-white px-4 text-[12px] font-bold text-[#4d423b] shadow-sm transition duration-150 hover:bg-[#faf9f8] active:scale-95 sm:w-auto"
-              >
-                <span>{timeframe}</span>
-                <ChevronDown size={13} />
-              </button>
-
-              {dropOpen ? (
-                <>
-                  <div className="fixed inset-0 z-20" onClick={() => setDropOpen(false)} />
-                  <div className="absolute right-0 z-30 mt-1.5 w-full rounded-[10px] border border-[#e0d5cc] bg-white py-1 shadow-[0_8px_20px_rgba(53,34,20,0.1)] sm:w-36">
-                    {TIMEFRAMES.map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => {
-                          setTimeframe(option);
-                          setDropOpen(false);
-                        }}
-                        type="button"
-                        className={`block w-full px-3.5 py-2 text-left text-[12px] font-bold transition ${
-                          timeframe === option
-                            ? "bg-[#fff3ec] text-[#d96834]"
-                            : "text-[#6f655e] hover:bg-[#faf5f1]"
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              ) : null}
-            </div>
+            <DateFilterDropdown
+              clearFilterValue={ALL_DATES_FILTER}
+              endDate={customEnd}
+              onChangeFilter={setTimeframe}
+              onCustomDateChange={handleCustomDateChange}
+              selectedFilter={timeframe}
+              startDate={customStart}
+            />
 
             <button
               onClick={handleResetFilters}

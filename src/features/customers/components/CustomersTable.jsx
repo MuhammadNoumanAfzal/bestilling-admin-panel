@@ -43,26 +43,11 @@ export default function CustomersTable({
   totalItems,
 }) {
   const navigate = useNavigate();
-  const [selectedIds, setSelectedIds] = useState([]);
   const [activeMenuId, setActiveMenuId] = useState(null);
 
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, totalItems);
-
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedIds(rows.map((r) => r.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleSelectRow = (id) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
 
   const buildPaginationItems = () => {
     const items = [];
@@ -85,17 +70,9 @@ export default function CustomersTable({
   return (
     <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-4">
       <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-[900px] border-collapse">
+        <table className="w-full min-w-[860px] border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="w-10 px-2 py-4 text-center">
-                <input
-                  type="checkbox"
-                  checked={rows.length > 0 && selectedIds.length === rows.length}
-                  onChange={handleSelectAll}
-                  className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
-                />
-              </th>
               <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] w-32">Customer ID</th>
               <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] w-52">Customer</th>
               <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Phone</th>
@@ -110,30 +87,19 @@ export default function CustomersTable({
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={9}>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={8}>
                   No customers match the current filters.
                 </td>
               </tr>
             ) : (
               rows.map((row) => {
-                const isSelected = selectedIds.includes(row.id);
                 const isMenuOpen = activeMenuId === row.id;
 
                 return (
                   <tr
                     key={row.id}
-                    className={`border-b border-[#f1e9e2] last:border-b-0 transition hover:bg-[#faf9f8] ${
-                      isSelected ? "bg-[#fffcf8]" : ""
-                    }`}
+                    className="border-b border-[#f1e9e2] last:border-b-0 transition hover:bg-[#faf9f8]"
                   >
-                    <td className="px-2 py-4 text-center align-middle">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleSelectRow(row.id)}
-                        className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
-                      />
-                    </td>
                     <td className="px-2 py-4 text-[15px] font-bold text-[#18120f] align-middle">
                       <button
                         onClick={() => navigate(`/customers/${encodeURIComponent(row.id)}`)}

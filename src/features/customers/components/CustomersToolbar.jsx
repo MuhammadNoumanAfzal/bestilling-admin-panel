@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, RotateCw, Search } from "lucide-react";
+import { ChevronDown, MapPin, Search } from "lucide-react";
 
 export default function CustomersToolbar({
   searchTerm,
@@ -39,19 +39,15 @@ export default function CustomersToolbar({
   };
 
   const statusOptions = [
-    { label: "All Status", value: "" },
+    { label: "Any Status", value: "" },
     ...statuses.map((status) => ({
       label: status,
       value: status,
     })),
   ];
 
-  // Check if any specific filter is active to highlight "All" tab vs custom filters
-  const isAnyFilterActive = statusFilter || cityFilter;
-
   return (
     <div ref={toolbarRef} className="flex flex-col gap-4 border-b border-[#e7ddd5] bg-[#fcfbfa] p-4 select-none">
-      {/* Top Search bar row */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="relative flex-1 min-w-0 max-w-sm">
           <input
@@ -66,33 +62,16 @@ export default function CustomersToolbar({
           </span>
         </div>
 
-        {/* Reset filters */}
         <button
           onClick={onResetFilters}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-[8px] border border-[#d8ccc2] bg-white text-[#6f655e] transition hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer outline-none self-end md:self-auto"
-          title="Reset Filters"
+          className="inline-flex h-9 items-center justify-center rounded-[8px] border border-[#d8ccc2] bg-white px-4 text-[12px] font-bold text-[#4d423b] transition hover:bg-[#faf9f8] cursor-pointer outline-none self-end md:self-auto"
           type="button"
         >
-          <RotateCw size={14} />
+          Clear Filters
         </button>
       </div>
 
-      {/* Filters options row */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* All Tab */}
-        <button
-          onClick={onResetFilters}
-          className={`inline-flex h-9 items-center justify-center rounded-[8px] px-4 text-[12px] font-bold transition cursor-pointer outline-none ${
-            !isAnyFilterActive
-              ? "bg-[#cf6e38] text-white"
-              : "border border-[#d8ccc2] bg-white text-[#4d423b] hover:bg-[#faf9f8]"
-          }`}
-          type="button"
-        >
-          All
-        </button>
-
-        {/* Status Dropdown */}
         <div className="relative">
           <button
             onClick={() => setActiveDropdown(activeDropdown === "status" ? null : "status")}
@@ -103,7 +82,7 @@ export default function CustomersToolbar({
             }`}
             type="button"
           >
-            <span>{statusFilter ? `Status: ${statusFilter}` : "Status"}</span>
+            <span>{statusFilter ? `Status: ${statusFilter}` : "Customer Status"}</span>
             <ChevronDown size={13} className="text-[#8c8077]" />
           </button>
 
@@ -127,52 +106,24 @@ export default function CustomersToolbar({
           )}
         </div>
 
-        {/* City Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setActiveDropdown(activeDropdown === "city" ? null : "city")}
-            className={`inline-flex h-9 items-center justify-between gap-1.5 rounded-[8px] border px-3 text-[12px] font-semibold outline-none transition hover:bg-[#faf9f8] cursor-pointer ${
-              cityFilter
-                ? "border-[#cf6e38] bg-[#fffcfb] text-[#cf6e38]"
-                : "border-[#d8ccc2] bg-white text-[#4d423b]"
-            }`}
-            type="button"
-          >
-            <span>{cityFilter ? `City: ${cityFilter}` : "City"}</span>
-            <ChevronDown size={13} className="text-[#8c8077]" />
-          </button>
-
-          {activeDropdown === "city" && (
-            <div className="absolute left-0 mt-1 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
-              <button
-                onClick={() => handleSelectCity("")}
-                className={`block w-full px-3.5 py-1.5 text-left text-[12px] font-semibold transition cursor-pointer ${
-                  !cityFilter
-                    ? "bg-[#fff3ec] text-[#d96834] font-bold"
-                    : "text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
-                }`}
-                type="button"
-              >
-                All Cities
-              </button>
-              {cities.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => handleSelectCity(c)}
-                  className={`block w-full px-3.5 py-1.5 text-left text-[12px] font-semibold transition cursor-pointer ${
-                    cityFilter === c
-                      ? "bg-[#fff3ec] text-[#d96834] font-bold"
-                      : "text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
-                  }`}
-                  type="button"
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          )}
+        <div className="relative min-w-[220px] flex-1 sm:max-w-[280px] sm:flex-none">
+          <input
+            className="h-9 w-full rounded-[8px] border border-[#d8ccc2] bg-white pl-9 pr-4 text-[12px] font-semibold text-[#4d423b] outline-none transition placeholder:text-[#8c8077] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]"
+            list="customer-city-filter-options"
+            onChange={(event) => handleSelectCity(event.target.value)}
+            placeholder="Search city..."
+            type="text"
+            value={cityFilter}
+          />
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8c8077]">
+            <MapPin size={13} />
+          </span>
+          <datalist id="customer-city-filter-options">
+            {cities.map((city) => (
+              <option key={city} value={city} />
+            ))}
+          </datalist>
         </div>
-
       </div>
     </div>
   );

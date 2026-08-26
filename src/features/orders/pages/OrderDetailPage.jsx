@@ -22,13 +22,11 @@ import EventInfoCard from "../components/details/EventInfoCard.jsx";
 import OrderSummaryCard from "../components/details/OrderSummaryCard.jsx";
 import {
   addOrderNoteRequest,
-  cancelOrderRequest,
   getCommissionPreviewForOrderRequest,
   getAdminOrderDetailRequest,
   getAdminOrderInvoiceRequest,
   refundOrderRequest,
   updateOrderPaymentStatusRequest,
-  updateOrderStatusRequest,
 } from "../api/ordersApi.js";
 
 function NotesCard({ notes }) {
@@ -233,41 +231,6 @@ export default function OrderDetailPage() {
       const result = await updateOrderPaymentStatusRequest({
         orderId: order.id,
         paymentStatus: "PAID",
-      });
-      return result.message;
-    });
-  }
-
-  async function handleMarkDelivered() {
-    await runAction(async () => {
-      const result = await updateOrderStatusRequest({
-        orderId: order.id,
-        status: "DELIVERED",
-      });
-      return result.message;
-    });
-  }
-
-  async function handleCancelOrder() {
-    const confirmation = await Swal.fire({
-      title: "Cancel this order?",
-      input: "text",
-      inputLabel: "Cancellation reason",
-      inputPlaceholder: "Add a reason for the cancellation",
-      showCancelButton: true,
-      confirmButtonText: "Cancel order",
-      confirmButtonColor: "#d83f3f",
-      cancelButtonColor: "#c8b9aa",
-    });
-
-    if (!confirmation.isConfirmed) {
-      return;
-    }
-
-    await runAction(async () => {
-      const result = await cancelOrderRequest({
-        orderId: order.id,
-        reason: confirmation.value || "",
       });
       return result.message;
     });
@@ -506,18 +469,6 @@ export default function OrderDetailPage() {
               </button>
             ) : null}
 
-            {order.actions.canMarkDelivered ? (
-              <button
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] bg-[#cf6e38] px-4 text-[13px] font-semibold text-white transition hover:bg-[#b95c29] disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={isWorking}
-                onClick={handleMarkDelivered}
-                type="button"
-              >
-                <CheckCircle size={15} />
-                Mark Delivered
-              </button>
-            ) : null}
-
             {order.actions.canRefund ? (
               <button
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] border border-[#eadccd] bg-white px-4 text-[13px] font-semibold text-[#8a5b16] transition hover:bg-[#fff8f1] disabled:cursor-not-allowed disabled:opacity-70"
@@ -530,17 +481,6 @@ export default function OrderDetailPage() {
               </button>
             ) : null}
 
-            {order.actions.canCancel ? (
-              <button
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] border border-[#f3d0d0] bg-white px-4 text-[13px] font-semibold text-[#d83f3f] transition hover:bg-[#fff7f7] disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={isWorking}
-                onClick={handleCancelOrder}
-                type="button"
-              >
-                <XCircle size={15} />
-                Cancel Order
-              </button>
-            ) : null}
           </div>
         </div>
       </section>

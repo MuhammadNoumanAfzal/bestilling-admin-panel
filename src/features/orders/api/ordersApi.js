@@ -802,13 +802,73 @@ export async function getAdminOrdersRequest(filters) {
     throw new Error("Unable to load orders.");
   }
 
+  const responseItems = Array.isArray(response.items) ? response.items : [];
+  const enrichedItems = await Promise.all(
+    responseItems.map(async (item) => {
+      const orderId = item?.id;
+
+      if (!orderId) {
+        return item;
+      }
+
+      try {
+        const fallbackData = await executeProtectedGraphqlRequest(
+          ADMIN_ORDER_STATUS_FALLBACK_QUERY,
+          {
+            search: `${orderId}`,
+            page: 1,
+            pageSize: 20,
+          },
+        );
+        const fallbackStatus = findFallbackPaymentOrderStatus(
+          fallbackData?.adminPayments?.items,
+          orderId,
+        );
+        const resolvedStatus = resolveMostAdvancedLifecycleStatus(
+          item?.status,
+          item?.fulfillmentStatus,
+          item?.delivery?.status,
+          fallbackStatus,
+        );
+
+        return resolvedStatus
+          ? {
+              ...item,
+              status: resolvedStatus,
+              fulfillmentStatus:
+                resolveMostAdvancedLifecycleStatus(
+                  item?.fulfillmentStatus,
+                  item?.delivery?.status,
+                  item?.status,
+                  fallbackStatus,
+                ) || resolvedStatus,
+              delivery: item?.delivery
+                ? {
+                    ...item.delivery,
+                    status:
+                      resolveMostAdvancedLifecycleStatus(
+                        item?.delivery?.status,
+                        item?.fulfillmentStatus,
+                        item?.status,
+                        fallbackStatus,
+                      ) || resolvedStatus,
+                  }
+                : item?.delivery,
+            }
+          : item;
+      } catch {
+        return item;
+      }
+    }),
+  );
+
   return {
-    rows: Array.isArray(response.items) ? response.items.map(normalizeOrderRow) : [],
+    rows: enrichedItems.map(normalizeOrderRow),
     summaryCards: normalizeSummary(response.summary),
     pageInfo: {
       page: Number(filters?.page ?? 1),
       pageSize: Number(filters?.limit ?? 10),
-      totalItems: Number(response?.pageInfo?.totalItems ?? response?.items?.length ?? 0),
+      totalItems: Number(response?.pageInfo?.totalItems ?? responseItems.length ?? 0),
       totalPages: Number(response?.pageInfo?.totalPages ?? 1),
       hasNextPage: Boolean(response?.pageInfo?.hasNextPage),
       hasPreviousPage: Boolean(response?.pageInfo?.hasPreviousPage),

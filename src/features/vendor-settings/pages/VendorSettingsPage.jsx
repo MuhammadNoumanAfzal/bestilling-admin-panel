@@ -5,7 +5,6 @@ import {
   ArrowUp,
   Banknote,
   ChefHat,
-  Clock3,
   Globe2,
   Languages,
   LayoutList,
@@ -25,7 +24,6 @@ import {
   deleteFoodTypeRequest,
   deleteLanguageRequest,
   deleteOccasionRequest,
-  deleteTimeZoneRequest,
   deleteVendorCategoryRequest,
   getVendorSettingsTaxonomyRequest,
   saveAllergenRequest,
@@ -36,7 +34,6 @@ import {
   saveFoodTypeRequest,
   saveLanguageRequest,
   saveOccasionRequest,
-  saveTimeZoneRequest,
   saveVendorCategoryRequest,
 } from "../api/vendorSettingsApi.js";
 import { mapVendorSettingsTaxonomy } from "../api/vendorSettingsMappers.js";
@@ -53,7 +50,7 @@ const SECTION_GROUPS = [
     title: "Vendor Profile Master Data",
     subtitle:
       "Controls the approved options vendors can select for operating information and regional preferences.",
-    sectionKeys: ["cuisineTypes", "businessTypes", "languages", "currencies", "timeZones"],
+    sectionKeys: ["cuisineTypes", "businessTypes", "languages", "currencies"],
   },
 ];
 
@@ -65,7 +62,7 @@ const SECTION_CONFIG = [
     subtitle: "Controls the main category picker vendors use when creating menus and add-ons.",
     icon: LayoutList,
     emptyLabel: "No vendor categories yet.",
-    addLabel: "Add category",
+    addLabel: "Add Category",
     save: saveVendorCategoryRequest,
     remove: deleteVendorCategoryRequest,
     deleteKey: "id",
@@ -89,7 +86,7 @@ const SECTION_CONFIG = [
     subtitle: "Shows up in vendor food type multi-selects and browse classification.",
     icon: ChefHat,
     emptyLabel: "No food types yet.",
-    addLabel: "Add food type",
+    addLabel: "Add Food Type",
     save: saveFoodTypeRequest,
     remove: deleteFoodTypeRequest,
     deleteKey: "id",
@@ -113,7 +110,7 @@ const SECTION_CONFIG = [
     subtitle: "Lets vendors map menus to occasions like wedding, meeting, and party.",
     icon: AlarmClockPlus,
     emptyLabel: "No occasions yet.",
-    addLabel: "Add occasion",
+    addLabel: "Add Occasion",
     save: saveOccasionRequest,
     remove: deleteOccasionRequest,
     deleteKey: "id",
@@ -137,7 +134,7 @@ const SECTION_CONFIG = [
     subtitle: "Used in vendor menu item allergen pickers so customers can review included allergens.",
     icon: ShieldAlert,
     emptyLabel: "No allergens yet.",
-    addLabel: "Add allergen",
+    addLabel: "Add Allergen",
     save: saveAllergenRequest,
     remove: null,
     deleteKey: "id",
@@ -161,7 +158,7 @@ const SECTION_CONFIG = [
     subtitle: "Controls the dietary tag choices vendors can assign to menus and add-ons.",
     icon: Leaf,
     emptyLabel: "No dietary tags yet.",
-    addLabel: "Add dietary tag",
+    addLabel: "Add Dietary Tag",
     save: saveDietaryTagRequest,
     remove: deleteDietaryTagRequest,
     deleteKey: "id",
@@ -198,7 +195,7 @@ const SECTION_CONFIG = [
     subtitle: "Controls the approved cuisine options in the vendor operating information panel.",
     icon: ChefHat,
     emptyLabel: "No cuisine types yet.",
-    addLabel: "Add cuisine type",
+    addLabel: "Add Cuisine Type",
     save: saveCuisineTypeRequest,
     remove: deleteCuisineTypeRequest,
     deleteKey: "id",
@@ -235,7 +232,7 @@ const SECTION_CONFIG = [
     subtitle: "Controls the approved business type options vendors can choose from.",
     icon: Store,
     emptyLabel: "No business types yet.",
-    addLabel: "Add business type",
+    addLabel: "Add Business Type",
     save: saveBusinessTypeRequest,
     remove: deleteBusinessTypeRequest,
     deleteKey: "id",
@@ -272,7 +269,7 @@ const SECTION_CONFIG = [
     subtitle: "Restricted to English and Norwegian to keep vendor-side language handling consistent.",
     icon: Languages,
     emptyLabel: "No supported languages configured yet.",
-    addLabel: "Add language",
+    addLabel: "Add Language",
     save: saveLanguageRequest,
     remove: deleteLanguageRequest,
     deleteKey: "code",
@@ -318,7 +315,7 @@ const SECTION_CONFIG = [
     subtitle: "Restricted to NOK so pricing, payouts, and reporting stay operationally consistent.",
     icon: Banknote,
     emptyLabel: "No supported currencies configured yet.",
-    addLabel: "Add currency",
+    addLabel: "Add Currency",
     save: saveCurrencyRequest,
     remove: deleteCurrencyRequest,
     deleteKey: "code",
@@ -364,57 +361,6 @@ const SECTION_CONFIG = [
       },
     ],
   },
-  {
-    key: "timeZones",
-    singularLabel: "time zone",
-    title: "Time Zones",
-    subtitle: "Controls the approved delivery and operating time-zone selections for vendors.",
-    icon: Clock3,
-    emptyLabel: "No time zones yet.",
-    addLabel: "Add time zone",
-    save: saveTimeZoneRequest,
-    remove: deleteTimeZoneRequest,
-    deleteKey: "value",
-    canDelete: true,
-    color: "from-[#f1f5ff] to-[#fbfcff]",
-    accent: "bg-[#5b72d6]",
-    fields: [
-      {
-        key: "value",
-        label: "Time Zone Value",
-        placeholder: "Europe/Oslo, UTC...",
-        required: true,
-        type: "text",
-      },
-      {
-        key: "label",
-        label: "Time Zone Label",
-        placeholder: "(GMT+01:00) Europe/Oslo",
-        required: true,
-        type: "text",
-      },
-      {
-        key: "utcOffset",
-        label: "UTC Offset",
-        placeholder: "+01:00",
-        required: false,
-        type: "text",
-      },
-      {
-        key: "sortOrder",
-        label: "Sort Order",
-        placeholder: "0",
-        required: false,
-        type: "number",
-      },
-      {
-        key: "isActive",
-        label: "Active",
-        required: false,
-        type: "checkbox",
-      },
-    ],
-  },
 ];
 
 const SECTION_MAP = SECTION_CONFIG.reduce((accumulator, section) => {
@@ -424,6 +370,14 @@ const SECTION_MAP = SECTION_CONFIG.reduce((accumulator, section) => {
 
 function normalizeString(value) {
   return String(value || "").trim();
+}
+
+function toTitleCase(value) {
+  return String(value || "")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 function createEmptyDraft(section) {
@@ -463,6 +417,33 @@ function validateValues(section, values) {
   );
 
   return missingField ? missingField.label : "";
+}
+
+function getPrimaryFieldKey(section) {
+  return section.fields.find((field) => field.type !== "checkbox")?.key || "";
+}
+
+function getComparableValue(value) {
+  return normalizeString(value).toLowerCase();
+}
+
+function getExistingComparableValue(item, fieldKey) {
+  if (!fieldKey) {
+    return "";
+  }
+
+  return getComparableValue(item?.raw?.[fieldKey] ?? item?.[fieldKey] ?? item?.name);
+}
+
+function getDuplicateItem(section, items, values, currentItemId = "") {
+  const fieldKey = getPrimaryFieldKey(section);
+  const nextValue = getComparableValue(values?.[fieldKey]);
+
+  if (!nextValue) {
+    return null;
+  }
+
+  return items.find((item) => item.id !== currentItemId && getExistingComparableValue(item, fieldKey) === nextValue) || null;
 }
 
 function getCreateErrorMessage(section, error) {
@@ -783,7 +764,6 @@ export default function VendorSettingsPage() {
     businessTypes: [],
     languages: [],
     currencies: [],
-    timeZones: [],
   });
   const [drafts, setDrafts] = useState(createDraftState);
   const [editingState, setEditingState] = useState({
@@ -894,14 +874,6 @@ export default function VendorSettingsPage() {
         toneClasses: "bg-[#d67d43]",
       },
       {
-        id: "timeZones",
-        icon: Clock3,
-        label: "Time Zones",
-        value: taxonomy.timeZones.length,
-        hint: "Operating and delivery timing",
-        toneClasses: "bg-[#5b72d6]",
-      },
-      {
         id: "businessTypes",
         icon: Store,
         label: "Business Types",
@@ -985,12 +957,23 @@ export default function VendorSettingsPage() {
   async function handleCreate(section) {
     const values = drafts[section.key];
     const missingField = validateValues(section, values);
+    const duplicateItem = getDuplicateItem(section, taxonomy[section.key], values);
 
     if (missingField) {
       await Swal.fire({
         icon: "warning",
         title: "Missing value",
         text: `Please complete ${missingField} before adding a new ${section.singularLabel}.`,
+        confirmButtonColor: "#cf6e38",
+      });
+      return;
+    }
+
+    if (duplicateItem) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Duplicate Value",
+        text: `${section.title} already includes "${duplicateItem.name}".`,
         confirmButtonColor: "#cf6e38",
       });
       return;
@@ -1010,14 +993,14 @@ export default function VendorSettingsPage() {
       await loadVendorSettings({ silent: true });
       await Swal.fire({
         icon: "success",
-        title: `${section.singularLabel} added`,
+        title: `${toTitleCase(section.singularLabel)} Added`,
         text: `${section.title} now includes the new option on the vendor side.`,
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
         icon: "error",
-        title: `Unable to add ${section.singularLabel}`,
+        title: `Unable to Add ${toTitleCase(section.singularLabel)}`,
         text: getCreateErrorMessage(section, error),
         confirmButtonColor: "#cf6e38",
       });
@@ -1029,12 +1012,23 @@ export default function VendorSettingsPage() {
   async function handleSaveEdit(section, item) {
     const values = editingState.values;
     const missingField = validateValues(section, values);
+    const duplicateItem = getDuplicateItem(section, taxonomy[section.key], values, item.id);
 
     if (missingField) {
       await Swal.fire({
         icon: "warning",
         title: "Missing value",
         text: `Please complete ${missingField} before saving your changes.`,
+        confirmButtonColor: "#cf6e38",
+      });
+      return;
+    }
+
+    if (duplicateItem) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Duplicate Value",
+        text: `${section.title} already includes "${duplicateItem.name}".`,
         confirmButtonColor: "#cf6e38",
       });
       return;

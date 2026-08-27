@@ -7,6 +7,8 @@ import {
   UPDATE_PLATFORM_PREFERENCES_MUTATION,
 } from "./settingsQueries.js";
 
+const NORWAY_TIME_ZONE = "Europe/Oslo";
+
 function getFirstErrorMessage(result, fallbackMessage) {
   const firstError = result?.errors?.find((item) => item?.message)?.message;
   return firstError || result?.message || fallbackMessage;
@@ -40,7 +42,7 @@ function normalizeSettingsUser(user) {
     },
     preferences: {
       defaultCurrency: user.preferences?.defaultCurrency ?? "",
-      timezone: user.preferences?.timezone ?? "",
+      timezone: user.preferences?.timezone ?? NORWAY_TIME_ZONE,
       locale: user.preferences?.locale ?? "",
     },
   };
@@ -105,7 +107,7 @@ export async function updatePlatformPreferencesRequest(input) {
   const data = await executeProtectedGraphqlRequest(UPDATE_PLATFORM_PREFERENCES_MUTATION, {
     input: {
       defaultCurrency: String(input?.defaultCurrency || "").trim(),
-      timezone: String(input?.timezone || "").trim(),
+      timezone: NORWAY_TIME_ZONE,
       locale: String(input?.locale || "").trim(),
     },
   });
@@ -120,7 +122,7 @@ export async function updatePlatformPreferencesRequest(input) {
     message: result.message || "Preferences updated successfully.",
     preferences: {
       defaultCurrency: result.preferences.defaultCurrency ?? "",
-      timezone: result.preferences.timezone ?? "",
+      timezone: result.preferences.timezone ?? NORWAY_TIME_ZONE,
       locale: result.preferences.locale ?? "",
     },
   };

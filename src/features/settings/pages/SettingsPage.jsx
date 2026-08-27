@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { BadgeCent, Banknote, Clock3, Globe2, KeyRound, Languages, RefreshCcw, Trash2 } from "lucide-react";
+import { BadgeCent, Banknote, Globe2, KeyRound, Languages, RefreshCcw, Trash2 } from "lucide-react";
 import Swal from "sweetalert2";
 import { getAdminDisplayName, validateAdminPassword } from "../../auth/authConfig.js";
 import { useAuth } from "../../auth/hooks/useAuth.js";
@@ -23,11 +23,9 @@ import SettingsStatusCard from "../components/SettingsStatusCard.jsx";
 import {
   deleteCurrencyRequest,
   deleteLanguageRequest,
-  deleteTimeZoneRequest,
   getVendorSettingsTaxonomyRequest,
   saveCurrencyRequest,
   saveLanguageRequest,
-  saveTimeZoneRequest,
 } from "../../vendor-settings/api/vendorSettingsApi.js";
 import { mapVendorSettingsTaxonomy } from "../../vendor-settings/api/vendorSettingsMappers.js";
 
@@ -85,25 +83,14 @@ const MASTER_DATA_CONFIG = [
       { key: "isActive", label: "Active", type: "checkbox" },
     ],
   },
-  {
-    key: "timeZones",
-    title: "Time Zones",
-    singularLabel: "time zone",
-    icon: Clock3,
-    save: saveTimeZoneRequest,
-    remove: deleteTimeZoneRequest,
-    deleteKey: "value",
-    fields: [
-      { key: "value", label: "Value", placeholder: "Europe/Oslo", required: true },
-      { key: "label", label: "Label", placeholder: "(GMT+01:00) Europe/Oslo", required: true },
-      { key: "utcOffset", label: "UTC Offset", placeholder: "+01:00", required: false },
-      { key: "sortOrder", label: "Sort Order", placeholder: "0", required: false, type: "number" },
-      { key: "isActive", label: "Active", type: "checkbox" },
-    ],
-  },
 ];
 
-const MASTER_DATA_MAP = MASTER_DATA_CONFIG.reduce((accumulator, section) => {
+const HIDDEN_MASTER_DATA_KEYS = new Set(["currencies", "languages"]);
+const VISIBLE_MASTER_DATA_CONFIG = MASTER_DATA_CONFIG.filter(
+  (section) => !HIDDEN_MASTER_DATA_KEYS.has(section.key),
+);
+
+const MASTER_DATA_MAP = VISIBLE_MASTER_DATA_CONFIG.reduce((accumulator, section) => {
   accumulator[section.key] = section;
   return accumulator;
 }, {});
@@ -120,7 +107,7 @@ function createEmptyMasterDataDraft(section) {
 }
 
 function createMasterDataDraftState() {
-  return MASTER_DATA_CONFIG.reduce((accumulator, section) => {
+  return VISIBLE_MASTER_DATA_CONFIG.reduce((accumulator, section) => {
     accumulator[section.key] = createEmptyMasterDataDraft(section);
     return accumulator;
   }, {});
@@ -379,14 +366,12 @@ function PreferencesCard({
   preferences,
   currencies,
   locales,
-  timeZones,
   onFieldChange,
   onSave,
   isSaving,
 }) {
   const currencyOptions = buildSelectOptions(currencies, "currencies");
   const localeOptions = buildSelectOptions(locales, "languages");
-  const timeZoneOptions = withSelectedFallback(buildSelectOptions(timeZones, "timeZones"), preferences.timezone);
   const selectedCurrency = currencyOptions.some((option) => option.value === preferences.defaultCurrency)
     ? preferences.defaultCurrency
     : "";
@@ -418,23 +403,6 @@ function PreferencesCard({
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-[12px] font-bold text-[#2f241d]">Timezone</span>
-            <select
-              className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
-              disabled={!timeZoneOptions.length}
-              onChange={onFieldChange("timezone")}
-              value={preferences.timezone}
-            >
-              <option value="">Select time zone</option>
-              {timeZoneOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-1.5">
             <span className="text-[12px] font-bold text-[#2f241d]">Locale</span>
             <select
               className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
@@ -453,7 +421,8 @@ function PreferencesCard({
         </div>
 
         <p className="mt-2 text-[11px] leading-5 text-[#9c9087]">
-          These preferences are saved per administrator and apply to platform defaults like currency, timezone, and locale.
+          Currency and locale are saved per administrator. GoCatering runs on Norway time automatically using
+          Europe/Oslo, including summer and winter clock changes.
         </p>
 
         <SaveButton className="mt-6 h-10 px-6" disabled={isSaving} onClick={onSave}>
@@ -649,7 +618,6 @@ export default function SettingsPage() {
   const [masterData, setMasterData] = useState({
     currencies: [],
     languages: [],
-    timeZones: [],
   });
   const [profileForm, setProfileForm] = useState({
     firstName: "",
@@ -716,7 +684,6 @@ export default function SettingsPage() {
       setMasterData({
         currencies: taxonomy.currencies,
         languages: taxonomy.languages,
-        timeZones: taxonomy.timeZones,
       });
       syncForms(user);
       updateSessionUser({
@@ -1131,13 +1098,6 @@ export default function SettingsPage() {
 
     return [
       {
-        id: "timezone",
-        icon: Clock3,
-        label: "Timezone",
-        value: settingsUser.preferences?.timezone || "Timezone pending",
-        tone: settingsUser.preferences?.timezone ? "success" : "neutral",
-      },
-      {
         id: "locale",
         icon: Globe2,
         label: "Locale",
@@ -1217,15 +1177,14 @@ export default function SettingsPage() {
             }
             onSave={handleSavePreferences}
             preferences={preferencesForm}
-            timeZones={masterData.timeZones}
           />
         )}
       </div>
 
       <div className="grid gap-5">
         {isLoading
-          ? MASTER_DATA_CONFIG.map((section) => <LoadingCard key={section.key} />)
-          : MASTER_DATA_CONFIG.map((section) => (
+          ? VISIBLE_MASTER_DATA_CONFIG.map((section) => <LoadingCard key={section.key} />)
+          : VISIBLE_MASTER_DATA_CONFIG.map((section) => (
               <MasterDataManagerCard
                 draftValues={masterDataDrafts[section.key]}
                 editingState={editingMasterData}

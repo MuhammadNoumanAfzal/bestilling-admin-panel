@@ -429,7 +429,7 @@ export default function ReportsPage() {
             />
           </section>
 
-          <section className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(190px,0.82fr)]">
+          <section className="grid items-start gap-3 2xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
             <CategoryPerformanceCard categories={reportSnapshot.categoryPerformance} />
             <OperationalHealthCard items={reportSnapshot.operationalHealth} />
           </section>

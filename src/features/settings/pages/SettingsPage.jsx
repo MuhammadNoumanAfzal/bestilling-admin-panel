@@ -324,6 +324,7 @@ function ProfileInformationCard({
             <SettingsField
               autoComplete="current-password"
               className="sm:col-span-2"
+              enablePasswordToggle
               label="Current Password"
               onChange={onPasswordFieldChange("currentPassword")}
               placeholder="Enter current password"
@@ -332,6 +333,7 @@ function ProfileInformationCard({
             />
             <SettingsField
               autoComplete="new-password"
+              enablePasswordToggle
               label="New Password"
               onChange={onPasswordFieldChange("newPassword")}
               placeholder="Enter new password"
@@ -340,6 +342,7 @@ function ProfileInformationCard({
             />
             <SettingsField
               autoComplete="new-password"
+              enablePasswordToggle
               label="Confirm New Password"
               onChange={onPasswordFieldChange("confirmPassword")}
               placeholder="Confirm new password"

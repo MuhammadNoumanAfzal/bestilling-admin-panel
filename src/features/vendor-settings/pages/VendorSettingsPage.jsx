@@ -79,7 +79,7 @@ const SECTION_CONFIG = [
       {
         key: "name",
         label: "Category Name",
-        placeholder: "Buffet, Desserts, Drinks...",
+        placeholder: "Enter category name",
         required: true,
         type: "text",
       },
@@ -103,7 +103,7 @@ const SECTION_CONFIG = [
       {
         key: "name",
         label: "Food Type Name",
-        placeholder: "Italian, BBQ, Breakfast...",
+        placeholder: "Enter food type name",
         required: true,
         type: "text",
       },
@@ -127,7 +127,7 @@ const SECTION_CONFIG = [
       {
         key: "name",
         label: "Occasion Name",
-        placeholder: "Wedding, Conference, Birthday...",
+        placeholder: "Enter occasion name",
         required: true,
         type: "text",
       },
@@ -151,7 +151,7 @@ const SECTION_CONFIG = [
       {
         key: "name",
         label: "Allergen Name",
-        placeholder: "Gluten, Milk, Soy...",
+        placeholder: "Enter allergen name",
         required: true,
         type: "text",
       },
@@ -175,7 +175,7 @@ const SECTION_CONFIG = [
       {
         key: "name",
         label: "Dietary Tag Name",
-        placeholder: "Vegan, Halal, Gluten-Free...",
+        placeholder: "Enter dietary tag name",
         required: true,
         type: "text",
       },
@@ -212,7 +212,7 @@ const SECTION_CONFIG = [
       {
         key: "name",
         label: "Cuisine Type Name",
-        placeholder: "Italian, Asian Fusion, Nordic...",
+        placeholder: "Enter cuisine type name",
         required: true,
         type: "text",
       },
@@ -249,7 +249,7 @@ const SECTION_CONFIG = [
       {
         key: "name",
         label: "Business Type Name",
-        placeholder: "Catering Company, Restaurant, Bakery...",
+        placeholder: "Enter business type name",
         required: true,
         type: "text",
       },
@@ -288,14 +288,14 @@ const SECTION_CONFIG = [
       {
         key: "code",
         label: "Language Code",
-        placeholder: "en, no, ur...",
+        placeholder: "Enter language code",
         required: true,
         type: "text",
       },
       {
         key: "label",
         label: "Language Label",
-        placeholder: "English, Norwegian, Urdu...",
+        placeholder: "Enter language label",
         required: true,
         type: "text",
       },
@@ -334,21 +334,21 @@ const SECTION_CONFIG = [
       {
         key: "code",
         label: "Currency Code",
-        placeholder: "NOK, USD, EUR...",
+        placeholder: "Enter currency code",
         required: true,
         type: "text",
       },
       {
         key: "label",
         label: "Currency Label",
-        placeholder: "Norwegian Krone, US Dollar...",
+        placeholder: "Enter currency label",
         required: true,
         type: "text",
       },
       {
         key: "symbol",
         label: "Symbol",
-        placeholder: "kr, $, €...",
+        placeholder: "Enter currency symbol",
         required: false,
         type: "text",
       },

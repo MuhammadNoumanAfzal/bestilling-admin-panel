@@ -156,13 +156,13 @@ export default function AddDeliveryAreaModal({
                 <AddDeliveryAreaField
                   label="Postal Code"
                   onChange={(event) => updatePostalField("postalCode", event.target.value)}
-                  placeholder="5003"
+                  placeholder="Enter postal code"
                   value={postalForm.postalCode}
                 />
                 <AddDeliveryAreaField
                   label="Area Name"
                   onChange={(event) => updatePostalField("areaName", event.target.value)}
-                  placeholder="Bergen Sentrum"
+                  placeholder="Enter area name"
                   value={postalForm.areaName}
                 />
                 <AddDeliveryAreaField

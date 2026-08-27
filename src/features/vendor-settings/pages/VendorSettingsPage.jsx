@@ -54,6 +54,12 @@ const SECTION_GROUPS = [
   },
 ];
 
+const HIDDEN_SECTION_KEYS = new Set(["languages", "currencies"]);
+const VISIBLE_SECTION_GROUPS = SECTION_GROUPS.map((group) => ({
+  ...group,
+  sectionKeys: group.sectionKeys.filter((sectionKey) => !HIDDEN_SECTION_KEYS.has(sectionKey)),
+})).filter((group) => group.sectionKeys.length);
+
 const SECTION_CONFIG = [
   {
     key: "categories",
@@ -368,6 +374,10 @@ const SECTION_MAP = SECTION_CONFIG.reduce((accumulator, section) => {
   return accumulator;
 }, {});
 
+const VISIBLE_SECTION_CONFIG = SECTION_CONFIG.filter(
+  (section) => !HIDDEN_SECTION_KEYS.has(section.key),
+);
+
 function normalizeString(value) {
   return String(value || "").trim();
 }
@@ -388,7 +398,7 @@ function createEmptyDraft(section) {
 }
 
 function createDraftState() {
-  return SECTION_CONFIG.reduce((accumulator, section) => {
+  return VISIBLE_SECTION_CONFIG.reduce((accumulator, section) => {
     accumulator[section.key] = createEmptyDraft(section);
     return accumulator;
   }, {});
@@ -866,14 +876,6 @@ export default function VendorSettingsPage() {
         toneClasses: "bg-[#33a08b]",
       },
       {
-        id: "currencies",
-        icon: Banknote,
-        label: "Currencies",
-        value: taxonomy.currencies.length,
-        hint: "Region and pricing preferences",
-        toneClasses: "bg-[#d67d43]",
-      },
-      {
         id: "businessTypes",
         icon: Store,
         label: "Business Types",
@@ -881,7 +883,7 @@ export default function VendorSettingsPage() {
         hint: "Approved vendor business models",
         toneClasses: "bg-[#527ec9]",
       },
-    ],
+    ].filter((item) => !HIDDEN_SECTION_KEYS.has(item.id)),
     [taxonomy],
   );
 
@@ -906,7 +908,7 @@ export default function VendorSettingsPage() {
   }
 
   function scrollDown() {
-    const orderedSections = SECTION_GROUPS.flatMap((group) => group.sectionKeys)
+    const orderedSections = VISIBLE_SECTION_GROUPS.flatMap((group) => group.sectionKeys)
       .map((sectionKey) => sectionRefs.current[sectionKey])
       .filter(Boolean);
 
@@ -1137,7 +1139,7 @@ export default function VendorSettingsPage() {
           </button>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((item) => (
             <StatCard
               key={item.id}
@@ -1150,7 +1152,7 @@ export default function VendorSettingsPage() {
 
       {isLoading ? (
         <div className="grid gap-5">
-          {SECTION_CONFIG.map((section) => (
+          {VISIBLE_SECTION_CONFIG.map((section) => (
             <div
               className="h-56 animate-pulse rounded-[24px] border border-[#eadfd6] bg-[#f7f2ed]"
               key={section.key}
@@ -1158,7 +1160,7 @@ export default function VendorSettingsPage() {
           ))}
         </div>
       ) : (
-        SECTION_GROUPS.map((group) => (
+        VISIBLE_SECTION_GROUPS.map((group) => (
           <section
             className="rounded-[22px] border border-[#e7ddd4] bg-[#fffdfb] p-4 shadow-[0_20px_55px_rgba(49,30,19,0.05)] sm:rounded-[26px] sm:p-5"
             key={group.key}

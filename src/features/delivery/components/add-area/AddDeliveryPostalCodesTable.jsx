@@ -1,18 +1,10 @@
-import { Pencil, Plus, Trash2, UsersRound } from "lucide-react";
+import { Pencil, Trash2, UsersRound } from "lucide-react";
 
-export default function AddDeliveryPostalCodesTable({ rows, onAdd, onDelete, onEdit }) {
+export default function AddDeliveryPostalCodesTable({ rows, onDelete, onEdit }) {
   return (
     <div className="rounded-[12px] border border-[#e6ddd6] bg-white">
       <div className="flex items-center justify-between gap-3 border-b border-[#eee4dd] px-4 py-2.5">
         <p className="text-[12px] font-bold text-[#6f645d]">Postal Area Coverage</p>
-        <button
-          className="inline-flex h-7.5 cursor-pointer items-center justify-center gap-1.5 rounded-[8px] bg-[#cf6e38] px-3 text-[12px] font-bold text-white transition hover:bg-[#bc6030]"
-          onClick={onAdd}
-          type="button"
-        >
-          <Plus size={12} />
-          <span>Add Code</span>
-        </button>
       </div>
 
       <div className="overflow-hidden">

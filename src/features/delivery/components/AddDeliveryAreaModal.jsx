@@ -186,7 +186,6 @@ export default function AddDeliveryAreaModal({
               </div>
 
               <AddDeliveryPostalCodesTable
-                onAdd={handleAddPostalCode}
                 onDelete={handleDeletePostalCode}
                 onEdit={handleEditPostalCode}
                 rows={postalRows.map((row) => ({

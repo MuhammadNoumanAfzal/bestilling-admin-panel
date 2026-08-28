@@ -358,9 +358,10 @@ function getCurrentMeta(pathname) {
   return pageMeta[pathname] || pageMeta["/dashboard"];
 }
 
-function NavItem({ item, pathname, onNavigate }) {
+function NavItem({ item, pathname, onNavigate, badgeCount = 0 }) {
   const Icon = item.icon;
   const active = isNavItemActive(item, pathname);
+  const shouldShowBadge = item.label === "Notifications" && badgeCount > 0;
 
   return (
     <NavLink
@@ -376,7 +377,17 @@ function NavItem({ item, pathname, onNavigate }) {
       <span className="inline-flex h-5 w-5 items-center justify-center rounded-[6px] transition">
         <Icon size={14} />
       </span>
-      <span className="truncate">{item.label}</span>
+      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+      {shouldShowBadge ? (
+        <span
+          className={[
+            "inline-flex min-w-[20px] items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none",
+            active ? "bg-[#c75f2e] text-white" : "bg-white/18 text-white",
+          ].join(" ")}
+        >
+          {badgeCount > 99 ? "99+" : badgeCount}
+        </span>
+      ) : null}
     </NavLink>
   );
 }
@@ -798,6 +809,7 @@ export default function AdminLayout() {
             <nav className="space-y-2">
               {navigation.map((item) => (
                 <NavItem
+                  badgeCount={notificationUnreadCount}
                   item={item}
                   key={item.to}
                   onNavigate={() => setIsMobileNavOpen(false)}
@@ -959,6 +971,8 @@ export default function AdminLayout() {
             {navigation.map((item) => {
               const Icon = item.icon;
               const active = isNavItemActive(item, location.pathname);
+              const shouldShowBadge =
+                item.label === "Notifications" && notificationUnreadCount > 0;
 
               return (
                 <NavLink
@@ -971,7 +985,14 @@ export default function AdminLayout() {
                   }
                   to={item.to}
                 >
-                  <Icon size={16} />
+                  <div className="relative">
+                    <Icon size={16} />
+                    {shouldShowBadge ? (
+                      <span className="absolute -right-3 -top-2 inline-flex min-w-[16px] items-center justify-center rounded-full bg-white px-1 py-0.5 text-[8px] font-bold leading-none text-[#d96834]">
+                        {notificationUnreadCount > 99 ? "99+" : notificationUnreadCount}
+                      </span>
+                    ) : null}
+                  </div>
                   <span>{item.label}</span>
                 </NavLink>
               );

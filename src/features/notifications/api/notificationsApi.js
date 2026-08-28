@@ -462,12 +462,12 @@ export async function getMyNotificationsRequest({ page, pageSize, status } = {})
 }
 
 export async function getMyNotificationUnreadCountRequest() {
-  const connection = await fetchCombinedAdminNotifications({ first: 5 });
+  const connection = await fetchCombinedAdminNotifications({ first: 200 });
   return Number(connection?.unreadCount ?? 0) || 0;
 }
 
 export async function getNotificationBellRequest() {
-  const connection = await fetchCombinedAdminNotifications({ first: 5 });
+  const connection = await fetchCombinedAdminNotifications({ first: 200 });
 
   return {
     unreadCount: Number(connection?.unreadCount ?? 0) || 0,

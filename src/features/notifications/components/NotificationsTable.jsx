@@ -130,6 +130,9 @@ export default function NotificationsTable({
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
               <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">
+                #
+              </th>
+              <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">
                 Notifications Title
               </th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">
@@ -153,17 +156,20 @@ export default function NotificationsTable({
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={6}>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={7}>
                   No notifications match the current filters.
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
+              rows.map((row, index) => (
                 <tr
                   key={row.id}
                   className="cursor-pointer border-b border-[#f1e9e2] transition hover:bg-[#fffaf6] last:border-b-0"
                   onClick={() => onOpenRow(row)}
                 >
+                  <td className="px-4 py-4 align-middle text-[15px] font-semibold text-[#8b7d72]">
+                    {(currentPage - 1) * pageSize + index + 1}
+                  </td>
                   <td className="px-4 py-4 align-middle">
                     <p className="max-w-[360px] text-[16px] font-semibold leading-6 text-[#18120f]">{row.title}</p>
                   </td>

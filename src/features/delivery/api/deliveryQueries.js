@@ -246,3 +246,46 @@ export const DELETE_DELIVERY_POSTAL_AREA_MUTATION = `
     }
   }
 `;
+
+export const EXTRACT_POSTAL_CODES_FROM_TEXT_MUTATION = `
+  mutation ExtractPostalCodesFromText($text: String!) {
+    extractPostalCodesFromText(text: $text) {
+      success
+      message
+      fileType
+      totalFound
+      uniqueCount
+      postalCodes
+      items {
+        postalCode
+        name
+        isKnownArea
+        occurrences
+      }
+    }
+  }
+`;
+
+export const BULK_IMPORT_DELIVERY_POSTAL_AREAS_MUTATION = `
+  mutation BulkImportDeliveryPostalAreas($deliveryAreaId: ID!, $postalCodes: [String]!) {
+    bulkImportDeliveryPostalAreas(
+      deliveryAreaId: $deliveryAreaId
+      postalCodes: $postalCodes
+    ) {
+      success
+      message
+      importedCount
+      skippedCount
+      postalAreas {
+        id
+        postalCode
+        areaName
+        status
+        vendors
+        deliveryFeeOverride
+        minimumOrderAmountOverride
+        estimatedDeliveryMinutes
+      }
+    }
+  }
+`;

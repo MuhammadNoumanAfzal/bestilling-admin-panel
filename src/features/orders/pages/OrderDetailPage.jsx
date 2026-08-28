@@ -413,22 +413,6 @@ export default function OrderDetailPage() {
                 {order.delivery.address}
               </span>
             </div>
-            <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
-                Rider
-              </span>
-              <span className="block text-[13px] font-semibold text-[#18120f]">
-                {order.delivery.riderName}
-              </span>
-            </div>
-            <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
-                Rider Phone
-              </span>
-              <span className="block text-[13px] font-semibold text-[#18120f]">
-                {order.delivery.riderPhone}
-              </span>
-            </div>
           </div>
         </article>
       </section>

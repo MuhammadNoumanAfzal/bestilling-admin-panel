@@ -268,6 +268,40 @@ export default function DeliveryAreaDetailPage() {
     }
   }
 
+  async function handlePostalImportComplete(result, preview) {
+    if (!area?.id) {
+      return;
+    }
+
+    const refreshedArea = await getAdminDeliveryAreaRequest(area.id);
+    const previewAreaNameMap = new Map(
+      (preview?.items || []).map((item) => [
+        `${item?.postalCode ?? ""}`.trim(),
+        `${item?.areaName ?? item?.name ?? ""}`.trim(),
+      ]),
+    );
+
+    setArea({
+      ...refreshedArea,
+      postalAreas: refreshedArea.postalAreas.map((postalArea) => ({
+        ...postalArea,
+        areaName:
+          postalArea.areaName ||
+          previewAreaNameMap.get(`${postalArea.postalCode ?? ""}`.trim()) ||
+          "",
+      })),
+    });
+
+    await Swal.fire({
+      icon: "success",
+      title: "Postal codes imported",
+      text:
+        result.message ||
+        `${result.importedCount} postal codes imported successfully.`,
+      confirmButtonColor: "#cf6e38",
+    });
+  }
+
   if (!isLoading && loadError && !area) {
     return <Navigate replace to="/delivery" />;
   }
@@ -381,6 +415,7 @@ export default function DeliveryAreaDetailPage() {
         isSubmitting={isSubmittingPostalArea}
         onCreate={handleCreatePostalArea}
         onDelete={handleDeletePostalArea}
+        onImportComplete={handlePostalImportComplete}
         onUpdate={handleUpdatePostalArea}
         rows={area.postalAreas}
       />

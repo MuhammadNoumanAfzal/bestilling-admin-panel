@@ -1,12 +1,17 @@
-import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
+import {
+  executeProtectedGraphqlRequest,
+  getCurrentAccessToken,
+} from "../../../app/api/protectedGraphqlClient.js";
 import {
   ADD_DELIVERY_POSTAL_AREA_MUTATION,
   ADMIN_DELIVERY_AREA_QUERY,
   ADMIN_DELIVERY_AREAS_QUERY,
   ADMIN_DELIVERY_SUMMARY_QUERY,
+  BULK_IMPORT_DELIVERY_POSTAL_AREAS_MUTATION,
   CREATE_DELIVERY_AREA_MUTATION,
   DELETE_DELIVERY_AREA_MUTATION,
   DELETE_DELIVERY_POSTAL_AREA_MUTATION,
+  EXTRACT_POSTAL_CODES_FROM_TEXT_MUTATION,
   UPDATE_DELIVERY_AREA_MUTATION,
   UPDATE_DELIVERY_AREA_STATUS_MUTATION,
   UPDATE_DELIVERY_POSTAL_AREA_MUTATION,
@@ -121,6 +126,13 @@ function normalizeAreaListItem(item) {
   };
 }
 
+function countActivePostalAreas(postalAreas = []) {
+  return postalAreas.filter((postalArea) => {
+    const status = `${postalArea?.status ?? ""}`.trim().toUpperCase();
+    return status !== "INACTIVE";
+  }).length;
+}
+
 function normalizeAreaDetail(area) {
   if (!area?.id) {
     return null;
@@ -202,6 +214,50 @@ function getDefaultLeadTimeDays(value) {
   return parsed ?? 0;
 }
 
+function getDeliveryRestBaseUrl() {
+  const explicitBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+  if (explicitBaseUrl) {
+    return explicitBaseUrl.replace(/\/$/, "");
+  }
+
+  const graphqlUrl =
+    import.meta.env.VITE_GRAPHQL_API_URL ??
+    import.meta.env.VITE_GRAPHQL_URL ??
+    "https://api.gocatering.no/graphql/";
+
+  return graphqlUrl.replace(/\/graphql\/?$/i, "").replace(/\/$/, "");
+}
+
+function normalizeExtractedPostalCodeItem(item) {
+  return {
+    postalCode: `${item?.postalCode ?? ""}`.trim(),
+    name: `${item?.name ?? ""}`.trim(),
+    areaName: `${item?.name ?? ""}`.trim(),
+    isKnownArea: Boolean(item?.isKnownArea),
+    occurrences: Number(item?.occurrences ?? 0),
+  };
+}
+
+function normalizePostalCodeExtractionResult(result) {
+  return {
+    success: Boolean(result?.success),
+    message: result?.message || "",
+    fileName: result?.fileName || "",
+    fileType: result?.fileType || "",
+    totalFound: Number(result?.totalFound ?? 0),
+    uniqueCount: Number(result?.uniqueCount ?? 0),
+    postalCodes: Array.isArray(result?.postalCodes)
+      ? result.postalCodes.map((code) => `${code ?? ""}`.trim()).filter(Boolean)
+      : [],
+    items: Array.isArray(result?.items)
+      ? result.items.map(normalizeExtractedPostalCodeItem).filter((item) => item.postalCode)
+      : [],
+    deliveryAreaImportedCount: Number(result?.deliveryAreaImportedCount ?? 0),
+    deliveryAreaName: result?.deliveryAreaName || "",
+  };
+}
+
 export async function getAdminDeliverySummaryRequest() {
   const data = await executeProtectedGraphqlRequest(ADMIN_DELIVERY_SUMMARY_QUERY, {});
   const summary = data?.adminDeliverySummary;
@@ -260,8 +316,44 @@ export async function getAdminDeliveryAreasRequest(filters) {
     throw new Error("Unable to load delivery areas.");
   }
 
+  const baseRows = Array.isArray(response.items)
+    ? response.items.map(normalizeAreaListItem)
+    : [];
+
+  const rows = await Promise.all(
+    baseRows.map(async (row) => {
+      if (!row.id) {
+        return row;
+      }
+
+      try {
+        const detailData = await executeProtectedGraphqlRequest(
+          ADMIN_DELIVERY_AREA_QUERY,
+          { id: row.id },
+        );
+        const detailArea = detailData?.adminDeliveryArea;
+
+        if (!detailArea?.id) {
+          return row;
+        }
+
+        const activePostalCodes = countActivePostalAreas(detailArea.postalAreas || []);
+
+        return {
+          ...row,
+          activePostalCodes,
+          coverageType: normalizeCoverageType(
+            detailArea?.settings?.coverageType || detailArea?.coverageType,
+          ),
+        };
+      } catch {
+        return row;
+      }
+    }),
+  );
+
   return {
-    rows: Array.isArray(response.items) ? response.items.map(normalizeAreaListItem) : [],
+    rows,
     pageInfo: {
       page: Number(response.pageInfo?.page ?? filters?.page ?? 1),
       pageSize: Number(response.pageInfo?.pageSize ?? filters?.pageSize ?? 10),
@@ -442,5 +534,91 @@ export async function deleteDeliveryPostalAreaRequest(id) {
 
   return {
     message: result.message || "Postal area deleted successfully.",
+  };
+}
+
+export async function extractPostalCodesFromFileRequest(file) {
+  if (!(file instanceof File)) {
+    throw new Error("Choose a PDF, Excel, CSV, or text file first.");
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const headers = {};
+  const accessToken = getCurrentAccessToken();
+
+  if (accessToken) {
+    headers.Authorization = `JWT ${accessToken}`;
+  }
+
+  const response = await fetch(`${getDeliveryRestBaseUrl()}/api/extract-postal-codes/`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok || !payload?.success) {
+    throw new Error(payload?.message || "Unable to extract postal codes from this file.");
+  }
+
+  return normalizePostalCodeExtractionResult(payload);
+}
+
+export async function extractPostalCodesFromTextRequest(text) {
+  const trimmedText = `${text ?? ""}`.trim();
+
+  if (!trimmedText) {
+    throw new Error("Paste delivery coverage text before extracting postal codes.");
+  }
+
+  const data = await executeProtectedGraphqlRequest(
+    EXTRACT_POSTAL_CODES_FROM_TEXT_MUTATION,
+    { text: trimmedText },
+  );
+  const result = data?.extractPostalCodesFromText;
+
+  if (!result?.success) {
+    throw new Error(getErrorMessage(result, "Unable to extract postal codes from the pasted text."));
+  }
+
+  return normalizePostalCodeExtractionResult(result);
+}
+
+export async function bulkImportDeliveryPostalAreasRequest(deliveryAreaId, postalCodes) {
+  const normalizedPostalCodes = Array.isArray(postalCodes)
+    ? postalCodes.map((code) => `${code ?? ""}`.trim()).filter(Boolean)
+    : [];
+
+  if (!deliveryAreaId) {
+    throw new Error("Delivery area ID is required for bulk import.");
+  }
+
+  if (normalizedPostalCodes.length === 0) {
+    throw new Error("No postal codes are available to import.");
+  }
+
+  const data = await executeProtectedGraphqlRequest(
+    BULK_IMPORT_DELIVERY_POSTAL_AREAS_MUTATION,
+    {
+      deliveryAreaId,
+      postalCodes: normalizedPostalCodes,
+    },
+  );
+  const result = data?.bulkImportDeliveryPostalAreas;
+
+  if (!result?.success) {
+    throw new Error(getErrorMessage(result, "Unable to import postal codes into this delivery area."));
+  }
+
+  return {
+    message: result.message || "Postal codes imported successfully.",
+    importedCount: Number(result?.importedCount ?? 0),
+    skippedCount: Number(result?.skippedCount ?? 0),
+    postalAreas: Array.isArray(result?.postalAreas)
+      ? result.postalAreas.map(normalizePostalArea)
+      : [],
   };
 }

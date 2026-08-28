@@ -2,6 +2,7 @@ import { Search, SlidersHorizontal, SquarePen, Trash2, UsersRound } from "lucide
 import { useMemo, useState } from "react";
 import DeliveryStatusPill from "./DeliveryStatusPill.jsx";
 import DeliveryPostalCodeModal from "./DeliveryPostalCodeModal.jsx";
+import PostalCodeImportPanel from "../PostalCodeImportPanel.jsx";
 
 const statusFilterOptions = ["All", "Active", "Inactive", "Limited"];
 
@@ -37,6 +38,7 @@ export default function DeliveryPostalAreasCard({
   isSubmitting = false,
   onCreate,
   onDelete,
+  onImportComplete,
   onUpdate,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -114,6 +116,11 @@ export default function DeliveryPostalAreasCard({
     <>
       <section className="overflow-hidden rounded-[18px] border border-[#ddd4cd] bg-white shadow-[0_10px_24px_rgba(55,31,13,0.05)]">
         <div className="flex flex-col gap-4 border-b border-[#eee4dd] px-5 py-5">
+          <PostalCodeImportPanel
+            deliveryAreaId={areaId}
+            onImportComplete={onImportComplete}
+          />
+
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h2 className="text-[28px] font-bold tracking-[-0.03em] text-[#18120f]">Postal Codes</h2>

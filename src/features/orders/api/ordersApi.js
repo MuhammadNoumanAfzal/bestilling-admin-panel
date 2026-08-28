@@ -540,7 +540,61 @@ function normalizeOrderRow(item) {
   };
 }
 
-function normalizeSummary(summary) {
+function buildSummaryFromRows(rows, fallbackRevenueValue) {
+  const totalOrders = rows.length;
+  const paidOrders = rows.filter((row) => row.paymentStatus === "Paid").length;
+  const pendingOrders = rows.filter(
+    (row) => row.status === "Pending" && row.paymentStatus !== "Paid",
+  ).length;
+  const refundOrReviewOrders = rows.filter((row) =>
+    ["Refunded", "Partially refunded"].includes(row.paymentStatus),
+  ).length;
+  const deliveredOrders = rows.filter((row) => row.status === "Delivered").length;
+
+  return [
+    {
+      id: "total",
+      title: "Total Orders",
+      value: `${totalOrders}`,
+    },
+    {
+      id: "paid",
+      title: "Paid Orders",
+      value: `${paidOrders}`,
+    },
+    {
+      id: "pending",
+      title: "Pending Orders",
+      value: `${pendingOrders}`,
+    },
+    {
+      id: "review",
+      title: "Refund / Review",
+      value: `${refundOrReviewOrders}`,
+    },
+    {
+      id: "delivered",
+      title: "Delivered Orders",
+      value: `${deliveredOrders}`,
+    },
+    {
+      id: "revenue",
+      title: "Revenue",
+      value: fallbackRevenueValue,
+    },
+  ];
+}
+
+function normalizeSummary(summary, rows, pageInfo) {
+  const totalItems = Number(pageInfo?.totalItems ?? 0);
+
+  if (Array.isArray(rows) && rows.length > 0 && totalItems === rows.length) {
+    return buildSummaryFromRows(
+      rows,
+      formatMoney(summary?.totalRevenue, summary?.currency || "NOK"),
+    );
+  }
+
   return [
     {
       id: "total",
@@ -882,17 +936,24 @@ export async function getAdminOrdersRequest(filters) {
     }),
   );
 
+  const normalizedRows = enrichedItems.map(normalizeOrderRow);
+  const normalizedPageInfo = {
+    page: Number(filters?.page ?? 1),
+    pageSize: Number(filters?.limit ?? 10),
+    totalItems: Number(response?.pageInfo?.totalItems ?? responseItems.length ?? 0),
+    totalPages: Number(response?.pageInfo?.totalPages ?? 1),
+    hasNextPage: Boolean(response?.pageInfo?.hasNextPage),
+    hasPreviousPage: Boolean(response?.pageInfo?.hasPreviousPage),
+  };
+
   return {
-    rows: enrichedItems.map(normalizeOrderRow),
-    summaryCards: normalizeSummary(response.summary),
-    pageInfo: {
-      page: Number(filters?.page ?? 1),
-      pageSize: Number(filters?.limit ?? 10),
-      totalItems: Number(response?.pageInfo?.totalItems ?? responseItems.length ?? 0),
-      totalPages: Number(response?.pageInfo?.totalPages ?? 1),
-      hasNextPage: Boolean(response?.pageInfo?.hasNextPage),
-      hasPreviousPage: Boolean(response?.pageInfo?.hasPreviousPage),
-    },
+    rows: normalizedRows,
+    summaryCards: normalizeSummary(
+      response.summary,
+      normalizedRows,
+      normalizedPageInfo,
+    ),
+    pageInfo: normalizedPageInfo,
     filterOptions: {
       vendors: Array.isArray(response?.filterOptions?.vendors) ? response.filterOptions.vendors : [],
       statuses: Array.isArray(response?.filterOptions?.statuses)

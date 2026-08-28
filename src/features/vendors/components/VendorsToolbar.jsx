@@ -57,7 +57,6 @@ export default function VendorsToolbar({
     { label: "Pending Approval", value: "Pending Approval" },
     { label: "Active", value: "Active" },
     { label: "Suspended", value: "Suspended" },
-    { label: "Rejected", value: "Rejected" },
   ];
 
   return (

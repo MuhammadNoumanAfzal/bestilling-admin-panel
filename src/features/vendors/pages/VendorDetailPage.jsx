@@ -153,6 +153,16 @@ export default function VendorDetailPage() {
       return;
     }
 
+    if (vendor.applicationStatus === "Rejected") {
+      await Swal.fire({
+        icon: "info",
+        title: "Application already rejected",
+        text: "This vendor is currently in rejected application status. Use the review flow to approve again before changing account status.",
+        confirmButtonColor: "#cf6e38",
+      });
+      return;
+    }
+
     const isReactivating = vendor.status === "Suspended" || vendor.status === "Deactivated";
 
     const result = await Swal.fire({
@@ -571,7 +581,13 @@ export default function VendorDetailPage() {
           isSuspending={isSuspending}
           onDelete={handleDeactivateVendor}
           onSuspend={handleSuspendVendor}
-          suspendLabel={vendor.status === "Suspended" || vendor.status === "Deactivated" ? "Reactivate Account" : "Suspend Account"}
+          suspendLabel={
+            vendor.applicationStatus === "Rejected"
+              ? "Application Rejected"
+              : vendor.status === "Suspended" || vendor.status === "Deactivated"
+                ? "Reactivate Account"
+                : "Suspend Account"
+          }
           vendorName={vendor.name}
         />
       </div>

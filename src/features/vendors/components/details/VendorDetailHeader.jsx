@@ -2,6 +2,25 @@ import { ArrowLeft, Calendar, Check, Copy, MapPin, UserRound } from "lucide-reac
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+function getStatusBadgeClass(status) {
+  switch (`${status ?? ""}`.trim()) {
+    case "Rejected":
+      return "border-[#f0c9c4] bg-[#fff3f1] text-[#bf4335]";
+    case "Pending Approval":
+      return "border-[#f0ddbe] bg-[#fff7e9] text-[#9a5c1d]";
+    case "Changes Requested":
+      return "border-[#f0d8c4] bg-[#fff6ef] text-[#bf6739]";
+    case "Suspended":
+      return "border-[#e7d5d2] bg-[#f7f1f1] text-[#8f4d4d]";
+    case "Deactivated":
+      return "border-[#ddd8d4] bg-[#f5f3f1] text-[#6c625c]";
+    case "Active":
+      return "border-[#dbe9df] bg-[#eef8f1] text-[#287946]";
+    default:
+      return "border-[#eadfd6] bg-white text-[#6f645d]";
+  }
+}
+
 export default function VendorDetailHeader({
   vendor,
   sections = [],
@@ -56,6 +75,20 @@ export default function VendorDetailHeader({
                     <h1 className="text-[30px] font-extrabold tracking-[-0.04em] text-[#18120f] sm:text-[38px]">
                       {vendor.name}
                     </h1>
+                    {vendor.applicationStatus ? (
+                      <span
+                        className={`rounded-full border px-3 py-1 text-[11px] font-bold ${getStatusBadgeClass(vendor.applicationStatus)}`}
+                      >
+                        Application: {vendor.applicationStatus}
+                      </span>
+                    ) : null}
+                    {vendor.status ? (
+                      <span
+                        className={`rounded-full border px-3 py-1 text-[11px] font-bold ${getStatusBadgeClass(vendor.status)}`}
+                      >
+                        Account: {vendor.status}
+                      </span>
+                    ) : null}
                   </div>
                   <p className="mt-2 text-[16px] leading-7 text-[#6f645d]">
                     Review vendor operations, menus, orders, reviews, payouts, and compliance documents in one place.

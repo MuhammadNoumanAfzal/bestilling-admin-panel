@@ -179,6 +179,7 @@ function HistoryItem({ item }) {
 function getApplicationBadgeClass(status) {
   switch (`${status ?? ""}`.trim()) {
     case "Rejected":
+    case "Suspended":
       return "bg-[#fff1f0] text-[#b43c2d]";
     case "Pending Approval":
       return "bg-[#fff3df] text-[#8a5318]";
@@ -471,7 +472,7 @@ export default function VendorApplicationReviewPage() {
         <div class="vendor-review-alert__shell">
           <div class="vendor-review-alert__hero">
             <div class="vendor-review-alert__hero-badge">Decision Required</div>
-            <h2 class="vendor-review-alert__title">Reject vendor application</h2>
+            <h2 class="vendor-review-alert__title">Suspend vendor application</h2>
             <p class="vendor-review-alert__lead">
               Share a clear reason so the team has a proper audit trail and the vendor can understand what blocked approval.
             </p>
@@ -498,13 +499,13 @@ export default function VendorApplicationReviewPage() {
 
             <div class="vendor-review-alert__note">
               <span class="vendor-review-alert__note-icon">!</span>
-              <p>This action marks the application as rejected. Use a precise reason so future reviews stay consistent.</p>
+              <p>This action marks the application as suspended. Use a precise reason so future reviews stay consistent.</p>
             </div>
           </div>
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: "Reject application",
+      confirmButtonText: "Suspend application",
       cancelButtonText: "Cancel",
       confirmButtonColor: "#c53a2f",
       cancelButtonColor: "#c8b9aa",
@@ -555,14 +556,14 @@ export default function VendorApplicationReviewPage() {
 
       await Swal.fire({
         icon: "success",
-        title: "Application rejected",
+        title: "Application suspended",
         text: response.message,
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
         icon: "error",
-        title: "Unable to reject application",
+        title: "Unable to suspend application",
         text: error instanceof Error ? error.message : "Please try again.",
         confirmButtonColor: "#cf6e38",
       });
@@ -778,8 +779,8 @@ export default function VendorApplicationReviewPage() {
                   <h1 className="text-[40px] font-extrabold tracking-[-0.04em] text-[#17110d]">
                     {vendor.name}
                   </h1>
-                  <span className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${getApplicationBadgeClass(vendor.applicationStatus)}`}>
-                    {vendor.applicationStatus}
+                  <span className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${getApplicationBadgeClass(applicationStatusLabel)}`}>
+                    {applicationStatusLabel}
                   </span>
                   {!canApproveForUi ? (
                     <span className="rounded-full bg-[#fff3f0] px-3 py-1.5 text-[11px] font-bold text-[#c53a2f]">
@@ -815,7 +816,7 @@ export default function VendorApplicationReviewPage() {
                 type="button"
               >
                 <XCircle size={13} />
-                Reject
+                Suspend
               </button>
               <button
                 className={[
@@ -944,3 +945,5 @@ export default function VendorApplicationReviewPage() {
     </div>
   );
 }
+  const applicationStatusLabel =
+    vendor?.applicationStatus === "Rejected" ? "Suspended" : vendor?.applicationStatus || "";

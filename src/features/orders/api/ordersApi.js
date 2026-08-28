@@ -215,6 +215,20 @@ function deriveAdminOrderPaymentStatus(order) {
   return "Pending";
 }
 
+function canMarkOrderPaid(order) {
+  const paymentStatus = deriveAdminOrderPaymentStatus(order);
+
+  if (
+    paymentStatus === "Paid" ||
+    paymentStatus === "Refunded" ||
+    paymentStatus === "Partially refunded"
+  ) {
+    return false;
+  }
+
+  return Boolean(order?.flags?.canUpdatePaymentStatus);
+}
+
 function resolveLifecycleRawStatus(order) {
   const status = `${order?.status ?? ""}`.trim().toUpperCase();
   const fulfillmentStatus = `${order?.fulfillmentStatus ?? ""}`.trim().toUpperCase();
@@ -467,6 +481,8 @@ function normalizeOrderRow(item) {
   const customerName = item?.customer?.fullName || "Unknown customer";
   const vendorName = item?.vendor?.businessName || "Unknown vendor";
   const currency = item?.amount?.currency || "NOK";
+  const paymentStatus = deriveAdminOrderPaymentStatus(item);
+  const canMarkPaid = canMarkOrderPaid(item);
   const eventLabel =
     `${item?.eventName ?? item?.eventType ?? item?.delivery?.type ?? ""}`.trim() ||
     "Not specified";
@@ -496,7 +512,7 @@ function normalizeOrderRow(item) {
     amountValue: getMoneyNumber(item?.amount?.total),
     status: normalizeStatus(resolveLifecycleRawStatus(item)),
     rawStatus: resolveLifecycleRawStatus(item),
-    paymentStatus: deriveAdminOrderPaymentStatus(item),
+    paymentStatus,
     rawPaymentStatus: `${item?.paymentStatus ?? ""}`.trim().toUpperCase(),
     fulfillmentStatus: normalizeStatus(item?.fulfillmentStatus || item?.status),
     rawFulfillmentStatus: `${item?.fulfillmentStatus ?? item?.status ?? ""}`.trim().toUpperCase(),
@@ -511,12 +527,12 @@ function normalizeOrderRow(item) {
       canMarkDelivered: Boolean(item?.flags?.canMarkDelivered),
       canCancel: Boolean(item?.flags?.canCancel),
       canRefund: Boolean(item?.flags?.canRefund),
-      canUpdatePaymentStatus: Boolean(item?.flags?.canUpdatePaymentStatus),
+      canUpdatePaymentStatus: canMarkPaid,
     },
     actions: {
       canCancel: Boolean(item?.flags?.canCancel),
       canRefund: Boolean(item?.flags?.canRefund),
-      canMarkPaid: Boolean(item?.flags?.canUpdatePaymentStatus),
+      canMarkPaid,
       canMarkDelivered: Boolean(item?.flags?.canMarkDelivered),
       canAssignVendor: false,
       canDownloadInvoice: Boolean(item?.payment?.invoiceUrl || item?.payment?.receiptUrl),
@@ -578,6 +594,8 @@ function normalizeOrderDetail(order) {
   const currency = order?.amount?.currency || "NOK";
   const customerName = order?.customer?.fullName || "Unknown customer";
   const vendorName = order?.vendor?.businessName || "Unknown vendor";
+  const paymentStatus = deriveAdminOrderPaymentStatus(order);
+  const canMarkPaid = canMarkOrderPaid(order);
   const itemCount = Array.isArray(order?.items)
     ? order.items.reduce((sum, item) => sum + Number(item?.quantity ?? 0), 0)
     : 0;
@@ -591,7 +609,7 @@ function normalizeOrderDetail(order) {
     orderNumber: order.orderNumber || order.id,
     status: normalizeStatus(resolveLifecycleRawStatus(order)),
     rawStatus: resolveLifecycleRawStatus(order),
-    paymentStatus: deriveAdminOrderPaymentStatus(order),
+    paymentStatus,
     rawPaymentStatus: `${order.paymentStatus ?? ""}`.trim().toUpperCase(),
     fulfillmentStatus: normalizeStatus(resolveLifecycleRawStatus(order)),
     placedAt: order.placedAt || "",
@@ -733,7 +751,7 @@ function normalizeOrderDetail(order) {
     flags: {
       canCancel: Boolean(order?.flags?.canCancel),
       canRefund: Boolean(order?.flags?.canRefund),
-      canMarkPaid: Boolean(order?.flags?.canUpdatePaymentStatus),
+      canMarkPaid,
       canMarkDelivered: Boolean(order?.flags?.canMarkDelivered),
       canAssignRider: Boolean(order?.flags?.canAssignRider),
       canReschedule: Boolean(order?.flags?.canReschedule),
@@ -741,7 +759,7 @@ function normalizeOrderDetail(order) {
     actions: {
       canCancel: Boolean(order?.flags?.canCancel),
       canRefund: Boolean(order?.flags?.canRefund),
-      canMarkPaid: Boolean(order?.flags?.canUpdatePaymentStatus),
+      canMarkPaid,
       canMarkDelivered: Boolean(order?.flags?.canMarkDelivered),
       canAssignVendor: Boolean(order?.flags?.canAssignRider),
       canDownloadInvoice: Boolean(order?.payment?.invoiceUrl || order?.payment?.receiptUrl),

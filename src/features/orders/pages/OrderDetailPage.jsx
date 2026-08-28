@@ -21,7 +21,6 @@ import OrderSummaryCard from "../components/details/OrderSummaryCard.jsx";
 import {
   getCommissionPreviewForOrderRequest,
   getAdminOrderDetailRequest,
-  refundOrderRequest,
   updateOrderPaymentStatusRequest,
 } from "../api/ordersApi.js";
 
@@ -205,72 +204,6 @@ export default function OrderDetailPage() {
     });
   }
 
-  async function handleRefundOrder() {
-    const refundModePrompt = await Swal.fire({
-      title: "Refund order",
-      input: "select",
-      inputOptions: {
-        FULL: "Full refund",
-        PARTIAL: "Partial refund",
-      },
-      inputValue: "FULL",
-      showCancelButton: true,
-      confirmButtonText: "Continue",
-      confirmButtonColor: "#cf6e38",
-      cancelButtonColor: "#c8b9aa",
-    });
-
-    if (!refundModePrompt.isConfirmed) {
-      return;
-    }
-
-    let partialAmount = "";
-    if (refundModePrompt.value === "PARTIAL") {
-      const amountPrompt = await Swal.fire({
-        title: "Partial refund amount",
-        input: "number",
-        inputAttributes: {
-          min: "0",
-          step: "0.01",
-        },
-        showCancelButton: true,
-        confirmButtonText: "Continue",
-        confirmButtonColor: "#cf6e38",
-        cancelButtonColor: "#c8b9aa",
-      });
-
-      if (!amountPrompt.isConfirmed) {
-        return;
-      }
-
-      partialAmount = amountPrompt.value || "";
-    }
-
-    const reasonPrompt = await Swal.fire({
-      title: "Refund reason",
-      input: "text",
-      inputPlaceholder: "Optional note for finance and support teams",
-      showCancelButton: true,
-      confirmButtonText: "Process refund",
-      confirmButtonColor: "#cf6e38",
-      cancelButtonColor: "#c8b9aa",
-    });
-
-    if (!reasonPrompt.isConfirmed) {
-      return;
-    }
-
-    await runAction(async () => {
-      const result = await refundOrderRequest({
-        orderId: order.id,
-        mode: refundModePrompt.value,
-        amount: partialAmount ? Number(partialAmount) : null,
-        reason: reasonPrompt.value || "",
-      });
-      return result.message;
-    });
-  }
-
   function handleViewCustomerProfile() {
     if (!order?.customer?.id) {
       return;
@@ -367,19 +300,6 @@ export default function OrderDetailPage() {
                 Mark Paid
               </button>
             ) : null}
-
-            {order.actions.canRefund ? (
-              <button
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] border border-[#eadccd] bg-white px-4 text-[13px] font-semibold text-[#8a5b16] transition hover:bg-[#fff8f1] disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={isWorking}
-                onClick={handleRefundOrder}
-                type="button"
-              >
-                <CreditCard size={15} />
-                Refund
-              </button>
-            ) : null}
-
           </div>
         </div>
       </section>

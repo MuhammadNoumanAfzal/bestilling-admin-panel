@@ -745,6 +745,8 @@ export default function VendorApplicationReviewPage() {
     ? Math.round((checklistCompleted / checklistTotal) * 100)
     : 100;
   const canApproveForUi = Boolean(vendor.canApprove);
+  const applicationStatusLabel =
+    vendor.applicationStatus === "Rejected" ? "Suspended" : vendor.applicationStatus || "";
 
   return (
     <div className="mx-auto max-w-[1120px] space-y-6">
@@ -945,5 +947,3 @@ export default function VendorApplicationReviewPage() {
     </div>
   );
 }
-  const applicationStatusLabel =
-    vendor?.applicationStatus === "Rejected" ? "Suspended" : vendor?.applicationStatus || "";

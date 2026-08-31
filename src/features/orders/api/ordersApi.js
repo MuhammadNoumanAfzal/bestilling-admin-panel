@@ -3,6 +3,7 @@ import {
   ADMIN_ADD_ORDER_NOTE_MUTATION,
   ADMIN_ASSIGN_ORDER_RIDER_MUTATION,
   ADMIN_CANCEL_ORDER_MUTATION,
+  ADMIN_ORDER_DETAIL_ENRICHED_QUERY,
   ADMIN_EXPORT_ORDERS_MUTATION,
   ADMIN_ORDER_ALLOWED_ACTIONS_QUERY,
   ADMIN_ORDER_AUDIT_LOGS_QUERY,
@@ -12,6 +13,7 @@ import {
   ADMIN_ORDER_INVOICE_QUERY,
   ADMIN_ORDER_PAYMENT_RECONCILIATION_QUERY,
   ADMIN_ORDER_STATUS_FALLBACK_QUERY,
+  ADMIN_ORDERS_ENRICHED_QUERY,
   ADMIN_ORDERS_QUERY,
   ADMIN_REFUND_ORDER_MUTATION,
   ADMIN_UPDATE_DELIVERY_STATUS_MUTATION,
@@ -22,6 +24,23 @@ import {
 function getErrorMessage(result, fallbackMessage) {
   const firstError = result?.errors?.find((item) => item?.message)?.message;
   return firstError || result?.message || fallbackMessage;
+}
+
+function isSchemaFieldMissingError(error) {
+  const message = `${error?.message ?? ""}`.trim().toLowerCase();
+  return message.includes("cannot query field");
+}
+
+async function executePreferredOrdersQuery(query, variables) {
+  try {
+    return await executeProtectedGraphqlRequest(query, variables);
+  } catch (error) {
+    if (!isSchemaFieldMissingError(error)) {
+      throw error;
+    }
+
+    return null;
+  }
 }
 
 function toInitials(value) {
@@ -98,7 +117,13 @@ function normalizeStatus(value) {
   const normalized = `${value ?? ""}`.trim().toUpperCase();
 
   switch (normalized) {
+    case "MODIFIED":
+    case "CHANGE_REQUESTED":
+    case "ADJUSTMENT_REQUESTED":
+    case "PENDING_CUSTOMER_APPROVAL":
+      return "Modified";
     case "ACCEPTED":
+    case "CONFIRMED":
       return "Accepted";
     case "PREPARING":
       return "Preparing";
@@ -114,6 +139,48 @@ function normalizeStatus(value) {
     default:
       return "Pending";
   }
+}
+
+const PENDING_VENDOR_ADJUSTMENT_STATUSES = new Set([
+  "PENDING",
+  "PENDING_CUSTOMER_APPROVAL",
+]);
+
+const CLOSED_REJECTED_STATUSES = new Set([
+  "REJECTED",
+  "DECLINED",
+  "CANCELED",
+  "CANCELLED",
+]);
+
+function hasPendingClientModification(order) {
+  if (typeof order?.hasPendingModificationRequest === "boolean") {
+    return order.hasPendingModificationRequest;
+  }
+
+  return `${order?.pendingModificationRequest?.status ?? ""}`.trim().toUpperCase() === "PENDING";
+}
+
+function hasPendingVendorAdjustment(order) {
+  const pendingStatus = `${order?.pendingVendorAdjustment?.status ?? ""}`.trim().toUpperCase();
+  return PENDING_VENDOR_ADJUSTMENT_STATUSES.has(pendingStatus);
+}
+
+function hasRejectedLatestChange(order) {
+  const vendorAdjustmentStatus = `${order?.latestVendorAdjustment?.status ?? ""}`.trim().toUpperCase();
+  return CLOSED_REJECTED_STATUSES.has(vendorAdjustmentStatus);
+}
+
+function resolveAdminDisplayStatus(order) {
+  if (hasPendingClientModification(order) || hasPendingVendorAdjustment(order)) {
+    return "Modified";
+  }
+
+  if (hasRejectedLatestChange(order)) {
+    return "Canceled";
+  }
+
+  return normalizeStatus(resolveLifecycleRawStatus(order));
 }
 
 function normalizePaymentStatus(value) {
@@ -510,7 +577,7 @@ function normalizeOrderRow(item) {
     dateTime: formatDateTimeLabel(item?.placedAt),
     amount: formatMoney(item?.amount?.total, currency),
     amountValue: getMoneyNumber(item?.amount?.total),
-    status: normalizeStatus(resolveLifecycleRawStatus(item)),
+    status: resolveAdminDisplayStatus(item),
     rawStatus: resolveLifecycleRawStatus(item),
     paymentStatus,
     rawPaymentStatus: `${item?.paymentStatus ?? ""}`.trim().toUpperCase(),
@@ -661,7 +728,7 @@ function normalizeOrderDetail(order) {
   return {
     id: order.id,
     orderNumber: order.orderNumber || order.id,
-    status: normalizeStatus(resolveLifecycleRawStatus(order)),
+    status: resolveAdminDisplayStatus(order),
     rawStatus: resolveLifecycleRawStatus(order),
     paymentStatus,
     rawPaymentStatus: `${order.paymentStatus ?? ""}`.trim().toUpperCase(),
@@ -866,10 +933,36 @@ function findFallbackPaymentOrderStatus(fallbackItems, orderId) {
   return directMatch?.order?.status || "";
 }
 
+function mergeAdminOrderChangeState(baseOrder, detailOrder) {
+  if (!detailOrder) {
+    return baseOrder;
+  }
+
+  return {
+    ...baseOrder,
+    pendingVendorAdjustment:
+      detailOrder?.pendingVendorAdjustment ?? baseOrder?.pendingVendorAdjustment ?? null,
+    latestVendorAdjustment:
+      detailOrder?.latestVendorAdjustment ?? baseOrder?.latestVendorAdjustment ?? null,
+    pendingModificationRequest:
+      detailOrder?.pendingModificationRequest ?? baseOrder?.pendingModificationRequest ?? null,
+    latestModificationRequest:
+      detailOrder?.latestModificationRequest ?? baseOrder?.latestModificationRequest ?? null,
+    canceledAt: detailOrder?.canceledAt || baseOrder?.canceledAt || "",
+    cancellationReason: detailOrder?.cancellationReason || baseOrder?.cancellationReason || "",
+    status: detailOrder?.status || baseOrder?.status,
+    fulfillmentStatus: detailOrder?.fulfillmentStatus || baseOrder?.fulfillmentStatus,
+    delivery: detailOrder?.delivery || baseOrder?.delivery,
+  };
+}
+
 export async function getAdminOrdersRequest(filters) {
-  const data = await executeProtectedGraphqlRequest(ADMIN_ORDERS_QUERY, {
+  const variables = {
     input: buildOrdersInput(filters),
-  });
+  };
+  const data =
+    (await executePreferredOrdersQuery(ADMIN_ORDERS_ENRICHED_QUERY, variables)) ||
+    (await executeProtectedGraphqlRequest(ADMIN_ORDERS_QUERY, variables));
   const response = data?.adminOrders;
 
   if (!response) {
@@ -886,50 +979,62 @@ export async function getAdminOrdersRequest(filters) {
       }
 
       try {
-        const fallbackData = await executeProtectedGraphqlRequest(
-          ADMIN_ORDER_STATUS_FALLBACK_QUERY,
-          {
-            search: `${orderId}`,
-            page: 1,
-            pageSize: 20,
-          },
-        );
+        const [fallbackData, detailData] = await Promise.all([
+          executeProtectedGraphqlRequest(
+            ADMIN_ORDER_STATUS_FALLBACK_QUERY,
+            {
+              search: `${orderId}`,
+              page: 1,
+              pageSize: 20,
+            },
+          ),
+          executePreferredOrdersQuery(ADMIN_ORDER_DETAIL_ENRICHED_QUERY, {
+            id: orderId,
+          })
+            .then((result) => result || executeProtectedGraphqlRequest(ADMIN_ORDER_DETAIL_QUERY, {
+              id: orderId,
+            }))
+            .catch(() => null),
+        ]);
+
+        const detailOrder = detailData?.adminOrder || null;
+        const mergedItem = mergeAdminOrderChangeState(item, detailOrder);
         const fallbackStatus = findFallbackPaymentOrderStatus(
           fallbackData?.adminPayments?.items,
           orderId,
         );
         const resolvedStatus = resolveMostAdvancedLifecycleStatus(
-          item?.status,
-          item?.fulfillmentStatus,
-          item?.delivery?.status,
+          mergedItem?.status,
+          mergedItem?.fulfillmentStatus,
+          mergedItem?.delivery?.status,
           fallbackStatus,
         );
 
         return resolvedStatus
           ? {
-              ...item,
+              ...mergedItem,
               status: resolvedStatus,
               fulfillmentStatus:
                 resolveMostAdvancedLifecycleStatus(
-                  item?.fulfillmentStatus,
-                  item?.delivery?.status,
-                  item?.status,
+                  mergedItem?.fulfillmentStatus,
+                  mergedItem?.delivery?.status,
+                  mergedItem?.status,
                   fallbackStatus,
                 ) || resolvedStatus,
-              delivery: item?.delivery
+              delivery: mergedItem?.delivery
                 ? {
-                    ...item.delivery,
+                    ...mergedItem.delivery,
                     status:
                       resolveMostAdvancedLifecycleStatus(
-                        item?.delivery?.status,
-                        item?.fulfillmentStatus,
-                        item?.status,
+                        mergedItem?.delivery?.status,
+                        mergedItem?.fulfillmentStatus,
+                        mergedItem?.status,
                         fallbackStatus,
                       ) || resolvedStatus,
                   }
-                : item?.delivery,
+                : mergedItem?.delivery,
             }
-          : item;
+          : mergedItem;
       } catch {
         return item;
       }
@@ -979,9 +1084,11 @@ export async function getAdminOrderCategoryBreakdownRequest(filters) {
 
 export async function getAdminOrderDetailRequest(orderId) {
   const [data, fallbackData] = await Promise.all([
-    executeProtectedGraphqlRequest(ADMIN_ORDER_DETAIL_QUERY, {
+    executePreferredOrdersQuery(ADMIN_ORDER_DETAIL_ENRICHED_QUERY, {
       id: orderId,
-    }),
+    }).then((result) => result || executeProtectedGraphqlRequest(ADMIN_ORDER_DETAIL_QUERY, {
+      id: orderId,
+    })),
     executeProtectedGraphqlRequest(ADMIN_ORDER_STATUS_FALLBACK_QUERY, {
       search: `${orderId}`,
       page: 1,

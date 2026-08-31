@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
 
 const statusClasses = {
   Accepted: "bg-[#fffbeb] text-[#b45309]",
+  Modified: "bg-[#fff4ea] text-[#cb6b2f]",
   Preparing: "bg-[#fff7ed] text-[#c2410c]",
   "Out for delivery": "bg-[#edf5ff] text-[#296db8]",
   Delivered: "bg-[#edf8f1] text-[#2b9e62]",

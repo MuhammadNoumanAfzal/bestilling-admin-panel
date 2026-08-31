@@ -48,6 +48,92 @@ export const ADMIN_ORDERS_QUERY = `
   }
 `;
 
+export const ADMIN_ORDERS_ENRICHED_QUERY = `
+  query AdminOrdersEnriched($input: AdminOrdersInput!) {
+    adminOrders(input: $input) {
+      items {
+        id
+        orderNumber
+        status
+        fulfillmentStatus
+        paymentStatus
+        eventType
+        guestCount
+        placedAt
+        canceledAt
+        cancellationReason
+        hasPendingVendorAdjustment
+        hasPendingModificationRequest
+        pendingVendorAdjustment {
+          id
+          status
+        }
+        latestVendorAdjustment {
+          id
+          status
+          createdOn
+          resolvedOn
+        }
+        pendingModificationRequest {
+          id
+          status
+        }
+        latestModificationRequest {
+          id
+          status
+          createdOn
+          resolvedOn
+        }
+        amount {
+          currency
+          total
+        }
+        customer {
+          id
+          fullName
+          email
+          phone
+          avatarUrl
+        }
+        vendor {
+          id
+          businessName
+          city
+          avatarUrl
+        }
+        delivery {
+          status
+          deliveredAt
+          city
+        }
+        flags {
+          canMarkDelivered
+          canCancel
+          canRefund
+          canUpdatePaymentStatus
+        }
+      }
+      summary {
+        totalOrders
+        paidOrders
+        pendingOrders
+        refundOrReviewOrders
+        deliveredOrders
+        totalRevenue
+        currency
+      }
+      filterOptions {
+        vendors {
+          id
+          label
+        }
+        statuses
+        paymentStatuses
+      }
+    }
+  }
+`;
+
 export const ADMIN_ORDER_DETAIL_QUERY = `
   query AdminOrderDetail($id: ID!) {
     adminOrder(id: $id) {
@@ -69,6 +155,208 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
       source
       specialInstructions
       orderNotes
+      amount {
+        currency
+        subtotal
+        tax
+        deliveryFee
+        serviceFee
+        tip
+        discount
+        refundAmount
+        refunded
+        total
+        formattedTotal
+      }
+      customer {
+        id
+        fullName
+        email
+        phone
+        avatarUrl
+        totalOrders
+        totalSpent {
+          amount
+          currency
+          formatted
+        }
+        defaultAddress {
+          line1
+          line2
+          city
+          postalCode
+          country
+        }
+      }
+      vendor {
+        id
+        businessName
+        email
+        phone
+        city
+        postalCode
+        avatarUrl
+        rating
+        totalOrders
+        address {
+          city
+          country
+          line1
+          line2
+          postalCode
+        }
+      }
+      delivery {
+        type
+        status
+        scheduledAt
+        deliveredAt
+        recipientName
+        recipientPhone
+        city
+        address {
+          line1
+          line2
+          city
+          postalCode
+          country
+        }
+        rider {
+          id
+          fullName
+          phone
+        }
+      }
+      items {
+        id
+        name
+        quantity
+        unitPrice
+        totalPrice
+        notes
+        imageUrl
+        options {
+          name
+          value
+        }
+        addons {
+          id
+          name
+          quantity
+          unitPrice
+          totalPrice
+        }
+      }
+      payment {
+        method
+        provider
+        transactionId
+        providerReference
+        capturedAt
+        refundedAt
+        invoiceUrl
+        receiptUrl
+      }
+      flags {
+        canMarkDelivered
+        canCancel
+        canRefund
+        canUpdatePaymentStatus
+        canAssignRider
+        canReschedule
+      }
+    }
+  }
+`;
+
+export const ADMIN_ORDER_DETAIL_ENRICHED_QUERY = `
+  query AdminOrderDetailEnriched($id: ID!) {
+    adminOrder(id: $id) {
+      id
+      orderNumber
+      status
+      paymentStatus
+      fulfillmentStatus
+      placedAt
+      acceptedAt
+      preparedAt
+      outForDeliveryAt
+      deliveredAt
+      canceledAt
+      cancellationReason
+      eventDate
+      eventTime
+      guestCount
+      source
+      specialInstructions
+      orderNotes
+      hasPendingVendorAdjustment
+      hasPendingModificationRequest
+      pendingVendorAdjustment {
+        id
+        status
+        reason
+        vendorNote
+        customerResponse
+        createdOn
+        resolvedOn
+        proposedEventDate
+        proposedDeliveryWindowStart
+        proposedDeliveryWindowEnd
+        proposedGuestCount
+        proposedAddressLine1
+        proposedAddressLine2
+        proposedCity
+        proposedPostalCode
+        oldTotal
+        newTotal
+      }
+      latestVendorAdjustment {
+        id
+        status
+        customerResponse
+        createdOn
+        resolvedOn
+      }
+      pendingModificationRequest {
+        id
+        status
+        reason
+        vendorNote
+        customerResponse
+        createdOn
+        resolvedOn
+        currentSnapshot {
+          eventDate
+          eventTime
+          personCount
+          orderNotes
+          deliveryAddress {
+            addressLine1
+            addressLine2
+            city
+            postalCode
+          }
+        }
+        proposedSnapshot {
+          eventDate
+          eventTime
+          personCount
+          orderNotes
+          deliveryAddress {
+            addressLine1
+            addressLine2
+            city
+            postalCode
+          }
+        }
+      }
+      latestModificationRequest {
+        id
+        status
+        createdOn
+        resolvedOn
+      }
       amount {
         currency
         subtotal

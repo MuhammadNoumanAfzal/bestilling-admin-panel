@@ -111,7 +111,6 @@ export const ADMIN_VENDOR_DETAIL_QUERY = `
       legalName
       businessType
       status
-      applicationStatus
       avatarUrl
       supportContactLabel
       managerName

@@ -306,7 +306,7 @@ function normalizeVendorDetail(vendor) {
     return null;
   }
 
-  const applicationStatus = normalizeVendorStatus(vendor.applicationStatus);
+  const applicationStatus = "";
 
   return {
     id: vendor.id,
@@ -316,7 +316,7 @@ function normalizeVendorDetail(vendor) {
     status: normalizeVendorStatus(vendor.status),
     rawStatus: `${vendor.status ?? ""}`.trim().toUpperCase() || "ACTIVE",
     applicationStatus,
-    rawApplicationStatus: `${vendor.applicationStatus ?? ""}`.trim().toUpperCase(),
+    rawApplicationStatus: "",
     avatarUrl: vendor.avatarUrl || "",
     supportContactLabel: vendor.supportContactLabel || "Back to vendors",
     manager: vendor.managerName || "Not assigned",

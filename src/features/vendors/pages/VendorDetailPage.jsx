@@ -342,8 +342,8 @@ export default function VendorDetailPage() {
               <div style="margin-top:6px;font-size:14px;font-weight:700;color:#1f1713;line-height:1.45;">${payoutProfile.bankName || "Not provided"}</div>
             </div>
             <div style="border:1px solid #efdfd3;border-radius:18px;padding:10px 12px;background:linear-gradient(180deg,#ffffff 0%,#fcfaf8 100%);">
-              <div style="font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a18f84;">Status</div>
-              <div style="margin-top:6px;font-size:14px;font-weight:700;color:#c96533;line-height:1.45;">${payoutProfile.verificationStatus || "Pending review"}</div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a18f84;">Account number</div>
+              <div style="margin-top:6px;font-size:14px;font-weight:700;color:#1f1713;line-height:1.45;">${payoutProfile.accountNumber || "Not provided"}</div>
             </div>
           </div>
 

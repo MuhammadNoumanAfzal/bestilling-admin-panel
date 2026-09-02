@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { executeProtectedGraphqlRequest } from "../../app/api/protectedGraphqlClient.js";
 import { useAuth } from "../../features/auth/hooks/useAuth.js";
@@ -13,8 +14,32 @@ const REGISTER_DEVICE_TOKEN_MUTATION = `
   }
 `;
 
+function getPushLink(payload) {
+  return String(payload?.data?.link || payload?.fcmOptions?.link || "").trim();
+}
+
+function openPushLink(link, navigate) {
+  if (!link) {
+    return;
+  }
+
+  try {
+    const target = new URL(link, window.location.origin);
+
+    if (target.origin === window.location.origin) {
+      navigate(`${target.pathname}${target.search}${target.hash}`);
+      return;
+    }
+
+    window.location.assign(target.href);
+  } catch {
+    navigate(link);
+  }
+}
+
 export default function PushNotificationBootstrap() {
   const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isAuthenticated || !user?.id) {
@@ -30,15 +55,21 @@ export default function PushNotificationBootstrap() {
         const { token, unsubscribe: stopListening } = await startFirebasePush((payload) => {
           const title = payload?.notification?.title || payload?.data?.title || "New notification";
           const text = payload?.notification?.body || payload?.data?.body || "You have a new update.";
+          const link = getPushLink(payload);
           void Swal.fire({
             toast: true,
             position: "top-end",
             icon: "info",
             title,
             text,
-            showConfirmButton: false,
+            showConfirmButton: Boolean(link),
+            confirmButtonText: "Open order",
             timer: 4500,
             timerProgressBar: true,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              openPushLink(link, navigate);
+            }
           });
         });
         unsubscribe = stopListening;
@@ -68,7 +99,7 @@ export default function PushNotificationBootstrap() {
       isDisposed = true;
       unsubscribe();
     };
-  }, [isAuthenticated, user?.id]);
+  }, [isAuthenticated, navigate, user?.id]);
 
   return null;
 }

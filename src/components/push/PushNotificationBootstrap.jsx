@@ -37,6 +37,27 @@ function openPushLink(link, navigate) {
   }
 }
 
+function showForegroundBrowserNotification(title, body, link, navigate) {
+  if (Notification.permission !== "granted") {
+    return;
+  }
+
+  try {
+    const notification = new Notification(title, {
+      body,
+      icon: "/favicon.ico",
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      openPushLink(link, navigate);
+      notification.close();
+    };
+  } catch (error) {
+    console.warn("Unable to show foreground browser notification:", error);
+  }
+}
+
 export default function PushNotificationBootstrap() {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
@@ -56,6 +77,8 @@ export default function PushNotificationBootstrap() {
           const title = payload?.notification?.title || payload?.data?.title || "New notification";
           const text = payload?.notification?.body || payload?.data?.body || "You have a new update.";
           const link = getPushLink(payload);
+          showForegroundBrowserNotification(title, text, link, navigate);
+
           void Swal.fire({
             toast: true,
             position: "top-end",

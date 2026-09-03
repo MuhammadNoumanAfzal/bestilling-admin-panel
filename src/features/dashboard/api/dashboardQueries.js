@@ -68,6 +68,15 @@ export const ADMIN_DASHBOARD_OVERVIEW_QUERY = `
   }
 `;
 
+export const ADMIN_VENDOR_STATUS_QUERY = `
+  query AdminVendorStatus($id: ID!) {
+    adminVendor(id: $id) {
+      id
+      status
+    }
+  }
+`;
+
 export const ADMIN_UPDATE_VENDOR_APPROVAL_STATUS_MUTATION = `
   mutation AdminUpdateVendorApprovalStatus($input: AdminUpdateVendorApprovalStatusInput!) {
     adminUpdateVendorApprovalStatus(input: $input) {

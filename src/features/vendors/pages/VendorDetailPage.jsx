@@ -10,7 +10,6 @@ import {
   deleteVendorRequest,
   getAdminVendorDetailRequest,
   getAdminVendorMenuDetailRequest,
-  getVendorDocumentAccessRequest,
   updateVendorStatusRequest,
 } from "../api/vendorsApi.js";
 import VendorBusinessOverviewSection from "../components/details/VendorBusinessOverviewSection.jsx";
@@ -22,7 +21,6 @@ import VendorPublishedMenusSection from "../components/details/VendorPublishedMe
 import VendorPayoutProfileSection from "../components/details/VendorPayoutProfileSection.jsx";
 import VendorRecentOrdersSection from "../components/details/VendorRecentOrdersSection.jsx";
 import VendorReviewsSection from "../components/details/VendorReviewsSection.jsx";
-import VendorVerificationSection from "../components/details/VendorVerificationSection.jsx";
 
 function LoadingState() {
   return (
@@ -57,7 +55,6 @@ export default function VendorDetailPage() {
     { id: "earnings", label: "Earnings" },
     { id: "payout-profile", label: "Bank Profile" },
     { id: "reviews", label: "Reviews" },
-    { id: "documents", label: "Documents" },
     { id: "admin-actions", label: "Admin Actions" },
   ];
 
@@ -114,34 +111,6 @@ export default function VendorDetailPage() {
       behavior: "smooth",
       block: "start",
     });
-  }
-
-  async function handlePreviewDocument(document) {
-    try {
-      const access = await getVendorDocumentAccessRequest(document.id);
-      window.open(access.previewUrl || access.downloadUrl, "_blank", "noopener,noreferrer");
-    } catch (error) {
-      await Swal.fire({
-        icon: "error",
-        title: "Unable to preview document",
-        text: error instanceof Error ? error.message : "Please try again.",
-        confirmButtonColor: "#cf6e38",
-      });
-    }
-  }
-
-  async function handleDownloadDocument(document) {
-    try {
-      const access = await getVendorDocumentAccessRequest(document.id);
-      window.open(access.downloadUrl || access.previewUrl, "_blank", "noopener,noreferrer");
-    } catch (error) {
-      await Swal.fire({
-        icon: "error",
-        title: "Unable to download document",
-        text: error instanceof Error ? error.message : "Please try again.",
-        confirmButtonColor: "#cf6e38",
-      });
-    }
   }
 
   async function handleViewMenu(menu) {
@@ -563,14 +532,6 @@ export default function VendorDetailPage() {
 
       <div ref={(node) => { sectionRefs.current.reviews = node; }} className="scroll-mt-6">
         <VendorReviewsSection summary={vendor.reviewsSummary} />
-      </div>
-
-      <div ref={(node) => { sectionRefs.current.documents = node; }} className="scroll-mt-6">
-        <VendorVerificationSection
-          documents={vendor.documents}
-          onDownload={handleDownloadDocument}
-          onPreview={handlePreviewDocument}
-        />
       </div>
 
       <div ref={(node) => { sectionRefs.current["admin-actions"] = node; }} className="scroll-mt-6">

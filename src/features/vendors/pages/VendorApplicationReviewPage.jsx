@@ -859,7 +859,7 @@ export default function VendorApplicationReviewPage() {
       ) : null}
 
       <section>
-        <SectionTitle title="Storefront Assets" subtitle="Logo and cover photo are returned separately from legal compliance documents." />
+        <SectionTitle title="Storefront Assets" subtitle="Review the logo and cover photo before approving this vendor." />
         <div className="grid gap-4 md:grid-cols-2">
           <AssetCard imageUrl={vendor.assets.logoUrl || vendor.logoUrl} label="Logo" />
           <AssetCard imageUrl={vendor.assets.coverImageUrl} label="Cover Image" />
@@ -892,45 +892,6 @@ export default function VendorApplicationReviewPage() {
             ))}
           </div>
         </article>
-      </section>
-
-      <section>
-        <SectionTitle
-          title="Compliance Documents"
-          subtitle="Review uploaded legal and operational documents before approving this vendor."
-        />
-        {vendor.documents.length ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {vendor.documents.map((document) => (
-              <DocumentCard
-                key={document.id}
-                document={document}
-                onDownload={(item) => handleDocumentAccess(item, "download")}
-                onPreview={(item) => handleDocumentAccess(item, "preview")}
-                onReview={handleReviewDocument}
-              />
-            ))}
-          </div>
-        ) : (
-          <article className="rounded-[16px] border border-dashed border-[#ddd2c9] bg-white px-5 py-8 text-center text-[14px] text-[#7d7068]">
-            No compliance documents have been uploaded yet.
-          </article>
-        )}
-      </section>
-
-      <section>
-        <SectionTitle title="Review History" subtitle="Audit trail of document review activity and admin actions." />
-        {vendor.documentReviewHistory.length ? (
-          <div className="space-y-3">
-            {vendor.documentReviewHistory.map((item) => (
-              <HistoryItem key={item.id} item={item} />
-            ))}
-          </div>
-        ) : (
-          <article className="rounded-[16px] border border-dashed border-[#ddd2c9] bg-white px-5 py-8 text-center text-[14px] text-[#7d7068]">
-            No review history has been recorded yet.
-          </article>
-        )}
       </section>
 
       <section className="rounded-[16px] border border-[#ddd2c9] bg-white px-5 py-5 shadow-[0_6px_16px_rgba(53,34,20,0.04)] sm:px-6">

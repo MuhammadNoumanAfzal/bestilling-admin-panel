@@ -788,13 +788,15 @@ export default function AdminLayout() {
             isMobileNavOpen ? "translate-x-0" : "-translate-x-full",
           ].join(" ")}
         >
-          <div className="flex h-[84px] items-center justify-between border-b border-white/12 px-4">
-            <img className="h-10 w-auto max-w-[92px]" src="/logo.png" alt="Bestilling Admin" />
-              <button
-                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-white/90 transition hover:bg-white/10 lg:hidden"
-                onClick={() => setIsMobileNavOpen(false)}
-                type="button"
-              >
+          <div className="relative mx-4 mt-4 rounded-[22px] border border-white/10 bg-white/12 px-4 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm">
+            <img className="block h-auto w-32 object-contain" src="/logo.png" alt="GoCatering Admin" />
+            <p className="type-subpara mt-3 text-white/75">Admin dashboard</p>
+            <button
+              aria-label="Close navigation"
+              className="absolute right-3 top-3 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-white/90 transition hover:bg-white/10 lg:hidden"
+              onClick={() => setIsMobileNavOpen(false)}
+              type="button"
+            >
               <X size={18} />
             </button>
           </div>

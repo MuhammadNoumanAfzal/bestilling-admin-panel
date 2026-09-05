@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import {
   approveInvoicePaymentRequest,
+  applyCommissionDisplayFallback,
   getAdminPaymentDetailRequest,
   markInvoicePaidRequest,
   markCustomerPaymentReceivedRequest,
@@ -11,6 +12,7 @@ import {
   rejectInvoicePaymentRequest,
   releaseVendorPayoutRequest,
 } from "../api/paymentsApi.js";
+import { getAdminCommissionSettingsRequest } from "../api/commissionApi.js";
 import PaymentActivityCard from "../components/details/PaymentActivityCard.jsx";
 import PaymentDetailsInfoCard from "../components/details/PaymentDetailsInfoCard.jsx";
 import PaymentDetailsOverviewCard from "../components/details/PaymentDetailsOverviewCard.jsx";
@@ -69,10 +71,13 @@ export default function PaymentDetailsPage() {
       setLoadError("");
 
       try {
-        const detail = await getAdminPaymentDetailRequest(decodeURIComponent(payoutId || ""));
+        const [detail, commissionSettings] = await Promise.all([
+          getAdminPaymentDetailRequest(decodeURIComponent(payoutId || "")),
+          getAdminCommissionSettingsRequest(),
+        ]);
 
         if (isMounted) {
-          setPaymentDetail(detail);
+          setPaymentDetail(applyCommissionDisplayFallback(detail, commissionSettings));
         }
       } catch (error) {
         if (isMounted) {
@@ -93,9 +98,13 @@ export default function PaymentDetailsPage() {
   }, [payoutId]);
 
   async function refreshPaymentDetail() {
-    const detail = await getAdminPaymentDetailRequest(decodeURIComponent(payoutId || ""));
-    setPaymentDetail(detail);
-    return detail;
+    const [detail, commissionSettings] = await Promise.all([
+      getAdminPaymentDetailRequest(decodeURIComponent(payoutId || "")),
+      getAdminCommissionSettingsRequest(),
+    ]);
+    const resolvedDetail = applyCommissionDisplayFallback(detail, commissionSettings);
+    setPaymentDetail(resolvedDetail);
+    return resolvedDetail;
   }
 
   async function handleRefreshDetails() {

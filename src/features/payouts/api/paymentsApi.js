@@ -233,6 +233,66 @@ function formatComputedMoney(amount, currency = "NOK") {
   return `${currency} ${amount.toFixed(2)}`;
 }
 
+function resolveConfiguredCommissionRate(commissionSettings, vendorId) {
+  const vendorRule = commissionSettings?.vendorRows?.find(
+    (row) => `${row?.vendorId || ""}` === `${vendorId || ""}`,
+  );
+  const rawRate = vendorRule?.rawRate ?? commissionSettings?.globalSettings?.rawRate;
+  const rate = Number(`${rawRate ?? ""}`.replace(/[^\d.-]/g, ""));
+
+  return Number.isFinite(rate) && rate > 0 ? rate : 0;
+}
+
+function applyCommissionFallback(financials, vendorId, commissionSettings) {
+  const grossAmount = parseMoneyAmount(financials?.orderAmount);
+  const storedCommission = parseMoneyAmount(financials?.platformCommission);
+  const rate = resolveConfiguredCommissionRate(commissionSettings, vendorId);
+
+  if (!Number.isFinite(grossAmount) || grossAmount <= 0 || storedCommission > 0 || rate <= 0) {
+    return financials;
+  }
+
+  const currency = `${financials?.orderAmount || ""}`.match(/^[A-Z]{3}/)?.[0] || "NOK";
+  const commission = Math.min(grossAmount, (grossAmount * rate) / 100);
+  const vendorAmount = parseMoneyAmount(financials?.vendorAmount);
+  const shouldUpdateVendorAmount = !Number.isFinite(vendorAmount) || Math.abs(vendorAmount - grossAmount) < 0.01;
+
+  return {
+    ...financials,
+    platformCommission: formatComputedMoney(commission, currency),
+    vendorAmount: shouldUpdateVendorAmount
+      ? formatComputedMoney(Math.max(grossAmount - commission, 0), currency)
+      : financials.vendorAmount,
+  };
+}
+
+// Legacy invoices may not have a locked commission snapshot. Display the active
+// vendor rule first, then the platform default, without replacing saved amounts.
+export function applyCommissionDisplayFallback(record, commissionSettings) {
+  if (!record || !commissionSettings) {
+    return record;
+  }
+
+  if (record.financials) {
+    return {
+      ...record,
+      financials: applyCommissionFallback(record.financials, record.vendor?.id, commissionSettings),
+    };
+  }
+
+  const financials = applyCommissionFallback(
+    {
+      orderAmount: record.orderAmount,
+      platformCommission: record.platformCommission,
+      vendorAmount: record.vendorAmount,
+    },
+    record.vendorId,
+    commissionSettings,
+  );
+
+  return { ...record, ...financials };
+}
+
 function resolveVendorReceivesLabel({
   primaryVendorAmount,
   fallbackVendorPayable,

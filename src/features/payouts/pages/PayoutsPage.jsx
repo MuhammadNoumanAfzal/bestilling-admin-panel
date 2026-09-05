@@ -6,6 +6,7 @@ import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.js
 import { getAdminCommissionSettingsRequest } from "../api/commissionApi.js";
 import {
   approveInvoicePaymentRequest,
+  applyCommissionDisplayFallback,
   getAdminPaymentsRequest,
   markCustomerPaymentReceivedRequest,
   markVendorPayoutPaidRequest,
@@ -112,7 +113,11 @@ export default function PayoutsPage() {
           return;
         }
 
-        setRows(paymentsResponse.rows);
+        setRows(
+          paymentsResponse.rows.map((row) =>
+            applyCommissionDisplayFallback(row, commissionResponse),
+          ),
+        );
         setSummaryCards(paymentsResponse.summaryCards);
         setPageInfo(paymentsResponse.pageInfo);
         setFilterOptions({

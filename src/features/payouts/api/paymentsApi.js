@@ -437,6 +437,10 @@ function deriveCustomerPaymentStatus(item) {
 }
 
 function deriveVendorPayoutStatus(item) {
+  if (item?.lifecycle?.payoutCompletedAt) {
+    return "Paid";
+  }
+
   if (item?.payoutReleasedAt) {
     return "Released";
   }

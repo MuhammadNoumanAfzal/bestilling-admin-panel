@@ -318,6 +318,30 @@ export function applyCommissionDisplayFallback(record, commissionSettings) {
   return { ...record, ...financials };
 }
 
+export function applyCommissionDisplayFallbackToPaymentList(result, commissionSettings) {
+  if (!result || !commissionSettings) {
+    return result;
+  }
+
+  const rows = (result.rows || []).map((row) =>
+    applyCommissionDisplayFallback(row, commissionSettings),
+  );
+  const commissionTotal = rows.reduce(
+    (total, row) => total + (parseMoneyAmount(row.platformCommission) || 0),
+    0,
+  );
+
+  return {
+    ...result,
+    rows,
+    summaryCards: (result.summaryCards || []).map((card) =>
+      card.id === "commission" && commissionTotal > 0
+        ? { ...card, value: formatComputedMoney(commissionTotal) }
+        : card,
+    ),
+  };
+}
+
 function resolveVendorReceivesLabel({
   primaryVendorAmount,
   fallbackVendorPayable,

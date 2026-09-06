@@ -6,6 +6,7 @@ import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.js
 import { getAdminCommissionSettingsRequest } from "../api/commissionApi.js";
 import {
   approveInvoicePaymentRequest,
+  applyCommissionDisplayFallbackToPaymentList,
   getAdminPaymentDetailRequest,
   getAdminPaymentsRequest,
   markCustomerPaymentReceivedRequest,
@@ -65,6 +66,8 @@ export default function PayoutsPage() {
   const [customEnd, setCustomEnd] = useState("");
   const [summaryCards, setSummaryCards] = useState([]);
   const [rows, setRows] = useState([]);
+  const [paymentResult, setPaymentResult] = useState(null);
+  const [commissionSettings, setCommissionSettings] = useState(null);
   const [pageInfo, setPageInfo] = useState({
     page: 1,
     pageSize: PAGE_SIZE,
@@ -122,6 +125,7 @@ export default function PayoutsPage() {
     if (cachedResponse) {
       setRows(cachedResponse.rows);
       setSummaryCards(cachedResponse.summaryCards);
+      setPaymentResult(cachedResponse);
       setPageInfo(cachedResponse.pageInfo);
       setFilterOptions({
         statuses: STATIC_STATUS_OPTIONS,
@@ -150,6 +154,7 @@ export default function PayoutsPage() {
           paymentsResponse.rows,
         );
         setSummaryCards(paymentsResponse.summaryCards);
+        setPaymentResult(paymentsResponse);
         setPageInfo(paymentsResponse.pageInfo);
         setFilterOptions({
           statuses: STATIC_STATUS_OPTIONS,
@@ -178,6 +183,19 @@ export default function PayoutsPage() {
   }, [normalizedFilters, paymentCacheKey, reloadKey]);
 
   useEffect(() => {
+    if (!paymentResult) {
+      return;
+    }
+
+    const displayResult = applyCommissionDisplayFallbackToPaymentList(
+      paymentResult,
+      commissionSettings,
+    );
+    setRows(displayResult.rows);
+    setSummaryCards(displayResult.summaryCards);
+  }, [commissionSettings, paymentResult]);
+
+  useEffect(() => {
     let isMounted = true;
 
     async function loadCommissionSettings() {
@@ -185,6 +203,7 @@ export default function PayoutsPage() {
         const commissionResponse = await getAdminCommissionSettingsRequest();
 
         if (isMounted) {
+          setCommissionSettings(commissionResponse);
           setCommissionBreakdown({
             globalLabel: commissionResponse.globalSettings.label || "Platform Default Commission",
             globalRate: commissionResponse.globalSettings.currentRate || "0%",

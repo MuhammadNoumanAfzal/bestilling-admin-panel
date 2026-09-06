@@ -1,4 +1,4 @@
-import { Archive, ChevronLeft, ChevronRight, Eye, Mail, MessageSquareText, Smartphone } from "lucide-react";
+import { Archive, Bell, ChevronLeft, ChevronRight, Eye, Mail, MessageSquareText, Smartphone } from "lucide-react";
 
 const audienceClasses = {
   Customers: "bg-[#fff1e8] text-[#d46b36]",
@@ -124,101 +124,55 @@ export default function NotificationsTable({
   const paginationItems = buildPaginationItems(currentPage, totalPages);
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-2">
-      <div className="overflow-x-auto">
-        <table className="min-w-[980px] w-full border-collapse">
-          <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
-            <tr className="text-left">
-              <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">
-                #
-              </th>
-              <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">
-                Notifications Title
-              </th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">
-                Audience
-              </th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">
-                Method
-              </th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">
-                Status
-              </th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">
-                Scheduled Date
-              </th>
-              <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">
-                Actions
-              </th>
-            </tr>
-          </thead>
+    <div className="m-2 overflow-hidden rounded-[18px] border border-[#e8ddd4] bg-[linear-gradient(180deg,#fffdfb_0%,#ffffff_100%)] p-4 shadow-[0_10px_24px_rgba(45,31,20,0.05)]">
+      <div className="space-y-3">
+        {rows.length === 0 ? (
+          <div className="rounded-[22px] border border-dashed border-[#ddd4cb] bg-white px-6 py-12 text-center text-[15px] font-medium text-[#6f645d]">
+            No notifications match the current filters.
+          </div>
+        ) : (
+          rows.map((row, index) => {
+            const isUnread = `${row.status || ""}`.toUpperCase() === "UNREAD";
 
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={7}>
-                  No notifications match the current filters.
-                </td>
-              </tr>
-            ) : (
-              rows.map((row, index) => (
-                <tr
-                  key={row.id}
-                  className="cursor-pointer border-b border-[#f1e9e2] transition hover:bg-[#fffaf6] last:border-b-0"
-                  onClick={() => onOpenRow(row)}
-                >
-                  <td className="px-4 py-4 align-middle text-[15px] font-semibold text-[#8b7d72]">
-                    {(currentPage - 1) * pageSize + index + 1}
-                  </td>
-                  <td className="px-4 py-4 align-middle">
-                    <p className="max-w-[360px] text-[16px] font-semibold leading-6 text-[#18120f]">{row.title}</p>
-                  </td>
-                  <td className="px-3 py-4 align-middle">
+            return (
+              <article
+                key={row.id}
+                className={`grid gap-3 rounded-[22px] border px-4 py-4 transition sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start ${
+                  isUnread ? "border-[#f0b79e] bg-[#fff7f2]" : "border-[#ece3db] bg-white"
+                }`}
+              >
+                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${isUnread ? "bg-[#ffe8dc] text-[#cf5c2f]" : "bg-[#f6f1eb] text-[#8d7e70]"}`}>
+                  <Bell size={20} />
+                </div>
+
+                <button className="min-w-0 cursor-pointer text-left" onClick={() => onOpenRow(row)} type="button">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[12px] font-semibold text-[#978d84]">{(currentPage - 1) * pageSize + index + 1}.</span>
+                    <h3 className="truncate text-[15px] font-semibold text-[#1f1f1f]">{row.title}</h3>
                     <AudienceBadge audience={row.audience} />
-                  </td>
-                  <td className="px-3 py-4 align-middle">
-                    <ChannelDots channels={row.channels} />
-                  </td>
-                  <td className="px-3 py-4 align-middle">
                     <StatusBadge status={row.statusLabel || row.status} />
-                  </td>
-                  <td className="px-3 py-4 align-middle text-[15px] font-medium text-[#18120f]">
-                    {row.createdAtDisplay || row.scheduledAt}
-                  </td>
-                  <td className="px-4 py-4 align-middle text-right">
-                    <div className="flex justify-end gap-4">
-                      <button
-                        className="inline-flex cursor-pointer items-center gap-1.5 text-[15px] font-semibold text-[#18120f] transition hover:text-[#cf6e38]"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onViewDetails(row);
-                        }}
-                        type="button"
-                      >
-                        <Eye size={15} />
-                        <span>View Details</span>
-                      </button>
+                  </div>
+                  <p className="mt-2 text-[13px] leading-5 text-[#6a625c]">{row.message || "Open this notification to review the full update."}</p>
+                </button>
 
-                      {row.status !== "ARCHIVED" ? (
-                        <button
-                          className="inline-flex cursor-pointer items-center gap-1.5 text-[15px] font-semibold text-[#8f4f36] transition hover:text-[#cf6e38]"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onArchive(row);
-                          }}
-                          type="button"
-                        >
-                          <Archive size={15} />
-                          <span>Archive</span>
-                        </button>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
+                  <span className="text-xs font-medium text-[#978d84]">{row.createdAtDisplay || row.scheduledAt}</span>
+                  <ChannelDots channels={row.channels || []} />
+                  <div className="flex items-center gap-2">
+                    <button className="inline-flex items-center gap-1.5 rounded-full bg-[#fff2eb] px-3 py-1.5 text-[11px] font-semibold text-[#cf6e38]" onClick={() => onViewDetails(row)} type="button">
+                      <Eye size={13} /> View
+                    </button>
+                    {row.status !== "ARCHIVED" ? (
+                      <button className="inline-flex items-center gap-1.5 rounded-full bg-[#f6f1eb] px-3 py-1.5 text-[11px] font-semibold text-[#80766d]" onClick={() => onArchive(row)} type="button">
+                        <Archive size={13} /> Archive
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              </article>
+            );
+          })
+        )}
       </div>
 
       <div className="flex flex-col gap-4 border-t border-[#eee4dd] px-4 py-4 text-[13px] text-[#6c6058] sm:flex-row sm:items-center sm:justify-between">

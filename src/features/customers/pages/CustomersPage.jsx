@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
 import { blockCustomerRequest, getAdminCustomersRequest, unblockCustomerRequest } from "../api/customersApi.js";
 import CustomerOverviewCard from "../components/CustomerOverviewCard.jsx";
@@ -25,6 +25,7 @@ function toDisplayStatus(status) {
 
 export default function CustomersPage() {
   const navigate = useNavigate();
+  const { setPageHeaderAction } = useOutletContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
@@ -49,6 +50,7 @@ export default function CustomersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [isUpdatingStatusId, setIsUpdatingStatusId] = useState("");
+  const deferredSearchTerm = useDeferredValue(searchTerm);
 
   const dateRange = useMemo(
     () => (timeframe === ALL_DATES_FILTER ? null : getDateRangeForFilter(timeframe, customStart, customEnd)),
@@ -57,7 +59,7 @@ export default function CustomersPage() {
 
   const normalizedFilters = useMemo(
     () => ({
-      search: searchTerm,
+      search: deferredSearchTerm,
       status: statusFilter ? statusFilter.toUpperCase() : null,
       city: cityFilter || null,
       registeredFrom: dateRange?.start || null,
@@ -67,7 +69,7 @@ export default function CustomersPage() {
       sortBy: "joinedAt",
       sortOrder: "DESC",
     }),
-    [cityFilter, currentPage, dateRange, searchTerm, statusFilter],
+    [cityFilter, currentPage, dateRange, deferredSearchTerm, statusFilter],
   );
 
   useEffect(() => {
@@ -109,13 +111,14 @@ export default function CustomersPage() {
     };
   }, [normalizedFilters]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter, cityFilter, timeframe, customStart, customEnd]);
-
   function handleCustomDateChange(start, end) {
     setCustomStart(start);
     setCustomEnd(end);
+    setCurrentPage(1);
+  }
+
+  function handleTimeframeChange(value) {
+    setTimeframe(value);
     setCurrentPage(1);
   }
 
@@ -235,12 +238,17 @@ export default function CustomersPage() {
     }
   }
 
+  useEffect(() => {
+    setPageHeaderAction(<DateFilterDropdown selectedFilter={timeframe} onChangeFilter={handleTimeframeChange} startDate={customStart} endDate={customEnd} onCustomDateChange={handleCustomDateChange} clearFilterValue={ALL_DATES_FILTER} />);
+    return () => setPageHeaderAction(null);
+  }, [customEnd, customStart, setPageHeaderAction, timeframe]);
+
   return (
     <div className="space-y-6">
-      <section className="flex justify-end">
+      <section className="flex justify-end lg:hidden">
         <DateFilterDropdown
           selectedFilter={timeframe}
-          onChangeFilter={setTimeframe}
+          onChangeFilter={handleTimeframeChange}
           startDate={customStart}
           endDate={customEnd}
           onCustomDateChange={handleCustomDateChange}
@@ -263,16 +271,16 @@ export default function CustomersPage() {
       <section className="overflow-hidden rounded-[16px] border border-[#ddd6cf] bg-white shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
         <CustomersToolbar
           searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          onSearchChange={(value) => { setSearchTerm(value); setCurrentPage(1); }}
           statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
+          onStatusFilterChange={(value) => { setStatusFilter(value); setCurrentPage(1); }}
           cityFilter={cityFilter}
-          onCityFilterChange={setCityFilter}
+          onCityFilterChange={(value) => { setCityFilter(value); setCurrentPage(1); }}
           statuses={filterOptions.statuses}
           cities={filterOptions.cities}
           onResetFilters={handleResetFilters}
         />
-        {isLoading ? (
+        {isLoading && rows.length === 0 ? (
           <AdminLoadingState
             title="Loading customer records"
             description="Fetching account details, status filters, recent registrations, and customer activity."

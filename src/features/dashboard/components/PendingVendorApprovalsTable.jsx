@@ -8,6 +8,7 @@ const statusClasses = {
   Approved: "bg-[#edf8f1] text-[#2b9e62] border border-[#cbeed8]",
   Rejected: "bg-[#fff2f1] text-[#d83f3f] border border-[#fcd5d5]",
 };
+const EMPTY_APPROVALS = [];
 
 export default function PendingVendorApprovalsTable({
   approvals,
@@ -15,21 +16,14 @@ export default function PendingVendorApprovalsTable({
   approvalActionId = "",
 }) {
   const navigate = useNavigate();
+  const visibleApprovals = Array.isArray(approvals) ? approvals : EMPTY_APPROVALS;
   const [selectedIds, setSelectedIds] = useState([]);
   const [activeMenuId, setActiveMenuId] = useState(null);
 
   useEffect(() => {
-    setSelectedIds((current) => current.filter((id) => approvals.some((approval) => approval.id === id)));
-    setActiveMenuId((current) => (approvals.some((approval) => approval.id === current) ? current : null));
-  }, [approvals]);
-
-  function handleSelectAll(event) {
-    if (event.target.checked) {
-      setSelectedIds(approvals.map((item) => item.id));
-    } else {
-      setSelectedIds([]);
-    }
-  }
+    setSelectedIds((current) => current.filter((id) => visibleApprovals.some((approval) => approval.id === id)));
+    setActiveMenuId((current) => (visibleApprovals.some((approval) => approval.id === current) ? current : null));
+  }, [visibleApprovals]);
 
   function handleSelectRow(id) {
     setSelectedIds((current) =>
@@ -40,6 +34,10 @@ export default function PendingVendorApprovalsTable({
   function handleActionClick(approval, nextStatus) {
     onUpdateStatus(approval, nextStatus);
     setActiveMenuId(null);
+  }
+
+  if (visibleApprovals.length === 0) {
+    return null;
   }
 
   return (
@@ -65,14 +63,7 @@ export default function PendingVendorApprovalsTable({
         <table className="w-full min-w-[860px] border-collapse">
           <thead>
             <tr className="border-b border-[#eee4dd] bg-[#fcfbfa] text-left">
-              <th className="w-12 px-3 py-4 text-center">
-                <input
-                  type="checkbox"
-                  checked={approvals.length > 0 && selectedIds.length === approvals.length}
-                  onChange={handleSelectAll}
-                  className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38]"
-                />
-              </th>
+              <th className="w-12 px-3 py-4" aria-label="Row selection" />
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor Name</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Type</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Location</th>
@@ -83,15 +74,7 @@ export default function PendingVendorApprovalsTable({
             </tr>
           </thead>
           <tbody>
-            {approvals.length === 0 ? (
-              <tr>
-                <td colSpan="8" className="px-4 py-10 text-center text-[14px] font-medium text-[#6f645d]">
-                  No vendor applications match the selected filter.
-                </td>
-              </tr>
-            ) : null}
-
-            {approvals.map((approval) => {
+            {visibleApprovals.map((approval) => {
               const isSelected = selectedIds.includes(approval.id);
               const isMenuOpen = activeMenuId === approval.id;
               const isUpdating = approvalActionId === approval.id;

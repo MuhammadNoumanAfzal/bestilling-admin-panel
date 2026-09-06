@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getVendorDetailPath } from "../../vendors/utils/vendorRoutes.js";
 
 function formatRevenue(value) {
   return `NOK ${Number(value ?? 0).toLocaleString("en-GB", {
@@ -31,7 +32,7 @@ export default function TopPerformingVendors({ vendors = [] }) {
             <button
               key={vendor.id}
               className="w-full rounded-[10px] border border-[#f1e9e2] bg-[#fcfbfa] p-3 text-left transition hover:border-[#cf6e38]"
-              onClick={() => navigate(`/vendors/${encodeURIComponent(vendor.id)}`)}
+              onClick={() => navigate(getVendorDetailPath(vendor))}
               type="button"
             >
               <div className="flex items-center justify-between gap-3">

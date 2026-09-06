@@ -7,9 +7,10 @@ export default function ReportsHeader({
   onCustomDateChange,
   startDate,
   endDate,
+  className = "",
 }) {
   return (
-    <section className="flex justify-end">
+    <section className={`flex justify-end ${className}`.trim()}>
       <div className="flex items-center gap-3 self-start">
         <ReportsFilterDropdown
           endDate={endDate}

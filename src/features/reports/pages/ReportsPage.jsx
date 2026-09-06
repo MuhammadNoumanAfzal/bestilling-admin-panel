@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import { getAdminReportsSnapshotRequest } from "../api/reportsApi.js";
 import { getAdminOrdersRequest } from "../../orders/api/ordersApi.js";
 import CategoryPerformanceCard from "../components/CategoryPerformanceCard.jsx";
@@ -316,6 +317,7 @@ function mergeReportsWithOrderData(baseSnapshot, ordersResponse, filters) {
 }
 
 export default function ReportsPage() {
+  const { setPageHeaderAction } = useOutletContext();
   const [selectedFilter, setSelectedFilter] = useState("Last 7 days");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
@@ -375,9 +377,17 @@ export default function ReportsPage() {
     };
   }, [snapshotFilters]);
 
+  useEffect(() => {
+    setPageHeaderAction(
+      <ReportsHeader endDate={customEndDate} filterLabel={selectedFilter} filterOptions={reportFilterOptions} onChangeFilter={setSelectedFilter} onCustomDateChange={(startDate, endDate) => { setCustomStartDate(startDate); setCustomEndDate(endDate); }} startDate={customStartDate} />,
+    );
+    return () => setPageHeaderAction(null);
+  }, [customEndDate, customStartDate, selectedFilter, setPageHeaderAction]);
+
   return (
     <div className="space-y-4">
       <ReportsHeader
+        className="lg:hidden"
         endDate={customEndDate}
         filterLabel={selectedFilter}
         filterOptions={reportFilterOptions}

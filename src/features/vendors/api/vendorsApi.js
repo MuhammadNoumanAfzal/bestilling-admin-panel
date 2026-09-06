@@ -15,6 +15,7 @@ import {
   VENDOR_MENU_DETAIL_QUERY,
   VENDOR_DOCUMENT_ACCESS_QUERY,
 } from "./vendorsQueries.js";
+import { getVendorSlug } from "../utils/vendorRoutes.js";
 
 function getErrorMessage(result, fallbackMessage) {
   const firstError = result?.errors?.find((item) => item?.message)?.message;
@@ -674,6 +675,33 @@ export async function getAdminVendorDetailRequest(id) {
     ...vendor,
     payoutProfile,
   };
+}
+
+export async function getAdminVendorDetailBySlugRequest(slug) {
+  const routeValue = decodeURIComponent(`${slug ?? ""}`).trim();
+
+  if (!routeValue) {
+    throw new Error("A vendor URL is required.");
+  }
+
+  if (/^\d+$/.test(routeValue)) {
+    return getAdminVendorDetailRequest(routeValue);
+  }
+
+  const vendors = await getAdminVendorsRequest({
+    search: routeValue.replace(/-/g, " "),
+    page: 1,
+    pageSize: 100,
+    sortBy: "JOINED_AT",
+    sortOrder: "DESC",
+  });
+  const matchedVendor = vendors.rows.find((vendor) => getVendorSlug(vendor.name) === routeValue.toLowerCase());
+
+  if (!matchedVendor?.id) {
+    throw new Error("Vendor not found.");
+  }
+
+  return getAdminVendorDetailRequest(matchedVendor.id);
 }
 
 export async function getAdminVendorMenuDetailRequest(id) {

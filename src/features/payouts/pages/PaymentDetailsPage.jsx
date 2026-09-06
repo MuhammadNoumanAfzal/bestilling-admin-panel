@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, RefreshCw } from "lucide-react";
 import {
   approveInvoicePaymentRequest,
+  approveVendorPayoutProfileRequest,
   applyCommissionDisplayFallback,
   getAdminPaymentDetailRequest,
   markInvoicePaidRequest,
@@ -52,12 +53,14 @@ function LoadingState() {
 
 export default function PaymentDetailsPage() {
   const { payoutId } = useParams();
+  const navigate = useNavigate();
   const [paymentDetail, setPaymentDetail] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [isUpdatingCustomerPayment, setIsUpdatingCustomerPayment] = useState(false);
   const [isUpdatingVendorPayout, setIsUpdatingVendorPayout] = useState(false);
   const [isApprovingInvoice, setIsApprovingInvoice] = useState(false);
+  const [isVerifyingBankProfile, setIsVerifyingBankProfile] = useState(false);
   const [isRejectingInvoice, setIsRejectingInvoice] = useState(false);
   const [isMarkingInvoicePaid, setIsMarkingInvoicePaid] = useState(false);
   const [isReleasingVendorPayout, setIsReleasingVendorPayout] = useState(false);
@@ -130,7 +133,11 @@ export default function PaymentDetailsPage() {
   }
 
   async function handleMarkReceived() {
-    if (!paymentDetail?.invoiceId || paymentDetail.statuses.customerPaymentStatus === "Paid") {
+    if (
+      !paymentDetail?.invoiceId ||
+      paymentDetail.order?.status === "Canceled" ||
+      paymentDetail.statuses.customerPaymentStatus === "Paid"
+    ) {
       return;
     }
 
@@ -186,10 +193,15 @@ export default function PaymentDetailsPage() {
   }
 
   async function handleMarkPaid() {
-    if (!paymentDetail?.payoutId || paymentDetail.statuses.vendorPayoutStatus === "Paid") {
+    if (
+      !paymentDetail?.payoutId ||
+      paymentDetail.order?.status === "Canceled" ||
+      paymentDetail.statuses.vendorPayoutStatus === "Paid"
+    ) {
       return;
     }
 
+    const paymentDate = new Date().toISOString().slice(0, 10);
     const prompt = await Swal.fire({
       title: "Confirm vendor payout",
       html: `
@@ -197,6 +209,10 @@ export default function PaymentDetailsPage() {
           <div>
             <label for="payout-reference" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Payout reference</label>
             <input id="payout-reference" class="swal2-input" placeholder="Outbound bank transfer reference" style="margin:0;width:100%;" />
+          </div>
+          <div>
+            <label for="payout-payment-date" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Transfer date</label>
+            <input id="payout-payment-date" type="date" class="swal2-input" value="${paymentDate}" style="margin:0;width:100%;" />
           </div>
           <div>
             <label for="payout-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Internal note</label>
@@ -211,6 +227,7 @@ export default function PaymentDetailsPage() {
       cancelButtonColor: "#c8b9aa",
       preConfirm: () => ({
         reference: document.getElementById("payout-reference")?.value?.trim() || "",
+        paymentDate: document.getElementById("payout-payment-date")?.value || paymentDate,
         note: document.getElementById("payout-note")?.value?.trim() || "",
       }),
     });
@@ -222,7 +239,19 @@ export default function PaymentDetailsPage() {
     try {
       setIsUpdatingVendorPayout(true);
       const result = await markVendorPayoutPaidRequest(paymentDetail.payoutId, prompt.value || {});
-      await refreshPaymentDetail();
+      if (result.status !== "Paid") {
+        throw new Error(
+          "The payout remains released. The payment API must persist the payout as PAID before it can be confirmed.",
+        );
+      }
+
+      const refreshedDetail = await refreshPaymentDetail();
+      if (refreshedDetail.statuses.vendorPayoutStatus !== "Paid") {
+        throw new Error(
+          "The payout was not saved as paid. The vendor will continue to see it as released until the payment API returns PAID.",
+        );
+      }
+
       await Swal.fire({
         icon: "success",
         title: "Vendor payout updated",
@@ -241,8 +270,58 @@ export default function PaymentDetailsPage() {
     }
   }
 
+  async function handleVerifyBankProfile() {
+    const payoutProfile = paymentDetail?.vendor?.payoutProfile;
+
+    if (!paymentDetail?.vendor?.id || payoutProfile?.bankDetailsVerified) {
+      return;
+    }
+
+    const prompt = await Swal.fire({
+      title: "Verify vendor bank details",
+      text: "Confirm that the account holder, bank, and account number match the vendor records before enabling payout release.",
+      input: "textarea",
+      inputPlaceholder: "Optional verification note",
+      showCancelButton: true,
+      confirmButtonText: "Verify bank details",
+      confirmButtonColor: "#cf6e38",
+      cancelButtonColor: "#c8b9aa",
+    });
+
+    if (!prompt.isConfirmed) {
+      return;
+    }
+
+    try {
+      setIsVerifyingBankProfile(true);
+      const result = await approveVendorPayoutProfileRequest(paymentDetail.vendor.id, {
+        verificationNote: prompt.value || "",
+      });
+      await refreshPaymentDetail();
+      await Swal.fire({
+        icon: "success",
+        title: "Bank details verified",
+        text: result.message,
+        confirmButtonColor: "#cf6e38",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to verify bank details",
+        text: error instanceof Error ? error.message : "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsVerifyingBankProfile(false);
+    }
+  }
+
   async function handleApproveInvoice() {
-    if (!paymentDetail?.invoiceId || paymentDetail.statuses.customerPaymentStatus !== "Reported") {
+    if (
+      !paymentDetail?.invoiceId ||
+      paymentDetail.order?.status === "Canceled" ||
+      paymentDetail.statuses.customerPaymentStatus !== "Reported"
+    ) {
       return;
     }
 
@@ -293,7 +372,11 @@ export default function PaymentDetailsPage() {
   }
 
   async function handleRejectInvoice() {
-    if (!paymentDetail?.invoiceId || paymentDetail.statuses.customerPaymentStatus !== "Reported") {
+    if (
+      !paymentDetail?.invoiceId ||
+      paymentDetail.order?.status === "Canceled" ||
+      paymentDetail.statuses.customerPaymentStatus !== "Reported"
+    ) {
       return;
     }
 
@@ -344,7 +427,11 @@ export default function PaymentDetailsPage() {
   }
 
   async function handleMarkInvoicePaid() {
-    if (!paymentDetail?.invoiceId || paymentDetail.statuses.customerPaymentStatus === "Paid") {
+    if (
+      !paymentDetail?.invoiceId ||
+      paymentDetail.order?.status === "Canceled" ||
+      paymentDetail.statuses.customerPaymentStatus === "Paid"
+    ) {
       return;
     }
 
@@ -395,8 +482,23 @@ export default function PaymentDetailsPage() {
   }
 
   async function handleReleasePayout() {
+    if (paymentDetail?.order?.status === "Canceled") {
+      return;
+    }
+
+    const canReleaseFromSettlement = Boolean(paymentDetail?.vendor?.id && paymentDetail?.settlementId);
+
+    if (!canReleaseFromSettlement) {
+      await Swal.fire({
+        icon: "info",
+        title: "Payout record is not ready",
+        text: "The customer payment is approved, but no payout or settlement record is available for release yet. Refresh after the payment settlement is created.",
+        confirmButtonColor: "#cf6e38",
+      });
+      return;
+    }
+
     if (
-      !paymentDetail?.payoutId ||
       paymentDetail.statuses.vendorPayoutStatus === "Released" ||
       paymentDetail.statuses.vendorPayoutStatus === "Paid"
     ) {
@@ -429,7 +531,13 @@ export default function PaymentDetailsPage() {
 
     try {
       setIsReleasingVendorPayout(true);
-      const result = await releaseVendorPayoutRequest(paymentDetail.payoutId, prompt.value || {});
+      const result = await releaseVendorPayoutRequest(
+        {
+          vendorId: paymentDetail.vendor.id,
+          settlementIds: [paymentDetail.settlementId],
+        },
+        prompt.value || {},
+      );
       await refreshPaymentDetail();
       await Swal.fire({
         icon: "success",
@@ -510,6 +618,16 @@ export default function PaymentDetailsPage() {
           </div>
 
           <div className="grid gap-3 xl:w-[320px] xl:grid-cols-1">
+            {paymentDetail.order?.id ? (
+              <button
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-[16px] border border-[#e2cbbb] bg-white/90 px-4 text-[14px] font-semibold text-[#703619] shadow-[0_10px_24px_rgba(51,30,17,0.08)] transition hover:-translate-y-[1px] hover:border-[#cf6e38] hover:bg-[#fff7f2]"
+                onClick={() => navigate(`/orders/${encodeURIComponent(paymentDetail.order.id)}`)}
+                type="button"
+              >
+                <span>View Order</span>
+                <ArrowUpRight size={16} />
+              </button>
+            ) : null}
             <button
               className="inline-flex h-12 items-center justify-center gap-2 rounded-[16px] bg-[linear-gradient(135deg,#d97342_0%,#c65b2d_100%)] px-4 text-[14px] font-semibold text-white shadow-[0_16px_34px_rgba(198,91,45,0.24)] transition hover:-translate-y-[1px] hover:shadow-[0_20px_40px_rgba(198,91,45,0.3)]"
               disabled={isRefreshing}
@@ -527,23 +645,29 @@ export default function PaymentDetailsPage() {
         <PaymentDetailsOverviewCard label="Total Order Amount" value={paymentDetail.financials.orderAmount} />
         <PaymentDetailsOverviewCard label="Platform Commission" value={paymentDetail.financials.platformCommission} />
         <PaymentDetailsOverviewCard label="Vendor Receives" value={paymentDetail.financials.vendorAmount} />
-        <PaymentDetailsOverviewCard label="Customer Payment" value={paymentDetail.statuses.customerPaymentStatus} />
+        <PaymentDetailsOverviewCard label="Customer Payment Status" value={paymentDetail.statuses.customerPaymentStatus} />
       </section>
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.08fr)_360px]">
         <div className="space-y-4">
           <PaymentDetailsInfoCard payout={paymentDetail} />
           <PaymentLifecycleCard payout={paymentDetail} />
-          <VendorBankDetailsCard payout={paymentDetail} />
+          <VendorBankDetailsCard
+            isApproving={isVerifyingBankProfile}
+            onApprove={handleVerifyBankProfile}
+            payout={paymentDetail}
+          />
           <PaymentFinanceContractCard payout={paymentDetail} />
           <PaymentStatusCards
             isApprovingInvoice={isApprovingInvoice}
+            isVerifyingBankProfile={isVerifyingBankProfile}
             isMarkingInvoicePaid={isMarkingInvoicePaid}
             isRejectingInvoice={isRejectingInvoice}
             isReleasingVendorPayout={isReleasingVendorPayout}
             isUpdatingCustomerPayment={isUpdatingCustomerPayment}
             isUpdatingVendorPayout={isUpdatingVendorPayout}
             onApproveInvoice={handleApproveInvoice}
+            onVerifyBankProfile={handleVerifyBankProfile}
             onMarkInvoicePaid={handleMarkInvoicePaid}
             onMarkPaid={handleMarkPaid}
             onMarkReceived={handleMarkReceived}

@@ -108,8 +108,8 @@ export default function PayoutToolbar({
 
       <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
         <Dropdown
-          clearLabel="Any payment status"
-          defaultLabel="Payment Status"
+          clearLabel="Any customer payment status"
+          defaultLabel="Customer Payment Status"
           isOpen={activeDropdown === "status"}
           label={statusOptions.find((option) => option.value === statusFilter)?.label}
           onSelect={(value) => handleSelect(onStatusFilterChange, value)}

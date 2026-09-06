@@ -11,6 +11,7 @@ export default function OrderAnalyticsCard({ analytics }) {
         <p className="text-[12px] font-medium text-[#8a7d74]">{analytics.subtitle}</p>
       </div>
 
+      <p className="mb-2 text-[11px] font-medium text-[#9a8d84]">Hover a bar to view the exact order count.</p>
       <ReportsBarChart bars={analytics.bars} className="mt-1" scale={analytics.scale} />
     </ReportsSectionCard>
   );

@@ -18,6 +18,8 @@ const paymentClasses = {
   Failed: "text-[#d83f3f]",
   Refunded: "text-[#7a51b3]",
   "Partially refunded": "text-[#b5751a]",
+  "Refund pending": "text-[#b45309]",
+  Cancelled: "text-[#6f645d]",
   Pending: "text-[#b45309]",
   Reported: "text-[#296db8]",
 };

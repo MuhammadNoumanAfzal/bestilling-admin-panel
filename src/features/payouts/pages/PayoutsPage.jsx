@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import { getAdminCommissionSettingsRequest } from "../api/commissionApi.js";
 import {
   approveInvoicePaymentRequest,
-  applyCommissionDisplayFallback,
+  getAdminPaymentDetailRequest,
   getAdminPaymentsRequest,
   markCustomerPaymentReceivedRequest,
   markVendorPayoutPaidRequest,
@@ -44,6 +44,7 @@ function mapPaymentStatusFilter(value) {
 
 export default function PayoutsPage() {
   const navigate = useNavigate();
+  const { setPageHeaderAction } = useOutletContext();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -75,6 +76,7 @@ export default function PayoutsPage() {
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [activeActionKey, setActiveActionKey] = useState("");
+  const deferredSearchTerm = useDeferredValue(searchTerm);
 
   const dateRange = useMemo(
     () => getDateRangeForFilter(timeframe, customStart, customEnd),
@@ -83,7 +85,7 @@ export default function PayoutsPage() {
 
   const normalizedFilters = useMemo(
     () => ({
-      search: searchTerm,
+      search: deferredSearchTerm,
       status: statusFilter === "all" ? "ALL" : statusFilter,
       vendorId: vendorFilter === "all" ? null : vendorFilter,
       dateFrom: dateRange?.start || null,
@@ -93,7 +95,7 @@ export default function PayoutsPage() {
       sortBy: "CREATED_AT",
       sortOrder: "DESC",
     }),
-    [currentPage, dateRange, searchTerm, statusFilter, vendorFilter],
+    [currentPage, dateRange, deferredSearchTerm, statusFilter, vendorFilter],
   );
 
   useEffect(() => {
@@ -104,19 +106,14 @@ export default function PayoutsPage() {
       setLoadError("");
 
       try {
-        const [paymentsResponse, commissionResponse] = await Promise.all([
-          getAdminPaymentsRequest(normalizedFilters),
-          getAdminCommissionSettingsRequest(),
-        ]);
+        const paymentsResponse = await getAdminPaymentsRequest(normalizedFilters);
 
         if (!isMounted) {
           return;
         }
 
         setRows(
-          paymentsResponse.rows.map((row) =>
-            applyCommissionDisplayFallback(row, commissionResponse),
-          ),
+          paymentsResponse.rows,
         );
         setSummaryCards(paymentsResponse.summaryCards);
         setPageInfo(paymentsResponse.pageInfo);
@@ -125,22 +122,6 @@ export default function PayoutsPage() {
           vendors: paymentsResponse.filterOptions.vendors.map((vendor) => ({
             value: vendor.id,
             label: vendor.name,
-          })),
-        });
-        setCommissionBreakdown({
-          globalLabel: commissionResponse.globalSettings.label || "Platform Default Commission",
-          globalRate: commissionResponse.globalSettings.currentRate || "0%",
-          regions: commissionResponse.areaRows.map((row) => ({
-            id: row.id,
-            label: row.area,
-            value: row.commissionRate,
-          })),
-          vendors: commissionResponse.vendorRows.map((row) => ({
-            id: row.id,
-            name: row.vendor,
-            share: row.currentCommission,
-            avatar: row.avatar,
-            avatarUrl: row.avatarUrl,
           })),
         });
       } catch (error) {
@@ -162,8 +143,34 @@ export default function PayoutsPage() {
   }, [normalizedFilters, reloadKey]);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter, vendorFilter, timeframe, customStart, customEnd]);
+    let isMounted = true;
+
+    async function loadCommissionSettings() {
+      try {
+        const commissionResponse = await getAdminCommissionSettingsRequest();
+
+        if (isMounted) {
+          setCommissionBreakdown({
+            globalLabel: commissionResponse.globalSettings.label || "Platform Default Commission",
+            globalRate: commissionResponse.globalSettings.currentRate || "0%",
+            regions: commissionResponse.areaRows.map((row) => ({ id: row.id, label: row.area, value: row.commissionRate })),
+            vendors: commissionResponse.vendorRows.map((row) => ({
+              id: row.id,
+              name: row.vendor,
+              share: row.currentCommission,
+              avatar: row.avatar,
+              avatarUrl: row.avatarUrl,
+            })),
+          });
+        }
+      } catch {
+        // Commission settings are supplemental and must not block payout records.
+      }
+    }
+
+    void loadCommissionSettings();
+    return () => { isMounted = false; };
+  }, [reloadKey]);
 
   function handleResetFilters() {
     setSearchTerm("");
@@ -178,6 +185,11 @@ export default function PayoutsPage() {
   function handleCustomDateChange(start, end) {
     setCustomStart(start);
     setCustomEnd(end);
+    setCurrentPage(1);
+  }
+
+  function handleTimeframeChange(value) {
+    setTimeframe(value);
     setCurrentPage(1);
   }
 
@@ -252,15 +264,35 @@ export default function PayoutsPage() {
       }
 
       if (action === "markVendorPaid") {
+        const paymentDate = new Date().toISOString().slice(0, 10);
         const prompt = await Swal.fire({
           title: "Mark vendor payout paid?",
-          input: "textarea",
-          inputLabel: "Internal note",
-          inputPlaceholder: "Optional note or transfer reference",
+          html: `
+            <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
+              <div>
+                <label for="payout-reference" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Payout reference</label>
+                <input id="payout-reference" class="swal2-input" placeholder="Outbound bank transfer reference" style="margin:0;width:100%;" />
+              </div>
+              <div>
+                <label for="payout-payment-date" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Transfer date</label>
+                <input id="payout-payment-date" type="date" class="swal2-input" value="${paymentDate}" style="margin:0;width:100%;" />
+              </div>
+              <div>
+                <label for="payout-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Internal note</label>
+                <textarea id="payout-note" class="swal2-textarea" placeholder="Optional admin note" style="margin:0;width:100%;min-height:110px;"></textarea>
+              </div>
+            </div>
+          `,
+          focusConfirm: false,
           showCancelButton: true,
           confirmButtonText: "Mark payout paid",
           confirmButtonColor: "#cf6e38",
           cancelButtonColor: "#c8b9aa",
+          preConfirm: () => ({
+            reference: document.getElementById("payout-reference")?.value?.trim() || "",
+            paymentDate: document.getElementById("payout-payment-date")?.value || paymentDate,
+            note: document.getElementById("payout-note")?.value?.trim() || "",
+          }),
         });
 
         if (!prompt.isConfirmed) {
@@ -268,8 +300,21 @@ export default function PayoutsPage() {
         }
 
         const result = await markVendorPayoutPaidRequest(row.payoutId, {
-          note: prompt.value || "",
+          ...prompt.value,
         });
+
+        if (result.status !== "Paid") {
+          throw new Error(
+            "The payout remains released. The payment API must persist the payout as PAID before it can be confirmed.",
+          );
+        }
+
+        const refreshedDetail = await getAdminPaymentDetailRequest(row.payoutId);
+        if (refreshedDetail.statuses.vendorPayoutStatus !== "Paid") {
+          throw new Error(
+            "The payout was not saved as paid. The vendor will continue to see it as released until the payment API returns PAID.",
+          );
+        }
 
         await Swal.fire({
           icon: "success",
@@ -312,12 +357,17 @@ export default function PayoutsPage() {
     }
   }
 
+  useEffect(() => {
+    setPageHeaderAction(<DateFilterDropdown selectedFilter={timeframe} onChangeFilter={handleTimeframeChange} startDate={customStart} endDate={customEnd} onCustomDateChange={handleCustomDateChange} />);
+    return () => setPageHeaderAction(null);
+  }, [customEnd, customStart, setPageHeaderAction, timeframe]);
+
   return (
     <div className="space-y-5">
-      <section className="flex justify-end">
+      <section className="flex justify-end lg:hidden">
         <DateFilterDropdown
           selectedFilter={timeframe}
-          onChangeFilter={setTimeframe}
+          onChangeFilter={handleTimeframeChange}
           startDate={customStart}
           endDate={customEnd}
           onCustomDateChange={handleCustomDateChange}
@@ -340,16 +390,16 @@ export default function PayoutsPage() {
         <div className="overflow-hidden rounded-[16px] border border-[#d8ccc2] bg-white">
           <PayoutToolbar
             onResetFilters={handleResetFilters}
-            onSearchChange={setSearchTerm}
-            onStatusFilterChange={setStatusFilter}
-            onVendorFilterChange={setVendorFilter}
+          onSearchChange={(value) => { setSearchTerm(value); setCurrentPage(1); }}
+          onStatusFilterChange={(value) => { setStatusFilter(value); setCurrentPage(1); }}
+          onVendorFilterChange={(value) => { setVendorFilter(value); setCurrentPage(1); }}
             searchTerm={searchTerm}
             statusFilter={statusFilter}
             statusOptions={filterOptions.statuses}
             vendorFilter={vendorFilter}
             vendorOptions={filterOptions.vendors}
           />
-          {isLoading ? (
+          {isLoading && rows.length === 0 ? (
             <AdminLoadingState
               title="Loading payout records"
               description="Preparing settlements, vendor amounts, commission totals, and payout actions for this date range."

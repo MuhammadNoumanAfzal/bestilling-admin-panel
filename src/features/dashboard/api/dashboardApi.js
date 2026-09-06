@@ -1,11 +1,8 @@
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
 import {
   ADMIN_DASHBOARD_OVERVIEW_QUERY,
-  ADMIN_VENDOR_STATUS_QUERY,
   ADMIN_UPDATE_VENDOR_APPROVAL_STATUS_MUTATION,
 } from "./dashboardQueries.js";
-
-const INACTIVE_VENDOR_STATUSES = new Set(["SUSPENDED", "DEACTIVATED", "DELETED"]);
 
 function toInitials(value) {
   return `${value ?? ""}`
@@ -73,30 +70,6 @@ function buildOverviewInput(filters) {
   };
 }
 
-async function excludeInactiveTopVendors(vendors) {
-  const statusChecks = await Promise.all(
-    vendors.map(async (vendor) => {
-      if (!vendor?.id) {
-        return true;
-      }
-
-      try {
-        const data = await executeProtectedGraphqlRequest(ADMIN_VENDOR_STATUS_QUERY, {
-          id: vendor.id,
-        });
-        const status = `${data?.adminVendor?.status ?? ""}`.trim().toUpperCase();
-
-        return !INACTIVE_VENDOR_STATUSES.has(status);
-      } catch {
-        // Leave the vendor visible if its status cannot be verified.
-        return true;
-      }
-    }),
-  );
-
-  return vendors.filter((_, index) => statusChecks[index]);
-}
-
 export async function getAdminDashboardOverviewRequest(filters) {
   const data = await executeProtectedGraphqlRequest(ADMIN_DASHBOARD_OVERVIEW_QUERY, {
     input: buildOverviewInput(filters),
@@ -107,9 +80,9 @@ export async function getAdminDashboardOverviewRequest(filters) {
     throw new Error("Unable to load dashboard overview.");
   }
 
-  const topPerformingVendors = await excludeInactiveTopVendors(
-    Array.isArray(overview?.topPerformingVendors) ? overview.topPerformingVendors : [],
-  );
+  const topPerformingVendors = Array.isArray(overview?.topPerformingVendors)
+    ? overview.topPerformingVendors
+    : [];
 
   return {
     stats: Array.isArray(overview.stats)

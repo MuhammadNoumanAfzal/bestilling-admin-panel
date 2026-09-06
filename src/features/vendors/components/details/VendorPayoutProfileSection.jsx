@@ -157,20 +157,7 @@ export default function VendorPayoutProfileSection({
         <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <DetailCell label="Account Holder" value={payoutProfile.accountHolderName} />
           <DetailCell label="Bank Name" value={payoutProfile.bankName} />
-          <DetailCell label="Payout Method" value={payoutProfile.payoutMethod} />
           <DetailCell label="Account Number" value={payoutProfile.accountNumber} />
-          <DetailCell label="IBAN" value={payoutProfile.iban} />
-          <DetailCell label="SWIFT / BIC" value={payoutProfile.swiftBic} />
-          <DetailCell label="Routing Number" value={payoutProfile.routingNumber} />
-          <DetailCell label="Branch Name" value={payoutProfile.branchName} />
-          <DetailCell label="Branch Code" value={payoutProfile.branchCode} />
-          <DetailCell label="Billing Address" value={payoutProfile.billingAddress} />
-          <DetailCell label="City" value={payoutProfile.city} />
-          <DetailCell label="Postal Code" value={payoutProfile.postalCode} />
-          <DetailCell label="Country" value={payoutProfile.country} />
-          <DetailCell label="Verification Note" value={payoutProfile.verificationNote} />
-          <DetailCell label="Created" value={payoutProfile.createdAtLabel} />
-          <DetailCell label="Last Updated" value={payoutProfile.updatedAtLabel} />
         </div>
       </div>
     </section>

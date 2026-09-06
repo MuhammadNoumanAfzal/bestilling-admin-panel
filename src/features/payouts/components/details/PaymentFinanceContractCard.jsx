@@ -197,7 +197,7 @@ export default function PaymentFinanceContractCard({ payout }) {
       {invoice ? (
         <Section title="Invoice Contract Details">
           <div className="space-y-3">
-            <InfoRow label="Payment Status" value={invoice.paymentStatus} />
+            <InfoRow label="Customer Payment Status" value={invoice.paymentStatus} />
             <InfoRow label="Payment Method" value={invoice.paymentMethod} />
             <InfoRow label="Reference" value={invoice.paymentReference} />
             <InfoRow label="Issued At" value={invoice.issuedAtLabel} />

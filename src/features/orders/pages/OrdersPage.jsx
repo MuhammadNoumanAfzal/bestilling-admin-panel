@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   ShoppingBag,
@@ -48,6 +48,7 @@ const presetByFilter = {
 
 export default function OrdersPage() {
   const navigate = useNavigate();
+  const { setPageHeaderAction } = useOutletContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [vendorFilter, setVendorFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -77,6 +78,7 @@ export default function OrdersPage() {
   const [loadError, setLoadError] = useState("");
   const [activeActionOrderId, setActiveActionOrderId] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const deferredSearchTerm = useDeferredValue(searchTerm);
 
   const dateRange = useMemo(
     () => getDateRangeForFilter(timeframe, customStart, customEnd),
@@ -85,7 +87,7 @@ export default function OrdersPage() {
 
   const normalizedFilters = useMemo(
     () => ({
-      search: searchTerm,
+      search: deferredSearchTerm,
       vendorId: vendorFilter || null,
       status: statusFilter
         ? statusFilter.replace(/\s+/g, "_").toUpperCase()
@@ -100,7 +102,15 @@ export default function OrdersPage() {
       sortField: "PLACED_AT",
       sortDirection: "DESC",
     }),
-    [currentPage, dateRange, paymentFilter, searchTerm, statusFilter, vendorFilter],
+    [currentPage, dateRange, deferredSearchTerm, paymentFilter, statusFilter, vendorFilter],
+  );
+  const categoryFilters = useMemo(
+    () => ({
+      vendorId: vendorFilter || null,
+      dateFrom: dateRange?.start || null,
+      dateTo: dateRange?.end || null,
+    }),
+    [dateRange, vendorFilter],
   );
 
   useEffect(() => {
@@ -111,10 +121,7 @@ export default function OrdersPage() {
       setLoadError("");
 
       try {
-        const [ordersResponse, categoryResponse] = await Promise.all([
-          getAdminOrdersRequest(normalizedFilters),
-          getAdminOrderCategoryBreakdownRequest(normalizedFilters),
-        ]);
+        const ordersResponse = await getAdminOrdersRequest(normalizedFilters);
 
         if (!isMounted) {
           return;
@@ -128,7 +135,6 @@ export default function OrdersPage() {
           statuses: ordersResponse.filterOptions.statuses,
           paymentStatuses: ordersResponse.filterOptions.paymentStatuses,
         });
-        setCategoryItems(categoryResponse);
       } catch (error) {
         if (isMounted) {
           setLoadError(error instanceof Error ? error.message : "Unable to load orders.");
@@ -148,12 +154,36 @@ export default function OrdersPage() {
   }, [normalizedFilters, reloadKey]);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, vendorFilter, statusFilter, paymentFilter, timeframe, customStart, customEnd]);
+    let isMounted = true;
+
+    async function loadCategoryBreakdown() {
+      try {
+        const categoryResponse = await getAdminOrderCategoryBreakdownRequest(categoryFilters);
+
+        if (isMounted) {
+          setCategoryItems(categoryResponse);
+        }
+      } catch {
+        if (isMounted) {
+          setCategoryItems([]);
+        }
+      }
+    }
+
+    void loadCategoryBreakdown();
+    return () => {
+      isMounted = false;
+    };
+  }, [categoryFilters, reloadKey]);
 
   function handleCustomDateChange(start, end) {
     setCustomStart(start);
     setCustomEnd(end);
+    setCurrentPage(1);
+  }
+
+  function handleTimeframeChange(value) {
+    setTimeframe(value);
     setCurrentPage(1);
   }
 
@@ -166,6 +196,13 @@ export default function OrdersPage() {
     setCustomStart("");
     setCustomEnd("");
     setCurrentPage(1);
+  }
+
+  function updateFilters(setter) {
+    return (value) => {
+      setter(value);
+      setCurrentPage(1);
+    };
   }
 
   function handleSummaryCardClick(cardId) {
@@ -386,12 +423,17 @@ export default function OrdersPage() {
     }
   }
 
+  useEffect(() => {
+    setPageHeaderAction(<DateFilterDropdown selectedFilter={timeframe} onChangeFilter={handleTimeframeChange} startDate={customStart} endDate={customEnd} onCustomDateChange={handleCustomDateChange} />);
+    return () => setPageHeaderAction(null);
+  }, [customEnd, customStart, setPageHeaderAction, timeframe]);
+
   return (
     <div className="space-y-6">
-      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:hidden">
         <DateFilterDropdown
           selectedFilter={timeframe}
-          onChangeFilter={setTimeframe}
+          onChangeFilter={handleTimeframeChange}
           startDate={customStart}
           endDate={customEnd}
           onCustomDateChange={handleCustomDateChange}
@@ -419,20 +461,20 @@ export default function OrdersPage() {
       <section className="overflow-hidden rounded-[16px] border border-[#ddd6cf] bg-white shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
         <OrdersToolbar
           searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          onSearchChange={updateFilters(setSearchTerm)}
           vendorFilter={vendorFilter}
-          onVendorFilterChange={setVendorFilter}
+          onVendorFilterChange={updateFilters(setVendorFilter)}
           statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
+          onStatusFilterChange={updateFilters(setStatusFilter)}
           paymentFilter={paymentFilter}
-          onPaymentFilterChange={setPaymentFilter}
+          onPaymentFilterChange={updateFilters(setPaymentFilter)}
           onResetFilters={handleResetFilters}
           vendors={filterOptions.vendors}
           statuses={filterOptions.statuses}
           paymentStatuses={filterOptions.paymentStatuses}
         />
 
-        {isLoading ? (
+        {isLoading && rows.length === 0 ? (
           <AdminLoadingState
             title="Loading order activity"
             description="Gathering customer, vendor, event, payment, and fulfillment records for the selected filters."

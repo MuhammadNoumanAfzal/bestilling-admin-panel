@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import {
   getAdminSupportSummaryRequest,
@@ -60,6 +61,7 @@ function buildDateFilters(timeframe, customStart, customEnd) {
 }
 
 export default function SupportPage() {
+  const { setPageHeaderAction } = useOutletContext();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [timeframe, setTimeframe] = useState("Last 7 days");
@@ -254,9 +256,14 @@ export default function SupportPage() {
     }
   }
 
+  useEffect(() => {
+    setPageHeaderAction(<DateFilterDropdown selectedFilter={timeframe} onChangeFilter={setTimeframe} startDate={customStart} endDate={customEnd} onCustomDateChange={handleCustomDateChange} />);
+    return () => setPageHeaderAction(null);
+  }, [customEnd, customStart, setPageHeaderAction, timeframe]);
+
   return (
     <div className="space-y-5">
-      <div className="flex justify-start sm:justify-end">
+      <div className="flex justify-start sm:justify-end lg:hidden">
         <DateFilterDropdown
           selectedFilter={timeframe}
           onChangeFilter={setTimeframe}

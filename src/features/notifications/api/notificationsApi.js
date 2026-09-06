@@ -1,6 +1,7 @@
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
 import {
   ADMIN_ORDER_NOTIFICATIONS_QUERY,
+  CREATE_ADMIN_NOTIFICATION_MUTATION,
   ADMIN_FINANCE_NOTIFICATIONS_QUERY,
   FINANCE_NOTIFICATION_DETAIL_QUERY,
   MARK_ALL_FINANCE_NOTIFICATIONS_READ_MUTATION,
@@ -8,6 +9,21 @@ import {
 } from "./notificationsQueries.js";
 
 const ADMIN_FINANCE_AUDIENCE = "ADMIN";
+
+export async function createAdminNotificationRequest(input) {
+  const data = await executeProtectedGraphqlRequest(CREATE_ADMIN_NOTIFICATION_MUTATION, { input });
+  const payload = data?.createAdminNotification;
+
+  if (!payload?.success) {
+    const firstFieldError = payload?.errors?.find((error) => error?.message)?.message;
+    throw new Error(firstFieldError || payload?.message || "Unable to create the notification.");
+  }
+
+  return {
+    ...payload,
+    notificationId: payload?.notification?.id || "",
+  };
+}
 
 function appendNotificationContext(path, notification) {
   const normalizedPath = String(path || "").trim();

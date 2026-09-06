@@ -1,72 +1,74 @@
-import { BadgeDollarSign, CalendarDays, CircleAlert } from "lucide-react";
+import { BadgeDollarSign, CalendarDays, CircleAlert, TrendingUp } from "lucide-react";
+
+function formatNok(value) {
+  return `NOK ${Number(value || 0).toLocaleString("en-GB", {
+    maximumFractionDigits: 0,
+  })}`;
+}
 
 function RevenueChart({ series }) {
-  const safeSeries = Array.isArray(series) ? series : [];
-  const maxValue = Math.max(...safeSeries.map((item) => Number(item?.value ?? 0)), 1);
-  const chartHeight = 180;
-  const chartWidth = Math.max(safeSeries.length * 52, 360);
-  const tickStep = maxValue > 0 ? Math.ceil(maxValue / 4) : 1;
-  const ticks = [tickStep * 4, tickStep * 3, tickStep * 2, tickStep, 0];
+  const safeSeries = (Array.isArray(series) ? series : [])
+    .map((item) => ({
+      label: item?.label || "Period",
+      value: Number(item?.value ?? 0),
+    }))
+    .filter((item) => Number.isFinite(item.value));
 
-  function buildBarPath(x, y, width, height, radius) {
-    const safeRadius = Math.min(radius, width / 2, height);
-    const right = x + width;
-    const bottom = y + height;
-
-    return [
-      `M ${x} ${bottom}`,
-      `L ${x} ${y + safeRadius}`,
-      `Q ${x} ${y} ${x + safeRadius} ${y}`,
-      `L ${right - safeRadius} ${y}`,
-      `Q ${right} ${y} ${right} ${y + safeRadius}`,
-      `L ${right} ${bottom}`,
-      "Z",
-    ].join(" ");
+  if (safeSeries.length === 0) {
+    return (
+      <div className="flex min-h-[280px] items-center justify-center rounded-[14px] border border-dashed border-[#e5d9d0] bg-[#fcfbfa] px-6 text-center">
+        <div>
+          <TrendingUp className="mx-auto h-7 w-7 text-[#c9b9ae]" />
+          <p className="mt-3 text-[14px] font-semibold text-[#5f534b]">No sales trend is available yet.</p>
+          <p className="mt-1 text-[12px] leading-5 text-[#8a7f76]">Revenue will appear after completed vendor orders are recorded.</p>
+        </div>
+      </div>
+    );
   }
 
+  const totalRevenue = safeSeries.reduce((sum, item) => sum + item.value, 0);
+  const averageRevenue = totalRevenue / safeSeries.length;
+  const bestPeriod = safeSeries.reduce((best, item) => (item.value > best.value ? item : best));
+  const latestPeriod = safeSeries[safeSeries.length - 1];
+  const maxValue = Math.max(...safeSeries.map((item) => item.value), 1);
+
+  const insights = [
+    { label: "Total sales", value: formatNok(totalRevenue), detail: "Selected range" },
+    { label: "Average sales", value: formatNok(averageRevenue), detail: "Per displayed period" },
+    { label: "Best period", value: formatNok(bestPeriod.value), detail: bestPeriod.label },
+    { label: "Latest period", value: formatNok(latestPeriod.value), detail: latestPeriod.label },
+  ];
+
   return (
-    <div className="grid min-w-0 grid-cols-[52px_minmax(0,1fr)] gap-3">
-      <div className="flex h-[180px] flex-col justify-between">
-        {ticks.map((tick) => (
-          <span key={tick} className="text-[10px] font-medium text-[#7a6e67]">
-            NOK {tick.toLocaleString("en-GB")}
-          </span>
+    <div className="space-y-5">
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        {insights.map((insight) => (
+          <div key={insight.label} className="rounded-[10px] border border-[#eee4dd] bg-[#fcfbfa] px-3 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#9b8f86]">{insight.label}</p>
+            <p className="mt-1 text-[16px] font-extrabold tracking-[-0.03em] text-[#201711]">{insight.value}</p>
+            <p className="mt-0.5 text-[10px] text-[#887b72]">{insight.detail}</p>
+          </div>
         ))}
       </div>
-      <div className="min-w-0 overflow-x-auto">
-        <div className="grid min-w-[360px] grid-rows-[180px_auto]">
-        <svg aria-hidden="true" className="h-[180px] w-full" preserveAspectRatio="none" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
-          {ticks.map((tick, index) => {
-            const y = (chartHeight / (ticks.length - 1)) * index;
-            return (
-              <line
-                key={tick}
-                stroke="#e4dbd4"
-                strokeDasharray="4 4"
-                strokeWidth="1"
-                x1="0"
-                x2={chartWidth}
-                y1={y}
-                y2={y}
-              />
-            );
-          })}
-          {safeSeries.map((item, index) => {
-            const step = chartWidth / Math.max(safeSeries.length, 1);
-            const width = 32;
-            const height = Math.max(((Number(item?.value ?? 0)) / maxValue) * (chartHeight - 10), 16);
-            const x = step * index + (step - width) / 2;
-            const y = chartHeight - height;
-            return <path key={item.label} d={buildBarPath(x, y, width, height, 10)} fill="#d46a37" />;
-          })}
-        </svg>
-        <div className="flex gap-3 pt-2">
-          {safeSeries.map((item) => (
-            <div key={item.label} className="flex flex-1 justify-center">
-              <span className="text-[10px] font-semibold text-[#5c5048]">{item.label}</span>
-            </div>
+      <div className="relative overflow-x-auto rounded-[14px] border border-[#eee4dd] bg-[#fcfbfa] px-3 pb-3 pt-5">
+        <div className="pointer-events-none absolute inset-x-3 top-5 grid h-[190px] grid-rows-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="border-b border-dashed border-[#eadfd8] last:border-b-0" />
           ))}
         </div>
+        <div className="relative grid min-w-[420px] grid-cols-[repeat(auto-fit,minmax(52px,1fr))] items-end gap-3 pt-1">
+          {safeSeries.map((item) => (
+            <div key={item.label} className="flex min-w-0 flex-col items-center gap-2">
+              <span className="text-[10px] font-bold text-[#6d5f56]">{formatNok(item.value)}</span>
+              <div className="flex h-[176px] w-full items-end rounded-t-[8px] bg-[#f5ebe5] px-1.5" title={`${item.label}: ${formatNok(item.value)}`}>
+                <div
+                  className="w-full rounded-t-[6px] bg-[#d46a37] transition-[height] duration-300"
+                  style={{ height: `${Math.max((item.value / maxValue) * 100, item.value > 0 ? 5 : 0)}%` }}
+                />
+              </div>
+              <span className="max-w-full truncate text-[10px] font-semibold text-[#5c5048]">{item.label}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -90,8 +92,10 @@ export default function VendorFinancialPerformanceSection({ financial }) {
         <article className="rounded-[16px] border border-[#d6cbc2] bg-white p-5 shadow-[0_8px_20px_rgba(53,34,20,0.04)]">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-[20px] font-extrabold tracking-[-0.04em] text-[#18120f]">{financial.chartTitle}</h3>
-              <p className="text-[13px] font-medium text-[#8a7f76]">{financial.chartSubtitle}</p>
+              <h3 className="text-[20px] font-extrabold tracking-[-0.04em] text-[#18120f]">Sales performance</h3>
+              <p className="text-[13px] font-medium text-[#8a7f76]">
+                {financial.chartSubtitle || "Completed-order sales across the selected period."}
+              </p>
             </div>
             <span className="rounded-full border border-[#e4d7ce] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#5f534b]">
               {financial.filterLabel}

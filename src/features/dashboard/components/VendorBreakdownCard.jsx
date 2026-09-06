@@ -16,13 +16,6 @@ const breakdownItems = [
     target: "/vendors?tab=Pending%20Approval",
   },
   {
-    key: "outOfStock",
-    label: "Out of Stock",
-    valueClassName: "text-[#d83f3f]",
-    labelClassName: "text-[#d83f3f]",
-    target: "/vendors",
-  },
-  {
     key: "topRated",
     label: "Top Rated",
     valueClassName: "text-[#18120f]",
@@ -41,7 +34,9 @@ export default function VendorBreakdownCard({ breakdown }) {
       <div className="grid grid-cols-2 gap-3">
         {breakdownItems.map((item) => (
           <button
-            className="rounded-[10px] border border-[#eee4dd] bg-[#fcfbfa] p-3 text-center transition hover:border-[#cf6e38]/35 hover:bg-white"
+            className={`rounded-[10px] border border-[#eee4dd] bg-[#fcfbfa] p-3 text-center transition hover:border-[#cf6e38]/35 hover:bg-white ${
+              item.key === "topRated" ? "col-span-2" : ""
+            }`}
             key={item.key}
             onClick={() => navigate(item.target)}
             type="button"

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { Users, Wifi, Clock, AlertTriangle, CircleAlert, DollarSign } from "lucide-react";
@@ -16,7 +16,6 @@ import VendorsToolbar from "../components/VendorsToolbar.jsx";
 import VendorStatusOverviewCard from "../components/VendorStatusOverviewCard.jsx";
 
 const PAGE_SIZE = 10;
-const FETCH_PAGE_SIZE = 100;
 
 const iconMap = {
   total: Users,
@@ -87,34 +86,6 @@ function buildFilterOptions(rows) {
   };
 }
 
-async function getAllAdminVendors(baseFilters) {
-  const firstPage = await getAdminVendorsRequest({
-    ...baseFilters,
-    page: 1,
-    pageSize: FETCH_PAGE_SIZE,
-  });
-
-  const totalPages = Math.max(1, Number(firstPage.pageInfo?.totalPages ?? 1));
-  if (totalPages === 1) {
-    return firstPage;
-  }
-
-  const remainingPages = await Promise.all(
-    Array.from({ length: totalPages - 1 }, (_, index) =>
-      getAdminVendorsRequest({
-        ...baseFilters,
-        page: index + 2,
-        pageSize: FETCH_PAGE_SIZE,
-      }),
-    ),
-  );
-
-  return {
-    ...firstPage,
-    rows: [firstPage.rows, ...remainingPages.map((page) => page.rows)].flat(),
-  };
-}
-
 export default function VendorsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
@@ -126,7 +97,8 @@ export default function VendorsPage() {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [stats, setStats] = useState([]);
-  const [allRows, setAllRows] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [pageInfo, setPageInfo] = useState({ page: 1, pageSize: PAGE_SIZE, totalItems: 0, totalPages: 1 });
   const [filterOptions, setFilterOptions] = useState({
     cities: [],
     statuses: [],
@@ -139,57 +111,28 @@ export default function VendorsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [isUpdatingStatusId, setIsUpdatingStatusId] = useState("");
+  const deferredSearchTerm = useDeferredValue(searchTerm);
 
   const dateRange = useMemo(
     () => (timeframe === ALL_DATES_FILTER ? null : getDateRangeForFilter(timeframe, customStart, customEnd)),
     [customEnd, customStart, timeframe],
   );
 
-  const filteredRows = useMemo(
-    () =>
-      sortRows(
-        allRows.filter((row) => {
-          const searchValue = searchTerm.trim().toLowerCase();
-          const matchesSearch =
-            !searchValue ||
-            row.name.toLowerCase().includes(searchValue) ||
-            row.businessType.toLowerCase().includes(searchValue) ||
-            row.city.toLowerCase().includes(searchValue);
-
-          const normalizedCityFilter = cityFilter.trim().toLowerCase();
-          const matchesCity =
-            !normalizedCityFilter ||
-            row.city.toLowerCase().includes(normalizedCityFilter);
-          const matchesRating = !ratingFilter || row.ratingValue >= Number(ratingFilter);
-          const matchesDate = withinDateRange(row.joinDateValue, dateRange);
-
-          return (
-            matchesSearch &&
-            matchesCity &&
-            matchesRating &&
-            matchesDate &&
-            matchesTab(row, activeTab)
-          );
-        }),
-        activeTab,
-      ),
-    [activeTab, allRows, cityFilter, dateRange, ratingFilter, searchTerm],
-  );
-
-  const paginatedRows = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return filteredRows.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [currentPage, filteredRows]);
-
-  const pageInfo = useMemo(() => {
-    const totalItems = filteredRows.length;
-    return {
+  const normalizedFilters = useMemo(
+    () => ({
+      search: deferredSearchTerm,
+      city: cityFilter || null,
+      minRating: ratingFilter ? Number(ratingFilter) : null,
+      status: activeTab === "All" || activeTab === "Top Performing" ? null : activeTab.replace(/\s+/g, "_").toUpperCase(),
+      joinedFrom: dateRange?.start || null,
+      joinedTo: dateRange?.end || null,
       page: currentPage,
       pageSize: PAGE_SIZE,
-      totalItems,
-      totalPages: Math.max(1, Math.ceil(totalItems / PAGE_SIZE)),
-    };
-  }, [currentPage, filteredRows.length]);
+      sortBy: "JOINED_AT",
+      sortOrder: "DESC",
+    }),
+    [activeTab, cityFilter, currentPage, dateRange, deferredSearchTerm, ratingFilter],
+  );
 
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab") || "All";
@@ -204,24 +147,15 @@ export default function VendorsPage() {
       setLoadError("");
 
       try {
-        const response = await getAllAdminVendors({
-          search: null,
-          vendorId: null,
-          city: null,
-          minRating: null,
-          status: null,
-          joinedFrom: null,
-          joinedTo: null,
-          sortBy: "JOINED_AT",
-          sortOrder: "DESC",
-        });
+        const response = await getAdminVendorsRequest(normalizedFilters);
 
         if (!isMounted) {
           return;
         }
-        setAllRows(response.rows);
+        setRows(response.rows);
+        setPageInfo(response.pageInfo);
         setStats(response.stats);
-        setFilterOptions(buildFilterOptions(response.rows));
+        setFilterOptions(response.filterOptions);
         setSidePanels(response.sidePanels);
       } catch (error) {
         if (isMounted) {
@@ -239,11 +173,7 @@ export default function VendorsPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, cityFilter, ratingFilter, activeTab, timeframe, customStart, customEnd]);
+  }, [normalizedFilters]);
 
   function handleCustomDateChange(start, end) {
     setCustomStart(start);
@@ -331,7 +261,7 @@ export default function VendorsPage() {
         ? await updateVendorStatusRequest(row.id, "ACTIVE", reasonResult.value || "")
         : await deactivateVendorRequest(row.id, reasonResult.value || "");
 
-      setAllRows((current) =>
+      setRows((current) =>
         current.map((item) =>
           item.id === row.id
             ? {
@@ -384,13 +314,13 @@ export default function VendorsPage() {
       <section className="rounded-[14px] border border-[#ddd6cf] bg-white shadow-[0_6px_16px_rgba(53,34,20,0.05)] overflow-hidden">
         <VendorsToolbar
           searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          onSearchChange={(value) => { setSearchTerm(value); setCurrentPage(1); }}
           cityFilter={cityFilter}
-          onCityFilterChange={setCityFilter}
+          onCityFilterChange={(value) => { setCityFilter(value); setCurrentPage(1); }}
           ratingFilter={ratingFilter}
-          onRatingFilterChange={setRatingFilter}
+          onRatingFilterChange={(value) => { setRatingFilter(value); setCurrentPage(1); }}
           timeframeFilter={timeframe}
-          onTimeframeFilterChange={setTimeframe}
+          onTimeframeFilterChange={(value) => { setTimeframe(value); setCurrentPage(1); }}
           customStart={customStart}
           customEnd={customEnd}
           onCustomDateChange={handleCustomDateChange}
@@ -401,7 +331,7 @@ export default function VendorsPage() {
         />
 
         <div className="px-4 pb-4">
-          {isLoading ? (
+          {isLoading && rows.length === 0 ? (
             <div className="px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
               Loading vendors...
             </div>
@@ -413,7 +343,7 @@ export default function VendorsPage() {
               onToggleStatus={handleToggleStatus}
               pageSize={pageInfo.pageSize}
               totalItems={pageInfo.totalItems}
-              vendors={paginatedRows}
+              vendors={rows}
             />
           )}
         </div>
@@ -424,7 +354,7 @@ export default function VendorsPage() {
           onViewAll={() => handleTabChange("Top Performing")}
           vendors={sidePanels.topPerformers}
         />
-        <VendorStatusOverviewCard breakdown={sidePanels.statusBreakdown} vendors={filteredRows} />
+        <VendorStatusOverviewCard breakdown={sidePanels.statusBreakdown} vendors={rows} />
       </section>
     </div>
   );

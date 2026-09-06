@@ -1,4 +1,4 @@
-import { CalendarDays, Check, Mail, Radio, SendHorizonal, Smartphone } from "lucide-react";
+import { CalendarDays, Check, Mail, Radio, SendHorizonal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -6,6 +6,7 @@ import CreateNotificationActionBar from "../components/create-notification/Creat
 import CreateNotificationChannelCard from "../components/create-notification/CreateNotificationChannelCard.jsx";
 import CreateNotificationField from "../components/create-notification/CreateNotificationField.jsx";
 import CreateNotificationSectionCard from "../components/create-notification/CreateNotificationSectionCard.jsx";
+import { createAdminNotificationRequest } from "../api/notificationsApi.js";
 
 const audienceOptions = [
   { value: "all-users", label: "All User" },
@@ -16,22 +17,16 @@ const audienceOptions = [
 const deliveryChannelOptions = [
   {
     id: "push",
-    title: "In-App Push Notification",
-    description: "Sent to the mobile app and delivered in real time.",
+    title: "Web Inbox & Browser Alert",
+    description: "Saved to the recipient's notification inbox. A browser alert is sent when permission is enabled.",
     icon: <Radio size={15} />,
-    badge: "Fast",
+    badge: "Web",
   },
   {
     id: "email",
     title: "Email Notification",
     description: "Sent directly to every required email address.",
     icon: <Mail size={15} />,
-  },
-  {
-    id: "sms",
-    title: "SMS Notification",
-    description: "Best for urgent alerts, service interruptions, and time-sensitive reminders.",
-    icon: <Smartphone size={15} />,
   },
 ];
 
@@ -62,6 +57,7 @@ export default function CreateNotificationPage() {
     scheduleTime: "07:00",
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function updateField(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -112,48 +108,69 @@ export default function CreateNotificationPage() {
     return Object.keys(nextErrors).length === 0;
   }
 
-  async function handleSaveDraft() {
-    if (!validateForm({ requireSchedule: false })) {
-      return;
-    }
-
-    await Swal.fire({
-      icon: "success",
-      title: "Draft saved",
-      text: "Your notification draft is ready to finish later.",
-      confirmButtonColor: "#cf6e38",
-    });
-    navigate("/notifications");
-  }
-
   async function handleSend() {
     if (!validateForm({ requireSchedule: true })) {
       return;
     }
 
-    const scheduleText =
-      form.scheduleMode === "immediately"
-        ? "This notification will be sent right away."
-        : `Scheduled for ${form.scheduleDate} at ${form.scheduleTime}.`;
+    const audience = {
+      "all-users": "ALL_USERS",
+      customers: "CUSTOMERS",
+      vendors: "VENDORS",
+    }[form.audience];
 
-    await Swal.fire({
-      icon: "success",
-      title: form.scheduleMode === "immediately" ? "Notification sent" : "Notification scheduled",
-      text: scheduleText,
-      confirmButtonColor: "#cf6e38",
-    });
-    navigate("/notifications");
+    setIsSubmitting(true);
+    try {
+      const result = await createAdminNotificationRequest({
+        title: form.title.trim(),
+        message: form.message.trim(),
+        emailSubject: form.channels.includes("email") ? form.emailSubject.trim() : null,
+        audience,
+        channels: form.channels.map((channel) => (channel === "push" ? "PUSH" : "EMAIL")),
+        // The inbox is the durable delivery record, including for email-only sends.
+        saveToInbox: true,
+        sendBrowserPush: form.channels.includes("push"),
+        sendEmail: form.channels.includes("email"),
+        schedule:
+          form.scheduleMode === "later"
+            ? {
+                date: form.scheduleDate,
+                time: form.scheduleTime,
+                timezone: "Europe/Oslo",
+              }
+            : null,
+      });
+
+      const delivery = result?.delivery;
+      const deliveryText = [
+        delivery?.inboxCreated ? `${delivery.inboxCreated} inbox recipient${delivery.inboxCreated === 1 ? "" : "s"}` : "",
+        delivery?.browserPushQueued ? `${delivery.browserPushQueued} browser alert${delivery.browserPushQueued === 1 ? "" : "s"} queued` : "",
+        delivery?.emailQueued ? `${delivery.emailQueued} email${delivery.emailQueued === 1 ? "" : "s"} queued` : "",
+      ]
+        .filter(Boolean)
+        .join(". ");
+
+      await Swal.fire({
+        icon: "success",
+        title: form.scheduleMode === "immediately" ? "Notification created" : "Notification scheduled",
+        text: deliveryText || result?.message || "The notification was accepted by the delivery service.",
+        confirmButtonColor: "#cf6e38",
+      });
+      navigate("/notifications");
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Notification was not created",
+        text: error?.message || "Please try again.",
+        confirmButtonColor: "#cf6e38",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <div className="space-y-6">
-      <section className="space-y-1">
-        <h1 className="text-[40px] font-bold tracking-[-0.04em] text-[#18120f]">Create Notification</h1>
-        <p className="max-w-[72ch] text-[16px] leading-7 text-[#6f645d]">
-          Draft and schedule platform-wide or targeted notifications for your users.
-        </p>
-      </section>
-
       <div className="max-w-[980px] space-y-5">
         <CreateNotificationSectionCard
           subtitle="Provide the core message and notification content."
@@ -213,6 +230,10 @@ export default function CreateNotificationPage() {
                 onClick={() => toggleChannel(option.id)}
               />
             ))}
+          </div>
+          <div className="mt-4 rounded-[12px] border border-[#eadfd6] bg-[#fffaf6] px-4 py-3 text-[12px] leading-5 text-[#74665d]">
+            <span className="font-bold text-[#3d2c22]">Web notification note: </span>
+            Every notification is saved in the recipient's web inbox. Browser alerts require the recipient to allow notifications; if their browser or device is unavailable, they will see the notification when they next open the web app. Email must be sent by the backend delivery service. SMS is not available here.
           </div>
           {errors.channels ? <p className="mt-3 text-[13px] font-medium text-[#d15b42]">{errors.channels}</p> : null}
           {!errors.channels ? (
@@ -307,9 +328,8 @@ export default function CreateNotificationPage() {
 
       <CreateNotificationActionBar
         onCancel={() => navigate("/notifications")}
-        onSaveDraft={handleSaveDraft}
         onSend={handleSend}
-        disableSend={!form.title.trim() || !form.message.trim() || form.channels.length === 0}
+        disableSend={isSubmitting || !form.title.trim() || !form.message.trim() || form.channels.length === 0}
       />
     </div>
   );

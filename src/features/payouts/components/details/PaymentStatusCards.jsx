@@ -82,11 +82,13 @@ function PaymentActionCard({
 
 export default function PaymentStatusCards({
   isApprovingInvoice = false,
+  isVerifyingBankProfile = false,
   isRejectingInvoice = false,
   isUpdatingCustomerPayment = false,
   isReleasingVendorPayout = false,
   isUpdatingVendorPayout = false,
   onApproveInvoice,
+  onVerifyBankProfile,
   onRejectInvoice,
   onReleasePayout,
   onMarkPaid,
@@ -97,14 +99,18 @@ export default function PaymentStatusCards({
 }) {
   const customerStatus = payout.statuses.customerPaymentStatus;
   const payoutStatus = payout.statuses.vendorPayoutStatus;
+  const isOrderCanceled = payout.order?.status === "Canceled";
   const payoutProfile = payout.vendor?.payoutProfile;
   const isBankProfileVerified = Boolean(payoutProfile?.bankDetailsVerified);
   const isReported = customerStatus === "Reported";
   const isPaid = customerStatus === "Paid";
   const isRejected = customerStatus === "Rejected";
   const isPendingCustomerPayment = customerStatus === "Pending";
-  const canManualMarkInvoicePaid = !isReported && !isPaid && !isRejected && !isPendingCustomerPayment;
-  const customerPrimaryLabel = isReported
+  const canManualMarkInvoicePaid =
+    !isOrderCanceled && !isReported && !isPaid && !isRejected && !isPendingCustomerPayment;
+  const customerPrimaryLabel = isOrderCanceled
+    ? "Order Canceled"
+    : isReported
     ? isApprovingInvoice
       ? "Approving..."
       : "Approve Reported Payment"
@@ -124,8 +130,13 @@ export default function PaymentStatusCards({
     : isPendingCustomerPayment
       ? onMarkReceived
       : onMarkInvoicePaid;
-  const vendorPrimaryLabel =
-    payoutStatus === "Paid"
+  const vendorPrimaryLabel = isOrderCanceled
+    ? "Order Canceled"
+    : !isBankProfileVerified
+      ? isVerifyingBankProfile
+        ? "Verifying bank details..."
+        : "Verify Bank Details"
+      : payoutStatus === "Paid"
       ? "Already Paid"
       : payoutStatus === "Released"
         ? isUpdatingVendorPayout
@@ -135,20 +146,32 @@ export default function PaymentStatusCards({
           ? "Releasing..."
           : "Release Payout";
   const vendorPrimaryAction =
-    payoutStatus === "Released" || payoutStatus === "Paid" ? onMarkPaid : onReleasePayout;
+    isOrderCanceled
+      ? undefined
+      : !isBankProfileVerified
+      ? onVerifyBankProfile
+      : payoutStatus === "Released" || payoutStatus === "Paid"
+        ? onMarkPaid
+        : onReleasePayout;
   const vendorPrimaryDisabled =
-    payoutStatus === "Paid"
+    isOrderCanceled
+      ? true
+      : !isBankProfileVerified
+      ? isVerifyingBankProfile || typeof onVerifyBankProfile !== "function"
+      : payoutStatus === "Paid"
       ? true
       : payoutStatus === "Released"
         ? isUpdatingVendorPayout
-        : isReleasingVendorPayout || !isPaid || !isBankProfileVerified;
+        : isReleasingVendorPayout || !isPaid;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <PaymentActionCard
         buttonLabel={customerPrimaryLabel}
         description={
-          isReported
+          isOrderCanceled
+            ? "This order was canceled, so no customer payment can be recorded."
+            : isReported
             ? "Review the reported payment and confirm it against the bank statement."
             : isPendingCustomerPayment
               ? "Customer payment is still waiting for manual confirmation."
@@ -161,7 +184,9 @@ export default function PaymentStatusCards({
           { label: "Customer", value: payout.customer.fullName },
         ]}
         disabled={
-          isReported
+          isOrderCanceled
+            ? true
+            : isReported
             ? isApprovingInvoice
             : isPendingCustomerPayment
               ? isUpdatingCustomerPayment
@@ -177,12 +202,16 @@ export default function PaymentStatusCards({
         secondaryButtonLabel={isReported ? (isRejectingInvoice ? "Rejecting..." : "Reject Report") : ""}
         secondaryDisabled={isRejectingInvoice}
         status={customerStatus}
-        title="Customer / Invoice Payment"
+        title="Customer Payment"
       />
       <PaymentActionCard
         buttonLabel={vendorPrimaryLabel}
         description={
-          payoutStatus === "Released"
+          isOrderCanceled
+            ? "This order was canceled, so no vendor payout can be released."
+            : !isBankProfileVerified
+            ? "Verify the vendor bank profile before releasing this payout."
+            : payoutStatus === "Released"
             ? "The payout is already released. Use this to confirm the outbound transfer is completed."
             : "Release the vendor payout after customer payment is approved, then mark it paid once the transfer is sent."
         }

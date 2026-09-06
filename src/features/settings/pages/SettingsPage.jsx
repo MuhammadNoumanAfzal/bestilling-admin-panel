@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { BadgeCent, Banknote, Globe2, KeyRound, Languages, RefreshCcw, Trash2 } from "lucide-react";
+import { useOutletContext } from "react-router-dom";
+import { Banknote, Globe2, KeyRound, Languages, RefreshCcw, Trash2 } from "lucide-react";
 import Swal from "sweetalert2";
 import { getAdminDisplayName, validateAdminPassword } from "../../auth/authConfig.js";
 import { useAuth } from "../../auth/hooks/useAuth.js";
@@ -8,7 +9,6 @@ import {
   getAdminSettingsRequest,
   updateAdminAvatarRequest,
   updateAdminProfileRequest,
-  updatePlatformPreferencesRequest,
 } from "../api/settingsApi.js";
 import {
   getAdminUploadConfigurationMessage,
@@ -155,37 +155,6 @@ function buildMasterDataPayload(section, values, item) {
   }
 
   return payload;
-}
-
-function buildSelectOptions(items, type) {
-  const normalizedItems = Array.isArray(items) ? items : [];
-
-  if (type === "currencies") {
-    return normalizedItems.map((item) => ({
-      value: item.raw?.code || "",
-      label: [item.raw?.code || "", item.raw?.label || item.name || ""].filter(Boolean).join(" - "),
-    }));
-  }
-
-  if (type === "languages") {
-    return normalizedItems.map((item) => ({
-      value: item.raw?.code || "",
-      label: item.raw?.code ? `${item.raw?.label || item.name} (${item.raw.code})` : item.raw?.label || item.name,
-    }));
-  }
-
-  return normalizedItems.map((item) => ({
-    value: item.raw?.value || "",
-    label: item.raw?.label || item.raw?.value || item.name || "",
-  }));
-}
-
-function withSelectedFallback(options, value) {
-  if (!value || options.some((option) => option.value === value)) {
-    return options;
-  }
-
-  return [{ value, label: value }, ...options];
 }
 
 function parseName(profile) {
@@ -356,77 +325,6 @@ function ProfileInformationCard({
       <div className="mt-5 flex items-center justify-end border-t border-[#eee5de] pt-4">
         <SaveButton className="h-10 min-w-[120px]" disabled={isSavingProfile} onClick={onSaveProfile}>
           {isSavingProfile ? "Saving..." : "Save Changes"}
-        </SaveButton>
-      </div>
-    </SettingsShellCard>
-  );
-}
-
-function PreferencesCard({
-  preferences,
-  currencies,
-  locales,
-  onFieldChange,
-  onSave,
-  isSaving,
-}) {
-  const currencyOptions = buildSelectOptions(currencies, "currencies");
-  const localeOptions = buildSelectOptions(locales, "languages");
-  const selectedCurrency = currencyOptions.some((option) => option.value === preferences.defaultCurrency)
-    ? preferences.defaultCurrency
-    : "";
-  const selectedLocale = localeOptions.some((option) => option.value === preferences.locale)
-    ? preferences.locale
-    : "";
-
-  return (
-    <SettingsShellCard>
-      <SettingsSectionHeader icon={BadgeCent} title="Platform Preferences" />
-
-      <div className="max-w-[420px]">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1.5 sm:col-span-2">
-            <span className="text-[12px] font-bold text-[#2f241d]">Default Currency</span>
-            <select
-              className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
-              disabled={!currencyOptions.length}
-              onChange={onFieldChange("defaultCurrency")}
-              value={selectedCurrency}
-            >
-              <option value="">Select currency</option>
-              {currencyOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[12px] font-bold text-[#2f241d]">Locale</span>
-            <select
-              className="h-12 cursor-pointer rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] text-[#2a1f19] outline-none transition focus:border-[#ce6938] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
-              disabled={!localeOptions.length}
-              onChange={onFieldChange("locale")}
-              value={selectedLocale}
-            >
-              <option value="">Select locale</option>
-              {localeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <p className="mt-2 text-[11px] leading-5 text-[#9c9087]">
-          Currency and locale are saved per administrator. GoCatering runs on Norway time automatically using
-          Europe/Oslo, including summer and winter clock changes.
-        </p>
-
-        <SaveButton className="mt-6 h-10 px-6" disabled={isSaving} onClick={onSave}>
-          {isSaving ? "Updating..." : "Update Preferences"}
         </SaveButton>
       </div>
     </SettingsShellCard>
@@ -612,6 +510,7 @@ function LoadingCard() {
 
 export default function SettingsPage() {
   const { updateSessionUser } = useAuth();
+  const { setPageHeaderAction } = useOutletContext();
   const isAvatarUploadAvailable = hasAdminUploadConfiguration();
   const avatarUploadUnavailableMessage = getAdminUploadConfigurationMessage();
   const [settingsUser, setSettingsUser] = useState(null);
@@ -630,11 +529,6 @@ export default function SettingsPage() {
     newPassword: "",
     confirmPassword: "",
   });
-  const [preferencesForm, setPreferencesForm] = useState({
-    defaultCurrency: "",
-    timezone: "",
-    locale: "",
-  });
   const [masterDataDrafts, setMasterDataDrafts] = useState(createMasterDataDraftState);
   const [editingMasterData, setEditingMasterData] = useState({
     sectionKey: "",
@@ -646,7 +540,6 @@ export default function SettingsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
-  const [isSavingPreferences, setIsSavingPreferences] = useState(false);
   const [masterDataSavingKey, setMasterDataSavingKey] = useState("");
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
   const [avatarInputKey, setAvatarInputKey] = useState(0);
@@ -658,11 +551,6 @@ export default function SettingsPage() {
       lastName: name.lastName,
       email: user?.email || "",
       phone: user?.phone || "",
-    });
-    setPreferencesForm({
-      defaultCurrency: user?.preferences?.defaultCurrency || "",
-      timezone: user?.preferences?.timezone || "",
-      locale: user?.preferences?.locale || "",
     });
   }
 
@@ -885,37 +773,6 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleSavePreferences() {
-    try {
-      setIsSavingPreferences(true);
-      const result = await updatePlatformPreferencesRequest({
-        defaultCurrency: preferencesForm.defaultCurrency,
-        timezone: preferencesForm.timezone,
-        locale: preferencesForm.locale,
-      });
-      setSettingsUser((current) => ({
-        ...current,
-        preferences: result.preferences,
-      }));
-      setPreferencesForm(result.preferences);
-      await Swal.fire({
-        icon: "success",
-        title: "Preferences updated",
-        text: result.message,
-        confirmButtonColor: "#cf6e38",
-      });
-    } catch (error) {
-      await Swal.fire({
-        icon: "error",
-        title: "Unable to update preferences",
-        text: error?.message || "Please try again.",
-        confirmButtonColor: "#cf6e38",
-      });
-    } finally {
-      setIsSavingPreferences(false);
-    }
-  }
-
   async function handleCreateMasterData(section) {
     const values = masterDataDrafts[section.key];
     const missingField = validateMasterDataValues(section, values);
@@ -1107,6 +964,16 @@ export default function SettingsPage() {
     ];
   }, [settingsUser]);
 
+  useEffect(() => {
+    setPageHeaderAction(
+      <button className="inline-flex cursor-pointer items-center gap-2 rounded-[12px] border border-[#dfd5cd] bg-white px-4 py-2.5 text-[12px] font-bold text-[#3c312a] shadow-[0_10px_22px_rgba(49,30,19,0.04)] transition hover:bg-[#faf6f2] disabled:cursor-not-allowed disabled:opacity-60" disabled={isRefreshing} onClick={() => loadSettings({ silent: true })} type="button">
+        <RefreshCcw size={14} />
+        {isRefreshing ? "Refreshing..." : "Refresh"}
+      </button>,
+    );
+    return () => setPageHeaderAction(null);
+  }, [isRefreshing, setPageHeaderAction]);
+
   return (
     <div className="space-y-6">
       <input
@@ -1125,7 +992,7 @@ export default function SettingsPage() {
           ))}
         </div>
         <button
-          className="inline-flex cursor-pointer items-center gap-2 rounded-[12px] border border-[#dfd5cd] bg-white px-4 py-2.5 text-[12px] font-bold text-[#3c312a] shadow-[0_10px_22px_rgba(49,30,19,0.04)] transition hover:bg-[#faf6f2] disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-[12px] border border-[#dfd5cd] bg-white px-4 py-2.5 text-[12px] font-bold text-[#3c312a] shadow-[0_10px_22px_rgba(49,30,19,0.04)] transition hover:bg-[#faf6f2] disabled:cursor-not-allowed disabled:opacity-60 lg:hidden"
           disabled={isRefreshing}
           onClick={() => loadSettings({ silent: true })}
           type="button"
@@ -1159,26 +1026,6 @@ export default function SettingsPage() {
           />
         )}
         <SettingsStatusCard user={settingsUser} />
-      </div>
-
-      <div className="max-w-[760px]">
-        {isLoading ? (
-          <LoadingCard />
-        ) : (
-          <PreferencesCard
-            currencies={masterData.currencies}
-            isSaving={isSavingPreferences}
-            locales={masterData.languages}
-            onFieldChange={(field) => (event) =>
-              setPreferencesForm((current) => ({
-                ...current,
-                [field]: event.target.value,
-              }))
-            }
-            onSave={handleSavePreferences}
-            preferences={preferencesForm}
-          />
-        )}
       </div>
 
       <div className="grid gap-5">

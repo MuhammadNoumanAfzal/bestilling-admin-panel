@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, MoreVertical, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getVendorDetailPath } from "../utils/vendorRoutes.js";
 
 const statusClasses = {
   Active: "bg-[#2b9e62] text-white",
@@ -35,7 +36,7 @@ function getVendorNavigationPath(row) {
   const cleanId = encodeURIComponent(row.id);
   return ["Pending Approval", "Changes Requested"].includes(row.status)
     ? `/vendors/${cleanId}/review`
-    : `/vendors/${cleanId}`;
+    : getVendorDetailPath(row);
 }
 
 function getReviewActionLabel(row) {

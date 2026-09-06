@@ -13,7 +13,8 @@ export default function RevenueAnalyticsCard({ analytics }) {
         </div>
       </div>
 
-      <ReportsBarChart bars={analytics.bars} className="mt-1" scale={analytics.scale} valuePrefix={analytics.valuePrefix} />
+      <p className="mb-2 text-[11px] font-medium text-[#9a8d84]">Hover a bar to view the exact revenue.</p>
+      <ReportsBarChart bars={analytics.bars} className="mt-1" scale={analytics.scale} valuePrefix={analytics.valuePrefix} valueType="currency" />
     </ReportsSectionCard>
   );
 }

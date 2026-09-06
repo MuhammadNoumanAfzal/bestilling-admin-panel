@@ -46,6 +46,10 @@ function LoadingState() {
   );
 }
 
+function isApprovedApplication(status) {
+  return ["APPROVED", "ACTIVE"].includes(String(status || "").trim().toUpperCase());
+}
+
 function ChecklistItem({ item }) {
   return (
     <div className="flex items-start gap-2.5 rounded-[12px] border border-[#eee3db] bg-[#fffdfa] px-4 py-3">
@@ -571,7 +575,7 @@ export default function VendorApplicationReviewPage() {
   }
 
   async function handleRequestChanges() {
-    if (!vendor) {
+    if (!vendor || isApprovedApplication(vendor.applicationStatus)) {
       return;
     }
 
@@ -747,6 +751,7 @@ export default function VendorApplicationReviewPage() {
   const canApproveForUi = Boolean(vendor.canApprove);
   const applicationStatusLabel =
     vendor.applicationStatus === "Rejected" ? "Suspended" : vendor.applicationStatus || "";
+  const isApprovedForUi = isApprovedApplication(vendor.applicationStatus);
 
   return (
     <div className="mx-auto max-w-[1120px] space-y-6">
@@ -805,13 +810,15 @@ export default function VendorApplicationReviewPage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <button
-                className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#d8ccc2] bg-white px-4 py-2.5 text-[14px] font-bold text-[#6a5c53]"
-                onClick={handleRequestChanges}
-                type="button"
-              >
-                Request Changes
-              </button>
+              {!isApprovedForUi ? (
+                <button
+                  className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#d8ccc2] bg-white px-4 py-2.5 text-[14px] font-bold text-[#6a5c53]"
+                  onClick={handleRequestChanges}
+                  type="button"
+                >
+                  Request Changes
+                </button>
+              ) : null}
               <button
                 className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#efbbb3] bg-white px-4 py-2.5 text-[14px] font-bold text-[#c53a2f]"
                 onClick={handleReject}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   approveVendorPayoutProfileRequest,
@@ -8,10 +8,11 @@ import {
 import {
   deactivateVendorRequest,
   deleteVendorRequest,
-  getAdminVendorDetailRequest,
+  getAdminVendorDetailBySlugRequest,
   getAdminVendorMenuDetailRequest,
   updateVendorStatusRequest,
 } from "../api/vendorsApi.js";
+import { getVendorDetailPath } from "../utils/vendorRoutes.js";
 import VendorBusinessOverviewSection from "../components/details/VendorBusinessOverviewSection.jsx";
 import VendorDangerZoneSection from "../components/details/VendorDangerZoneSection.jsx";
 import VendorDetailHeader from "../components/details/VendorDetailHeader.jsx";
@@ -37,7 +38,8 @@ function LoadingState() {
 }
 
 export default function VendorDetailPage() {
-  const { vendorId } = useParams();
+  const { vendorId: vendorSlug } = useParams();
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("overview");
   const [vendor, setVendor] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,10 +68,13 @@ export default function VendorDetailPage() {
       setLoadError("");
 
       try {
-        const detail = await getAdminVendorDetailRequest(decodeURIComponent(vendorId || ""));
+        const detail = await getAdminVendorDetailBySlugRequest(vendorSlug || "");
 
         if (isMounted) {
           setVendor(detail);
+          if (/^\d+$/.test(vendorSlug || "")) {
+            navigate(getVendorDetailPath(detail), { replace: true });
+          }
         }
       } catch (error) {
         if (isMounted) {
@@ -87,7 +92,7 @@ export default function VendorDetailPage() {
     return () => {
       isMounted = false;
     };
-  }, [vendorId]);
+  }, [navigate, vendorSlug]);
 
   useEffect(() => {
     if (!vendor) {

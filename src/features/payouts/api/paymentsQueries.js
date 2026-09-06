@@ -194,6 +194,7 @@ export const ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY = `
       invoiceNumber
       payoutId
       payoutNumber
+      settlementId
       settlementNumber
       paymentStatus
       payoutStatus
@@ -457,12 +458,21 @@ export const APPROVE_INVOICE_PAYMENT_MUTATION = `
       message
       payment {
         id
+        invoiceId
         invoiceNumber
+        payoutId
+        payoutNumber
+        settlementId
+        settlementNumber
         paymentStatus
         settlementStatus
+        payoutStatus
         fundedAt
         paymentApprovedAt
-        note
+        grossAmount { amount currency formatted }
+        totalCommission { amount currency formatted }
+        vendorPayable { amount currency formatted }
+        vendor { id businessName }
       }
     }
   }
@@ -513,6 +523,9 @@ export const RELEASE_VENDOR_PAYOUT_MUTATION = `
         readyForPayoutAt
         releasedAt
         note
+        grossAmount { amount formatted }
+        commissionAmount { amount formatted }
+        netAmount { amount formatted }
       }
     }
   }
@@ -528,9 +541,11 @@ export const MARK_VENDOR_PAYOUT_PAID_MUTATION = `
         payoutNumber
         status
         paidAt
-        settledAt
         transferReference
         note
+        grossAmount { amount formatted }
+        commissionAmount { amount formatted }
+        netAmount { amount formatted }
       }
     }
   }

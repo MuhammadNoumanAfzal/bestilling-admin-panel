@@ -263,6 +263,10 @@ function deriveAdminOrderPaymentStatus(order) {
     return "Partially refunded";
   }
 
+  if (resolveLifecycleRawStatus(order) === "CANCELLED") {
+    return rawPaymentStatus === "PAID" || capturedAt ? "Refund pending" : "Cancelled";
+  }
+
   if (rawPaymentStatus === "PAID") {
     return "Paid";
   }
@@ -286,6 +290,7 @@ function canMarkOrderPaid(order) {
   const paymentStatus = deriveAdminOrderPaymentStatus(order);
 
   if (
+    resolveLifecycleRawStatus(order) === "CANCELLED" ||
     paymentStatus === "Paid" ||
     paymentStatus === "Refunded" ||
     paymentStatus === "Partially refunded"
@@ -831,6 +836,7 @@ function normalizeOrderDetail(order) {
     items: Array.isArray(order?.items)
       ? order.items.map((item) => ({
           id: item?.id || "",
+          menuId: item?.menuItemId || "",
           name: item?.name || "Unnamed item",
           imageUrl: item?.imageUrl || "",
           quantity: Number(item?.quantity ?? 0),
@@ -970,78 +976,9 @@ export async function getAdminOrdersRequest(filters) {
   }
 
   const responseItems = Array.isArray(response.items) ? response.items : [];
-  const enrichedItems = await Promise.all(
-    responseItems.map(async (item) => {
-      const orderId = item?.id;
-
-      if (!orderId) {
-        return item;
-      }
-
-      try {
-        const [fallbackData, detailData] = await Promise.all([
-          executeProtectedGraphqlRequest(
-            ADMIN_ORDER_STATUS_FALLBACK_QUERY,
-            {
-              search: `${orderId}`,
-              page: 1,
-              pageSize: 20,
-            },
-          ),
-          executePreferredOrdersQuery(ADMIN_ORDER_DETAIL_ENRICHED_QUERY, {
-            id: orderId,
-          })
-            .then((result) => result || executeProtectedGraphqlRequest(ADMIN_ORDER_DETAIL_QUERY, {
-              id: orderId,
-            }))
-            .catch(() => null),
-        ]);
-
-        const detailOrder = detailData?.adminOrder || null;
-        const mergedItem = mergeAdminOrderChangeState(item, detailOrder);
-        const fallbackStatus = findFallbackPaymentOrderStatus(
-          fallbackData?.adminPayments?.items,
-          orderId,
-        );
-        const resolvedStatus = resolveMostAdvancedLifecycleStatus(
-          mergedItem?.status,
-          mergedItem?.fulfillmentStatus,
-          mergedItem?.delivery?.status,
-          fallbackStatus,
-        );
-
-        return resolvedStatus
-          ? {
-              ...mergedItem,
-              status: resolvedStatus,
-              fulfillmentStatus:
-                resolveMostAdvancedLifecycleStatus(
-                  mergedItem?.fulfillmentStatus,
-                  mergedItem?.delivery?.status,
-                  mergedItem?.status,
-                  fallbackStatus,
-                ) || resolvedStatus,
-              delivery: mergedItem?.delivery
-                ? {
-                    ...mergedItem.delivery,
-                    status:
-                      resolveMostAdvancedLifecycleStatus(
-                        mergedItem?.delivery?.status,
-                        mergedItem?.fulfillmentStatus,
-                        mergedItem?.status,
-                        fallbackStatus,
-                      ) || resolvedStatus,
-                  }
-                : mergedItem?.delivery,
-            }
-          : mergedItem;
-      } catch {
-        return item;
-      }
-    }),
-  );
-
-  const normalizedRows = enrichedItems.map(normalizeOrderRow);
+  // The list query already contains the fields required by the table. Fetching a
+  // full detail record and payment fallback for every row made one page load 20+ requests.
+  const normalizedRows = responseItems.map(normalizeOrderRow);
   const normalizedPageInfo = {
     page: Number(filters?.page ?? 1),
     pageSize: Number(filters?.limit ?? 10),

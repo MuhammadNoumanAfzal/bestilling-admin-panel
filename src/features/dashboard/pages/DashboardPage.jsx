@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   DollarSign,
@@ -38,6 +38,7 @@ const statIcons = {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { setPageHeaderAction } = useOutletContext();
   const [timeframe, setTimeframe] = useState("Last 7 days");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
@@ -233,9 +234,23 @@ export default function DashboardPage() {
     }
   }
 
+  useEffect(() => {
+    setPageHeaderAction(
+      <DateFilterDropdown
+        selectedFilter={timeframe}
+        onChangeFilter={setTimeframe}
+        startDate={customStart}
+        endDate={customEnd}
+        onCustomDateChange={handleCustomDateChange}
+      />,
+    );
+
+    return () => setPageHeaderAction(null);
+  }, [customEnd, customStart, setPageHeaderAction, timeframe]);
+
   return (
     <div className="space-y-6">
-      <section className="flex justify-end">
+      <section className="flex justify-end lg:hidden">
         <DateFilterDropdown
           selectedFilter={timeframe}
           onChangeFilter={setTimeframe}

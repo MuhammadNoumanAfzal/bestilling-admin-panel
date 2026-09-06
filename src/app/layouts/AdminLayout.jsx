@@ -337,7 +337,7 @@ function getCurrentMeta(pathname) {
   if (pathname.startsWith("/vendors/") && pathname !== "/vendors") {
     return {
       title: "Vendor Details",
-      subtitle: "Review menus, documents, financials, and vendor operations in one place.",
+      subtitle: "Review menus, financials, and vendor operations in one place.",
     };
   }
 
@@ -451,6 +451,7 @@ export default function AdminLayout() {
   const [globalSearchResults, setGlobalSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
+  const [pageHeaderAction, setPageHeaderAction] = useState(null);
   const profileMenuRef = useRef(null);
   const searchRef = useRef(null);
   const knownUnreadNotificationIdsRef = useRef(new Set());
@@ -834,7 +835,7 @@ export default function AdminLayout() {
         </aside>
 
         <div className="min-h-screen overflow-x-hidden bg-[#f7f5f3]">
-          <header className="sticky top-0 z-30 border-b border-[#ebe4de] bg-white/92 backdrop-blur-xl">
+          <header className="sticky top-0 z-30 border-b border-[#ebe4de] bg-white/92 backdrop-blur-xl lg:h-[69px]">
             <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6 lg:flex-nowrap lg:px-5">
               <button
                 className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#2f241c] transition hover:bg-[#f5f1ed] lg:hidden"
@@ -928,24 +929,31 @@ export default function AdminLayout() {
                 </button>
 
                 {isProfileMenuOpen ? (
-                  <div className="absolute right-0 top-[calc(100%+10px)] z-40 w-[220px] overflow-hidden rounded-[18px] border border-[#e8dfd8] bg-white shadow-[0_24px_60px_rgba(45,28,16,0.14)]">
-                    <div className="border-b border-[#f0e7e0] px-4 py-3">
-                      <p className="truncate text-[13px] font-bold text-[#231913]">
-                        {getAdminDisplayName(user)}
-                      </p>
-                      <p className="truncate text-[12px] text-[#7b6f66]">{user?.email || ""}</p>
+                  <div className="absolute right-0 top-[calc(100%+10px)] z-40 w-[220px] rounded-[18px] border border-[#eadfd5] bg-white p-2 shadow-[0_18px_34px_rgba(38,23,14,0.12)]">
+                    <div className="flex items-center gap-3 rounded-[14px] bg-[#faf6f2] px-3 py-3">
+                      {user?.avatar?.url ? (
+                        <img
+                          alt={getAdminDisplayName(user)}
+                          className="h-11 w-11 rounded-full object-cover"
+                          src={user.avatar.url}
+                        />
+                      ) : (
+                        <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#fff0e7] text-[14px] font-bold text-[#d16737]">
+                          {initials}
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-[13px] font-extrabold text-[#211915]">
+                          {getAdminDisplayName(user)}
+                        </p>
+                        <p className="mt-1 truncate text-[12px] font-medium text-[#8f7f73]">
+                          {getAdminRoleLabel(user?.role)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="p-2">
+                    <div className="mt-2 flex flex-col gap-1">
                       <button
-                        className="flex w-full cursor-pointer items-center gap-3 rounded-[12px] px-3 py-3 text-left text-[13px] font-semibold text-[#2e241d] transition hover:bg-[#faf4ee]"
-                        onClick={() => navigate("/settings")}
-                        type="button"
-                      >
-                        <SettingsIcon size={15} />
-                        <span>Account settings</span>
-                      </button>
-                      <button
-                        className="flex w-full cursor-pointer items-center gap-3 rounded-[12px] px-3 py-3 text-left text-[13px] font-semibold text-[#b74f28] transition hover:bg-[#fff3ec]"
+                        className="flex w-full cursor-pointer items-center gap-2 rounded-[12px] px-3 py-2.5 text-left text-[13px] font-semibold text-[#c85e2f] transition hover:bg-[#fff4ee]"
                         onClick={handleLogout}
                         type="button"
                       >
@@ -960,11 +968,14 @@ export default function AdminLayout() {
           </header>
 
           <main className="overflow-x-hidden px-3 py-4 pb-24 sm:px-6 lg:px-5 lg:py-5 lg:pb-8">
-            <div className="mb-5 hidden lg:block">
-              <h1 className="text-[34px] font-bold tracking-[-0.04em] text-[#18120f]">{meta.title}</h1>
-              <p className="mt-1 text-[15px] leading-7 text-[#6f645d]">{meta.subtitle}</p>
+            <div className="mb-5 hidden items-start justify-between gap-4 lg:flex">
+              <div>
+                <h1 className="text-[34px] font-bold tracking-[-0.04em] text-[#18120f]">{meta.title}</h1>
+                <p className="mt-1 text-[15px] leading-7 text-[#6f645d]">{meta.subtitle}</p>
+              </div>
+              {pageHeaderAction ? <div className="shrink-0">{pageHeaderAction}</div> : null}
             </div>
-            <Outlet />
+            <Outlet context={{ setPageHeaderAction }} />
           </main>
         </div>
 

@@ -1,9 +1,13 @@
+import { useState } from "react";
+
 export default function ReportsBarChart({
   bars = [],
   scale = [],
   valuePrefix = "",
+  valueType = "number",
   className = "",
 }) {
+  const [hoveredBar, setHoveredBar] = useState(null);
   const safeBars = Array.isArray(bars)
     ? bars.map((item, index) => ({
         label: item?.label || `Item ${index + 1}`,
@@ -32,6 +36,28 @@ export default function ReportsBarChart({
   const barWidth = Math.min(28, Math.max(18, Math.floor(chartWidth / (barCount * 2.2))));
   const stepX = chartWidth / barCount;
 
+  function formatAxisValue(value) {
+    const compactValue = new Intl.NumberFormat("en-NO", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(value);
+
+    return valueType === "currency" ? `NOK ${compactValue}` : `${valuePrefix}${compactValue}`;
+  }
+
+  function formatTooltipValue(value) {
+    if (valueType === "currency") {
+      return `NOK ${new Intl.NumberFormat("en-NO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(value)}`;
+    }
+
+    return `${valuePrefix}${new Intl.NumberFormat("en-NO", {
+      maximumFractionDigits: 0,
+    }).format(value)}`;
+  }
+
   function buildBarPath(x, y, width, height, radius) {
     const safeRadius = Math.min(radius, width / 2, height);
     const right = x + width;
@@ -49,18 +75,17 @@ export default function ReportsBarChart({
   }
 
   return (
-    <div className={["h-[220px] min-w-0", className].join(" ")}>
+    <div className={["h-[236px] min-w-0", className].join(" ")}>
       {safeBars.length === 0 ? (
         <div className="flex h-full items-center justify-center rounded-[14px] border border-dashed border-[#e3d7cf] bg-[#fffdfa] px-4 text-center text-[13px] font-medium text-[#7a6d66]">
           No chart data is available for the selected period.
         </div>
       ) : (
       <div className="flex h-full gap-3">
-        <div className="flex h-[190px] w-[46px] shrink-0 flex-col justify-between pt-1">
+        <div className="flex h-[190px] w-[58px] shrink-0 flex-col justify-between pt-1">
           {ticks.map((tick) => (
-            <span key={tick} className="text-[10px] font-medium leading-none text-[#7a6e67]">
-              {valuePrefix}
-              {tick}
+            <span key={tick} className="truncate text-[10px] font-medium leading-none text-[#7a6e67]" title={formatTooltipValue(tick)}>
+              {formatAxisValue(tick)}
             </span>
           ))}
         </div>
@@ -100,11 +125,28 @@ export default function ReportsBarChart({
                   <path
                     key={bar.label}
                     d={path}
-                    fill="#d46a37"
+                    fill={hoveredBar?.index === index ? "#b95227" : "#d46a37"}
+                    onMouseEnter={() => setHoveredBar({ bar, index, x: x + barWidth / 2, y })}
+                    onMouseLeave={() => setHoveredBar(null)}
+                    className="cursor-pointer transition-[fill] duration-150"
                   />
                 );
               })}
             </svg>
+            {hoveredBar ? (
+              <div
+                className="pointer-events-none absolute z-10 -translate-x-1/2 rounded-[10px] border border-[#e1cbbd] bg-[#241812] px-3 py-2 text-center shadow-[0_10px_24px_rgba(38,21,12,0.22)]"
+                style={{
+                  left: `${(hoveredBar.x / chartWidth) * 100}%`,
+                  top: `${Math.max(6, hoveredBar.y - 50)}px`,
+                }}
+              >
+                <p className="text-[10px] font-semibold text-[#f2d6c5]">{hoveredBar.bar.label}</p>
+                <p className="mt-0.5 whitespace-nowrap text-[12px] font-bold text-white">
+                  {formatTooltipValue(hoveredBar.bar.value)}
+                </p>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex min-w-0 gap-4 pt-2">

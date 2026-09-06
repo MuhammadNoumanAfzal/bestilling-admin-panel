@@ -66,6 +66,23 @@ export const MARK_ALL_FINANCE_NOTIFICATIONS_READ_MUTATION = `
   }
 `;
 
+export const CREATE_ADMIN_NOTIFICATION_MUTATION = `
+  mutation CreateAdminNotification($input: CreateAdminNotificationInput!) {
+    createAdminNotification(input: $input) {
+      success
+      message
+      errors {
+        field
+        message
+        code
+      }
+      notification {
+        id
+      }
+    }
+  }
+`;
+
 export const ORDER_NOTIFICATION_FIELDS = `
   id
   type

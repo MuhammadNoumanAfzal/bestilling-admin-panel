@@ -47,7 +47,7 @@ export default function VendorRecentOrdersSection({ orders }) {
           <ClipboardList size={15} />
         </span>
         <h2 className="text-[22px] font-extrabold tracking-tight text-[#18120f]">
-          Recent Orders
+          Orders
         </h2>
       </div>
 

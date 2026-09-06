@@ -88,10 +88,35 @@ function normalizeOrderStatus(status) {
     case "PLACED":
     case "NEW":
     case "DRAFT":
-      return "Pending";
+      return "Awaiting acceptance";
     default:
-      return "Pending";
+      return "Awaiting acceptance";
   }
+}
+
+function isCancelledOrder(order) {
+  const statuses = [order?.delivery?.status, order?.fulfillmentStatus, order?.status];
+
+  return statuses.some((status) => {
+    const normalizedStatus = `${status ?? ""}`.trim().toUpperCase();
+    return normalizedStatus === "CANCELLED" || normalizedStatus === "CANCELED";
+  }) || Boolean(order?.cancelledAt || order?.canceledAt);
+}
+
+function resolveCustomerPaymentStatusForOrder(status, order) {
+  if (!isCancelledOrder(order) || status === "Paid") {
+    return status;
+  }
+
+  return "Canceled";
+}
+
+function resolveVendorPayoutStatusForOrder(status, order) {
+  if (!isCancelledOrder(order) || status === "Paid") {
+    return status;
+  }
+
+  return "Canceled";
 }
 
 function normalizePaymentStatus(status) {
@@ -548,6 +573,7 @@ function normalizeContractInvoice(contract) {
 
   return {
     id: contract.id || "",
+    settlementId: contract.settlementId || contract.id || "",
     invoiceId: contract.invoiceId || contract.id || "",
     payoutId: contract.payoutId || "",
     payoutNumber: contract.payoutNumber || "",
@@ -576,7 +602,7 @@ function normalizeContractInvoice(contract) {
       : null,
     paymentHistory: settlementHistory,
     settlement: {
-      id: contract.id || "",
+      id: contract.settlementId || contract.id || "",
       settlementNumber: contract.settlementNumber || "Not available",
       status: contract.settlementStatus || "Not available",
       statusLabel: normalizeSettlementStatus(contract.settlementStatus),
@@ -653,8 +679,9 @@ function normalizePaymentRow(item, contractInvoice = null) {
   const orderAmountSource = item?.orderAmount || contractInvoice?.settlement?.grossOrderAmount;
   const commissionSource =
     item?.platformCommission || contractInvoice?.settlement?.commission?.totalCommission;
-  const resolvedOrderStatus =
-    item?.order?.delivery?.deliveredAt ||
+  const resolvedOrderStatus = isCancelledOrder(item?.order)
+    ? "Canceled"
+    : item?.order?.delivery?.deliveredAt ||
     item?.order?.deliveredAt
       ? "Delivered"
       : normalizeOrderStatus(
@@ -694,8 +721,14 @@ function normalizePaymentRow(item, contractInvoice = null) {
         orderAmount: orderAmountSource,
         commissionAmount: commissionSource,
       }) || "NOK 0.00",
-    customerPaymentStatus: deriveCustomerPaymentStatus(item),
-    vendorPayoutStatus: deriveVendorPayoutStatus(item),
+    customerPaymentStatus: resolveCustomerPaymentStatusForOrder(
+      contractInvoice?.paymentStatus || deriveCustomerPaymentStatus(item),
+      item?.order,
+    ),
+    vendorPayoutStatus: resolveVendorPayoutStatusForOrder(
+      contractInvoice?.payoutStatus || deriveVendorPayoutStatus(item),
+      item?.order,
+    ),
     createdAt: item?.createdAt || "",
     paidAt: item?.paidAt || "",
     payoutReleasedAt: item?.payoutReleasedAt || "",
@@ -717,12 +750,9 @@ function normalizePaymentDetail(payment, contractInvoice = null) {
     rawPayment.vendor?.name ||
     contractInvoice?.vendorName ||
     "Unknown vendor";
-  const customerPaymentStatus =
-    contractInvoice?.paymentStatus || deriveCustomerPaymentStatusFromDetail(rawPayment);
-  const vendorPayoutStatus =
-    contractInvoice?.settlement?.statusLabel || deriveVendorPayoutStatusFromDetail(rawPayment);
-  const orderStatus =
-    rawPayment.order?.delivery?.deliveredAt ||
+  const orderStatus = isCancelledOrder(rawPayment.order)
+    ? "Canceled"
+    : rawPayment.order?.delivery?.deliveredAt ||
     rawPayment.order?.deliveredAt
       ? "Delivered"
       : normalizeOrderStatus(
@@ -730,11 +760,20 @@ function normalizePaymentDetail(payment, contractInvoice = null) {
           rawPayment.order?.fulfillmentStatus ||
           rawPayment.order?.status,
         );
+  const customerPaymentStatus = resolveCustomerPaymentStatusForOrder(
+    contractInvoice?.paymentStatus || deriveCustomerPaymentStatusFromDetail(rawPayment),
+    rawPayment.order,
+  );
+  const vendorPayoutStatus = resolveVendorPayoutStatusForOrder(
+    contractInvoice?.settlement?.statusLabel || deriveVendorPayoutStatusFromDetail(rawPayment),
+    rawPayment.order,
+  );
 
   return {
     id: contractInvoice?.invoiceId || rawPayment.id,
     invoiceId: contractInvoice?.invoiceId || rawPayment.id || "",
     payoutId: contractInvoice?.payoutId || "",
+    settlementId: contractInvoice?.settlementId || "",
     payoutNumber: contractInvoice?.payoutNumber || "",
     invoiceNumber: rawPayment.invoiceNumber || contractInvoice?.paymentReference || "Not available",
     notes: rawPayment.notes || contractInvoice?.settlement?.commission?.note || "",
@@ -935,40 +974,18 @@ export async function getAdminPaymentsRequest(filters) {
     throw new Error("Unable to load payments.");
   }
 
-  const contractInvoicesById = new Map();
   const responseItems = Array.isArray(response.items)
     ? response.items
     : Array.isArray(response.edges)
       ? response.edges.map((edge) => edge?.node).filter(Boolean)
       : [];
 
-  await Promise.all(
-    responseItems.map(async (item) => {
-      const invoiceId = item?.id;
-
-      if (!invoiceId) {
-        return;
-      }
-
-      try {
-        const contractData = await executeProtectedGraphqlRequest(
-          ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY,
-          { id: invoiceId },
-        );
-        const contractInvoice = normalizeContractInvoice(contractData?.adminPaymentFinanceContract);
-
-        if (contractInvoice) {
-          contractInvoicesById.set(invoiceId, contractInvoice);
-        }
-      } catch {
-        // Keep the list resilient even when a per-row finance contract fails.
-      }
-    }),
-  );
+  // The paginated list already contains the amounts and lifecycle needed by the
+  // table. Per-row finance contract calls turned one page into an N+1 request.
 
   return {
     rows: responseItems.map((item) =>
-      normalizePaymentRow(item, contractInvoicesById.get(item?.id) || null),
+      normalizePaymentRow(item, null),
     ),
     pageInfo: {
       page: Number(response.pageInfo?.page ?? filters?.page ?? 1),
@@ -984,7 +1001,7 @@ export async function getAdminPaymentsRequest(filters) {
     summaryCards: normalizeSummary(
       response.summary,
       responseItems.map((item) =>
-        normalizePaymentRow(item, contractInvoicesById.get(item?.id) || null),
+        normalizePaymentRow(item, null),
       ),
     ),
     filterOptions: {
@@ -1181,12 +1198,24 @@ export async function markInvoicePaidRequest(id, { note = "" } = {}) {
   };
 }
 
-export async function releaseVendorPayoutRequest(id, { note = "" } = {}) {
+export async function releaseVendorPayoutRequest(
+  { vendorId = "", settlementIds = [] } = {},
+  { note = "" } = {},
+) {
+  const normalizedSettlementIds = Array.isArray(settlementIds)
+    ? settlementIds.filter(Boolean)
+    : [];
+
+  if (!vendorId || normalizedSettlementIds.length === 0) {
+    throw new Error("A vendor and settlement are required to release this payout.");
+  }
+
   const data = await executeProtectedGraphqlRequest(
     RELEASE_VENDOR_PAYOUT_MUTATION,
     {
       input: {
-        payoutId: id,
+        vendorId,
+        settlementIds: normalizedSettlementIds,
         note: note || null,
       },
     },
@@ -1204,7 +1233,10 @@ export async function releaseVendorPayoutRequest(id, { note = "" } = {}) {
   };
 }
 
-export async function markVendorPayoutPaidRequest(id, { reference = "", note = "" } = {}) {
+export async function markVendorPayoutPaidRequest(
+  id,
+  { reference = "", note = "", paymentDate = "" } = {},
+) {
   const data = await executeProtectedGraphqlRequest(
     MARK_VENDOR_PAYOUT_PAID_MUTATION,
     {
@@ -1212,6 +1244,7 @@ export async function markVendorPayoutPaidRequest(id, { reference = "", note = "
         transferReference: reference || null,
         payoutId: id,
         note: note || null,
+        paymentDate: paymentDate || null,
       },
     },
   );

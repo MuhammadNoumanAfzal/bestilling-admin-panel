@@ -91,7 +91,7 @@ export default function VendorDetailHeader({
                     ) : null}
                   </div>
                   <p className="mt-2 text-[16px] leading-7 text-[#6f645d]">
-                    Review vendor operations, menus, orders, reviews, payouts, and compliance documents in one place.
+                    Review vendor operations, menus, orders, reviews, payouts, and compliance information in one place.
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] font-semibold text-[#7b6f67] sm:text-[14px]">
                     <button

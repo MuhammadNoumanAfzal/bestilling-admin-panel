@@ -1,4 +1,4 @@
-export default function CreateNotificationActionBar({ onCancel, onSaveDraft, onSend, disableSend = false }) {
+export default function CreateNotificationActionBar({ onCancel, onSend, disableSend = false }) {
   return (
     <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
       <button
@@ -7,13 +7,6 @@ export default function CreateNotificationActionBar({ onCancel, onSaveDraft, onS
         type="button"
       >
         Cancel
-      </button>
-      <button
-        className="inline-flex h-11 cursor-pointer items-center justify-center rounded-[10px] border border-[#d5ccc5] bg-white px-5 text-[14px] font-bold text-[#332822] transition hover:bg-[#faf6f2]"
-        onClick={onSaveDraft}
-        type="button"
-      >
-        Save as Draft
       </button>
       <button
         className={[

@@ -44,13 +44,13 @@ export default function OrderItemsTable({ items, onViewItemSource }) {
 
                       <div>
                         <p className="text-[14px] font-bold text-[#18120f]">{item.name}</p>
-                        {onViewItemSource ? (
+                        {onViewItemSource && item.menuId ? (
                           <button
                             className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-[#cf6e38] transition hover:underline"
                             onClick={() => onViewItemSource(item)}
                             type="button"
                           >
-                            View Vendor Menu
+                            View Menu
                             <ArrowUpRight size={12} />
                           </button>
                         ) : null}

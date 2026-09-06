@@ -1,4 +1,4 @@
-import { Building2, Landmark, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Building2, Landmark, ShieldCheck } from "lucide-react";
 
 function DetailCell({ label, value }) {
   return (
@@ -29,6 +29,8 @@ function StatusPill({ verified, verificationStatus }) {
 }
 
 export default function VendorBankDetailsCard({
+  isApproving = false,
+  onApprove,
   payout,
 }) {
   const payoutProfile = payout?.vendor?.payoutProfile;
@@ -73,10 +75,22 @@ export default function VendorBankDetailsCard({
                 Use these saved bank details when you manually transfer the vendor payout.
               </p>
             </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#e6ded5] bg-white px-3 py-2 text-[12px] font-semibold text-[#4d433d]">
-              <ShieldCheck size={14} className={payoutProfile.bankDetailsVerified ? "text-[#208348]" : "text-[#cf6e38]"} />
-              {payoutProfile.bankDetailsVerified ? "Bank details confirmed" : "Needs admin review"}
-            </div>
+            {payoutProfile.bankDetailsVerified ? (
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#cde8d4] bg-[#effaf2] px-3 py-2 text-[12px] font-semibold text-[#208348]">
+                <ShieldCheck size={14} />
+                Bank details approved
+              </div>
+            ) : (
+              <button
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] bg-[#cf6e38] px-4 text-[12px] font-bold text-white shadow-[0_10px_20px_rgba(207,110,56,0.2)] transition hover:bg-[#b95d2b] disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isApproving || typeof onApprove !== "function"}
+                onClick={onApprove}
+                type="button"
+              >
+                <BadgeCheck size={15} />
+                {isApproving ? "Approving..." : "Approve vendor bank details"}
+              </button>
+            )}
           </div>
         </div>
 
@@ -89,8 +103,8 @@ export default function VendorBankDetailsCard({
         <div className="flex items-start gap-3 rounded-[18px] border border-[#e8ddd5] bg-[#fcfaf8] px-4 py-4 text-[13px] leading-6 text-[#665850]">
           <Building2 size={16} className="mt-0.5 shrink-0 text-[#cf6e38]" />
           <p>
-            Payout release should only happen after the bank profile is verified. If changes are requested, the vendor
-            is notified and should update these details from vendor settings before you continue.
+            Review the account holder, bank name, and account number, then approve the vendor bank details. Payout
+            release remains unavailable until this approval is completed.
           </p>
         </div>
       </div>

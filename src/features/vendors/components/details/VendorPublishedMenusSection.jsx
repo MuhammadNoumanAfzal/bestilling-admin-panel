@@ -57,7 +57,7 @@ function DetailRow({ label, value }) {
   );
 }
 
-function MenuPreviewModal({ errorMessage, isLoading, menu, onClose }) {
+export function MenuPreviewModal({ errorMessage, isLoading, menu, onClose }) {
   if (!menu && !isLoading && !errorMessage) {
     return null;
   }

@@ -229,6 +229,7 @@ export const ADMIN_ORDER_DETAIL_QUERY = `
       }
       items {
         id
+        menuItemId
         name
         quantity
         unitPrice
@@ -431,6 +432,7 @@ export const ADMIN_ORDER_DETAIL_ENRICHED_QUERY = `
       }
       items {
         id
+        menuItemId
         name
         quantity
         unitPrice

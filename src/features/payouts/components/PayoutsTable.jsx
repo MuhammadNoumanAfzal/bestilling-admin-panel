@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 const orderStatusClasses = {
   Delivered: "bg-[#17b84a] text-white",
   Canceled: "bg-[#d80f0f] text-white",
-  Pending: "bg-[#ffe8a6] text-[#b78600]",
+  "Awaiting acceptance": "bg-[#ffe8a6] text-[#b78600]",
 };
 
 const paymentStatusClasses = {
@@ -137,9 +137,9 @@ export default function PayoutsTable({
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Amount</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Status</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Platform Comm.</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Payment Status</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Customer Payment Status</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor Amount</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Payout Status</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor Payout Status</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Date</th>
               <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
             </tr>
@@ -232,6 +232,15 @@ export default function PayoutsTable({
                       >
                         View Details
                       </button>
+                      {row.orderId ? (
+                        <button
+                          className="inline-flex min-h-[32px] w-full items-center justify-center rounded-[10px] border border-[#cfe1f2] bg-[#f1f7ff] px-2.5 text-center text-[10px] font-bold leading-4 text-[#306aa1] transition hover:border-[#9cc6e9] hover:bg-[#e8f3ff]"
+                          onClick={() => navigate(`/orders/${encodeURIComponent(row.orderId)}`)}
+                          type="button"
+                        >
+                          View Order
+                        </button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>

@@ -18,6 +18,8 @@ import OrderTimelineCard from "../components/details/OrderTimelineCard.jsx";
 import OrderItemsTable from "../components/details/OrderItemsTable.jsx";
 import EventInfoCard from "../components/details/EventInfoCard.jsx";
 import OrderSummaryCard from "../components/details/OrderSummaryCard.jsx";
+import { MenuPreviewModal } from "../../vendors/components/details/VendorPublishedMenusSection.jsx";
+import { getAdminVendorMenuDetailRequest } from "../../vendors/api/vendorsApi.js";
 import {
   getCommissionPreviewForOrderRequest,
   getAdminOrderDetailRequest,
@@ -92,6 +94,10 @@ export default function OrderDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [isWorking, setIsWorking] = useState(false);
+  const [selectedMenu, setSelectedMenu] = useState(null);
+  const [selectedMenuDetail, setSelectedMenuDetail] = useState(null);
+  const [isLoadingMenu, setIsLoadingMenu] = useState(false);
+  const [menuLoadError, setMenuLoadError] = useState("");
 
   async function loadOrder(options = {}) {
     const { silent = false } = options;
@@ -220,12 +226,35 @@ export default function OrderDetailPage() {
     navigate(`/vendors/${encodeURIComponent(order.vendor.id)}`);
   }
 
-  function handleViewItemSource() {
-    if (!order?.vendor?.id) {
+  async function handleViewItemSource(item) {
+    if (!item?.menuId) {
       return;
     }
 
-    navigate(`/vendors/${encodeURIComponent(order.vendor.id)}#menus`);
+    setSelectedMenu({
+      id: item.menuId,
+      title: item.name,
+      primaryImageUrl: item.imageUrl,
+      imageUrl: item.imageUrl,
+    });
+    setSelectedMenuDetail(null);
+    setMenuLoadError("");
+    setIsLoadingMenu(true);
+
+    try {
+      setSelectedMenuDetail(await getAdminVendorMenuDetailRequest(item.menuId));
+    } catch (error) {
+      setMenuLoadError(error instanceof Error ? error.message : "Unable to load the full menu details.");
+    } finally {
+      setIsLoadingMenu(false);
+    }
+  }
+
+  function handleCloseMenuPreview() {
+    setSelectedMenu(null);
+    setSelectedMenuDetail(null);
+    setMenuLoadError("");
+    setIsLoadingMenu(false);
   }
 
   if (isLoading) {
@@ -261,6 +290,8 @@ export default function OrderDetailPage() {
     Failed: "text-[#d83f3f]",
     Refunded: "text-[#7a51b3]",
     "Partially refunded": "text-[#b5751a]",
+    "Refund pending": "text-[#b45309]",
+    Cancelled: "text-[#6f645d]",
   };
 
   return (
@@ -332,6 +363,13 @@ export default function OrderDetailPage() {
       <section>
         <OrderItemsTable items={order.items} onViewItemSource={handleViewItemSource} />
       </section>
+
+      <MenuPreviewModal
+        errorMessage={menuLoadError}
+        isLoading={isLoadingMenu}
+        menu={selectedMenuDetail || selectedMenu}
+        onClose={handleCloseMenuPreview}
+      />
 
       <section className="grid gap-6 grid-cols-1 md:grid-cols-2">
         <EventInfoCard order={order} />

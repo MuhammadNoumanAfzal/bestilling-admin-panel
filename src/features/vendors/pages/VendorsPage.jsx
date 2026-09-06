@@ -85,6 +85,46 @@ function buildFilterOptions(rows) {
   };
 }
 
+function filterVendorRows(rows, { search, city, minRating, activeTab, dateRange }) {
+  const normalizedSearch = `${search ?? ""}`.trim().toLowerCase();
+  const normalizedCity = `${city ?? ""}`.trim().toLowerCase();
+  const minimumRating = Number(minRating || 0);
+
+  return sortRows(
+    (rows || []).filter((row) => {
+      if (!matchesTab(row, activeTab)) {
+        return false;
+      }
+
+      if (activeTab === "Top Performing" && row.status !== "Active") {
+        return false;
+      }
+
+      if (normalizedSearch) {
+        const searchable = [row.id, row.name, row.businessType, row.city]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+
+        if (!searchable.includes(normalizedSearch)) {
+          return false;
+        }
+      }
+
+      if (normalizedCity && !`${row.city ?? ""}`.toLowerCase().includes(normalizedCity)) {
+        return false;
+      }
+
+      if (minimumRating && Number(row.ratingValue || 0) < minimumRating) {
+        return false;
+      }
+
+      return withinDateRange(row.joinDateValue, dateRange);
+    }),
+    activeTab,
+  );
+}
+
 function readVendorCache(cacheKey) {
   const memoryEntry = vendorListCache.get(cacheKey);
   if (memoryEntry && Date.now() - memoryEntry.savedAt < VENDOR_CACHE_TTL_MS) {
@@ -189,6 +229,29 @@ export default function VendorsPage() {
     [activeTab, normalizedFilters],
   );
 
+  function applyActiveFilters(response) {
+    const visibleRows = filterVendorRows(response.rows, {
+      search: searchTerm,
+      city: cityFilter,
+      minRating: ratingFilter,
+      activeTab,
+      dateRange,
+    });
+
+    return {
+      ...response,
+      rows: visibleRows,
+      pageInfo: {
+        ...response.pageInfo,
+        page: 1,
+        totalItems: visibleRows.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
+  }
+
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab") || "All";
     setActiveTab(tabFromUrl);
@@ -199,8 +262,9 @@ export default function VendorsPage() {
     const cachedResponse = readVendorCache(vendorCacheKey);
 
     if (cachedResponse) {
-      setRows(cachedResponse.rows);
-      setPageInfo(cachedResponse.pageInfo);
+      const filteredResponse = applyActiveFilters(cachedResponse);
+      setRows(filteredResponse.rows);
+      setPageInfo(filteredResponse.pageInfo);
       setStats(cachedResponse.stats);
       setFilterOptions(cachedResponse.filterOptions);
       setSidePanels(cachedResponse.sidePanels);
@@ -219,34 +283,14 @@ export default function VendorsPage() {
         if (!isMounted) {
           return;
         }
-        const filteredRows = response.rows.filter((row) => matchesTab(row, activeTab));
-        const visibleRows =
-          activeTab === "Top Performing"
-            ? filteredRows
-                .filter((row) => row.status === "Active")
-                .sort((left, right) => right.revenueValue - left.revenueValue)
-            : filteredRows;
-        const visiblePageInfo =
-          activeTab !== "All"
-            ? {
-                ...response.pageInfo,
-                totalItems: visibleRows.length,
-                totalPages: 1,
-                hasNextPage: false,
-                hasPreviousPage: false,
-              }
-            : response.pageInfo;
+        const filteredResponse = applyActiveFilters(response);
 
-        setRows(visibleRows);
-        setPageInfo(visiblePageInfo);
+        setRows(filteredResponse.rows);
+        setPageInfo(filteredResponse.pageInfo);
         setStats(response.stats);
         setFilterOptions(response.filterOptions);
         setSidePanels(response.sidePanels);
-        writeVendorCache(vendorCacheKey, {
-          ...response,
-          rows: visibleRows,
-          pageInfo: visiblePageInfo,
-        });
+        writeVendorCache(vendorCacheKey, response);
       } catch (error) {
         if (isMounted) {
           setLoadError(error instanceof Error ? error.message : "Unable to load vendors.");
@@ -264,6 +308,17 @@ export default function VendorsPage() {
       isMounted = false;
     };
   }, [activeTab, normalizedFilters, vendorCacheKey]);
+
+  useEffect(() => {
+    const cachedResponse = readVendorCache(vendorCacheKey);
+    if (!cachedResponse) {
+      return;
+    }
+
+    const filteredResponse = applyActiveFilters(cachedResponse);
+    setRows(filteredResponse.rows);
+    setPageInfo(filteredResponse.pageInfo);
+  }, [activeTab, cityFilter, dateRange, ratingFilter, searchTerm, vendorCacheKey]);
 
   function handleCustomDateChange(start, end) {
     setCustomStart(start);

@@ -25,7 +25,6 @@ const STATIC_STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
   { value: "PAID", label: "Paid" },
   { value: "RELEASED", label: "Released" },
-  { value: "SCHEDULED", label: "Scheduled" },
   { value: "CANCELED", label: "Canceled" },
 ];
 
@@ -33,8 +32,6 @@ function mapPaymentStatusFilter(value) {
   switch (`${value ?? ""}`.trim().toUpperCase()) {
     case "PAID":
       return { value: "PAID", label: "Paid" };
-    case "SCHEDULED":
-      return { value: "SCHEDULED", label: "Scheduled" };
     case "RELEASED":
       return { value: "RELEASED", label: "Released" };
     case "CANCELLED":
@@ -52,6 +49,51 @@ function readPaymentCache(cacheKey) {
 
 function writePaymentCache(cacheKey, data) {
   paymentListCache.set(cacheKey, { data, savedAt: Date.now() });
+}
+
+function filterPaymentRows(rows, { search, status, vendorId, dateRange }) {
+  const normalizedSearch = `${search || ""}`.trim().toLowerCase();
+  const expectedStatus = status === "all" ? "" : mapPaymentStatusFilter(status).label;
+  const startTime = dateRange?.start ? new Date(dateRange.start).getTime() : null;
+  const endTime = dateRange?.end ? new Date(dateRange.end).getTime() : null;
+
+  return (rows || []).filter((row) => {
+    if (expectedStatus) {
+      const isCanceled = [
+        row.orderStatus,
+        row.customerPaymentStatus,
+        row.vendorPayoutStatus,
+      ].includes("Canceled");
+
+      if (expectedStatus === "Canceled" ? !isCanceled : row.customerPaymentStatus !== expectedStatus) {
+        return false;
+      }
+    }
+
+    if (vendorId !== "all" && `${row.vendorId || ""}` !== `${vendorId}`) {
+      return false;
+    }
+
+    if (normalizedSearch) {
+      const searchable = [row.invoiceNumber, row.orderId, row.customer, row.customerEmail, row.vendor]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      if (!searchable.includes(normalizedSearch)) {
+        return false;
+      }
+    }
+
+    if (startTime != null || endTime != null) {
+      const rowTime = new Date(row.createdAt || row.paidAt || "").getTime();
+      if (Number.isNaN(rowTime) || (startTime != null && rowTime < startTime) || (endTime != null && rowTime > endTime)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
 }
 
 export default function PayoutsPage() {
@@ -118,15 +160,38 @@ export default function PayoutsPage() {
   );
   const paymentCacheKey = useMemo(() => JSON.stringify(normalizedFilters), [normalizedFilters]);
 
+  function applyActiveFilters(result) {
+    const filteredRows = filterPaymentRows(result.rows, {
+      search: searchTerm,
+      status: statusFilter,
+      vendorId: vendorFilter,
+      dateRange,
+    });
+
+    return {
+      ...result,
+      rows: filteredRows,
+      pageInfo: {
+        ...result.pageInfo,
+        totalItems: filteredRows.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+        page: 1,
+      },
+    };
+  }
+
   useEffect(() => {
     let isMounted = true;
     const cachedResponse = readPaymentCache(paymentCacheKey);
 
     if (cachedResponse) {
-      setRows(cachedResponse.rows);
-      setSummaryCards(cachedResponse.summaryCards);
-      setPaymentResult(cachedResponse);
-      setPageInfo(cachedResponse.pageInfo);
+      const filteredResponse = applyActiveFilters(cachedResponse);
+      setRows(filteredResponse.rows);
+      setSummaryCards(filteredResponse.summaryCards);
+      setPaymentResult(filteredResponse);
+      setPageInfo(filteredResponse.pageInfo);
       setFilterOptions({
         statuses: STATIC_STATUS_OPTIONS,
         vendors: cachedResponse.filterOptions.vendors.map((vendor) => ({
@@ -150,12 +215,11 @@ export default function PayoutsPage() {
           return;
         }
 
-        setRows(
-          paymentsResponse.rows,
-        );
-        setSummaryCards(paymentsResponse.summaryCards);
-        setPaymentResult(paymentsResponse);
-        setPageInfo(paymentsResponse.pageInfo);
+        const filteredResponse = applyActiveFilters(paymentsResponse);
+        setRows(filteredResponse.rows);
+        setSummaryCards(filteredResponse.summaryCards);
+        setPaymentResult(filteredResponse);
+        setPageInfo(filteredResponse.pageInfo);
         setFilterOptions({
           statuses: STATIC_STATUS_OPTIONS,
           vendors: paymentsResponse.filterOptions.vendors.map((vendor) => ({
@@ -194,6 +258,16 @@ export default function PayoutsPage() {
     setRows(displayResult.rows);
     setSummaryCards(displayResult.summaryCards);
   }, [commissionSettings, paymentResult]);
+
+  useEffect(() => {
+    if (!paymentResult) {
+      return;
+    }
+
+    const filteredResult = applyActiveFilters(paymentResult);
+    setRows(filteredResult.rows);
+    setPageInfo(filteredResult.pageInfo);
+  }, [dateRange, paymentResult, searchTerm, statusFilter, vendorFilter]);
 
   useEffect(() => {
     let isMounted = true;

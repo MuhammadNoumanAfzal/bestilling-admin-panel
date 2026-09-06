@@ -31,11 +31,7 @@ const iconMap = {
 const ALL_DATES_FILTER = "All Dates";
 
 function matchesTab(row, tab) {
-  if (tab === "All") {
-    return true;
-  }
-
-  if (tab === "Top Performing") {
+  if (tab === "All" || tab === "Top Performing") {
     return true;
   }
 
@@ -177,7 +173,8 @@ export default function VendorsPage() {
       search: debouncedSearchTerm,
       city: cityFilter || null,
       minRating: ratingFilter ? Number(ratingFilter) : null,
-      status: activeTab === "All" || activeTab === "Top Performing" ? null : activeTab.replace(/\s+/g, "_").toUpperCase(),
+      // The API status enum differs from its display values, so the normalized UI filters below are reliable.
+      status: null,
       joinedFrom: dateRange?.start || null,
       joinedTo: dateRange?.end || null,
       page: currentPage,
@@ -188,8 +185,8 @@ export default function VendorsPage() {
     [activeTab, cityFilter, currentPage, dateRange, debouncedSearchTerm, ratingFilter],
   );
   const vendorCacheKey = useMemo(
-    () => JSON.stringify(normalizedFilters),
-    [normalizedFilters],
+    () => JSON.stringify({ ...normalizedFilters, activeTab }),
+    [activeTab, normalizedFilters],
   );
 
   useEffect(() => {
@@ -222,12 +219,34 @@ export default function VendorsPage() {
         if (!isMounted) {
           return;
         }
-        setRows(response.rows);
-        setPageInfo(response.pageInfo);
+        const filteredRows = response.rows.filter((row) => matchesTab(row, activeTab));
+        const visibleRows =
+          activeTab === "Top Performing"
+            ? filteredRows
+                .filter((row) => row.status === "Active")
+                .sort((left, right) => right.revenueValue - left.revenueValue)
+            : filteredRows;
+        const visiblePageInfo =
+          activeTab !== "All"
+            ? {
+                ...response.pageInfo,
+                totalItems: visibleRows.length,
+                totalPages: 1,
+                hasNextPage: false,
+                hasPreviousPage: false,
+              }
+            : response.pageInfo;
+
+        setRows(visibleRows);
+        setPageInfo(visiblePageInfo);
         setStats(response.stats);
         setFilterOptions(response.filterOptions);
         setSidePanels(response.sidePanels);
-        writeVendorCache(vendorCacheKey, response);
+        writeVendorCache(vendorCacheKey, {
+          ...response,
+          rows: visibleRows,
+          pageInfo: visiblePageInfo,
+        });
       } catch (error) {
         if (isMounted) {
           setLoadError(error instanceof Error ? error.message : "Unable to load vendors.");
@@ -244,7 +263,7 @@ export default function VendorsPage() {
     return () => {
       isMounted = false;
     };
-  }, [normalizedFilters, vendorCacheKey]);
+  }, [activeTab, normalizedFilters, vendorCacheKey]);
 
   function handleCustomDateChange(start, end) {
     setCustomStart(start);

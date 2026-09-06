@@ -18,11 +18,64 @@ function toDisplayStatus(status) {
   switch (`${status ?? ""}`.trim().toUpperCase()) {
     case "BLOCKED":
       return "Blocked";
+    case "DEACTIVATED":
+      return "Deactivated";
     case "INACTIVE":
       return "Inactive";
     default:
       return "Active";
   }
+}
+
+function toApiStatus(status) {
+  switch (`${status ?? ""}`.trim().toUpperCase()) {
+    case "BLOCKED":
+      return "BLOCKED";
+    case "DEACTIVATED":
+      return "DEACTIVATED";
+    case "INACTIVE":
+      return "INACTIVE";
+    default:
+      return "ACTIVE";
+  }
+}
+
+function filterCustomerRows(rows, { search, status, city, dateRange }) {
+  const normalizedSearch = `${search ?? ""}`.trim().toLowerCase();
+  const normalizedCity = `${city ?? ""}`.trim().toLowerCase();
+  const expectedStatus = status ? toDisplayStatus(status) : "";
+  const startTime = dateRange?.start ? new Date(dateRange.start).getTime() : null;
+  const endTime = dateRange?.end ? new Date(dateRange.end).getTime() : null;
+
+  return (rows || []).filter((row) => {
+    if (expectedStatus && row.status !== expectedStatus) {
+      return false;
+    }
+
+    if (normalizedSearch) {
+      const searchable = [row.id, row.name, row.fullName, row.email, row.phone]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      if (!searchable.includes(normalizedSearch)) {
+        return false;
+      }
+    }
+
+    if (normalizedCity && !`${row.city ?? ""}`.toLowerCase().includes(normalizedCity)) {
+      return false;
+    }
+
+    if (startTime != null || endTime != null) {
+      const joinedAt = new Date(row.joinDateValue || "").getTime();
+      if (Number.isNaN(joinedAt) || (startTime != null && joinedAt < startTime) || (endTime != null && joinedAt > endTime)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
 }
 
 function readCustomerCache(cacheKey) {
@@ -32,6 +85,22 @@ function readCustomerCache(cacheKey) {
 
 function writeCustomerCache(cacheKey, data) {
   customerListCache.set(cacheKey, { data, savedAt: Date.now() });
+}
+
+function normalizeCityOptions(cities) {
+  const seen = new Set();
+
+  return (cities || []).filter((city) => {
+    const value = `${city ?? ""}`.trim();
+    const key = value.toLowerCase();
+
+    if (!value || seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  }).map((city) => `${city}`.trim());
 }
 
 export default function CustomersPage() {
@@ -76,7 +145,7 @@ export default function CustomersPage() {
   const normalizedFilters = useMemo(
     () => ({
       search: debouncedSearchTerm,
-      status: statusFilter ? statusFilter.toUpperCase() : null,
+      status: statusFilter ? toApiStatus(statusFilter) : null,
       city: cityFilter || null,
       registeredFrom: dateRange?.start || null,
       registeredTo: dateRange?.end || null,
@@ -89,16 +158,39 @@ export default function CustomersPage() {
   );
   const customerCacheKey = useMemo(() => JSON.stringify(normalizedFilters), [normalizedFilters]);
 
+  function applyActiveFilters(response) {
+    const filteredRows = filterCustomerRows(response.rows, {
+      search: searchTerm,
+      status: statusFilter,
+      city: cityFilter,
+      dateRange,
+    });
+
+    return {
+      ...response,
+      rows: filteredRows,
+      pageInfo: {
+        ...response.pageInfo,
+        page: 1,
+        totalItems: filteredRows.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
+  }
+
   useEffect(() => {
     let isMounted = true;
     const cachedResponse = readCustomerCache(customerCacheKey);
 
     if (cachedResponse) {
-      setRows(cachedResponse.rows);
-      setSummaryCards(cachedResponse.summaryCards);
-      setPageInfo(cachedResponse.pageInfo);
+      const filteredResponse = applyActiveFilters(cachedResponse);
+      setRows(filteredResponse.rows);
+      setSummaryCards(filteredResponse.summaryCards);
+      setPageInfo(filteredResponse.pageInfo);
       setFilterOptions({
-        cities: cachedResponse.filterOptions.cities,
+        cities: normalizeCityOptions(cachedResponse.filterOptions.cities),
         statuses: [...new Set(cachedResponse.filterOptions.statuses.map(toDisplayStatus).filter(Boolean))],
       });
       setIsLoading(false);
@@ -117,11 +209,12 @@ export default function CustomersPage() {
           return;
         }
 
-        setRows(response.rows);
-        setSummaryCards(response.summaryCards);
-        setPageInfo(response.pageInfo);
+        const filteredResponse = applyActiveFilters(response);
+        setRows(filteredResponse.rows);
+        setSummaryCards(filteredResponse.summaryCards);
+        setPageInfo(filteredResponse.pageInfo);
         setFilterOptions({
-          cities: response.filterOptions.cities,
+          cities: normalizeCityOptions(response.filterOptions.cities),
           statuses: [...new Set(response.filterOptions.statuses.map(toDisplayStatus).filter(Boolean))],
         });
         writeCustomerCache(customerCacheKey, response);
@@ -142,6 +235,17 @@ export default function CustomersPage() {
       isMounted = false;
     };
   }, [customerCacheKey, normalizedFilters]);
+
+  useEffect(() => {
+    const cachedResponse = readCustomerCache(customerCacheKey);
+    if (!cachedResponse) {
+      return;
+    }
+
+    const filteredResponse = applyActiveFilters(cachedResponse);
+    setRows(filteredResponse.rows);
+    setPageInfo(filteredResponse.pageInfo);
+  }, [cityFilter, customerCacheKey, dateRange, searchTerm, statusFilter]);
 
   function handleCustomDateChange(start, end) {
     setCustomStart(start);

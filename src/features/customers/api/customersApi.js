@@ -49,6 +49,8 @@ function normalizeStatus(status) {
       return "Blocked";
     case "DEACTIVATED":
       return "Deactivated";
+    case "INACTIVE":
+      return "Inactive";
     default:
       return "Active";
   }

@@ -199,6 +199,11 @@ function normalizePaymentStatus(value) {
       return "Refunded";
     case "PARTIALLY_REFUNDED":
       return "Partially refunded";
+    case "REFUND_PENDING":
+      return "Refund pending";
+    case "CANCELLED":
+    case "CANCELED":
+      return "Cancelled";
     default:
       return "Pending";
   }

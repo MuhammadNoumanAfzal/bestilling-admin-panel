@@ -57,6 +57,71 @@ function writeOrderCache(cacheKey, data) {
   orderListCache.set(cacheKey, { data, savedAt: Date.now() });
 }
 
+function uniqueTextOptions(options) {
+  return [...new Set((options || []).map((option) => `${option ?? ""}`.trim()).filter(Boolean))];
+}
+
+function uniqueVendorOptions(vendors) {
+  const seen = new Set();
+
+  return (vendors || []).filter((vendor) => {
+    const id = `${vendor?.id ?? ""}`.trim();
+    if (!id || seen.has(id)) {
+      return false;
+    }
+
+    seen.add(id);
+    return true;
+  });
+}
+
+function filterOrderRows(rows, { search, vendorId, status, paymentStatus, dateRange }) {
+  const normalizedSearch = `${search ?? ""}`.trim().toLowerCase();
+  const startTime = dateRange?.start ? new Date(dateRange.start).getTime() : null;
+  const endTime = dateRange?.end ? new Date(dateRange.end).getTime() : null;
+
+  return (rows || []).filter((row) => {
+    if (vendorId && `${row.vendorId ?? ""}` !== `${vendorId}`) {
+      return false;
+    }
+
+    if (status && row.status !== status) {
+      return false;
+    }
+
+    if (paymentStatus && row.paymentStatus !== paymentStatus) {
+      return false;
+    }
+
+    if (normalizedSearch) {
+      const searchable = [
+        row.id,
+        row.orderNumber,
+        row.customer,
+        row.customerEmail,
+        row.vendor,
+        row.vendorCity,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      if (!searchable.includes(normalizedSearch)) {
+        return false;
+      }
+    }
+
+    if (startTime != null || endTime != null) {
+      const placedAt = new Date(row.placedAt || "").getTime();
+      if (Number.isNaN(placedAt) || (startTime != null && placedAt < startTime) || (endTime != null && placedAt > endTime)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+}
+
 export default function OrdersPage() {
   const navigate = useNavigate();
   const { setPageHeaderAction } = useOutletContext();
@@ -130,15 +195,43 @@ export default function OrdersPage() {
     [dateRange, vendorFilter],
   );
 
+  function applyActiveFilters(response) {
+    const filteredRows = filterOrderRows(response.rows, {
+      search: searchTerm,
+      vendorId: vendorFilter,
+      status: statusFilter,
+      paymentStatus: paymentFilter,
+      dateRange,
+    });
+
+    return {
+      ...response,
+      rows: filteredRows,
+      pageInfo: {
+        ...response.pageInfo,
+        page: 1,
+        totalItems: filteredRows.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
+  }
+
   useEffect(() => {
     let isMounted = true;
     const cachedResponse = readOrderCache(orderCacheKey);
 
     if (cachedResponse) {
-      setRows(cachedResponse.rows);
-      setSummaryCards(cachedResponse.summaryCards);
-      setPageInfo(cachedResponse.pageInfo);
-      setFilterOptions(cachedResponse.filterOptions);
+      const filteredResponse = applyActiveFilters(cachedResponse);
+      setRows(filteredResponse.rows);
+      setSummaryCards(filteredResponse.summaryCards);
+      setPageInfo(filteredResponse.pageInfo);
+      setFilterOptions({
+        vendors: uniqueVendorOptions(cachedResponse.filterOptions.vendors),
+        statuses: uniqueTextOptions(cachedResponse.filterOptions.statuses),
+        paymentStatuses: uniqueTextOptions(cachedResponse.filterOptions.paymentStatuses),
+      });
       setIsLoading(false);
     }
 
@@ -155,13 +248,14 @@ export default function OrdersPage() {
           return;
         }
 
-        setRows(ordersResponse.rows);
-        setSummaryCards(ordersResponse.summaryCards);
-        setPageInfo(ordersResponse.pageInfo);
+        const filteredResponse = applyActiveFilters(ordersResponse);
+        setRows(filteredResponse.rows);
+        setSummaryCards(filteredResponse.summaryCards);
+        setPageInfo(filteredResponse.pageInfo);
         setFilterOptions({
-          vendors: ordersResponse.filterOptions.vendors,
-          statuses: ordersResponse.filterOptions.statuses,
-          paymentStatuses: ordersResponse.filterOptions.paymentStatuses,
+          vendors: uniqueVendorOptions(ordersResponse.filterOptions.vendors),
+          statuses: uniqueTextOptions(ordersResponse.filterOptions.statuses),
+          paymentStatuses: uniqueTextOptions(ordersResponse.filterOptions.paymentStatuses),
         });
         writeOrderCache(orderCacheKey, ordersResponse);
       } catch (error) {
@@ -181,6 +275,17 @@ export default function OrdersPage() {
       isMounted = false;
     };
   }, [normalizedFilters, orderCacheKey, reloadKey]);
+
+  useEffect(() => {
+    const cachedResponse = readOrderCache(orderCacheKey);
+    if (!cachedResponse) {
+      return;
+    }
+
+    const filteredResponse = applyActiveFilters(cachedResponse);
+    setRows(filteredResponse.rows);
+    setPageInfo(filteredResponse.pageInfo);
+  }, [dateRange, orderCacheKey, paymentFilter, searchTerm, statusFilter, vendorFilter]);
 
   useEffect(() => {
     let isMounted = true;

@@ -21,7 +21,7 @@ import SupportCustomerProfileCard from "../components/details/SupportCustomerPro
 import SupportCustomerProfileModal from "../components/details/SupportCustomerProfileModal.jsx";
 import SupportTicketActionsCard from "../components/details/SupportTicketActionsCard.jsx";
 import SupportTicketSummaryCard from "../components/details/SupportTicketSummaryCard.jsx";
-import { formatStatusLabel } from "../supportUtils.js";
+import { formatReadableDate, formatStatusLabel } from "../supportUtils.js";
 
 function TicketStatusPill({ status }) {
   const className =

@@ -159,12 +159,20 @@ export default function SupportTicketDetailPage() {
       return undefined;
     }
 
-    const intervalId = window.setInterval(() => {
-      void refreshTicket().catch(() => {});
-    }, 15000);
+    const refreshOnActivePage = () => {
+      if (document.visibilityState === "visible") {
+        void refreshTicket().catch(() => {});
+      }
+    };
+
+    const intervalId = window.setInterval(refreshOnActivePage, 10000);
+    window.addEventListener("focus", refreshOnActivePage);
+    document.addEventListener("visibilitychange", refreshOnActivePage);
 
     return () => {
       window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshOnActivePage);
+      document.removeEventListener("visibilitychange", refreshOnActivePage);
     };
   }, [ticketId]);
 

@@ -9,8 +9,20 @@ import AddDeliveryAreaModal from "../components/AddDeliveryAreaModal.jsx";
 import DeliveryAreasTable from "../components/DeliveryAreasTable.jsx";
 import DeliveryOverviewCard from "../components/DeliveryOverviewCard.jsx";
 import DeliveryToolbar from "../components/DeliveryToolbar.jsx";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 const PAGE_SIZE = 10;
+const DELIVERY_CACHE_TTL_MS = 60_000;
+const deliveryPageCache = new Map();
+
+function readDeliveryCache(cacheKey) {
+  const entry = deliveryPageCache.get(cacheKey);
+  return entry && Date.now() - entry.savedAt < DELIVERY_CACHE_TTL_MS ? entry.data : null;
+}
+
+function writeDeliveryCache(cacheKey, data) {
+  deliveryPageCache.set(cacheKey, { data, savedAt: Date.now() });
+}
 
 export default function DeliveryPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,24 +47,42 @@ export default function DeliveryPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebouncedSearchTerm(searchTerm), 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const normalizedFilters = useMemo(
     () => ({
       page: currentPage,
       pageSize: PAGE_SIZE,
-      search: searchTerm,
+      search: debouncedSearchTerm,
       status: statusFilter ? statusFilter.toUpperCase() : null,
       region: regionFilter || null,
       city: cityFilter || null,
     }),
-    [cityFilter, currentPage, regionFilter, searchTerm, statusFilter],
+    [cityFilter, currentPage, debouncedSearchTerm, regionFilter, statusFilter],
   );
+  const deliveryCacheKey = useMemo(() => JSON.stringify(normalizedFilters), [normalizedFilters]);
 
   useEffect(() => {
     let isMounted = true;
+    const cachedResponse = readDeliveryCache(deliveryCacheKey);
+
+    if (cachedResponse) {
+      setSummaryCards(cachedResponse.summaryCards);
+      setRows(cachedResponse.rows);
+      setPageInfo(cachedResponse.pageInfo);
+      setFilterOptions(cachedResponse.filterOptions);
+      setIsLoading(false);
+    }
 
     async function loadDeliveryPage() {
-      setIsLoading(true);
+      if (!cachedResponse) {
+        setIsLoading(true);
+      }
       setLoadError("");
 
       try {
@@ -69,6 +99,12 @@ export default function DeliveryPage() {
         setRows(areasResult.rows);
         setPageInfo(areasResult.pageInfo);
         setFilterOptions(areasResult.filterOptions);
+        writeDeliveryCache(deliveryCacheKey, {
+          summaryCards: summaryResult,
+          rows: areasResult.rows,
+          pageInfo: areasResult.pageInfo,
+          filterOptions: areasResult.filterOptions,
+        });
       } catch (error) {
         if (isMounted) {
           setLoadError(error instanceof Error ? error.message : "Unable to load delivery areas.");
@@ -85,7 +121,7 @@ export default function DeliveryPage() {
     return () => {
       isMounted = false;
     };
-  }, [normalizedFilters]);
+  }, [deliveryCacheKey, normalizedFilters]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -95,6 +131,7 @@ export default function DeliveryPage() {
     try {
       setIsSubmittingArea(true);
       const result = await createDeliveryAreaRequest(input);
+      deliveryPageCache.clear();
       setIsAddAreaOpen(false);
       setCurrentPage(1);
       const [summaryResult, areasResult] = await Promise.all([
@@ -187,9 +224,7 @@ export default function DeliveryPage() {
             )}
           />
           {isLoading ? (
-            <div className="px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
-              Loading delivery areas...
-            </div>
+            <AdminLoadingState columns={5} title="Loading delivery areas" description="Fetching delivery coverage and service availability." />
           ) : (
             <DeliveryAreasTable
               currentPage={pageInfo.page}

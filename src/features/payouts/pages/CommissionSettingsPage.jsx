@@ -115,6 +115,15 @@ function LoadingBlock() {
   );
 }
 
+const COMMISSION_CACHE_TTL_MS = 120_000;
+let commissionSettingsCache = null;
+
+function readCommissionCache() {
+  return commissionSettingsCache && Date.now() - commissionSettingsCache.savedAt < COMMISSION_CACHE_TTL_MS
+    ? commissionSettingsCache.data
+    : null;
+}
+
 export default function CommissionSettingsPage() {
   const [commissionState, setCommissionState] = useState(createEmptyCommissionState);
   const [isLoading, setIsLoading] = useState(true);
@@ -134,6 +143,24 @@ export default function CommissionSettingsPage() {
   const [isLoadingVendorOptions, setIsLoadingVendorOptions] = useState(false);
   const [isLoadingVendorAreaOptions, setIsLoadingVendorAreaOptions] = useState(false);
   const [isLoadingAreaOptions, setIsLoadingAreaOptions] = useState(false);
+  const [debouncedVendorSearch, setDebouncedVendorSearch] = useState("");
+  const [debouncedVendorAreaSearch, setDebouncedVendorAreaSearch] = useState("");
+  const [debouncedAreaSearch, setDebouncedAreaSearch] = useState("");
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebouncedVendorSearch(vendorForm.vendorSearch), 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [vendorForm.vendorSearch]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebouncedVendorAreaSearch(vendorForm.areaSearch), 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [vendorForm.areaSearch]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebouncedAreaSearch(areaForm.areaSearch), 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [areaForm.areaSearch]);
 
   const deleteTarget = useMemo(() => {
     if (!modalState.rowId || !modalState.type?.startsWith("delete")) {
@@ -148,7 +175,13 @@ export default function CommissionSettingsPage() {
   }, [commissionState.areaRows, commissionState.vendorRows, modalState.rowId, modalState.type]);
 
   async function loadCommissionSettings({ silent = false } = {}) {
-    if (silent) {
+    const cachedSettings = silent ? null : readCommissionCache();
+
+    if (cachedSettings) {
+      setCommissionState(cachedSettings);
+      setIsLoading(false);
+      setIsRefreshing(true);
+    } else if (silent) {
       setIsRefreshing(true);
     } else {
       setIsLoading(true);
@@ -157,6 +190,7 @@ export default function CommissionSettingsPage() {
     try {
       const data = await getAdminCommissionSettingsRequest();
       setCommissionState(data);
+      commissionSettingsCache = { data, savedAt: Date.now() };
       setLoadError("");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to load commission settings.";
@@ -188,7 +222,7 @@ export default function CommissionSettingsPage() {
     let isActive = true;
     setIsLoadingVendorOptions(true);
 
-    getCommissionVendorOptionsRequest(vendorForm.vendorSearch)
+    getCommissionVendorOptionsRequest(debouncedVendorSearch)
       .then((options) => {
         if (!isActive) {
           return;
@@ -217,7 +251,7 @@ export default function CommissionSettingsPage() {
     return () => {
       isActive = false;
     };
-  }, [modalState.type, vendorForm.vendorId, vendorForm.vendorName, vendorForm.vendorSearch]);
+  }, [debouncedVendorSearch, modalState.type, vendorForm.vendorId, vendorForm.vendorName]);
 
   useEffect(() => {
     if (modalState.type !== "vendor") {
@@ -227,7 +261,7 @@ export default function CommissionSettingsPage() {
     let isActive = true;
     setIsLoadingVendorAreaOptions(true);
 
-    getCommissionAreaOptionsRequest(vendorForm.areaSearch)
+    getCommissionAreaOptionsRequest(debouncedVendorAreaSearch)
       .then((options) => {
         if (!isActive) {
           return;
@@ -256,7 +290,7 @@ export default function CommissionSettingsPage() {
     return () => {
       isActive = false;
     };
-  }, [modalState.type, vendorForm.areaId, vendorForm.areaName, vendorForm.areaSearch]);
+  }, [debouncedVendorAreaSearch, modalState.type, vendorForm.areaId, vendorForm.areaName]);
 
   useEffect(() => {
     if (modalState.type !== "area") {
@@ -266,7 +300,7 @@ export default function CommissionSettingsPage() {
     let isActive = true;
     setIsLoadingAreaOptions(true);
 
-    getCommissionAreaOptionsRequest(areaForm.areaSearch)
+    getCommissionAreaOptionsRequest(debouncedAreaSearch)
       .then((options) => {
         if (!isActive) {
           return;
@@ -293,7 +327,7 @@ export default function CommissionSettingsPage() {
     return () => {
       isActive = false;
     };
-  }, [areaForm.areaId, areaForm.areaName, areaForm.areaSearch, modalState.type]);
+  }, [areaForm.areaId, areaForm.areaName, debouncedAreaSearch, modalState.type]);
 
   function closeModal() {
     setModalState({ type: null, mode: "create", rowId: null });

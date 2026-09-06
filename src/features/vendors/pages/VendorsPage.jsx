@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { Users, Wifi, Clock, AlertTriangle, CircleAlert, DollarSign } from "lucide-react";
@@ -14,8 +14,11 @@ import TopPerformingVendorsCard from "../components/TopPerformingVendorsCard.jsx
 import VendorsTable from "../components/VendorsTable.jsx";
 import VendorsToolbar from "../components/VendorsToolbar.jsx";
 import VendorStatusOverviewCard from "../components/VendorStatusOverviewCard.jsx";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 const PAGE_SIZE = 10;
+const VENDOR_CACHE_TTL_MS = 60_000;
+const vendorListCache = new Map();
 
 const iconMap = {
   total: Users,
@@ -86,6 +89,49 @@ function buildFilterOptions(rows) {
   };
 }
 
+function readVendorCache(cacheKey) {
+  const memoryEntry = vendorListCache.get(cacheKey);
+  if (memoryEntry && Date.now() - memoryEntry.savedAt < VENDOR_CACHE_TTL_MS) {
+    return memoryEntry.data;
+  }
+
+  try {
+    const rawEntry = window.sessionStorage.getItem(`admin-vendors:${cacheKey}`);
+    const sessionEntry = rawEntry ? JSON.parse(rawEntry) : null;
+    if (sessionEntry && Date.now() - sessionEntry.savedAt < VENDOR_CACHE_TTL_MS) {
+      vendorListCache.set(cacheKey, sessionEntry);
+      return sessionEntry.data;
+    }
+  } catch {
+    // Caching is an enhancement; the request remains the source of truth.
+  }
+
+  return null;
+}
+
+function writeVendorCache(cacheKey, data) {
+  const entry = { data, savedAt: Date.now() };
+  vendorListCache.set(cacheKey, entry);
+
+  try {
+    window.sessionStorage.setItem(`admin-vendors:${cacheKey}`, JSON.stringify(entry));
+  } catch {
+    // Ignore unavailable or full session storage.
+  }
+}
+
+function clearVendorCache() {
+  vendorListCache.clear();
+
+  try {
+    Object.keys(window.sessionStorage)
+      .filter((key) => key.startsWith("admin-vendors:"))
+      .forEach((key) => window.sessionStorage.removeItem(key));
+  } catch {
+    // The in-memory cache has already been cleared.
+  }
+}
+
 export default function VendorsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
@@ -111,7 +157,15 @@ export default function VendorsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [isUpdatingStatusId, setIsUpdatingStatusId] = useState("");
-  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const dateRange = useMemo(
     () => (timeframe === ALL_DATES_FILTER ? null : getDateRangeForFilter(timeframe, customStart, customEnd)),
@@ -120,7 +174,7 @@ export default function VendorsPage() {
 
   const normalizedFilters = useMemo(
     () => ({
-      search: deferredSearchTerm,
+      search: debouncedSearchTerm,
       city: cityFilter || null,
       minRating: ratingFilter ? Number(ratingFilter) : null,
       status: activeTab === "All" || activeTab === "Top Performing" ? null : activeTab.replace(/\s+/g, "_").toUpperCase(),
@@ -131,7 +185,11 @@ export default function VendorsPage() {
       sortBy: "JOINED_AT",
       sortOrder: "DESC",
     }),
-    [activeTab, cityFilter, currentPage, dateRange, deferredSearchTerm, ratingFilter],
+    [activeTab, cityFilter, currentPage, dateRange, debouncedSearchTerm, ratingFilter],
+  );
+  const vendorCacheKey = useMemo(
+    () => JSON.stringify(normalizedFilters),
+    [normalizedFilters],
   );
 
   useEffect(() => {
@@ -141,9 +199,21 @@ export default function VendorsPage() {
 
   useEffect(() => {
     let isMounted = true;
+    const cachedResponse = readVendorCache(vendorCacheKey);
+
+    if (cachedResponse) {
+      setRows(cachedResponse.rows);
+      setPageInfo(cachedResponse.pageInfo);
+      setStats(cachedResponse.stats);
+      setFilterOptions(cachedResponse.filterOptions);
+      setSidePanels(cachedResponse.sidePanels);
+      setIsLoading(false);
+    }
 
     async function loadVendors() {
-      setIsLoading(true);
+      if (!cachedResponse) {
+        setIsLoading(true);
+      }
       setLoadError("");
 
       try {
@@ -157,6 +227,7 @@ export default function VendorsPage() {
         setStats(response.stats);
         setFilterOptions(response.filterOptions);
         setSidePanels(response.sidePanels);
+        writeVendorCache(vendorCacheKey, response);
       } catch (error) {
         if (isMounted) {
           setLoadError(error instanceof Error ? error.message : "Unable to load vendors.");
@@ -173,7 +244,7 @@ export default function VendorsPage() {
     return () => {
       isMounted = false;
     };
-  }, [normalizedFilters]);
+  }, [normalizedFilters, vendorCacheKey]);
 
   function handleCustomDateChange(start, end) {
     setCustomStart(start);
@@ -272,6 +343,7 @@ export default function VendorsPage() {
             : item,
         ),
       );
+      clearVendorCache();
 
       await Swal.fire({
         icon: "success",
@@ -332,9 +404,7 @@ export default function VendorsPage() {
 
         <div className="px-4 pb-4">
           {isLoading && rows.length === 0 ? (
-            <div className="px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
-              Loading vendors...
-            </div>
+            <AdminLoadingState columns={6} title="Loading vendor records" description="Synchronizing vendor profiles, reviews, and approval status." />
           ) : (
             <VendorsTable
               currentPage={pageInfo.page}

@@ -20,6 +20,7 @@ import EventInfoCard from "../components/details/EventInfoCard.jsx";
 import OrderSummaryCard from "../components/details/OrderSummaryCard.jsx";
 import { MenuPreviewModal } from "../../vendors/components/details/VendorPublishedMenusSection.jsx";
 import { getAdminVendorMenuDetailRequest } from "../../vendors/api/vendorsApi.js";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 import {
   getCommissionPreviewForOrderRequest,
   getAdminOrderDetailRequest,
@@ -258,11 +259,7 @@ export default function OrderDetailPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="rounded-[16px] border border-[#e7ddd6] bg-white px-5 py-14 text-center text-[15px] font-medium text-[#6f645d]">
-        Loading order details...
-      </div>
-    );
+    return <AdminLoadingState cards={3} columns={5} title="Loading order details" description="Preparing the order, customer, and fulfillment details." />;
   }
 
   if (loadError || !order) {

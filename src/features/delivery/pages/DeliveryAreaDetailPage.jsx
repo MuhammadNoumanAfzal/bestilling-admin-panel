@@ -2,6 +2,7 @@ import { ChevronLeft, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { Link, Navigate, useParams } from "react-router-dom";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 import {
   addDeliveryPostalAreaRequest,
   deleteDeliveryAreaRequest,
@@ -306,10 +307,14 @@ export default function DeliveryAreaDetailPage() {
     return <Navigate replace to="/delivery" />;
   }
 
+  if (isLoading) {
+    return <AdminLoadingState cards={2} columns={4} title="Loading delivery area" description="Retrieving delivery coverage and postal-code details." />;
+  }
+
   if (!area) {
     return (
       <div className="rounded-[16px] border border-[#ece4de] bg-white px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
-        {isLoading ? "Loading delivery area..." : "Unable to load this delivery area."}
+        Unable to load this delivery area.
       </div>
     );
   }

@@ -12,6 +12,7 @@ import NotificationDetailsModal from "../components/NotificationDetailsModal.jsx
 import NotificationOverviewCard from "../components/NotificationOverviewCard.jsx";
 import NotificationsTable from "../components/NotificationsTable.jsx";
 import NotificationsToolbar from "../components/NotificationsToolbar.jsx";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 const PAGE_SIZE = 10;
 
@@ -349,9 +350,7 @@ export default function NotificationsPage() {
           ) : null}
 
           {isLoading ? (
-            <div className="border-t border-[#eee4dd] px-4 py-12 text-center text-[15px] font-medium text-[#6f645d]">
-              Loading notifications...
-            </div>
+            <AdminLoadingState columns={5} title="Loading notifications" description="Synchronizing the latest platform activity." />
           ) : (
             <NotificationsTable
               currentPage={currentPage}

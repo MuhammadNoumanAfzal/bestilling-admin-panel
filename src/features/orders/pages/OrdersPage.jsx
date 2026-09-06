@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
@@ -28,6 +28,8 @@ import {
 } from "../api/ordersApi.js";
 
 const PAGE_SIZE = 10;
+const ORDER_CACHE_TTL_MS = 30_000;
+const orderListCache = new Map();
 
 const iconMap = {
   total: ShoppingBag,
@@ -45,6 +47,15 @@ const presetByFilter = {
   "Last 6 Months": "LAST_6_MONTHS",
   "This Year": "THIS_YEAR",
 };
+
+function readOrderCache(cacheKey) {
+  const entry = orderListCache.get(cacheKey);
+  return entry && Date.now() - entry.savedAt < ORDER_CACHE_TTL_MS ? entry.data : null;
+}
+
+function writeOrderCache(cacheKey, data) {
+  orderListCache.set(cacheKey, { data, savedAt: Date.now() });
+}
 
 export default function OrdersPage() {
   const navigate = useNavigate();
@@ -78,7 +89,12 @@ export default function OrdersPage() {
   const [loadError, setLoadError] = useState("");
   const [activeActionOrderId, setActiveActionOrderId] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
-  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebouncedSearchTerm(searchTerm), 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const dateRange = useMemo(
     () => getDateRangeForFilter(timeframe, customStart, customEnd),
@@ -87,7 +103,7 @@ export default function OrdersPage() {
 
   const normalizedFilters = useMemo(
     () => ({
-      search: deferredSearchTerm,
+      search: debouncedSearchTerm,
       vendorId: vendorFilter || null,
       status: statusFilter
         ? statusFilter.replace(/\s+/g, "_").toUpperCase()
@@ -102,8 +118,9 @@ export default function OrdersPage() {
       sortField: "PLACED_AT",
       sortDirection: "DESC",
     }),
-    [currentPage, dateRange, deferredSearchTerm, paymentFilter, statusFilter, vendorFilter],
+    [currentPage, dateRange, debouncedSearchTerm, paymentFilter, statusFilter, vendorFilter],
   );
+  const orderCacheKey = useMemo(() => JSON.stringify(normalizedFilters), [normalizedFilters]);
   const categoryFilters = useMemo(
     () => ({
       vendorId: vendorFilter || null,
@@ -115,9 +132,20 @@ export default function OrdersPage() {
 
   useEffect(() => {
     let isMounted = true;
+    const cachedResponse = readOrderCache(orderCacheKey);
+
+    if (cachedResponse) {
+      setRows(cachedResponse.rows);
+      setSummaryCards(cachedResponse.summaryCards);
+      setPageInfo(cachedResponse.pageInfo);
+      setFilterOptions(cachedResponse.filterOptions);
+      setIsLoading(false);
+    }
 
     async function loadOrders() {
-      setIsLoading(true);
+      if (!cachedResponse) {
+        setIsLoading(true);
+      }
       setLoadError("");
 
       try {
@@ -135,6 +163,7 @@ export default function OrdersPage() {
           statuses: ordersResponse.filterOptions.statuses,
           paymentStatuses: ordersResponse.filterOptions.paymentStatuses,
         });
+        writeOrderCache(orderCacheKey, ordersResponse);
       } catch (error) {
         if (isMounted) {
           setLoadError(error instanceof Error ? error.message : "Unable to load orders.");
@@ -151,7 +180,7 @@ export default function OrdersPage() {
     return () => {
       isMounted = false;
     };
-  }, [normalizedFilters, reloadKey]);
+  }, [normalizedFilters, orderCacheKey, reloadKey]);
 
   useEffect(() => {
     let isMounted = true;
@@ -263,6 +292,7 @@ export default function OrdersPage() {
   }
 
   function refreshOrders() {
+    orderListCache.clear();
     setReloadKey((current) => current + 1);
   }
 

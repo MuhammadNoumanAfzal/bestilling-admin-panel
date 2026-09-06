@@ -9,6 +9,7 @@ import {
 import SupportOverviewCard from "../components/SupportOverviewCard.jsx";
 import SupportTicketsTable from "../components/SupportTicketsTable.jsx";
 import SupportToolbar from "../components/SupportToolbar.jsx";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -306,9 +307,7 @@ export default function SupportPage() {
         ) : null}
 
         {isLoading ? (
-          <div className="border-t border-[#eee4dd] px-4 py-12 text-center text-[15px] font-medium text-[#6f645d]">
-            Loading support tickets...
-          </div>
+          <AdminLoadingState columns={5} title="Loading support tickets" description="Retrieving customer conversations and their latest status." />
         ) : (
           <SupportTicketsTable
             currentPage={currentPage}

@@ -43,6 +43,8 @@ async function executePreferredOrdersQuery(query, variables) {
   }
 }
 
+let enrichedOrderListQuerySupported;
+
 function toInitials(value) {
   return `${value ?? ""}`
     .split(/\s+/)
@@ -966,9 +968,16 @@ export async function getAdminOrdersRequest(filters) {
   const variables = {
     input: buildOrdersInput(filters),
   };
-  const data =
-    (await executePreferredOrdersQuery(ADMIN_ORDERS_ENRICHED_QUERY, variables)) ||
-    (await executeProtectedGraphqlRequest(ADMIN_ORDERS_QUERY, variables));
+  let data = null;
+
+  if (enrichedOrderListQuerySupported !== false) {
+    data = await executePreferredOrdersQuery(ADMIN_ORDERS_ENRICHED_QUERY, variables);
+    enrichedOrderListQuerySupported = Boolean(data);
+  }
+
+  if (!data) {
+    data = await executeProtectedGraphqlRequest(ADMIN_ORDERS_QUERY, variables);
+  }
   const response = data?.adminOrders;
 
   if (!response) {

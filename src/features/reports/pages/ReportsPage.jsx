@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { getAdminReportsSnapshotRequest } from "../api/reportsApi.js";
-import { getAdminOrdersRequest } from "../../orders/api/ordersApi.js";
 import CategoryPerformanceCard from "../components/CategoryPerformanceCard.jsx";
 import CustomerAnalyticsCard from "../components/CustomerAnalyticsCard.jsx";
 import OperationalHealthCard from "../components/OperationalHealthCard.jsx";
@@ -13,8 +12,10 @@ import VendorPerformanceCard from "../components/VendorPerformanceCard.jsx";
 import { reportFilterOptions } from "../data/reportsData.js";
 import { createEmptyReportsSnapshot } from "../reportsUtils.js";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
-const REPORT_ORDERS_PAGE_SIZE = 100;
+const REPORT_CACHE_TTL_MS = 60_000;
+const reportSnapshotCache = new Map();
 
 function getTimezone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -326,35 +327,43 @@ export default function ReportsPage() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const hasLoadedSnapshotRef = useRef(false);
 
   const snapshotFilters = useMemo(
     () => buildReportsFilters(selectedFilter, customStartDate, customEndDate),
     [customEndDate, customStartDate, selectedFilter],
   );
+  const reportCacheKey = useMemo(() => JSON.stringify(snapshotFilters), [snapshotFilters]);
 
   useEffect(() => {
     let isMounted = true;
+    const cachedEntry = reportSnapshotCache.get(reportCacheKey);
+    const cachedSnapshot =
+      cachedEntry && Date.now() - cachedEntry.savedAt < REPORT_CACHE_TTL_MS
+        ? cachedEntry.snapshot
+        : null;
+
+    if (cachedSnapshot) {
+      setReportSnapshot(cachedSnapshot);
+      hasLoadedSnapshotRef.current = true;
+      setIsLoading(false);
+    } else if (!hasLoadedSnapshotRef.current) {
+      setIsLoading(true);
+    }
 
     async function loadReportsSnapshot() {
-      setIsLoading(true);
       setLoadError("");
 
       try {
-        const [snapshot, ordersResponse] = await Promise.all([
-          getAdminReportsSnapshotRequest(snapshotFilters),
-          getAllOrdersForReports({
-            dateFrom: snapshotFilters.dateFrom,
-            dateTo: snapshotFilters.dateTo,
-            page: 1,
-            limit: REPORT_ORDERS_PAGE_SIZE,
-            sortField: "PLACED_AT",
-            sortDirection: "ASC",
-          }),
-        ]);
-        const mergedSnapshot = mergeReportsWithOrderData(snapshot, ordersResponse, snapshotFilters);
+        const snapshot = await getAdminReportsSnapshotRequest(snapshotFilters);
 
         if (isMounted) {
-          setReportSnapshot(mergedSnapshot);
+          setReportSnapshot(snapshot);
+          reportSnapshotCache.set(reportCacheKey, {
+            snapshot,
+            savedAt: Date.now(),
+          });
+          hasLoadedSnapshotRef.current = true;
         }
       } catch (error) {
         if (isMounted) {
@@ -375,7 +384,7 @@ export default function ReportsPage() {
     return () => {
       isMounted = false;
     };
-  }, [snapshotFilters]);
+  }, [reportCacheKey, snapshotFilters]);
 
   useEffect(() => {
     setPageHeaderAction(
@@ -406,9 +415,7 @@ export default function ReportsPage() {
       ) : null}
 
       {isLoading ? (
-        <div className="rounded-[16px] border border-[#ece4de] bg-white px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
-          Loading reports snapshot...
-        </div>
+        <AdminLoadingState cards={4} columns={6} title="Loading reports snapshot" description="Calculating the latest financial and operational performance." />
       ) : (
         <>
           {reportSnapshot.summary.length ? (

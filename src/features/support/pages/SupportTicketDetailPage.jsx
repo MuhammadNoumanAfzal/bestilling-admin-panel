@@ -2,6 +2,7 @@ import { ChevronLeft } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import { Link, Navigate, useParams } from "react-router-dom";
+import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 import { useAuth } from "../../auth/hooks/useAuth.js";
 import {
   addSupportInternalNoteRequest,
@@ -399,11 +400,7 @@ export default function SupportTicketDetailPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="rounded-[18px] border border-[#e8ddd5] bg-white px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
-        Loading support ticket...
-      </div>
-    );
+    return <AdminLoadingState cards={2} columns={4} title="Loading support ticket" description="Retrieving the conversation, requester, and ticket activity." />;
   }
 
   if (loadError && !ticket) {

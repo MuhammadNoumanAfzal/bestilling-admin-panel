@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
@@ -18,6 +18,8 @@ import PayoutToolbar from "../components/PayoutToolbar.jsx";
 import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 const PAGE_SIZE = 10;
+const PAYMENT_CACHE_TTL_MS = 30_000;
+const paymentListCache = new Map();
 const STATIC_STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
   { value: "PAID", label: "Paid" },
@@ -40,6 +42,15 @@ function mapPaymentStatusFilter(value) {
     default:
       return { value: "PENDING", label: "Pending" };
   }
+}
+
+function readPaymentCache(cacheKey) {
+  const entry = paymentListCache.get(cacheKey);
+  return entry && Date.now() - entry.savedAt < PAYMENT_CACHE_TTL_MS ? entry.data : null;
+}
+
+function writePaymentCache(cacheKey, data) {
+  paymentListCache.set(cacheKey, { data, savedAt: Date.now() });
 }
 
 export default function PayoutsPage() {
@@ -76,7 +87,12 @@ export default function PayoutsPage() {
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [activeActionKey, setActiveActionKey] = useState("");
-  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebouncedSearchTerm(searchTerm), 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const dateRange = useMemo(
     () => getDateRangeForFilter(timeframe, customStart, customEnd),
@@ -85,7 +101,7 @@ export default function PayoutsPage() {
 
   const normalizedFilters = useMemo(
     () => ({
-      search: deferredSearchTerm,
+      search: debouncedSearchTerm,
       status: statusFilter === "all" ? "ALL" : statusFilter,
       vendorId: vendorFilter === "all" ? null : vendorFilter,
       dateFrom: dateRange?.start || null,
@@ -95,14 +111,32 @@ export default function PayoutsPage() {
       sortBy: "CREATED_AT",
       sortOrder: "DESC",
     }),
-    [currentPage, dateRange, deferredSearchTerm, statusFilter, vendorFilter],
+    [currentPage, dateRange, debouncedSearchTerm, statusFilter, vendorFilter],
   );
+  const paymentCacheKey = useMemo(() => JSON.stringify(normalizedFilters), [normalizedFilters]);
 
   useEffect(() => {
     let isMounted = true;
+    const cachedResponse = readPaymentCache(paymentCacheKey);
+
+    if (cachedResponse) {
+      setRows(cachedResponse.rows);
+      setSummaryCards(cachedResponse.summaryCards);
+      setPageInfo(cachedResponse.pageInfo);
+      setFilterOptions({
+        statuses: STATIC_STATUS_OPTIONS,
+        vendors: cachedResponse.filterOptions.vendors.map((vendor) => ({
+          value: vendor.id,
+          label: vendor.name,
+        })),
+      });
+      setIsLoading(false);
+    }
 
     async function loadPaymentsPage() {
-      setIsLoading(true);
+      if (!cachedResponse) {
+        setIsLoading(true);
+      }
       setLoadError("");
 
       try {
@@ -124,6 +158,7 @@ export default function PayoutsPage() {
             label: vendor.name,
           })),
         });
+        writePaymentCache(paymentCacheKey, paymentsResponse);
       } catch (error) {
         if (isMounted) {
           setLoadError(error instanceof Error ? error.message : "Unable to load payments.");
@@ -140,7 +175,7 @@ export default function PayoutsPage() {
     return () => {
       isMounted = false;
     };
-  }, [normalizedFilters, reloadKey]);
+  }, [normalizedFilters, paymentCacheKey, reloadKey]);
 
   useEffect(() => {
     let isMounted = true;
@@ -194,6 +229,7 @@ export default function PayoutsPage() {
   }
 
   function refreshPaymentsPage() {
+    paymentListCache.clear();
     setReloadKey((current) => current + 1);
   }
 

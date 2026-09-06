@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
 import { blockCustomerRequest, getAdminCustomersRequest, unblockCustomerRequest } from "../api/customersApi.js";
@@ -11,6 +11,8 @@ import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 const PAGE_SIZE = 10;
 const ALL_DATES_FILTER = "All Dates";
+const CUSTOMER_CACHE_TTL_MS = 60_000;
+const customerListCache = new Map();
 
 function toDisplayStatus(status) {
   switch (`${status ?? ""}`.trim().toUpperCase()) {
@@ -21,6 +23,15 @@ function toDisplayStatus(status) {
     default:
       return "Active";
   }
+}
+
+function readCustomerCache(cacheKey) {
+  const entry = customerListCache.get(cacheKey);
+  return entry && Date.now() - entry.savedAt < CUSTOMER_CACHE_TTL_MS ? entry.data : null;
+}
+
+function writeCustomerCache(cacheKey, data) {
+  customerListCache.set(cacheKey, { data, savedAt: Date.now() });
 }
 
 export default function CustomersPage() {
@@ -50,7 +61,12 @@ export default function CustomersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [isUpdatingStatusId, setIsUpdatingStatusId] = useState("");
-  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebouncedSearchTerm(searchTerm), 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const dateRange = useMemo(
     () => (timeframe === ALL_DATES_FILTER ? null : getDateRangeForFilter(timeframe, customStart, customEnd)),
@@ -59,7 +75,7 @@ export default function CustomersPage() {
 
   const normalizedFilters = useMemo(
     () => ({
-      search: deferredSearchTerm,
+      search: debouncedSearchTerm,
       status: statusFilter ? statusFilter.toUpperCase() : null,
       city: cityFilter || null,
       registeredFrom: dateRange?.start || null,
@@ -69,14 +85,29 @@ export default function CustomersPage() {
       sortBy: "joinedAt",
       sortOrder: "DESC",
     }),
-    [cityFilter, currentPage, dateRange, deferredSearchTerm, statusFilter],
+    [cityFilter, currentPage, dateRange, debouncedSearchTerm, statusFilter],
   );
+  const customerCacheKey = useMemo(() => JSON.stringify(normalizedFilters), [normalizedFilters]);
 
   useEffect(() => {
     let isMounted = true;
+    const cachedResponse = readCustomerCache(customerCacheKey);
+
+    if (cachedResponse) {
+      setRows(cachedResponse.rows);
+      setSummaryCards(cachedResponse.summaryCards);
+      setPageInfo(cachedResponse.pageInfo);
+      setFilterOptions({
+        cities: cachedResponse.filterOptions.cities,
+        statuses: [...new Set(cachedResponse.filterOptions.statuses.map(toDisplayStatus).filter(Boolean))],
+      });
+      setIsLoading(false);
+    }
 
     async function loadCustomers() {
-      setIsLoading(true);
+      if (!cachedResponse) {
+        setIsLoading(true);
+      }
       setLoadError("");
 
       try {
@@ -93,6 +124,7 @@ export default function CustomersPage() {
           cities: response.filterOptions.cities,
           statuses: [...new Set(response.filterOptions.statuses.map(toDisplayStatus).filter(Boolean))],
         });
+        writeCustomerCache(customerCacheKey, response);
       } catch (error) {
         if (isMounted) {
           setLoadError(error instanceof Error ? error.message : "Unable to load customers.");
@@ -109,7 +141,7 @@ export default function CustomersPage() {
     return () => {
       isMounted = false;
     };
-  }, [normalizedFilters]);
+  }, [customerCacheKey, normalizedFilters]);
 
   function handleCustomDateChange(start, end) {
     setCustomStart(start);
@@ -219,6 +251,7 @@ export default function CustomersPage() {
             : item,
         ),
       );
+      customerListCache.clear();
 
       await Swal.fire({
         icon: "success",

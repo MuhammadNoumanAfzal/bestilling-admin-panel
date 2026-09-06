@@ -129,7 +129,7 @@ export default function VendorsTable({
       className="mt-4 overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]"
     >
       <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-[900px] border-collapse">
+        <table className="w-full min-w-[980px] border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
               <th className="w-10 px-2 py-4 text-center">
@@ -148,7 +148,7 @@ export default function VendorsTable({
               <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Rating</th>
               <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Join Date</th>
               <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
-              <th className="w-16 px-2 py-4 text-center text-[13px] font-bold text-[#9b8f86]">Actions</th>
+              <th className="w-44 px-2 py-4 text-center text-[13px] font-bold text-[#9b8f86]">Actions</th>
             </tr>
           </thead>
 
@@ -226,26 +226,28 @@ export default function VendorsTable({
                       </button>
                     </td>
                     <td className="relative px-2 py-4 text-center align-middle">
-                      <button
-                        onClick={() => setActiveMenuId(activeMenuId === row.id ? null : row.id)}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[#6f655e] transition hover:bg-[#f1e9e2] hover:text-[#1f1711] cursor-pointer"
-                        type="button"
-                      >
-                        <MoreVertical size={14} />
-                      </button>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          className="inline-flex min-h-8 items-center justify-center rounded-[9px] border border-[#e4d5cb] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#6f5145] transition hover:border-[#d96834] hover:bg-[#fff8f4] hover:text-[#c75f2e]"
+                          onClick={() => navigate(getVendorNavigationPath(row))}
+                          type="button"
+                        >
+                          {getReviewActionLabel(row)}
+                        </button>
+                        {!["Pending Approval", "Changes Requested"].includes(row.status) ? (
+                          <button
+                            aria-label={`More actions for ${row.name}`}
+                            onClick={() => setActiveMenuId(activeMenuId === row.id ? null : row.id)}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[#6f655e] transition hover:bg-[#f1e9e2] hover:text-[#1f1711] cursor-pointer"
+                            type="button"
+                          >
+                            <MoreVertical size={14} />
+                          </button>
+                        ) : null}
+                      </div>
 
                       {isMenuOpen && (
                         <div className="absolute right-4 top-10 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
-                          <button
-                            onClick={() => {
-                              navigate(getVendorNavigationPath(row));
-                              setActiveMenuId(null);
-                            }}
-                            className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
-                            type="button"
-                          >
-                            {getReviewActionLabel(row)}
-                          </button>
                           {!["Pending Approval", "Changes Requested"].includes(row.status) ? (
                             <button
                               onClick={() => {

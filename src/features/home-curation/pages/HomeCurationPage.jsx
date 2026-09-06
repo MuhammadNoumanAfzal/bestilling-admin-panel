@@ -57,6 +57,19 @@ function isActiveProduct(item) {
   return `${item?.menuStatus || ""}`.trim().toLowerCase() === "active";
 }
 
+const HOME_CURATION_CACHE_TTL_MS = 120_000;
+let homeCurationCache = null;
+
+function readHomeCurationCache() {
+  return homeCurationCache && Date.now() - homeCurationCache.savedAt < HOME_CURATION_CACHE_TTL_MS
+    ? homeCurationCache.data
+    : null;
+}
+
+function invalidateHomeCurationCache() {
+  homeCurationCache = null;
+}
+
 export default function HomeCurationPage() {
   const [collections, setCollections] = useState(initialCollections);
   const [options, setOptions] = useState(initialOptions);
@@ -70,7 +83,15 @@ export default function HomeCurationPage() {
   const sectionRefs = useRef({});
 
   async function loadPage({ silent = false } = {}) {
-    if (silent) {
+    const cachedPage = silent ? null : readHomeCurationCache();
+
+    if (cachedPage) {
+      setCollections(cachedPage.curated);
+      setOptions(cachedPage.options);
+      setPaginationState(initialPagination);
+      setIsLoading(false);
+      setIsRefreshing(true);
+    } else if (silent) {
       setIsRefreshing(true);
     } else {
       setIsLoading(true);
@@ -82,6 +103,7 @@ export default function HomeCurationPage() {
       setCollections(mapped.curated);
       setOptions(mapped.options);
       setPaginationState(initialPagination);
+      homeCurationCache = { data: mapped, savedAt: Date.now() };
     } catch (error) {
       await Swal.fire({
         icon: "error",
@@ -253,6 +275,7 @@ export default function HomeCurationPage() {
         isPopular: true,
         isFeatured: item.isFeatured,
       });
+      invalidateHomeCurationCache();
       setCollections((current) => ({
         ...current,
         popularVendors: upsertById(current.popularVendors, {
@@ -291,6 +314,7 @@ export default function HomeCurationPage() {
         isPopular: false,
         isFeatured: item.isFeatured,
       });
+      invalidateHomeCurationCache();
       setCollections((current) => ({
         ...current,
         popularVendors: current.popularVendors.filter((vendor) => vendor.id !== item.id),
@@ -320,6 +344,7 @@ export default function HomeCurationPage() {
         isPopular: item.isPopular,
         isFeatured: true,
       });
+      invalidateHomeCurationCache();
       setCollections((current) => ({
         ...current,
         featuredVendors: upsertById(current.featuredVendors, {
@@ -358,6 +383,7 @@ export default function HomeCurationPage() {
         isPopular: item.isPopular,
         isFeatured: false,
       });
+      invalidateHomeCurationCache();
       setCollections((current) => ({
         ...current,
         featuredVendors: current.featuredVendors.filter((vendor) => vendor.id !== item.id),
@@ -384,6 +410,7 @@ export default function HomeCurationPage() {
     try {
       setBusyKey(`popular-product:add:${item.id}`);
       await updateProductHomeCurationRequest(item.id, { isPopular: true });
+      invalidateHomeCurationCache();
       setCollections((current) => ({
         ...current,
         popularProducts: upsertById(current.popularProducts, {
@@ -419,6 +446,7 @@ export default function HomeCurationPage() {
     try {
       setBusyKey(`popular-product:remove:${item.id}`);
       await updateProductHomeCurationRequest(item.id, { isPopular: false });
+      invalidateHomeCurationCache();
       setCollections((current) => ({
         ...current,
         popularProducts: current.popularProducts.filter((product) => product.id !== item.id),

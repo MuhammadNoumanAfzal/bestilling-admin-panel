@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import {
@@ -12,6 +12,17 @@ import SupportToolbar from "../components/SupportToolbar.jsx";
 import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 const DEFAULT_PAGE_SIZE = 10;
+const SUPPORT_CACHE_TTL_MS = 30_000;
+const supportPageCache = new Map();
+
+function readSupportCache(cacheKey) {
+  const entry = supportPageCache.get(cacheKey);
+  return entry && Date.now() - entry.savedAt < SUPPORT_CACHE_TTL_MS ? entry.data : null;
+}
+
+function writeSupportCache(cacheKey, data) {
+  supportPageCache.set(cacheKey, { data, savedAt: Date.now() });
+}
 
 function getDynamicDateRangeForFilter(selectedFilter, customStart, customEnd) {
   if (selectedFilter === "Custom Date" && customStart && customEnd) {
@@ -93,6 +104,28 @@ export default function SupportPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const hasLoadedTicketsRef = useRef(false);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebouncedSearchTerm(searchTerm), 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const dateFilters = useMemo(
+    () => buildDateFilters(timeframe, customStart, customEnd),
+    [customEnd, customStart, timeframe],
+  );
+  const supportCacheKey = useMemo(
+    () => JSON.stringify({
+      search: debouncedSearchTerm.trim(),
+      status: statusFilter,
+      userType: userFilter,
+      page: currentPage,
+      ...dateFilters,
+    }),
+    [currentPage, dateFilters, debouncedSearchTerm, statusFilter, userFilter],
+  );
 
   const supportSummary = useMemo(
     () => [
@@ -158,16 +191,25 @@ export default function SupportPage() {
 
   useEffect(() => {
     let isMounted = true;
+    const cachedResponse = readSupportCache(supportCacheKey);
+
+    if (cachedResponse) {
+      setRows(cachedResponse.ticketResult.items);
+      setPageInfo(cachedResponse.ticketResult.pageInfo);
+      setSummary(cachedResponse.summaryResult);
+      hasLoadedTicketsRef.current = true;
+      setIsLoading(false);
+    } else if (!hasLoadedTicketsRef.current) {
+      setIsLoading(true);
+    }
 
     async function loadSupportData() {
-      setIsLoading(true);
       setLoadError("");
 
       try {
-        const dateFilters = buildDateFilters(timeframe, customStart, customEnd);
         const [ticketResult, summaryResult] = await Promise.all([
           getAdminSupportTicketsRequest({
-            search: searchTerm.trim() || null,
+            search: debouncedSearchTerm.trim() || null,
             status: statusFilter || null,
             userType: userFilter || null,
             page: currentPage,
@@ -189,6 +231,8 @@ export default function SupportPage() {
         setRows(ticketResult.items);
         setPageInfo(ticketResult.pageInfo);
         setSummary(summaryResult);
+        writeSupportCache(supportCacheKey, { ticketResult, summaryResult });
+        hasLoadedTicketsRef.current = true;
       } catch (error) {
         if (!isMounted) {
           return;
@@ -222,7 +266,7 @@ export default function SupportPage() {
     return () => {
       isMounted = false;
     };
-  }, [currentPage, customEnd, customStart, searchTerm, statusFilter, timeframe, userFilter]);
+  }, [dateFilters, debouncedSearchTerm, currentPage, statusFilter, supportCacheKey, timeframe, userFilter]);
 
   function handlePageChange(nextPage) {
     const safePage = Math.min(Math.max(nextPage, 1), pageInfo.totalPages || 1);

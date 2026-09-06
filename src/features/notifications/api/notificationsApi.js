@@ -444,12 +444,19 @@ async function fetchCombinedAdminNotifications({ first = 50, status = null } = {
     : [];
   const dedupedItems = dedupeNotifications([...financeItems, ...orderItems]);
   const items = sortNotificationsByCreatedAtDesc(dedupedItems);
-  const unreadCount = items.filter((item) => !item.isRead && !item.isArchived).length;
+  const unreadCount = Math.max(
+    items.filter((item) => !item.isRead && !item.isArchived).length,
+    Number(financeConnection?.unreadCount || 0) + Number(orderConnection?.unreadCount || 0),
+  );
+  const totalCount = Math.max(
+    items.length,
+    Number(financeConnection?.totalCount || 0) + Number(orderConnection?.totalCount || 0),
+  );
 
   return {
     items,
     unreadCount,
-    totalCount: items.length,
+    totalCount,
   };
 }
 
@@ -457,7 +464,8 @@ export async function getMyNotificationsRequest({ page, pageSize, status } = {})
   const safePage = Math.max(1, page || 1);
   const safePageSize = Math.max(1, pageSize || 10);
   const connection = await fetchCombinedAdminNotifications({
-    first: Math.max(safePage * safePageSize, 50),
+    // Fetch only the rows required to build the requested combined page.
+    first: safePage * safePageSize,
     status: status === "UNREAD" ? "UNREAD" : status === "READ" ? "READ" : null,
   });
   const allItems = Array.isArray(connection?.items) ? connection.items : [];
@@ -478,12 +486,12 @@ export async function getMyNotificationsRequest({ page, pageSize, status } = {})
 }
 
 export async function getMyNotificationUnreadCountRequest() {
-  const connection = await fetchCombinedAdminNotifications({ first: 200 });
+  const connection = await fetchCombinedAdminNotifications({ first: 1 });
   return Number(connection?.unreadCount ?? 0) || 0;
 }
 
 export async function getNotificationBellRequest() {
-  const connection = await fetchCombinedAdminNotifications({ first: 200 });
+  const connection = await fetchCombinedAdminNotifications({ first: 5 });
 
   return {
     unreadCount: Number(connection?.unreadCount ?? 0) || 0,
@@ -492,7 +500,7 @@ export async function getNotificationBellRequest() {
 }
 
 export async function getNotificationCountsRequest() {
-  const connection = await fetchCombinedAdminNotifications({ first: 50 });
+  const connection = await fetchCombinedAdminNotifications({ first: 1 });
   return {
     total: Number(connection?.totalCount ?? 0) || 0,
     unread: Number(connection?.unreadCount ?? 0) || 0,

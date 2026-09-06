@@ -55,6 +55,71 @@ const SECTION_GROUPS = [
 ];
 
 const HIDDEN_SECTION_KEYS = new Set(["languages", "currencies"]);
+const VENDOR_SETTINGS_CACHE_KEY = "admin-vendor-settings-taxonomy-v1";
+const VENDOR_SETTINGS_CACHE_TTL_MS = 2 * 60 * 1000;
+let vendorSettingsCache = null;
+
+function readVendorSettingsCache() {
+  const now = Date.now();
+  const cached = vendorSettingsCache;
+
+  if (cached?.expiresAt > now) {
+    return cached.taxonomy;
+  }
+
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const stored = JSON.parse(window.sessionStorage.getItem(VENDOR_SETTINGS_CACHE_KEY) || "null");
+
+    if (stored?.expiresAt > now && stored?.taxonomy) {
+      vendorSettingsCache = stored;
+      return stored.taxonomy;
+    }
+
+    window.sessionStorage.removeItem(VENDOR_SETTINGS_CACHE_KEY);
+  } catch {
+    try {
+      window.sessionStorage.removeItem(VENDOR_SETTINGS_CACHE_KEY);
+    } catch {
+      // Storage may be unavailable in privacy-restricted browser sessions.
+    }
+  }
+
+  return null;
+}
+
+function writeVendorSettingsCache(taxonomy) {
+  const cached = {
+    taxonomy,
+    expiresAt: Date.now() + VENDOR_SETTINGS_CACHE_TTL_MS,
+  };
+
+  vendorSettingsCache = cached;
+
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.sessionStorage.setItem(VENDOR_SETTINGS_CACHE_KEY, JSON.stringify(cached));
+  } catch {
+    // The in-memory cache still provides instant route-to-route navigation.
+  }
+}
+
+function invalidateVendorSettingsCache() {
+  vendorSettingsCache = null;
+
+  try {
+    window.sessionStorage.removeItem(VENDOR_SETTINGS_CACHE_KEY);
+  } catch {
+    // Storage may be unavailable in privacy-restricted browser sessions.
+  }
+}
+
 const VISIBLE_SECTION_GROUPS = SECTION_GROUPS.map((group) => ({
   ...group,
   sectionKeys: group.sectionKeys.filter((sectionKey) => !HIDDEN_SECTION_KEYS.has(sectionKey)),
@@ -764,7 +829,8 @@ function SectionCard({
 }
 
 export default function VendorSettingsPage() {
-  const [taxonomy, setTaxonomy] = useState({
+  const initialTaxonomyRef = useRef(readVendorSettingsCache());
+  const [taxonomy, setTaxonomy] = useState(initialTaxonomyRef.current || {
     categories: [],
     foodTypes: [],
     occasions: [],
@@ -781,7 +847,7 @@ export default function VendorSettingsPage() {
     itemId: "",
     values: {},
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialTaxonomyRef.current);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [savingKey, setSavingKey] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -789,22 +855,33 @@ export default function VendorSettingsPage() {
   const sectionRefs = useRef({});
 
   async function loadVendorSettings({ silent = false } = {}) {
+    const cachedTaxonomy = readVendorSettingsCache();
+
+    if (cachedTaxonomy) {
+      setTaxonomy(cachedTaxonomy);
+      setIsLoading(false);
+    }
+
     if (silent) {
       setIsRefreshing(true);
-    } else {
+    } else if (!cachedTaxonomy) {
       setIsLoading(true);
     }
 
     try {
       const result = await getVendorSettingsTaxonomyRequest();
-      setTaxonomy(mapVendorSettingsTaxonomy(result));
+      const nextTaxonomy = mapVendorSettingsTaxonomy(result);
+      writeVendorSettingsCache(nextTaxonomy);
+      setTaxonomy(nextTaxonomy);
     } catch (error) {
-      await Swal.fire({
-        icon: "error",
-        title: "Unable to load vendor settings",
-        text: error?.message || "Please refresh and try again.",
-        confirmButtonColor: "#cf6e38",
-      });
+      if (!cachedTaxonomy) {
+        await Swal.fire({
+          icon: "error",
+          title: "Unable to load vendor settings",
+          text: error?.message || "Please refresh and try again.",
+          confirmButtonColor: "#cf6e38",
+        });
+      }
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -992,6 +1069,7 @@ export default function VendorSettingsPage() {
         ...current,
         [section.key]: createEmptyDraft(section),
       }));
+      invalidateVendorSettingsCache();
       await loadVendorSettings({ silent: true });
       await Swal.fire({
         icon: "success",
@@ -1044,6 +1122,7 @@ export default function VendorSettingsPage() {
         }),
       );
       cancelEditing();
+      invalidateVendorSettingsCache();
       await loadVendorSettings({ silent: true });
       await Swal.fire({
         icon: "success",
@@ -1090,6 +1169,7 @@ export default function VendorSettingsPage() {
       if (editingState.itemId === item.id) {
         cancelEditing();
       }
+      invalidateVendorSettingsCache();
       await loadVendorSettings({ silent: true });
       await Swal.fire({
         icon: "success",

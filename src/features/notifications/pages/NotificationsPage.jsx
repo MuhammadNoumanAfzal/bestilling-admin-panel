@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
@@ -15,6 +15,80 @@ import NotificationsToolbar from "../components/NotificationsToolbar.jsx";
 import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 const PAGE_SIZE = 10;
+const NOTIFICATION_CACHE_PREFIX = "admin-notifications-v1:";
+const NOTIFICATION_CACHE_TTL_MS = 30 * 1000;
+const notificationPageCache = new Map();
+
+function getNotificationCacheKey({ page, status }) {
+  return `${page}:${status || "ALL"}`;
+}
+
+function readNotificationCache(filters) {
+  const key = getNotificationCacheKey(filters);
+  const now = Date.now();
+  const inMemory = notificationPageCache.get(key);
+
+  if (inMemory?.expiresAt > now) {
+    return inMemory.result;
+  }
+
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const stored = JSON.parse(
+      window.sessionStorage.getItem(`${NOTIFICATION_CACHE_PREFIX}${key}`) || "null",
+    );
+
+    if (stored?.expiresAt > now && stored?.result) {
+      notificationPageCache.set(key, stored);
+      return stored.result;
+    }
+
+    window.sessionStorage.removeItem(`${NOTIFICATION_CACHE_PREFIX}${key}`);
+  } catch {
+    // Continue without a persistent cache when browser storage is unavailable.
+  }
+
+  return null;
+}
+
+function writeNotificationCache(filters, result) {
+  const key = getNotificationCacheKey(filters);
+  const cached = {
+    result,
+    expiresAt: Date.now() + NOTIFICATION_CACHE_TTL_MS,
+  };
+
+  notificationPageCache.set(key, cached);
+
+  try {
+    window.sessionStorage.setItem(`${NOTIFICATION_CACHE_PREFIX}${key}`, JSON.stringify(cached));
+  } catch {
+    // In-memory cache remains available for route-to-route navigation.
+  }
+}
+
+function invalidateNotificationCache() {
+  notificationPageCache.clear();
+
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.sessionStorage.key(index);
+
+      if (key?.startsWith(NOTIFICATION_CACHE_PREFIX)) {
+        window.sessionStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // Storage may be disabled without affecting the live notification feed.
+  }
+}
 
 function buildSummary(pageInfo, visibleCount) {
   return [
@@ -47,21 +121,22 @@ function buildSummary(pageInfo, visibleCount) {
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
+  const initialResultRef = useRef(readNotificationCache({ page: 1, status: null }));
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [audienceFilter, setAudienceFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [rows, setRows] = useState([]);
-  const [pageInfo, setPageInfo] = useState({
+  const [rows, setRows] = useState(initialResultRef.current?.items || []);
+  const [pageInfo, setPageInfo] = useState(initialResultRef.current?.pageInfo || {
     page: 1,
     pageSize: PAGE_SIZE,
     totalItems: 0,
     totalPages: 1,
     unreadCount: 0,
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialResultRef.current);
   const [loadError, setLoadError] = useState("");
 
   const filteredRows = useMemo(() => {
@@ -104,8 +179,21 @@ export default function NotificationsPage() {
     let isMounted = true;
 
     async function loadNotifications() {
-      setIsLoading(true);
-      setLoadError("");
+      const cacheFilters = {
+        page: currentPage,
+        status: statusFilter || null,
+      };
+      const cachedResult = readNotificationCache(cacheFilters);
+
+      if (cachedResult) {
+        setRows(cachedResult.items);
+        setPageInfo(cachedResult.pageInfo);
+        setIsLoading(false);
+        setLoadError("");
+      } else {
+        setIsLoading(true);
+        setLoadError("");
+      }
 
       try {
         const result = await getMyNotificationsRequest({
@@ -121,22 +209,29 @@ export default function NotificationsPage() {
           return;
         }
 
-        setRows(result.items);
-        setPageInfo(result.pageInfo);
+        const nextResult = {
+          items: result.items,
+          pageInfo: result.pageInfo,
+        };
+        writeNotificationCache(cacheFilters, nextResult);
+        setRows(nextResult.items);
+        setPageInfo(nextResult.pageInfo);
       } catch (error) {
         if (!isMounted) {
           return;
         }
 
-        setRows([]);
-        setPageInfo({
-          page: 1,
-          pageSize: PAGE_SIZE,
-          totalItems: 0,
-          totalPages: 1,
-          unreadCount: 0,
-        });
-        setLoadError(error instanceof Error ? error.message : "Unable to load notifications.");
+        if (!cachedResult) {
+          setRows([]);
+          setPageInfo({
+            page: 1,
+            pageSize: PAGE_SIZE,
+            totalItems: 0,
+            totalPages: 1,
+            unreadCount: 0,
+          });
+          setLoadError(error instanceof Error ? error.message : "Unable to load notifications.");
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -149,7 +244,7 @@ export default function NotificationsPage() {
     return () => {
       isMounted = false;
     };
-  }, [audienceFilter, currentPage, searchTerm, statusFilter, typeFilter]);
+  }, [currentPage, statusFilter]);
 
   function handlePageChange(nextPage) {
     const safePage = Math.min(Math.max(nextPage, 1), pageInfo.totalPages || 1);
@@ -175,6 +270,7 @@ export default function NotificationsPage() {
           ...currentInfo,
           unreadCount: Math.max(0, (currentInfo.unreadCount || 0) - 1),
         }));
+        invalidateNotificationCache();
         window.dispatchEvent(new Event("admin-notifications-updated"));
       } catch (error) {
         await Swal.fire({
@@ -222,6 +318,7 @@ export default function NotificationsPage() {
         setSelectedNotification(null);
       }
 
+      invalidateNotificationCache();
       window.dispatchEvent(new Event("admin-notifications-updated"));
 
       await Swal.fire({
@@ -261,6 +358,7 @@ export default function NotificationsPage() {
         ...currentInfo,
         unreadCount: 0,
       }));
+      invalidateNotificationCache();
       window.dispatchEvent(new Event("admin-notifications-updated"));
 
       await Swal.fire({

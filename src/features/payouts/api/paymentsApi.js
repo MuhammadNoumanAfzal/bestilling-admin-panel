@@ -1008,13 +1008,32 @@ export async function getAdminPaymentsRequest(filters) {
       ? response.edges.map((edge) => edge?.node).filter(Boolean)
       : [];
 
-  // The paginated list already contains the amounts and lifecycle needed by the
-  // table. Per-row finance contract calls turned one page into an N+1 request.
+  // Older payment rows may omit their locked commission snapshot. Fetch a
+  // contract only for those rows so the list matches the payment detail.
+  const contractInvoices = await Promise.all(
+    responseItems.map(async (item) => {
+      if ((parseMoneyAmount(item?.platformCommission) || 0) > 0) {
+        return null;
+      }
+
+      try {
+        const contractData = await executeProtectedGraphqlRequest(
+          ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY,
+          { id: item?.id },
+        );
+        return normalizeContractInvoice(contractData?.adminPaymentFinanceContract);
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  const rows = responseItems.map((item, index) =>
+    normalizePaymentRow(item, contractInvoices[index]),
+  );
 
   return {
-    rows: responseItems.map((item) =>
-      normalizePaymentRow(item, null),
-    ),
+    rows,
     pageInfo: {
       page: Number(response.pageInfo?.page ?? filters?.page ?? 1),
       pageSize: Number(response.pageInfo?.pageSize ?? filters?.pageSize ?? 10),
@@ -1028,9 +1047,7 @@ export async function getAdminPaymentsRequest(filters) {
     },
     summaryCards: normalizeSummary(
       response.summary,
-      responseItems.map((item) =>
-        normalizePaymentRow(item, null),
-      ),
+      rows,
     ),
     filterOptions: {
       vendors: Array.isArray(response.filterOptions?.vendors)

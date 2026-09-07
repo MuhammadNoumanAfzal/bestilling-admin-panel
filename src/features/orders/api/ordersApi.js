@@ -116,7 +116,7 @@ function getMoneyNumber(value) {
 }
 
 function normalizeStatus(value) {
-  const normalized = `${value ?? ""}`.trim().toUpperCase();
+  const normalized = `${value ?? ""}`.trim().toUpperCase().replace(/[\s-]+/g, "_");
 
   switch (normalized) {
     case "MODIFIED":
@@ -129,6 +129,11 @@ function normalizeStatus(value) {
       return "Accepted";
     case "PREPARING":
       return "Preparing";
+    case "READY":
+    case "FOOD_READY":
+    case "READY_TO_DELIVER":
+    case "READY_TO_DISPATCH":
+      return "Ready";
     case "OUT_FOR_DELIVERY":
       return "Out for delivery";
     case "DELIVERED":
@@ -217,7 +222,9 @@ function normalizeLifecycleStatusCode(value) {
       return "ACCEPTED";
     case "FOOD_READY":
     case "READY":
-      return "PREPARING";
+    case "READY_TO_DELIVER":
+    case "READY_TO_DISPATCH":
+      return "READY";
     case "IN_TRANSIT":
       return "OUT_FOR_DELIVERY";
     case "COMPLETED":
@@ -238,6 +245,8 @@ function getLifecycleStatusRank(value) {
       return 1;
     case "PREPARING":
       return 2;
+    case "READY":
+      return 2.5;
     case "OUT_FOR_DELIVERY":
       return 3;
     case "DELIVERED":
@@ -309,7 +318,7 @@ function canMarkOrderPaid(order) {
 }
 
 function resolveLifecycleRawStatus(order) {
-  const status = `${order?.status ?? ""}`.trim().toUpperCase();
+  const status = normalizeLifecycleStatusCode(order?.status);
   const fulfillmentStatus = `${order?.fulfillmentStatus ?? ""}`.trim().toUpperCase();
   const deliveryStatus = `${order?.delivery?.status ?? ""}`.trim().toUpperCase();
 
@@ -321,11 +330,16 @@ function resolveLifecycleRawStatus(order) {
     return "DELIVERED";
   }
 
+  // The current order stage takes precedence over a stale delivery subrecord.
+  if (status === "READY") return "READY";
+
   if (order?.outForDeliveryAt || status === "OUT_FOR_DELIVERY" || deliveryStatus === "OUT_FOR_DELIVERY") {
     return "OUT_FOR_DELIVERY";
   }
 
-  if (order?.preparedAt || status === "PREPARING" || status === "READY" || status === "FOOD_READY") {
+  if (normalizeLifecycleStatusCode(fulfillmentStatus) === "READY") return "READY";
+
+  if (order?.preparedAt || status === "PREPARING") {
     return "PREPARING";
   }
 

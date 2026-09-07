@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
 
 const statusClasses = {
+  Ready: "bg-[#edf8f1] text-[#2b9e62]",
   Accepted: "bg-[#fffbeb] text-[#b45309]",
   Modified: "bg-[#fff4ea] text-[#cb6b2f]",
   Preparing: "bg-[#fff7ed] text-[#c2410c]",

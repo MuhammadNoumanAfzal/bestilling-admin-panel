@@ -235,8 +235,11 @@ export default function OrdersPage() {
       setIsLoading(false);
     }
 
-    async function loadOrders() {
-      if (!cachedResponse) {
+    let requestPending = false;
+    async function loadOrders(silent = false) {
+      if (requestPending) return;
+      requestPending = true;
+      if (!cachedResponse && !silent) {
         setIsLoading(true);
       }
       setLoadError("");
@@ -263,6 +266,7 @@ export default function OrdersPage() {
           setLoadError(error instanceof Error ? error.message : "Unable to load orders.");
         }
       } finally {
+        requestPending = false;
         if (isMounted) {
           setIsLoading(false);
         }
@@ -271,8 +275,18 @@ export default function OrdersPage() {
 
     loadOrders();
 
+    const refresh = () => {
+      if (document.visibilityState === "visible") void loadOrders(true);
+    };
+    const refreshTimer = window.setInterval(refresh, 10000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+
     return () => {
       isMounted = false;
+      window.clearInterval(refreshTimer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
     };
   }, [normalizedFilters, orderCacheKey, reloadKey]);
 

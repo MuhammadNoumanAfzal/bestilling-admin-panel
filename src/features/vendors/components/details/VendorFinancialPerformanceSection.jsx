@@ -30,7 +30,7 @@ function RevenueChart({ series }) {
   const averageRevenue = totalRevenue / safeSeries.length;
   const bestPeriod = safeSeries.reduce((best, item) => (item.value > best.value ? item : best));
   const latestPeriod = safeSeries[safeSeries.length - 1];
-  const maxValue = Math.max(...safeSeries.map((item) => item.value), 1);
+  const maxValue = Math.max(...safeSeries.map((item) => item.value), 1) * 1.15;
 
   const insights = [
     { label: "Total sales", value: formatNok(totalRevenue), detail: "Selected range" },
@@ -56,14 +56,19 @@ function RevenueChart({ series }) {
             <div key={index} className="border-b border-dashed border-[#eadfd8] last:border-b-0" />
           ))}
         </div>
-        <div className="relative grid min-w-[420px] grid-cols-[repeat(auto-fit,minmax(52px,1fr))] items-end gap-3 pt-1">
-          {safeSeries.map((item) => (
-            <div key={item.label} className="flex min-w-0 flex-col items-center gap-2">
+        <div
+          className="relative grid items-end gap-3 pt-1"
+          style={{ gridTemplateColumns: `repeat(${safeSeries.length}, minmax(80px, 1fr))`, minWidth: safeSeries.length * 92 - 12 }}
+          role="img"
+          aria-label={`Sales by period: ${safeSeries.map((item) => `${item.label}: ${formatNok(item.value)}`).join(", ")}`}
+        >
+          {safeSeries.map((item, index) => (
+            <div key={`${item.label}-${index}`} className="flex min-w-0 flex-col items-center gap-2">
               <span className="text-[10px] font-bold text-[#6d5f56]">{formatNok(item.value)}</span>
-              <div className="flex h-[176px] w-full items-end rounded-t-[8px] bg-[#f5ebe5] px-1.5" title={`${item.label}: ${formatNok(item.value)}`}>
+              <div className="flex h-[176px] w-full max-w-[64px] items-end" title={`${item.label}: ${formatNok(item.value)}`}>
                 <div
                   className="w-full rounded-t-[6px] bg-[#d46a37] transition-[height] duration-300"
-                  style={{ height: `${Math.max((item.value / maxValue) * 100, item.value > 0 ? 5 : 0)}%` }}
+                  style={{ height: `${Math.max((item.value / maxValue) * 100, 0)}%` }}
                 />
               </div>
               <span className="max-w-full truncate text-[10px] font-semibold text-[#5c5048]">{item.label}</span>
@@ -89,7 +94,7 @@ export default function VendorFinancialPerformanceSection({ financial }) {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,1fr)]">
-        <article className="rounded-[16px] border border-[#d6cbc2] bg-white p-5 shadow-[0_8px_20px_rgba(53,34,20,0.04)]">
+        <article className="min-w-0 rounded-[16px] border border-[#d6cbc2] bg-white p-5 shadow-[0_8px_20px_rgba(53,34,20,0.04)]">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
               <h3 className="text-[20px] font-extrabold tracking-[-0.04em] text-[#18120f]">Sales performance</h3>
@@ -116,19 +121,12 @@ export default function VendorFinancialPerformanceSection({ financial }) {
               </span>
             </div>
 
-            <div className="grid gap-0 border-t border-[#ddd6cf] sm:grid-cols-2">
-              <div className="px-5 py-4 sm:border-r sm:border-[#ddd6cf]">
+            <div className="border-t border-[#ddd6cf]">
+              <div className="px-5 py-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.04em] text-[#8c8077]">Est. Payout</p>
                 <p className="mt-1 flex items-center gap-1.5 text-[13px] font-bold text-[#1f1711]">
                   <CalendarDays size={12} className="text-[#6f645d]" />
                   {financial.estimatedPayout}
-                </p>
-              </div>
-              <div className="px-5 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.04em] text-[#8c8077]">Last Payout</p>
-                <p className="mt-1 flex items-center gap-1.5 text-[13px] font-bold text-[#1f1711]">
-                  <CalendarDays size={12} className="text-[#6f645d]" />
-                  {financial.lastPayout}
                 </p>
               </div>
             </div>

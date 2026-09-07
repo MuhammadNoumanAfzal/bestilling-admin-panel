@@ -66,18 +66,22 @@ function toInitials(name) {
 }
 
 function normalizeOrderStatus(status) {
-  const normalized = `${status ?? ""}`.trim().toUpperCase();
+  const normalized = `${status ?? ""}`.trim().toUpperCase().replace(/[\s-]+/g, "_");
 
   switch (normalized) {
     case "CANCELLED":
     case "CANCELED":
       return "Canceled";
     case "ACCEPTED":
+    case "CONFIRMED":
       return "Accepted";
     case "PREPARING":
+      return "Preparing";
     case "READY":
     case "FOOD_READY":
-      return "Preparing";
+    case "READY_TO_DELIVER":
+    case "READY_TO_DISPATCH":
+      return "Ready";
     case "OUT_FOR_DELIVERY":
     case "IN_TRANSIT":
       return "Out for delivery";
@@ -101,6 +105,19 @@ function isCancelledOrder(order) {
     const normalizedStatus = `${status ?? ""}`.trim().toUpperCase();
     return normalizedStatus === "CANCELLED" || normalizedStatus === "CANCELED";
   }) || Boolean(order?.cancelledAt || order?.canceledAt);
+}
+
+function resolvePaymentOrderStatus(order) {
+  if (isCancelledOrder(order)) return "Canceled";
+  if (order?.deliveredAt || order?.delivery?.deliveredAt) return "Delivered";
+  if (normalizeOrderStatus(order?.status) === "Ready") return "Ready";
+  const stages = ["Awaiting acceptance", "Accepted", "Preparing", "Ready", "Out for delivery", "Delivered"];
+  const statuses = [order?.status, order?.fulfillmentStatus, order?.delivery?.status];
+  if (order?.acceptedAt) statuses.push("ACCEPTED");
+  return statuses.map(normalizeOrderStatus).reduce(
+    (current, candidate) => stages.indexOf(candidate) > stages.indexOf(current) ? candidate : current,
+    stages[0],
+  );
 }
 
 function resolveCustomerPaymentStatusForOrder(status, order) {
@@ -707,16 +724,7 @@ function normalizePaymentRow(item, contractInvoice = null) {
   const orderAmountSource = item?.orderAmount || contractInvoice?.settlement?.grossOrderAmount;
   const commissionSource =
     item?.platformCommission || contractInvoice?.settlement?.commission?.totalCommission;
-  const resolvedOrderStatus = isCancelledOrder(item?.order)
-    ? "Canceled"
-    : item?.order?.delivery?.deliveredAt ||
-    item?.order?.deliveredAt
-      ? "Delivered"
-      : normalizeOrderStatus(
-          item?.order?.delivery?.status ||
-          item?.order?.fulfillmentStatus ||
-          item?.order?.status,
-        );
+  const resolvedOrderStatus = resolvePaymentOrderStatus(item?.order);
 
   return {
     id: item?.id || "",
@@ -778,16 +786,7 @@ function normalizePaymentDetail(payment, contractInvoice = null) {
     rawPayment.vendor?.name ||
     contractInvoice?.vendorName ||
     "Unknown vendor";
-  const orderStatus = isCancelledOrder(rawPayment.order)
-    ? "Canceled"
-    : rawPayment.order?.delivery?.deliveredAt ||
-    rawPayment.order?.deliveredAt
-      ? "Delivered"
-      : normalizeOrderStatus(
-          rawPayment.order?.delivery?.status ||
-          rawPayment.order?.fulfillmentStatus ||
-          rawPayment.order?.status,
-        );
+  const orderStatus = resolvePaymentOrderStatus(rawPayment.order);
   const customerPaymentStatus = resolveCustomerPaymentStatusForOrder(
     contractInvoice?.paymentStatus || deriveCustomerPaymentStatusFromDetail(rawPayment),
     rawPayment.order,

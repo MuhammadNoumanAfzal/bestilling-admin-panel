@@ -134,7 +134,9 @@ export default function VendorPayoutProfileSection({
           <div>
             <p className="text-[15px] font-bold text-[#211915]">Verification actions</p>
             <p className="mt-1 text-[13px] leading-6 text-[#665850]">
-              Request corrections if anything does not match the vendor account or company records.
+              {payoutProfile.bankDetailsVerified
+                ? "Bank details are verified and ready for payout release."
+                : "Request corrections if anything does not match the vendor account or company records."}
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -144,13 +146,13 @@ export default function VendorPayoutProfileSection({
               label={payoutProfile.bankDetailsVerified ? "Already verified" : isApproving ? "Approving..." : "Approve bank details"}
               onClick={onApprove}
             />
-            <ActionButton
+            {!payoutProfile.bankDetailsVerified && <ActionButton
               disabled={isApproving || isRequestingChanges}
               icon={MessageSquareWarning}
               label={isRequestingChanges ? "Sending..." : "Request changes"}
               onClick={onRequestChanges}
               secondary
-            />
+            />}
           </div>
         </div>
 

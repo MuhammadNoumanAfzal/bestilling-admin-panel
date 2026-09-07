@@ -202,8 +202,11 @@ export default function PayoutsPage() {
       setIsLoading(false);
     }
 
-    async function loadPaymentsPage() {
-      if (!cachedResponse) {
+    let requestPending = false;
+    async function loadPaymentsPage(silent = false) {
+      if (requestPending) return;
+      requestPending = true;
+      if (!cachedResponse && !silent) {
         setIsLoading(true);
       }
       setLoadError("");
@@ -233,6 +236,7 @@ export default function PayoutsPage() {
           setLoadError(error instanceof Error ? error.message : "Unable to load payments.");
         }
       } finally {
+        requestPending = false;
         if (isMounted) {
           setIsLoading(false);
         }
@@ -241,8 +245,18 @@ export default function PayoutsPage() {
 
     loadPaymentsPage();
 
+    const refresh = () => {
+      if (document.visibilityState === "visible") void loadPaymentsPage(true);
+    };
+    const refreshTimer = window.setInterval(refresh, 10000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+
     return () => {
       isMounted = false;
+      window.clearInterval(refreshTimer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
     };
   }, [normalizedFilters, paymentCacheKey, reloadKey]);
 

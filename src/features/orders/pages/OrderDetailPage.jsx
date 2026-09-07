@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { hasDetailValue } from "../components/details/hasDetailValue.js";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
@@ -292,7 +293,7 @@ export default function OrderDetailPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 [&_button:enabled]:cursor-pointer [&_button:disabled]:cursor-not-allowed [&_a[href]]:cursor-pointer">
       <section className="space-y-3">
         <button
           className="inline-flex items-center gap-1 text-[13px] font-bold text-[#cf6e38] transition hover:underline"
@@ -384,70 +385,21 @@ export default function OrderDetailPage() {
           </header>
 
           <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 xl:grid-cols-3">
-            <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
-                Transaction ID
-              </span>
-              <span className="block text-[13px] font-semibold text-[#18120f]">
-                {order.payment.transactionId}
-              </span>
-            </div>
-            <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
-                Provider
-              </span>
-              <span className="block text-[13px] font-semibold text-[#18120f]">
-                {order.payment.provider}
-              </span>
-            </div>
-            <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
-                Provider Reference
-              </span>
-              <span className="block text-[13px] font-semibold text-[#18120f]">
-                {order.payment.providerReference}
-              </span>
-            </div>
-            <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
-                Delivery Type
-              </span>
-              <span className="block text-[13px] font-semibold text-[#18120f]">
-                {order.delivery.type}
-              </span>
-            </div>
-            <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
-                Delivery Status
-              </span>
-              <span className="block text-[13px] font-semibold text-[#18120f]">
-                {order.delivery.status}
-              </span>
-            </div>
-            <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
-                Scheduled Delivery
-              </span>
-              <span className="block text-[13px] font-semibold text-[#18120f]">
-                {order.delivery.scheduledAt}
-              </span>
-            </div>
-            <div>
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
-                Delivered At
-              </span>
-              <span className="block text-[13px] font-semibold text-[#18120f]">
-                {order.delivery.deliveredAt}
-              </span>
-            </div>
-            <div className="sm:col-span-2">
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
-                Delivery Address
-              </span>
-              <span className="block text-[13px] font-semibold leading-6 text-[#18120f]">
-                {order.delivery.address}
-              </span>
-            </div>
+            {[
+              ["Transaction ID", order.payment.transactionId],
+              ["Provider", order.payment.provider],
+              ["Provider Reference", order.payment.providerReference],
+              ["Delivery Type", order.delivery.type],
+              ["Delivery Status", order.delivery.status],
+              ["Scheduled Delivery", order.delivery.scheduledAt],
+              ["Delivered At", order.delivery.deliveredAt],
+              ["Delivery Address", order.delivery.address],
+            ].filter(([, value]) => hasDetailValue(value)).map(([label, value]) => (
+              <div key={label} className={label === "Delivery Address" ? "sm:col-span-2" : ""}>
+                <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">{label}</span>
+                <span className="block break-words text-[13px] font-semibold leading-6 text-[#18120f]">{value}</span>
+              </div>
+            ))}
           </div>
         </article>
       </section>

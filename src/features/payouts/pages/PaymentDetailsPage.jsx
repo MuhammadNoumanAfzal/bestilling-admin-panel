@@ -21,6 +21,7 @@ import PaymentFinanceContractCard from "../components/details/PaymentFinanceCont
 import PaymentLifecycleCard from "../components/details/PaymentLifecycleCard.jsx";
 import PaymentStatusCards from "../components/details/PaymentStatusCards.jsx";
 import VendorBankDetailsCard from "../components/details/VendorBankDetailsCard.jsx";
+import { showPaymentConfirmation } from "../components/details/paymentConfirmation.js";
 
 function HeaderBadge({ label, value }) {
   return (
@@ -141,30 +142,7 @@ export default function PaymentDetailsPage() {
       return;
     }
 
-    const prompt = await Swal.fire({
-      title: "Confirm customer payment",
-      html: `
-        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
-          <div>
-            <label for="payment-reference" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Reference</label>
-            <input id="payment-reference" class="swal2-input" placeholder="Bank transfer reference or cash receipt number" style="margin:0;width:100%;" />
-          </div>
-          <div>
-            <label for="payment-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Internal note</label>
-            <textarea id="payment-note" class="swal2-textarea" placeholder="Optional admin note" style="margin:0;width:100%;min-height:110px;"></textarea>
-          </div>
-        </div>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: "Mark as received",
-      confirmButtonColor: "#cf6e38",
-      cancelButtonColor: "#c8b9aa",
-      preConfirm: () => ({
-        reference: document.getElementById("payment-reference")?.value?.trim() || "",
-        note: document.getElementById("payment-note")?.value?.trim() || "",
-      }),
-    });
+    const prompt = await showPaymentConfirmation();
 
     if (!prompt.isConfirmed) {
       return;
@@ -194,43 +172,16 @@ export default function PaymentDetailsPage() {
 
   async function handleMarkPaid() {
     if (
-      !paymentDetail?.payoutId ||
+      !paymentDetail?.vendor?.payoutProfile?.bankDetailsVerified ||
+      paymentDetail?.statuses.customerPaymentStatus !== "Paid" ||
+      isUpdatingVendorPayout ||
       paymentDetail.order?.status === "Canceled" ||
       paymentDetail.statuses.vendorPayoutStatus === "Paid"
     ) {
       return;
     }
 
-    const paymentDate = new Date().toISOString().slice(0, 10);
-    const prompt = await Swal.fire({
-      title: "Confirm vendor payout",
-      html: `
-        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
-          <div>
-            <label for="payout-reference" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Payout reference</label>
-            <input id="payout-reference" class="swal2-input" placeholder="Outbound bank transfer reference" style="margin:0;width:100%;" />
-          </div>
-          <div>
-            <label for="payout-payment-date" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Transfer date</label>
-            <input id="payout-payment-date" type="date" class="swal2-input" value="${paymentDate}" style="margin:0;width:100%;" />
-          </div>
-          <div>
-            <label for="payout-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Internal note</label>
-            <textarea id="payout-note" class="swal2-textarea" placeholder="Optional admin note" style="margin:0;width:100%;min-height:110px;"></textarea>
-          </div>
-        </div>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: "Mark payout paid",
-      confirmButtonColor: "#cf6e38",
-      cancelButtonColor: "#c8b9aa",
-      preConfirm: () => ({
-        reference: document.getElementById("payout-reference")?.value?.trim() || "",
-        paymentDate: document.getElementById("payout-payment-date")?.value || paymentDate,
-        note: document.getElementById("payout-note")?.value?.trim() || "",
-      }),
-    });
+    const prompt = await showPaymentConfirmation({ vendor: true });
 
     if (!prompt.isConfirmed) {
       return;
@@ -238,7 +189,18 @@ export default function PaymentDetailsPage() {
 
     try {
       setIsUpdatingVendorPayout(true);
-      const result = await markVendorPayoutPaidRequest(paymentDetail.payoutId, prompt.value || {});
+      let latest = await refreshPaymentDetail();
+      if (latest.statuses.vendorPayoutStatus === "Paid") return;
+      if (latest.order?.status === "Canceled" || latest.statuses.customerPaymentStatus !== "Paid" || !latest.vendor?.payoutProfile?.bankDetailsVerified) {
+        throw new Error("Customer payment must be received and bank details verified before recording a vendor payout.");
+      }
+      if (latest.statuses.vendorPayoutStatus !== "Released") {
+        if (!latest.settlementId || !latest.vendor?.id) throw new Error("The settlement is not ready for payout yet.");
+        await releaseVendorPayoutRequest({ vendorId: latest.vendor.id, settlementIds: [latest.settlementId] }, { note: prompt.value?.note || "Released while recording completed vendor transfer." });
+        latest = await refreshPaymentDetail();
+      }
+      if (!latest.payoutId) throw new Error("The payout record is not available yet. Refresh and retry.");
+      const result = await markVendorPayoutPaidRequest(latest.payoutId, prompt.value || {});
       if (result.status !== "Paid") {
         throw new Error(
           "The payout remains released. The payment API must persist the payout as PAID before it can be confirmed.",
@@ -259,6 +221,7 @@ export default function PaymentDetailsPage() {
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
+      await refreshPaymentDetail().catch(() => {});
       await Swal.fire({
         icon: "error",
         title: "Unable to mark vendor payout paid",
@@ -575,7 +538,7 @@ export default function PaymentDetailsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 [&_button:enabled]:cursor-pointer [&_button:disabled]:cursor-not-allowed [&_a[href]]:cursor-pointer">
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
           {loadError}
@@ -648,16 +611,6 @@ export default function PaymentDetailsPage() {
         <PaymentDetailsOverviewCard label="Customer Payment Status" value={paymentDetail.statuses.customerPaymentStatus} />
       </section>
 
-      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.08fr)_360px]">
-        <div className="space-y-4">
-          <PaymentDetailsInfoCard payout={paymentDetail} />
-          <PaymentLifecycleCard payout={paymentDetail} />
-          <VendorBankDetailsCard
-            isApproving={isVerifyingBankProfile}
-            onApprove={handleVerifyBankProfile}
-            payout={paymentDetail}
-          />
-          <PaymentFinanceContractCard payout={paymentDetail} />
           <PaymentStatusCards
             isApprovingInvoice={isApprovingInvoice}
             isVerifyingBankProfile={isVerifyingBankProfile}
@@ -675,6 +628,18 @@ export default function PaymentDetailsPage() {
             onReleasePayout={handleReleasePayout}
             payout={paymentDetail}
           />
+
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.08fr)_360px]">
+        <div className="space-y-4">
+          <PaymentDetailsInfoCard payout={paymentDetail} />
+          <PaymentLifecycleCard payout={paymentDetail} />
+          <VendorBankDetailsCard
+            isApproving={isVerifyingBankProfile}
+            onApprove={handleVerifyBankProfile}
+            payout={paymentDetail}
+          />
+          <PaymentFinanceContractCard payout={paymentDetail} />
+
         </div>
 
         <div className="xl:sticky xl:top-6">

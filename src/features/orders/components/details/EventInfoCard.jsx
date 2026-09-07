@@ -1,4 +1,5 @@
 import { CalendarRange } from "lucide-react";
+import { hasDetailValue } from "./hasDetailValue.js";
 
 export default function EventInfoCard({ order }) {
   const details = [
@@ -24,7 +25,7 @@ export default function EventInfoCard({ order }) {
       </header>
 
       <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
-        {details.map((item) => (
+        {details.filter((item) => hasDetailValue(item.value)).map((item) => (
           <div
             key={item.label}
             className={[

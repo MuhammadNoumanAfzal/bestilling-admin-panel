@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { loadCompleteList, paginateFilteredRows } from "../../shared/completeList.js";
+import { useOutletContext, useSearchParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { Users, Wifi, Clock, AlertTriangle, CircleAlert, DollarSign } from "lucide-react";
 import StatCard from "../../dashboard/components/StatCard.jsx";
@@ -28,7 +29,7 @@ const iconMap = {
   revenue: DollarSign,
 };
 
-const ALL_DATES_FILTER = "All Dates";
+const DEFAULT_DATE_FILTER = "Last 7 days";
 
 function matchesTab(row, tab) {
   if (tab === "All" || tab === "Top Performing") {
@@ -169,13 +170,14 @@ function clearVendorCache() {
 }
 
 export default function VendorsPage() {
+  const { setPageHeaderAction } = useOutletContext();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "All");
   const [currentPage, setCurrentPage] = useState(1);
-  const [timeframe, setTimeframe] = useState(ALL_DATES_FILTER);
+  const [timeframe, setTimeframe] = useState(DEFAULT_DATE_FILTER);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [stats, setStats] = useState([]);
@@ -204,7 +206,7 @@ export default function VendorsPage() {
   }, [searchTerm]);
 
   const dateRange = useMemo(
-    () => (timeframe === ALL_DATES_FILTER ? null : getDateRangeForFilter(timeframe, customStart, customEnd)),
+    () => getDateRangeForFilter(timeframe, customStart, customEnd),
     [customEnd, customStart, timeframe],
   );
 
@@ -240,15 +242,7 @@ export default function VendorsPage() {
 
     return {
       ...response,
-      rows: visibleRows,
-      pageInfo: {
-        ...response.pageInfo,
-        page: 1,
-        totalItems: visibleRows.length,
-        totalPages: 1,
-        hasNextPage: false,
-        hasPreviousPage: false,
-      },
+      ...paginateFilteredRows(visibleRows, currentPage, PAGE_SIZE),
     };
   }
 
@@ -273,12 +267,13 @@ export default function VendorsPage() {
 
     async function loadVendors() {
       if (!cachedResponse) {
+        setRows([]);
         setIsLoading(true);
       }
       setLoadError("");
 
       try {
-        const response = await getAdminVendorsRequest(normalizedFilters);
+        const response = await loadCompleteList(getAdminVendorsRequest, normalizedFilters);
 
         if (!isMounted) {
           return;
@@ -319,6 +314,11 @@ export default function VendorsPage() {
     setRows(filteredResponse.rows);
     setPageInfo(filteredResponse.pageInfo);
   }, [activeTab, cityFilter, dateRange, ratingFilter, searchTerm, vendorCacheKey]);
+
+  function handleTimeframeChange(value) {
+    setTimeframe(value);
+    setCurrentPage(1);
+  }
 
   function handleCustomDateChange(start, end) {
     setCustomStart(start);
@@ -372,7 +372,7 @@ export default function VendorsPage() {
       nextParams.delete("tab");
       return nextParams;
     });
-    setTimeframe(ALL_DATES_FILTER);
+    setTimeframe(DEFAULT_DATE_FILTER);
     setCustomStart("");
     setCustomEnd("");
     setCurrentPage(1);
@@ -437,8 +437,18 @@ export default function VendorsPage() {
     }
   }
 
+  useEffect(() => {
+    setPageHeaderAction(
+      <DateFilterDropdown selectedFilter={timeframe} onChangeFilter={handleTimeframeChange} startDate={customStart} endDate={customEnd} onCustomDateChange={handleCustomDateChange} clearFilterValue={DEFAULT_DATE_FILTER} />,
+    );
+    return () => setPageHeaderAction(null);
+  }, [customEnd, customStart, setPageHeaderAction, timeframe]);
+
   return (
     <div className="space-y-6">
+      <section className="flex justify-end lg:hidden">
+        <DateFilterDropdown selectedFilter={timeframe} onChangeFilter={handleTimeframeChange} startDate={customStart} endDate={customEnd} onCustomDateChange={handleCustomDateChange} clearFilterValue={DEFAULT_DATE_FILTER} />
+      </section>
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
           {loadError}
@@ -465,11 +475,6 @@ export default function VendorsPage() {
           onCityFilterChange={(value) => { setCityFilter(value); setCurrentPage(1); }}
           ratingFilter={ratingFilter}
           onRatingFilterChange={(value) => { setRatingFilter(value); setCurrentPage(1); }}
-          timeframeFilter={timeframe}
-          onTimeframeFilterChange={(value) => { setTimeframe(value); setCurrentPage(1); }}
-          customStart={customStart}
-          customEnd={customEnd}
-          onCustomDateChange={handleCustomDateChange}
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onResetFilters={handleResetFilters}

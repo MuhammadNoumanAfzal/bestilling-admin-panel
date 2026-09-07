@@ -130,39 +130,14 @@ export default function PaymentStatusCards({
     : isPendingCustomerPayment
       ? onMarkReceived
       : onMarkInvoicePaid;
-  const vendorPrimaryLabel = isOrderCanceled
-    ? "Order Canceled"
-    : !isBankProfileVerified
-      ? isVerifyingBankProfile
-        ? "Verifying bank details..."
-        : "Verify Bank Details"
-      : payoutStatus === "Paid"
-      ? "Already Paid"
-      : payoutStatus === "Released"
-        ? isUpdatingVendorPayout
-          ? "Updating..."
-          : "Mark as Paid"
-        : isReleasingVendorPayout
-          ? "Releasing..."
-          : "Release Payout";
-  const vendorPrimaryAction =
-    isOrderCanceled
-      ? undefined
-      : !isBankProfileVerified
-      ? onVerifyBankProfile
-      : payoutStatus === "Released" || payoutStatus === "Paid"
-        ? onMarkPaid
-        : onReleasePayout;
-  const vendorPrimaryDisabled =
-    isOrderCanceled
-      ? true
-      : !isBankProfileVerified
-      ? isVerifyingBankProfile || typeof onVerifyBankProfile !== "function"
-      : payoutStatus === "Paid"
-      ? true
-      : payoutStatus === "Released"
-        ? isUpdatingVendorPayout
-        : isReleasingVendorPayout || !isPaid;
+  const vendorPrimaryLabel = isOrderCanceled ? "Order Canceled"
+    : payoutStatus === "Paid" ? "Already Paid"
+    : !isBankProfileVerified ? (isVerifyingBankProfile ? "Verifying..." : "Verify Bank Details")
+    : isUpdatingVendorPayout ? "Recording payment..." : "Mark vendor paid";
+  const vendorPrimaryAction = !isBankProfileVerified ? onVerifyBankProfile : onMarkPaid;
+  const vendorPrimaryDisabled = isOrderCanceled || payoutStatus === "Paid" ||
+    isUpdatingVendorPayout || isVerifyingBankProfile || isReleasingVendorPayout ||
+    (isBankProfileVerified && (!isPaid || (!payout.payoutId && !payout.settlementId)));
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -213,7 +188,7 @@ export default function PaymentStatusCards({
             ? "Verify the vendor bank profile before releasing this payout."
             : payoutStatus === "Released"
             ? "The payout is already released. Use this to confirm the outbound transfer is completed."
-            : "Release the vendor payout after customer payment is approved, then mark it paid once the transfer is sent."
+            : "Once customer payment is received, record the completed bank transfer with Mark vendor paid."
         }
         details={[
           { label: "Vendor", value: payout.vendor.name },

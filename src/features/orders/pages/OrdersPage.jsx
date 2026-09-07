@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { loadCompleteList, paginateFilteredRows } from "../../shared/completeList.js";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   ShoppingBag,
   CircleDollarSign,
   Clock3,
-  AlertCircle,
   CheckCircle2,
 } from "lucide-react";
 
@@ -35,7 +35,6 @@ const iconMap = {
   total: ShoppingBag,
   paid: CircleDollarSign,
   pending: Clock3,
-  review: AlertCircle,
   delivered: CheckCircle2,
   revenue: CircleDollarSign,
 };
@@ -206,8 +205,7 @@ export default function OrdersPage() {
 
     return {
       ...response,
-      rows: filteredRows,
-      pageInfo: response.pageInfo,
+      ...paginateFilteredRows(filteredRows, currentPage, PAGE_SIZE),
     };
   }
 
@@ -233,12 +231,13 @@ export default function OrdersPage() {
       if (requestPending) return;
       requestPending = true;
       if (!cachedResponse && !silent) {
+        setRows([]);
         setIsLoading(true);
       }
       setLoadError("");
 
       try {
-        const ordersResponse = await getAdminOrdersRequest(normalizedFilters);
+        const ordersResponse = await loadCompleteList(getAdminOrdersRequest, normalizedFilters);
 
         if (!isMounted) {
           return;
@@ -588,8 +587,8 @@ export default function OrdersPage() {
         </div>
       ) : null}
 
-      <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
-        {summaryCards.map((stat) => (
+      <section className="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-5">
+        {summaryCards.filter((stat) => stat.id !== "review").map((stat) => (
           <StatCard
             key={stat.id}
             title={stat.title}

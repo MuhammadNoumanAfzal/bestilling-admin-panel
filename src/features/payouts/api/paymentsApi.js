@@ -445,6 +445,18 @@ function normalizeSummary(summary, rows = []) {
   ];
 }
 
+export function summarizePaymentRows(rows) {
+  const sum = (items, key) => items.reduce((total, row) => total + (parseMoneyAmount(row[key]) || 0), 0);
+  const money = (amount) => ({ amount, currency: "NOK", formatted: formatComputedMoney(amount, "NOK") });
+  const payable = rows.filter((row) => row.orderStatus !== "Canceled" && row.vendorPayoutStatus !== "Canceled");
+  return normalizeSummary({
+    totalRevenue: money(sum(rows, "orderAmount")),
+    platformCommission: money(sum(rows, "platformCommission")),
+    pendingPayouts: money(sum(payable.filter((row) => ["Pending", "Released"].includes(row.vendorPayoutStatus)), "vendorAmount")),
+    completedPayouts: money(sum(rows.filter((row) => row.vendorPayoutStatus === "Paid"), "vendorAmount")),
+  }, rows);
+}
+
 function deriveCustomerPaymentStatus(item) {
   if (item?.lifecycle?.paymentReceivedAt || item?.paidAt) {
     return "Paid";

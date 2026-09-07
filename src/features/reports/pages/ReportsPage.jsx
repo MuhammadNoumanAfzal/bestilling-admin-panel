@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { getAdminReportsSnapshotRequest } from "../api/reportsApi.js";
-import CategoryPerformanceCard from "../components/CategoryPerformanceCard.jsx";
 import CustomerAnalyticsCard from "../components/CustomerAnalyticsCard.jsx";
-import OperationalHealthCard from "../components/OperationalHealthCard.jsx";
 import OrderAnalyticsCard from "../components/OrderAnalyticsCard.jsx";
 import ReportsHeader from "../components/ReportsHeader.jsx";
 import ReportsStatCard from "../components/ReportsStatCard.jsx";
@@ -446,10 +444,6 @@ export default function ReportsPage() {
             />
           </section>
 
-          <section className="grid items-start gap-3 2xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
-            <CategoryPerformanceCard categories={reportSnapshot.categoryPerformance} />
-            <OperationalHealthCard items={reportSnapshot.operationalHealth} />
-          </section>
         </>
       )}
     </div>

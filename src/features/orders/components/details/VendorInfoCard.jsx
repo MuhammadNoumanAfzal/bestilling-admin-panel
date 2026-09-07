@@ -1,3 +1,4 @@
+import { hasDetailValue } from "./hasDetailValue.js";
 import { ArrowUpRight, Store, Star } from "lucide-react";
 
 function displayValue(value, fallback = "Not available") {
@@ -49,20 +50,25 @@ export default function VendorInfoCard({ vendor, onViewProfile }) {
               Vendor
             </span>
           </div>
-          <p className="truncate text-[12px] text-[#5a4d46]">{displayValue(vendor.email)}</p>
-          <p className="text-[12px] text-[#5a4d46]">{displayValue(vendor.phone)}</p>
+          {hasDetailValue(vendor.email) && <p className="truncate text-[12px] text-[#5a4d46]">{vendor.email}</p>}
+          {hasDetailValue(vendor.phone) && <p className="text-[12px] text-[#5a4d46]">{vendor.phone}</p>}
         </div>
       </div>
 
       <div className="space-y-3 border-t border-[#f1e9e2] pt-4">
+        {hasDetailValue(vendor.city) && (
         <div className="flex items-center justify-between text-[13px]">
           <span className="font-semibold text-[#8c8077]">City</span>
           <span className="font-bold text-[#18120f]">{displayValue(vendor.city)}</span>
         </div>
+        )}
+        {hasDetailValue(vendor.totalOrders) && (
         <div className="flex items-center justify-between text-[13px]">
           <span className="font-semibold text-[#8c8077]">Total Orders</span>
           <span className="font-bold text-[#18120f]">{displayValue(vendor.totalOrders)}</span>
         </div>
+        )}
+        {typeof vendor.rating === "number" && (
         <div className="flex items-center justify-between text-[13px]">
           <span className="font-semibold text-[#8c8077]">Rating</span>
           {typeof vendor.rating === "number" ? (
@@ -74,10 +80,13 @@ export default function VendorInfoCard({ vendor, onViewProfile }) {
             <span className="font-bold text-[#18120f]">Not available</span>
           )}
         </div>
+        )}
+        {hasDetailValue(vendor.address) && (
         <div className="space-y-1 text-[13px]">
           <span className="block font-semibold text-[#8c8077]">Address</span>
           <span className="block leading-6 text-[#18120f]">{displayValue(vendor.address, "Not provided")}</span>
         </div>
+        )}
       </div>
     </article>
   );

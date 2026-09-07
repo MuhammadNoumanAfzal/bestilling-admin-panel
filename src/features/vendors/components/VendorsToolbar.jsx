@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, ChevronDown, Star, MapPin } from "lucide-react";
-import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 
 export default function VendorsToolbar({
   searchTerm,
@@ -9,11 +8,6 @@ export default function VendorsToolbar({
   onCityFilterChange,
   ratingFilter,
   onRatingFilterChange,
-  timeframeFilter,
-  onTimeframeFilterChange,
-  customStart,
-  customEnd,
-  onCustomDateChange,
   activeTab,
   onTabChange,
   onResetFilters,
@@ -135,14 +129,6 @@ export default function VendorsToolbar({
             )}
           </div>
 
-          <DateFilterDropdown
-            clearFilterValue="All Dates"
-            endDate={customEnd}
-            onChangeFilter={onTimeframeFilterChange}
-            onCustomDateChange={onCustomDateChange}
-            selectedFilter={timeframeFilter}
-            startDate={customStart}
-          />
 
           <button
             className="inline-flex h-9 items-center justify-center rounded-[8px] border border-[#ead7ca] bg-[#fff8f4] px-3 text-[12px] font-semibold text-[#cf6e38] transition hover:bg-[#fff1e8]"

@@ -25,7 +25,7 @@ import VendorReviewsSection from "../components/details/VendorReviewsSection.jsx
 
 function LoadingState() {
   return (
-    <div className="mx-auto max-w-6xl space-y-5 px-0 sm:space-y-6">
+    <div className="[&_button:enabled]:cursor-pointer [&_button:disabled]:cursor-not-allowed [&_a[href]]:cursor-pointer mx-auto max-w-6xl space-y-5 px-0 sm:space-y-6">
       <div className="h-44 animate-pulse rounded-[18px] border border-[#ddd6cf] bg-white" />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         {Array.from({ length: 6 }).map((_, index) => (
@@ -489,7 +489,7 @@ export default function VendorDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 px-0 sm:space-y-6">
+    <div className="[&_button:enabled]:cursor-pointer [&_button:disabled]:cursor-not-allowed [&_a[href]]:cursor-pointer mx-auto max-w-6xl space-y-5 px-0 sm:space-y-6">
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
           {loadError}

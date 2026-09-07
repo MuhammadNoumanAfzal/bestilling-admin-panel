@@ -10,7 +10,7 @@ import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 const PAGE_SIZE = 10;
-const ALL_DATES_FILTER = "All Dates";
+const DEFAULT_DATE_FILTER = "Last 7 days";
 const CUSTOMER_CACHE_TTL_MS = 60_000;
 const customerListCache = new Map();
 
@@ -110,7 +110,7 @@ export default function CustomersPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [timeframe, setTimeframe] = useState(ALL_DATES_FILTER);
+  const [timeframe, setTimeframe] = useState(DEFAULT_DATE_FILTER);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [summaryCards, setSummaryCards] = useState([]);
@@ -138,7 +138,7 @@ export default function CustomersPage() {
   }, [searchTerm]);
 
   const dateRange = useMemo(
-    () => (timeframe === ALL_DATES_FILTER ? null : getDateRangeForFilter(timeframe, customStart, customEnd)),
+    () => getDateRangeForFilter(timeframe, customStart, customEnd),
     [customEnd, customStart, timeframe],
   );
 
@@ -262,7 +262,7 @@ export default function CustomersPage() {
     setSearchTerm("");
     setStatusFilter("");
     setCityFilter("");
-    setTimeframe(ALL_DATES_FILTER);
+    setTimeframe(DEFAULT_DATE_FILTER);
     setCustomStart("");
     setCustomEnd("");
     setCurrentPage(1);
@@ -376,7 +376,7 @@ export default function CustomersPage() {
   }
 
   useEffect(() => {
-    setPageHeaderAction(<DateFilterDropdown selectedFilter={timeframe} onChangeFilter={handleTimeframeChange} startDate={customStart} endDate={customEnd} onCustomDateChange={handleCustomDateChange} clearFilterValue={ALL_DATES_FILTER} />);
+    setPageHeaderAction(<DateFilterDropdown selectedFilter={timeframe} onChangeFilter={handleTimeframeChange} startDate={customStart} endDate={customEnd} onCustomDateChange={handleCustomDateChange} clearFilterValue={DEFAULT_DATE_FILTER} />);
     return () => setPageHeaderAction(null);
   }, [customEnd, customStart, setPageHeaderAction, timeframe]);
 
@@ -389,7 +389,7 @@ export default function CustomersPage() {
           startDate={customStart}
           endDate={customEnd}
           onCustomDateChange={handleCustomDateChange}
-          clearFilterValue={ALL_DATES_FILTER}
+          clearFilterValue={DEFAULT_DATE_FILTER}
         />
       </section>
 

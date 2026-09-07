@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { loadCompleteList, paginateFilteredRows } from "../../shared/completeList.js";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
@@ -9,6 +10,7 @@ import {
   applyCommissionDisplayFallbackToPaymentList,
   getAdminPaymentDetailRequest,
   getAdminPaymentsRequest,
+  summarizePaymentRows,
   markCustomerPaymentReceivedRequest,
   markVendorPayoutPaidRequest,
 } from "../api/paymentsApi.js";
@@ -65,7 +67,8 @@ function filterPaymentRows(rows, { search, status, vendorId, dateRange }) {
         row.vendorPayoutStatus,
       ].includes("Canceled");
 
-      if (expectedStatus === "Canceled" ? !isCanceled : row.customerPaymentStatus !== expectedStatus) {
+      const actualStatus = expectedStatus === "Released" ? row.vendorPayoutStatus : row.customerPaymentStatus;
+      if (expectedStatus === "Canceled" ? !isCanceled : actualStatus !== expectedStatus) {
         return false;
       }
     }
@@ -106,18 +109,8 @@ export default function PayoutsPage() {
   const [timeframe, setTimeframe] = useState("Last 7 days");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
-  const [summaryCards, setSummaryCards] = useState([]);
-  const [rows, setRows] = useState([]);
   const [paymentResult, setPaymentResult] = useState(null);
   const [commissionSettings, setCommissionSettings] = useState(null);
-  const [pageInfo, setPageInfo] = useState({
-    page: 1,
-    pageSize: PAGE_SIZE,
-    totalItems: 0,
-    totalPages: 1,
-    hasNextPage: false,
-    hasPreviousPage: false,
-  });
   const [filterOptions, setFilterOptions] = useState({
     statuses: STATIC_STATUS_OPTIONS,
     vendors: [],
@@ -132,59 +125,34 @@ export default function PayoutsPage() {
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [activeActionKey, setActiveActionKey] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setDebouncedSearchTerm(searchTerm), 250);
-    return () => window.clearTimeout(timeoutId);
-  }, [searchTerm]);
-
   const dateRange = useMemo(
     () => getDateRangeForFilter(timeframe, customStart, customEnd),
     [customEnd, customStart, timeframe],
   );
 
-  const normalizedFilters = useMemo(
-    () => ({
-      search: debouncedSearchTerm,
-      status: statusFilter === "all" ? "ALL" : statusFilter,
-      vendorId: vendorFilter === "all" ? null : vendorFilter,
-      dateFrom: dateRange?.start || null,
-      dateTo: dateRange?.end || null,
-      page: currentPage,
-      pageSize: PAGE_SIZE,
-      sortBy: "CREATED_AT",
-      sortOrder: "DESC",
-    }),
-    [currentPage, dateRange, debouncedSearchTerm, statusFilter, vendorFilter],
-  );
-  const paymentCacheKey = useMemo(() => JSON.stringify(normalizedFilters), [normalizedFilters]);
+  const normalizedFilters = useMemo(() => ({
+    status: "ALL", page: 1, pageSize: 100,
+    sortBy: "CREATED_AT", sortOrder: "DESC",
+  }), []);
+  const paymentCacheKey = "payments-complete-v2";
 
-  function applyActiveFilters(result) {
-    const filteredRows = filterPaymentRows(result.rows, {
-      search: searchTerm,
-      status: statusFilter,
-      vendorId: vendorFilter,
-      dateRange,
+  const filteredRows = useMemo(() => {
+    const displayResult = applyCommissionDisplayFallbackToPaymentList(
+      paymentResult || { rows: [], summaryCards: [] }, commissionSettings,
+    );
+    return filterPaymentRows(displayResult.rows, {
+      search: searchTerm, status: statusFilter, vendorId: vendorFilter, dateRange,
     });
-
-    return {
-      ...result,
-      rows: filteredRows,
-      pageInfo: result.pageInfo,
-    };
-  }
+  }, [paymentResult, commissionSettings, searchTerm, statusFilter, vendorFilter, dateRange]);
+  const { rows, pageInfo } = paginateFilteredRows(filteredRows, currentPage, PAGE_SIZE);
+  const summaryCards = summarizePaymentRows(filteredRows);
 
   useEffect(() => {
     let isMounted = true;
     const cachedResponse = readPaymentCache(paymentCacheKey);
 
     if (cachedResponse) {
-      const filteredResponse = applyActiveFilters(cachedResponse);
-      setRows(filteredResponse.rows);
-      setSummaryCards(filteredResponse.summaryCards);
-      setPaymentResult(filteredResponse);
-      setPageInfo(filteredResponse.pageInfo);
+      setPaymentResult(cachedResponse);
       setFilterOptions({
         statuses: STATIC_STATUS_OPTIONS,
         vendors: cachedResponse.filterOptions.vendors.map((vendor) => ({
@@ -205,17 +173,12 @@ export default function PayoutsPage() {
       setLoadError("");
 
       try {
-        const paymentsResponse = await getAdminPaymentsRequest(normalizedFilters);
+        const paymentsResponse = await loadCompleteList(getAdminPaymentsRequest, normalizedFilters);
 
         if (!isMounted) {
           return;
         }
-
-        const filteredResponse = applyActiveFilters(paymentsResponse);
-        setRows(filteredResponse.rows);
-        setSummaryCards(filteredResponse.summaryCards);
-        setPaymentResult(filteredResponse);
-        setPageInfo(filteredResponse.pageInfo);
+        setPaymentResult(paymentsResponse);
         setFilterOptions({
           statuses: STATIC_STATUS_OPTIONS,
           vendors: paymentsResponse.filterOptions.vendors.map((vendor) => ({
@@ -252,29 +215,6 @@ export default function PayoutsPage() {
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [normalizedFilters, paymentCacheKey, reloadKey]);
-
-  useEffect(() => {
-    if (!paymentResult) {
-      return;
-    }
-
-    const displayResult = applyCommissionDisplayFallbackToPaymentList(
-      paymentResult,
-      commissionSettings,
-    );
-    setRows(displayResult.rows);
-    setSummaryCards(displayResult.summaryCards);
-  }, [commissionSettings, paymentResult]);
-
-  useEffect(() => {
-    if (!paymentResult) {
-      return;
-    }
-
-    const filteredResult = applyActiveFilters(paymentResult);
-    setRows(filteredResult.rows);
-    setPageInfo(filteredResult.pageInfo);
-  }, [dateRange, paymentResult, searchTerm, statusFilter, vendorFilter]);
 
   useEffect(() => {
     let isMounted = true;

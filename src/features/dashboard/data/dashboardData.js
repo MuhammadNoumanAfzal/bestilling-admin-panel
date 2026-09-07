@@ -584,7 +584,7 @@ export function getDateRangeForFilter(
 ) {
   if (selectedFilter === "Custom Date" && customStart && customEnd) {
     const start = new Date(`${customStart}T00:00:00Z`);
-    const end = new Date(`${customEnd}T23:59:59Z`);
+    const end = new Date(`${customEnd}T23:59:59.999Z`);
     if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime()) && start <= end) {
       return { start, end };
     }
@@ -612,7 +612,7 @@ export function getDateRangeForFilter(
       break;
     case "Last 7 days":
     default:
-      start.setUTCDate(start.getUTCDate() - 7);
+      start.setUTCDate(start.getUTCDate() - 6);
       break;
   }
 

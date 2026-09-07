@@ -3,17 +3,17 @@ import { MessageSquare, Star } from "lucide-react";
 import DateFilterDropdown from "../../../dashboard/components/DateFilterDropdown.jsx";
 import { getDateRangeForFilter } from "../../../dashboard/data/dashboardData.js";
 
-const ALL_DATES_FILTER = "All Dates";
+const DEFAULT_DATE_FILTER = "Last 7 days";
 
 export default function CustomerReviewsCard({ reviewsData = [] }) {
   const [ratingFilter, setRatingFilter] = useState("All");
-  const [timeframe, setTimeframe] = useState(ALL_DATES_FILTER);
+  const [timeframe, setTimeframe] = useState(DEFAULT_DATE_FILTER);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [showAll, setShowAll] = useState(false);
 
   const dateRange = useMemo(
-    () => (timeframe === ALL_DATES_FILTER ? null : getDateRangeForFilter(timeframe, customStart, customEnd)),
+    () => getDateRangeForFilter(timeframe, customStart, customEnd),
     [customEnd, customStart, timeframe],
   );
 
@@ -49,7 +49,7 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
 
   function handleResetFilters() {
     setRatingFilter("All");
-    setTimeframe(ALL_DATES_FILTER);
+    setTimeframe(DEFAULT_DATE_FILTER);
     setCustomStart("");
     setCustomEnd("");
   }
@@ -101,7 +101,7 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
 
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-end">
             <DateFilterDropdown
-              clearFilterValue={ALL_DATES_FILTER}
+              clearFilterValue={DEFAULT_DATE_FILTER}
               endDate={customEnd}
               onChangeFilter={setTimeframe}
               onCustomDateChange={handleCustomDateChange}

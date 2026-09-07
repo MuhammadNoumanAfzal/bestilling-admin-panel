@@ -1,3 +1,4 @@
+import { hasDetailValue } from "./hasDetailValue.js";
 import { ArrowUpRight, User } from "lucide-react";
 
 function displayValue(value, fallback = "Not available") {
@@ -49,24 +50,30 @@ export default function CustomerInfoCard({ customer, onViewProfile }) {
               Customer
             </span>
           </div>
-          <p className="truncate text-[12px] text-[#5a4d46]">{displayValue(customer.email)}</p>
-          <p className="text-[12px] text-[#5a4d46]">{displayValue(customer.phone)}</p>
+          {hasDetailValue(customer.email) && <p className="truncate text-[12px] text-[#5a4d46]">{customer.email}</p>}
+          {hasDetailValue(customer.phone) && <p className="text-[12px] text-[#5a4d46]">{customer.phone}</p>}
         </div>
       </div>
 
       <div className="space-y-3.5 border-t border-[#f1e9e2] pt-4">
+        {hasDetailValue(customer.totalOrders) && (
         <div className="flex items-center justify-between text-[13px]">
           <span className="font-semibold text-[#8c8077]">Total Orders</span>
           <span className="font-bold text-[#18120f]">{displayValue(customer.totalOrders)}</span>
         </div>
+        )}
+        {hasDetailValue(customer.totalSpent) && (
         <div className="flex items-center justify-between text-[13px]">
           <span className="font-semibold text-[#8c8077]">Total Spent</span>
           <span className="font-bold text-[#18120f]">{displayValue(customer.totalSpent)}</span>
         </div>
+        )}
+        {hasDetailValue(customer.address) && (
         <div className="space-y-1 text-[13px]">
           <span className="block font-semibold text-[#8c8077]">Default Address</span>
           <span className="block leading-6 text-[#18120f]">{displayValue(customer.address, "Not provided")}</span>
         </div>
+        )}
       </div>
     </article>
   );

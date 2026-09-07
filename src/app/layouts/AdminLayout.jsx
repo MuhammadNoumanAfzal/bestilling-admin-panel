@@ -345,6 +345,7 @@ function getCurrentMeta(pathname) {
     return {
       title: "Order Details",
       subtitle: "Review order details, items invoice, customer & vendor profiles.",
+      hidePageHeader: true,
     };
   }
 
@@ -968,13 +969,13 @@ export default function AdminLayout() {
           </header>
 
           <main className="overflow-x-hidden px-3 py-4 pb-24 sm:px-6 lg:px-5 lg:py-5 lg:pb-8">
-            <div className="mb-5 hidden items-start justify-between gap-4 lg:flex">
+            {!meta.hidePageHeader && <div className="mb-5 hidden items-start justify-between gap-4 lg:flex">
               <div>
                 <h1 className="text-[34px] font-bold tracking-[-0.04em] text-[#18120f]">{meta.title}</h1>
                 <p className="mt-1 text-[15px] leading-7 text-[#6f645d]">{meta.subtitle}</p>
               </div>
               {pageHeaderAction ? <div className="shrink-0">{pageHeaderAction}</div> : null}
-            </div>
+            </div>}
             <Outlet context={{ setPageHeaderAction }} />
           </main>
         </div>

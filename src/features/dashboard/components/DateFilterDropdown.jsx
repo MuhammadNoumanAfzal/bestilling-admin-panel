@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Calendar, X } from "lucide-react";
 import { dashboardFilterOptions } from "../data/dashboardData.js";
 
@@ -9,6 +10,7 @@ export default function DateFilterDropdown({
   endDate,
   onCustomDateChange,
   clearFilterValue = "Last 7 days",
+  options = dashboardFilterOptions,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showCustomFields, setShowCustomFields] = useState(false);
@@ -18,6 +20,32 @@ export default function DateFilterDropdown({
     typeof window !== "undefined" ? window.innerWidth < 640 : false,
   );
   const dropdownRef = useRef(null);
+  const menuRef = useRef(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, maxHeight: 360 });
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const position = () => {
+      const anchor = dropdownRef.current.getBoundingClientRect();
+      const width = Math.min(224, window.innerWidth - 32);
+      const height = menuRef.current?.offsetHeight || 304;
+      const below = window.innerHeight - anchor.bottom - 22;
+      const above = anchor.top - 22;
+      const opensAbove = below < height && above > below;
+      setMenuPosition({
+        left: Math.max(16, Math.min(anchor.right - width, window.innerWidth - width - 16)),
+        top: opensAbove ? Math.max(16, anchor.top - height - 6) : anchor.bottom + 6,
+        maxHeight: Math.max(80, opensAbove ? above : below),
+      });
+    };
+    position();
+    window.addEventListener("resize", position);
+    window.addEventListener("scroll", position, true);
+    return () => {
+      window.removeEventListener("resize", position);
+      window.removeEventListener("scroll", position, true);
+    };
+  }, [isOpen, showCustomFields]);
 
   useEffect(() => {
     setTempStart(startDate || "");
@@ -40,14 +68,22 @@ export default function DateFilterDropdown({
   // Close when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && !menuRef.current?.contains(event.target)) {
         setIsOpen(false);
         setShowCustomFields(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        setShowCustomFields(false);
+      }
+    }
+    document.addEventListener("keydown", handleEscape);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, []);
 
@@ -130,7 +166,9 @@ export default function DateFilterDropdown({
       {/* Selector Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex h-9 max-w-full min-w-[110px] cursor-pointer items-center justify-between gap-1.5 rounded-full border border-[#d8ccc2] bg-white px-3 py-1.5 text-[12px] font-bold text-[#231913] transition hover:bg-[#faf9f8] outline-none focus:border-[#cf6e38] sm:h-auto sm:min-w-0 sm:px-4 sm:text-[13px]"
+        aria-expanded={isOpen}
+        aria-label="Filter by date"
+        className="inline-flex h-[38px] max-w-full cursor-pointer items-center justify-between gap-2 rounded-full border border-[#e66b35] bg-white px-4 text-[14px] font-medium text-[#231913] transition hover:bg-[#fff7f2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e66b35]"
         type="button"
       >
         <span className="truncate">
@@ -140,17 +178,17 @@ export default function DateFilterDropdown({
       </button>
 
       {/* Dropdown Menu Popup */}
-      {isOpen && (
-        <div className="absolute right-0 top-full z-40 mt-1.5 w-[11rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[12px] border border-[#d8ccc2] bg-white py-2 shadow-[0_8px_24px_rgba(53,34,20,0.12)] sm:w-56">
+      {isOpen && createPortal(
+        <div ref={menuRef} style={menuPosition} className="fixed z-[100] w-56 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-[12px] border border-[#d8ccc2] bg-white py-2 shadow-[0_8px_24px_rgba(53,34,20,0.12)]">
           {!showCustomFields ? (
             <div className="flex flex-col">
-              {dashboardFilterOptions.map((opt) => {
+              {options.map((opt) => {
                 if (opt === "Clear Filter") {
                   return (
                     <button
                       key={opt}
                       onClick={handleClear}
-                      className="mt-1.5 flex w-full cursor-pointer items-center border-t border-[#f1e9e2] px-4 py-2 text-left text-[12px] font-bold text-[#d83f3f] transition hover:bg-[#fff2f1] sm:text-[13px]"
+                      className="mt-1 flex h-10 w-full cursor-pointer items-center border-t border-[#f1e9e2] px-4 text-left text-[14px] font-medium text-[#ee6538] transition hover:bg-[#fff3ec]"
                       type="button"
                     >
                       {opt}
@@ -163,9 +201,10 @@ export default function DateFilterDropdown({
                   <button
                     key={opt}
                     onClick={() => handleSelectOption(opt)}
-                    className={`flex w-full cursor-pointer items-center px-4 py-2 text-left text-[12px] font-semibold transition sm:text-[13px] ${
+                    aria-current={isActive ? "true" : undefined}
+                    className={`flex h-10 w-full cursor-pointer items-center px-4 text-left text-[14px] font-medium transition ${
                       isActive
-                        ? "bg-[#fff3ec] text-[#d96834] font-bold"
+                        ? "bg-[#fff3ec] text-[#e66b35]"
                         : "text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
                     }`}
                     type="button"
@@ -243,7 +282,7 @@ export default function DateFilterDropdown({
               ) : null}
             </form>
           )}
-        </div>
+        </div>, document.body
       )}
     </div>
   );

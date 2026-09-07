@@ -68,6 +68,25 @@ export default function VendorPayoutProfileSection({
     );
   }
 
+  if (payoutProfile.bankDetailsVerified) {
+    return (
+      <section className="rounded-[22px] border border-[#ddd6cf] bg-white p-5 shadow-[0_14px_32px_rgba(55,31,13,0.06)]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-[#221914]">
+            <Landmark size={20} className="text-[#cf6e38]" />
+            <h2 className="text-[20px] font-bold">Payout Bank Profile</h2>
+          </div>
+          <StatusPill verified verificationStatus="Verified" />
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <DetailCell label="Account Holder" value={payoutProfile.accountHolderName} />
+          <DetailCell label="Bank Name" value={payoutProfile.bankName} />
+          <DetailCell label="Account Number" value={payoutProfile.accountNumber} />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="overflow-hidden rounded-[22px] border border-[#ddd6cf] bg-white shadow-[0_14px_32px_rgba(55,31,13,0.06)]">
       <div className="border-b border-[#eee1d7] bg-[linear-gradient(135deg,#fff8f2_0%,#fffdfb_55%,#fff5ec_100%)] px-5 py-5">

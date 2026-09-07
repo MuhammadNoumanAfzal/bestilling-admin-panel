@@ -122,7 +122,7 @@ export default function OrdersTable({
   }
 
   return (
-    <div className="overflow-visible rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] md:overflow-hidden">
+    <div className="[&_button:enabled]:cursor-pointer [&_button:disabled]:cursor-not-allowed [&_a[href]]:cursor-pointer overflow-visible rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] md:overflow-hidden">
       <div className="hidden w-full overflow-x-auto md:block">
         <table className="w-full min-w-[980px] border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">

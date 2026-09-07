@@ -30,7 +30,9 @@ function RevenueChart({ series }) {
   const averageRevenue = totalRevenue / safeSeries.length;
   const bestPeriod = safeSeries.reduce((best, item) => (item.value > best.value ? item : best));
   const latestPeriod = safeSeries[safeSeries.length - 1];
-  const maxValue = Math.max(...safeSeries.map((item) => item.value), 1) * 1.15;
+  const peak = Math.max(...safeSeries.map((item) => item.value), 1);
+  const step = 10 ** Math.floor(Math.log10(peak));
+  const maxValue = Math.ceil(peak * 1.2 / step) * step;
 
   const insights = [
     { label: "Total sales", value: formatNok(totalRevenue), detail: "Selected range" },
@@ -50,31 +52,37 @@ function RevenueChart({ series }) {
           </div>
         ))}
       </div>
-      <div className="relative overflow-x-auto rounded-[14px] border border-[#eee4dd] bg-[#fcfbfa] px-3 pb-3 pt-5">
-        <div className="pointer-events-none absolute inset-x-3 top-5 grid h-[190px] grid-rows-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="border-b border-dashed border-[#eadfd8] last:border-b-0" />
-          ))}
-        </div>
-        <div
-          className="relative grid items-end gap-3 pt-1"
-          style={{ gridTemplateColumns: `repeat(${safeSeries.length}, minmax(80px, 1fr))`, minWidth: safeSeries.length * 92 - 12 }}
-          role="img"
-          aria-label={`Sales by period: ${safeSeries.map((item) => `${item.label}: ${formatNok(item.value)}`).join(", ")}`}
-        >
-          {safeSeries.map((item, index) => (
-            <div key={`${item.label}-${index}`} className="flex min-w-0 flex-col items-center gap-2">
-              <span className="text-[10px] font-bold text-[#6d5f56]">{formatNok(item.value)}</span>
-              <div className="flex h-[176px] w-full max-w-[64px] items-end" title={`${item.label}: ${formatNok(item.value)}`}>
-                <div
-                  className="w-full rounded-t-[6px] bg-[#d46a37] transition-[height] duration-300"
-                  style={{ height: `${Math.max((item.value / maxValue) * 100, 0)}%` }}
-                />
+      <div className="rounded-[14px] border border-[#eee4dd] bg-[#fcfbfa] p-4">
+        <p className="mb-5 text-xs font-semibold text-[#796659]">Revenue (NOK)</p>
+        <div className="flex">
+          <div className="relative h-[220px] w-[72px] shrink-0 pr-2">
+            {Array.from({ length: 5 }, (_, i) => (
+              <span key={i} className="absolute right-2 -translate-y-1/2 text-[11px] tabular-nums text-[#796659]" style={{ top: `${i * 25}%` }}>
+                {((maxValue / 4) * (4 - i)).toLocaleString("en-GB", { maximumFractionDigits: 0 })}
+              </span>
+            ))}
+          </div>
+          <div className="min-w-0 flex-1 overflow-x-auto pb-2">
+            <div style={{ minWidth: safeSeries.length * 100 }}>
+              <div className="relative h-[220px] border-b border-l border-[#cdbbad]">
+                {Array.from({ length: 4 }, (_, i) => (
+                  <div key={i} className="pointer-events-none absolute inset-x-0 border-t border-dashed border-[#e6d8cd]" style={{ top: `${i * 25}%` }} />
+                ))}
+                <div className="absolute inset-0 grid items-end" style={{ gridTemplateColumns: `repeat(${safeSeries.length}, minmax(0, 1fr))` }} role="img" aria-label={safeSeries.map(item => `${item.label}: ${formatNok(item.value)}`).join(", ")}>
+                  {safeSeries.map((item, index) => (
+                    <div key={index} className="relative mx-auto w-[60%] max-w-[56px] rounded-t-md bg-[#d46a37]" style={{ height: `${Math.max(0, item.value / maxValue * 100)}%` }} title={`${item.label}: ${formatNok(item.value)}`}>
+                      <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-bold text-[#694a37]">{formatNok(item.value)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <span className="max-w-full truncate text-[10px] font-semibold text-[#5c5048]">{item.label}</span>
+              <div className="mt-3 grid" style={{ gridTemplateColumns: `repeat(${safeSeries.length}, minmax(0, 1fr))` }}>
+                {safeSeries.map((item, index) => <span key={index} className="px-1 text-center text-xs font-medium text-[#695548]">{item.label}</span>)}
+              </div>
             </div>
-          ))}
+          </div>
         </div>
+        <p className="mt-2 text-center text-xs font-semibold text-[#796659]">Month</p>
       </div>
     </div>
   );

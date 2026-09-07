@@ -1,4 +1,9 @@
+function hasValue(value) {
+  return value != null && !["", "pending update", "not available", "not provided", "n/a", "not scheduled"].includes(String(value).trim().toLowerCase());
+}
+
 function InfoRow({ label, value }) {
+  if (!hasValue(value)) return null;
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-[14px] text-[#5d524b]">{label}</span>
@@ -207,7 +212,7 @@ export default function PaymentFinanceContractCard({ payout }) {
             <InfoRow label="Rejected At" value={invoice.rejectedAtLabel} />
           </div>
 
-          {invoice.paymentReport ? (
+          {invoice.paymentReport && [invoice.paymentReport.paymentDate, invoice.paymentReport.reportedAtLabel, invoice.paymentReport.transferReference, invoice.paymentReport.receiptUrl].some(hasValue) ? (
             <div className="mt-5 rounded-[14px] border border-[#f1e2d7] bg-[#fff8f3] px-4 py-4">
               <p className="text-[14px] font-semibold text-[#221914]">Reported Payment</p>
               <div className="mt-3 space-y-3">

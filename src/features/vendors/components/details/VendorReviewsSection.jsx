@@ -53,15 +53,12 @@ function ReviewCard({ review }) {
 
 export default function VendorReviewsSection({ summary }) {
   const [activeFilter, setActiveFilter] = useState(summary.activeFilter || "All");
-  const [periodFilter, setPeriodFilter] = useState(summary.periodFilter || "Last Month");
+  const [periodFilter, setPeriodFilter] = useState("Last 7 days");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
 
   const filteredReviews = useMemo(() => {
-    const dateRange =
-      periodFilter === "All time"
-        ? null
-        : getDateRangeForFilter(periodFilter, customStart, customEnd);
+    const dateRange = getDateRangeForFilter(periodFilter, customStart, customEnd);
 
     return summary.reviewEntries.filter((review) => {
       const matchesRating = activeFilter === "All" || review.rating === Number(activeFilter);
@@ -143,7 +140,7 @@ export default function VendorReviewsSection({ summary }) {
           </div>
           <div className="flex flex-wrap gap-2">
             <DateFilterDropdown
-              clearFilterValue="All time"
+              clearFilterValue="Last 7 days"
               endDate={customEnd}
               onChangeFilter={setPeriodFilter}
               onCustomDateChange={(start, end) => {
@@ -157,7 +154,7 @@ export default function VendorReviewsSection({ summary }) {
               className="rounded-[8px] border border-[#ddd4cb] bg-[#faf7f4] px-3 py-1.5 text-[12px] font-semibold text-[#4d423b] shadow-[0_2px_6px_rgba(53,34,20,0.03)]"
               onClick={() => {
                 setActiveFilter("All");
-                setPeriodFilter(summary.periodFilter || "Last Month");
+                setPeriodFilter("Last 7 days");
                 setCustomStart("");
                 setCustomEnd("");
               }}

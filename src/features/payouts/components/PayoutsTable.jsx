@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 const orderStatusClasses = {
   Delivered: "bg-[#17b84a] text-white",
   Canceled: "bg-[#d80f0f] text-white",
-  "Awaiting acceptance": "bg-[#ffe8a6] text-[#b78600]",
+  "In progress": "bg-[#ffe8a6] text-[#b78600]",
+  Unknown: "bg-[#f2eeea] text-[#79685b]",
 };
 
 const paymentStatusClasses = {
@@ -68,15 +69,18 @@ function PaginationIconButton({ children, disabled = false, onClick }) {
 
 function StatusBadge({ status, variant = "order" }) {
   const classes = variant === "payment" ? paymentStatusClasses : orderStatusClasses;
+  const label = variant === "order" && ["Awaiting acceptance", "Accepted", "Preparing", "Ready", "Out for delivery"].includes(status)
+    ? "In progress"
+    : status || "Unknown";
 
   return (
     <span
       className={[
         "inline-flex min-w-[74px] justify-center rounded-full px-2.5 py-1 text-[10px] font-bold leading-none",
-        classes[status] || classes.Paid,
+        classes[label] || "bg-[#f2eeea] text-[#79685b]",
       ].join(" ")}
     >
-      {status}
+      {label}
     </span>
   );
 }

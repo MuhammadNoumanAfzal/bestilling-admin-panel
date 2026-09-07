@@ -114,10 +114,45 @@ function resolvePaymentOrderStatus(order) {
   const stages = ["Awaiting acceptance", "Accepted", "Preparing", "Ready", "Out for delivery", "Delivered"];
   const statuses = [order?.status, order?.fulfillmentStatus, order?.delivery?.status];
   if (order?.acceptedAt) statuses.push("ACCEPTED");
+  if (order?.preparedAt) statuses.push("PREPARING");
+  if (order?.outForDeliveryAt) statuses.push("OUT_FOR_DELIVERY");
   return statuses.map(normalizeOrderStatus).reduce(
     (current, candidate) => stages.indexOf(candidate) > stages.indexOf(current) ? candidate : current,
     stages[0],
   );
+}
+
+// Payment order snapshots can lag behind fulfillment. Read the current order
+// records in bounded batches, using variables rather than interpolating IDs.
+async function loadCurrentPaymentOrders(items) {
+  const ids = [...new Set(items.map((item) => item?.order?.id).filter(Boolean))];
+  const orders = new Map();
+  for (let offset = 0; offset < ids.length; offset += 20) {
+    const batch = ids.slice(offset, offset + 20);
+    const variables = Object.fromEntries(batch.map((id, index) => [`id${index}`, id]));
+    const definitions = batch.map((_, index) => `$id${index}: ID!`).join(", ");
+    const selections = batch.map((_, index) => `
+      order${index}: adminOrder(id: $id${index}) {
+        id status fulfillmentStatus acceptedAt preparedAt outForDeliveryAt
+        deliveredAt canceledAt delivery { status deliveredAt }
+      }
+    `).join("\n");
+    const data = await executeProtectedGraphqlRequest(
+      `query PaymentOrderStatuses(${definitions}) { ${selections} }`,
+      variables,
+    );
+    batch.forEach((id, index) => {
+      const order = data?.[`order${index}`];
+      if (!order || String(order.id) !== String(id)) {
+        throw new Error("Unable to load the current order status. Please refresh payments.");
+      }
+      orders.set(String(id), order);
+    });
+  }
+  return items.map((item) => ({
+    ...item,
+    order: orders.get(String(item?.order?.id)) || item?.order,
+  }));
 }
 
 function resolveCustomerPaymentStatusForOrder(status, order) {
@@ -1039,7 +1074,8 @@ export async function getAdminPaymentsRequest(filters) {
     }),
   );
 
-  const rows = responseItems.map((item, index) =>
+  const currentItems = await loadCurrentPaymentOrders(responseItems);
+  const rows = currentItems.map((item, index) =>
     normalizePaymentRow(item, contractInvoices[index]),
   );
 
@@ -1107,7 +1143,8 @@ export async function getAdminPaymentDetailRequest(id) {
     );
   }
 
-  const payment = normalizePaymentDetail(data?.adminPayment, contractInvoice);
+  const [currentPayment] = await loadCurrentPaymentOrders([data?.adminPayment]);
+  const payment = normalizePaymentDetail(currentPayment, contractInvoice);
 
   if (!payment?.id) {
     throw new Error("Unable to load this payment.");

@@ -1,5 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import "./PayoutsTable.css";
 
 const orderStatusClasses = {
   Delivered: "bg-[#17b84a] text-white",
@@ -14,6 +16,8 @@ const paymentStatusClasses = {
   Pending: "bg-[#ffe8a6] text-[#b78600]",
   Scheduled: "bg-[#eef4ff] text-[#4b74c6]",
   Released: "bg-[#e9fff0] text-[#219653]",
+  Reported: "bg-[#eef4ff] text-[#4b74c6]",
+  Refunded: "bg-[#f3eefb] text-[#7a51b3]",
 };
 
 function buildPaginationItems(currentPage, totalPages) {
@@ -76,7 +80,7 @@ function StatusBadge({ status, variant = "order" }) {
   return (
     <span
       className={[
-        "inline-flex min-w-[74px] justify-center rounded-full px-2.5 py-1 text-[10px] font-bold leading-none",
+        "inline-flex min-w-[74px] whitespace-nowrap justify-center rounded-full px-2.5 py-1 text-[11px] font-bold leading-none",
         classes[label] || "bg-[#f2eeea] text-[#79685b]",
       ].join(" ")}
     >
@@ -87,9 +91,8 @@ function StatusBadge({ status, variant = "order" }) {
 
 function Avatar({ label, src }) {
   return (
-    <button
-      className="inline-flex h-9 w-9 shrink-0 cursor-pointer overflow-hidden rounded-full transition hover:scale-[1.03]"
-      type="button"
+    <span
+      className="inline-flex h-9 w-9 shrink-0 overflow-hidden rounded-full"
     >
       {src ? (
         <img alt={label} className="h-full w-full object-cover" src={src} />
@@ -98,13 +101,13 @@ function Avatar({ label, src }) {
           {label}
         </span>
       )}
-    </button>
+    </span>
   );
 }
 
 function PersonCell({ name, src, subtitle, avatar }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex max-w-[200px] items-center gap-2.5">
       <Avatar label={avatar} src={src} />
       <div className="min-w-0">
         <p className="truncate text-[15px] font-bold leading-5 text-[#18120f]">{name}</p>
@@ -124,27 +127,36 @@ export default function PayoutsTable({
   totalItems,
 }) {
   const navigate = useNavigate();
+  const [view, setView] = useState("overview");
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, totalItems);
   const paginationItems = buildPaginationItems(currentPage, totalPages);
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-2">
-      <div className="w-full overflow-x-auto">
-        <table className="min-w-[1320px] w-full border-collapse">
+    <div className="payout-table-container overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-2">
+      <div className="payout-view-switch border-b border-[#eee4dd] p-3" role="group" aria-label="Payment table view">
+        {["overview", "financials"].map((option) => (
+          <button key={option} type="button" aria-pressed={view === option} onClick={() => setView(option)}
+            className={`cursor-pointer rounded-lg px-4 py-2 text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-[#cf6e38] ${view === option ? "bg-[#cf6e38] text-white" : "text-[#6c6058] hover:bg-[#faf5f1]"}`}>
+            {option === "overview" ? "Overview" : "Financials"}
+          </button>
+        ))}
+      </div>
+      <div className="w-full overflow-x-auto" role="region" aria-label="Payments table" tabIndex={0}>
+        <table className={`payout-table payout-view-${view} w-full border-collapse`}>
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order ID</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Customer</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Amount</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Status</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Platform Comm.</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Customer Payment Status</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor Amount</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor Payout Status</th>
               <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Date</th>
+              <th className="payout-overview-column px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Customer</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor</th>
+              <th className="payout-overview-column px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Amount</th>
+              <th className="payout-overview-column px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Status</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Payment Status</th>
+              <th className="payout-financial-column px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Platform Commission</th>
+              <th className="payout-financial-column px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendor Amount</th>
+              <th className="payout-financial-column px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Payout Status</th>
               <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
             </tr>
           </thead>
@@ -167,8 +179,9 @@ export default function PayoutsTable({
 
                 return (
                 <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.invoiceNumber}</td>
-                  <td className="px-3 py-4">
+                  <td className="whitespace-nowrap px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.invoiceNumber}</td>
+                  <td className="whitespace-nowrap px-3 py-4 text-[13px] font-medium text-[#6c6058]">{row.date}</td>
+                  <td className="payout-overview-column px-3 py-4">
                     <PersonCell
                       avatar={row.customerAvatar}
                       name={row.customer}
@@ -184,19 +197,18 @@ export default function PayoutsTable({
                       subtitle={row.vendorCity}
                     />
                   </td>
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.orderAmount}</td>
-                  <td className="px-3 py-4">
+                  <td className="payout-overview-column whitespace-nowrap px-3 py-4 text-[14px] font-medium tabular-nums text-[#18120f]">{row.orderAmount}</td>
+                  <td className="payout-overview-column px-3 py-4">
                     <StatusBadge status={row.orderStatus} />
                   </td>
-                  <td className="px-3 py-4 text-[15px] font-semibold text-[#ff2c23]">{row.platformCommission}</td>
                   <td className="px-3 py-4">
                     <StatusBadge status={row.customerPaymentStatus} variant="payment" />
                   </td>
-                  <td className="px-3 py-4 text-[15px] font-semibold text-[#cf6e38]">{row.vendorAmount}</td>
-                  <td className="px-3 py-4">
+                  <td className="payout-financial-column whitespace-nowrap px-3 py-4 text-[14px] font-semibold tabular-nums text-[#6c6058]">{row.platformCommission}</td>
+                  <td className="payout-financial-column whitespace-nowrap px-3 py-4 text-[14px] font-semibold tabular-nums text-[#cf6e38]">{row.vendorAmount}</td>
+                  <td className="payout-financial-column px-3 py-4">
                     <StatusBadge status={row.vendorPayoutStatus} variant="payment" />
                   </td>
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.date}</td>
                   <td className="px-4 py-4 text-right">
                     <div className="ml-auto flex w-[132px] flex-col items-stretch gap-1.5">
                       {canApproveReportedPayment ? (

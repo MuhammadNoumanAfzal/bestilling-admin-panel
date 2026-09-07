@@ -207,14 +207,7 @@ export default function OrdersPage() {
     return {
       ...response,
       rows: filteredRows,
-      pageInfo: {
-        ...response.pageInfo,
-        page: 1,
-        totalItems: filteredRows.length,
-        totalPages: 1,
-        hasNextPage: false,
-        hasPreviousPage: false,
-      },
+      pageInfo: response.pageInfo,
     };
   }
 

@@ -1007,13 +1007,19 @@ export async function getAdminOrdersRequest(filters) {
   // The list query already contains the fields required by the table. Fetching a
   // full detail record and payment fallback for every row made one page load 20+ requests.
   const normalizedRows = responseItems.map(normalizeOrderRow);
+  const page = Math.max(1, Number(filters?.page) || 1);
+  const pageSize = Math.max(1, Number(filters?.limit) || 10);
+  // The list schema exposes the matching count in summary, even when it
+  // does not expose pageInfo. A page's row count is not the total count.
+  const totalItems = Math.max(0, Number(response?.pageInfo?.totalItems ?? response?.summary?.totalOrders ?? responseItems.length) || 0);
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const normalizedPageInfo = {
-    page: Number(filters?.page ?? 1),
-    pageSize: Number(filters?.limit ?? 10),
-    totalItems: Number(response?.pageInfo?.totalItems ?? responseItems.length ?? 0),
-    totalPages: Number(response?.pageInfo?.totalPages ?? 1),
-    hasNextPage: Boolean(response?.pageInfo?.hasNextPage),
-    hasPreviousPage: Boolean(response?.pageInfo?.hasPreviousPage),
+    page,
+    pageSize,
+    totalItems,
+    totalPages,
+    hasNextPage: page < totalPages,
+    hasPreviousPage: page > 1,
   };
 
   return {

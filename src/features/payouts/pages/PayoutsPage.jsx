@@ -171,14 +171,7 @@ export default function PayoutsPage() {
     return {
       ...result,
       rows: filteredRows,
-      pageInfo: {
-        ...result.pageInfo,
-        totalItems: filteredRows.length,
-        totalPages: 1,
-        hasNextPage: false,
-        hasPreviousPage: false,
-        page: 1,
-      },
+      pageInfo: result.pageInfo,
     };
   }
 

@@ -774,7 +774,7 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#211f1f] text-[#201813]">
-      <div className="mx-auto min-h-screen max-w-[1440px] overflow-x-clip bg-[#f4f1ee] lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">
+      <div className="min-h-screen w-full overflow-x-clip bg-[#f4f1ee] lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">
         {isMobileNavOpen ? (
           <button
             aria-label="Close navigation overlay"

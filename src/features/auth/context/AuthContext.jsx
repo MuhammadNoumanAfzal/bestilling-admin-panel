@@ -43,8 +43,8 @@ export function AuthProvider({ children }) {
             user,
           });
         }
-      } catch {
-        if (isMounted) {
+      } catch (error) {
+        if (isMounted && (error?.isAuthenticationError || error?.isAuthorizationError)) {
           clearStoredAuthSession();
           setSession({
             accessToken: null,

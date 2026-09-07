@@ -33,6 +33,7 @@ export function isAuthenticationError(payload) {
 
   return (
     code === "unauthorized" ||
+    code === "unauthenticated" ||
     code === "invalid_token" ||
     code === "authentication_failed" ||
     message.includes("authentication failed") ||
@@ -76,21 +77,41 @@ export async function executeGraphqlRequest(query, variables, options = {}) {
     headers.Authorization = `JWT ${options.accessToken}`;
   }
 
-  const response = await fetch(GRAPHQL_API_URL, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      query,
-      variables,
-    }),
-  });
-
-  const payload = await response.json().catch(() => null);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20_000);
+  let response;
+  let payload;
+  try {
+    response = await fetch(GRAPHQL_API_URL, {
+      method: "POST",
+      headers,
+      signal: controller.signal,
+      body: JSON.stringify({ query, variables }),
+    });
+    try {
+      payload = await response.json();
+    } catch (error) {
+      if (controller.signal.aborted) throw error;
+      payload = null;
+    }
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error("The server took too long to respond. Please try again. If you were updating a payment, refresh its status before retrying.");
+    }
+    throw new Error("Unable to connect to the server. Check your connection and try again.", { cause: error });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
-    throw new Error(
-      getErrorMessage(payload, "Unable to reach the authentication service right now."),
-    );
+    const error = new Error(getErrorMessage(payload,
+      response.status === 401 ? "Your session has expired. Please log in again."
+        : response.status === 403 ? "You do not have permission to access this resource."
+        : "The server is temporarily unavailable. Please try again shortly.",
+    ));
+    error.isAuthenticationError = response.status === 401;
+    error.isAuthorizationError = response.status === 403;
+    throw error;
   }
 
   if (payload?.errors?.length) {
@@ -100,5 +121,8 @@ export async function executeGraphqlRequest(query, variables, options = {}) {
     throw error;
   }
 
-  return payload?.data ?? null;
+  if (!payload?.data || typeof payload.data !== "object") {
+    throw new Error("The server returned an invalid response. Please try again shortly.");
+  }
+  return payload.data;
 }

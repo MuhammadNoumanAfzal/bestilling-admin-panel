@@ -34,7 +34,9 @@ function normalizeAdminUser(user) {
 
 function assertValidAdminUser(user) {
   if (!user?.id || !user?.email || !isAllowedAdminRole(user?.role)) {
-    throw new Error("This account is not allowed to access the admin portal.");
+    const error = new Error("This account is not allowed to access the admin portal.");
+    error.isAuthorizationError = true;
+    throw error;
   }
 }
 

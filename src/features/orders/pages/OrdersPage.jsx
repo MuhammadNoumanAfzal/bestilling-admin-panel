@@ -22,7 +22,6 @@ import {
   getAdminOrderInvoiceRequest,
   getAdminOrderCategoryBreakdownRequest,
   getAdminOrdersRequest,
-  refundOrderRequest,
   updateOrderPaymentStatusRequest,
   updateOrderStatusRequest,
 } from "../api/ordersApi.js";
@@ -465,77 +464,6 @@ export default function OrdersPage() {
           icon: "success",
           title: "Order canceled",
           text: result.message || "Order canceled successfully.",
-          confirmButtonColor: "#cf6e38",
-        });
-        refreshOrders();
-        return;
-      }
-
-      if (action === "refund") {
-        const refundModePrompt = await Swal.fire({
-          title: "Refund order",
-          input: "select",
-          inputOptions: {
-            FULL: "Full refund",
-            PARTIAL: "Partial refund",
-          },
-          inputValue: "FULL",
-          showCancelButton: true,
-          confirmButtonText: "Continue",
-          confirmButtonColor: "#cf6e38",
-          cancelButtonColor: "#c8b9aa",
-        });
-
-        if (!refundModePrompt.isConfirmed) {
-          return;
-        }
-
-        let partialAmount = "";
-        if (refundModePrompt.value === "PARTIAL") {
-          const amountPrompt = await Swal.fire({
-            title: "Partial refund amount",
-            input: "number",
-            inputAttributes: {
-              min: "0",
-              step: "0.01",
-            },
-            showCancelButton: true,
-            confirmButtonText: "Continue",
-            confirmButtonColor: "#cf6e38",
-            cancelButtonColor: "#c8b9aa",
-          });
-
-          if (!amountPrompt.isConfirmed) {
-            return;
-          }
-
-          partialAmount = amountPrompt.value || "";
-        }
-
-        const reasonPrompt = await Swal.fire({
-          title: "Refund reason",
-          input: "text",
-          inputPlaceholder: "Optional note for finance and support teams",
-          showCancelButton: true,
-          confirmButtonText: "Process refund",
-          confirmButtonColor: "#cf6e38",
-          cancelButtonColor: "#c8b9aa",
-        });
-
-        if (!reasonPrompt.isConfirmed) {
-          return;
-        }
-
-        const result = await refundOrderRequest({
-          orderId: row.id,
-          mode: refundModePrompt.value,
-          amount: partialAmount ? Number(partialAmount) : null,
-          reason: reasonPrompt.value || "",
-        });
-        await Swal.fire({
-          icon: "success",
-          title: "Refund processed",
-          text: result.message || "Order refunded successfully.",
           confirmButtonColor: "#cf6e38",
         });
         refreshOrders();

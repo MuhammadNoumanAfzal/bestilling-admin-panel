@@ -57,17 +57,140 @@ function normalizeStatus(status) {
 }
 
 function normalizeOrderStatus(status) {
-  const normalized = `${status ?? ""}`.trim().toUpperCase();
+  const normalized = `${status ?? ""}`.trim().toUpperCase().replace(/[\s-]+/g, "_");
 
   switch (normalized) {
     case "CANCELLED":
     case "CANCELED":
       return "Canceled";
+    case "DELIVERED":
+    case "COMPLETED":
+      return "Delivered";
+    case "OUT_FOR_DELIVERY":
+    case "IN_TRANSIT":
+      return "Out for delivery";
+    case "PREPARING":
+    case "FOOD_READY":
+    case "READY":
+      return "Preparing";
+    case "ACCEPTED":
+    case "CONFIRMED":
+      return "Accepted";
     case "PENDING":
+    case "PLACED":
+    case "NEW":
+    case "":
       return "Pending";
     default:
-      return "Delivered";
+      return "Pending";
   }
+}
+
+function resolveCurrentOrderStatus(order) {
+  const normalizedStatus = `${order?.status ?? ""}`.trim().toUpperCase().replace(/[\s-]+/g, "_");
+  const fulfillmentStatus = `${order?.fulfillmentStatus ?? ""}`.trim().toUpperCase().replace(/[\s-]+/g, "_");
+  const deliveryStatus = `${order?.delivery?.status ?? ""}`.trim().toUpperCase().replace(/[\s-]+/g, "_");
+
+  if (order?.canceledAt || normalizedStatus === "CANCELED" || normalizedStatus === "CANCELLED") {
+    return "Canceled";
+  }
+
+  if (order?.deliveredAt || order?.delivery?.deliveredAt || normalizedStatus === "DELIVERED" || normalizedStatus === "COMPLETED") {
+    return "Delivered";
+  }
+
+  if (normalizedStatus === "READY") {
+    return "Ready";
+  }
+
+  if (order?.outForDeliveryAt || normalizedStatus === "OUT_FOR_DELIVERY" || normalizedStatus === "IN_TRANSIT" || deliveryStatus === "OUT_FOR_DELIVERY") {
+    return "Out for delivery";
+  }
+
+  if (fulfillmentStatus === "READY") {
+    return "Ready";
+  }
+
+  if (order?.preparedAt || normalizedStatus === "PREPARING" || normalizedStatus === "FOOD_READY") {
+    return "Preparing";
+  }
+
+  if (order?.acceptedAt || normalizedStatus === "ACCEPTED" || normalizedStatus === "CONFIRMED") {
+    return "Accepted";
+  }
+
+  return normalizeOrderStatus(fulfillmentStatus || deliveryStatus || normalizedStatus);
+}
+
+async function loadCurrentCustomerOrderStatuses(orderIds) {
+  const ids = [...new Set((orderIds || []).map((id) => `${id ?? ""}`.trim()).filter(Boolean))];
+
+  if (!ids.length) {
+    return new Map();
+  }
+
+  const variableDefinitions = ids.map((_, index) => `$id${index}: ID!`).join(", ");
+  const fieldSelections = ids
+    .map(
+      (_, index) => `
+        order${index}: adminOrder(id: $id${index}) {
+          id
+          status
+          fulfillmentStatus
+          acceptedAt
+          preparedAt
+          outForDeliveryAt
+          deliveredAt
+          canceledAt
+          delivery {
+            status
+            deliveredAt
+          }
+        }
+      `,
+    )
+    .join("\n");
+  const variables = ids.reduce((accumulator, id, index) => {
+    accumulator[`id${index}`] = id;
+    return accumulator;
+  }, {});
+  const query = `
+    query AdminCustomerOrderStatuses(${variableDefinitions}) {
+      ${fieldSelections}
+    }
+  `;
+
+  try {
+    const data = await executeProtectedGraphqlRequest(query, variables);
+    return ids.reduce((statusMap, id, index) => {
+      const order = data?.[`order${index}`];
+
+      if (order?.id) {
+        statusMap.set(`${id}`, resolveCurrentOrderStatus(order));
+      }
+
+      return statusMap;
+    }, new Map());
+  } catch {
+    return new Map();
+  }
+}
+
+function applyCurrentOrderStatuses(customer, statusMap) {
+  if (!customer?.orderHistory?.items?.length || !statusMap?.size) {
+    return customer;
+  }
+
+  return {
+    ...customer,
+    orderHistory: {
+      ...customer.orderHistory,
+      items: customer.orderHistory.items.map((item) => ({
+        ...item,
+        status: statusMap.get(`${item.id}`) || item.status,
+      })),
+    },
+  };
 }
 
 function normalizeTicketStatus(status) {
@@ -329,7 +452,11 @@ export async function getAdminCustomerDetailRequest(id) {
     throw new Error("Unable to load this customer.");
   }
 
-  return customer;
+  const currentStatusMap = await loadCurrentCustomerOrderStatuses(
+    customer.orderHistory.items.map((item) => item.id),
+  );
+
+  return applyCurrentOrderStatuses(customer, currentStatusMap);
 }
 
 export async function updateCustomerProfileRequest(id, input) {

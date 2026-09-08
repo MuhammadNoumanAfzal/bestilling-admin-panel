@@ -3,6 +3,10 @@ import { ShoppingBag, XCircle, TrendingUp, Search, Users, ArrowUpRight, Clock } 
 import { useNavigate } from "react-router-dom";
 
 const STATUS_BADGE = {
+  Accepted: "bg-[#fffbeb] text-[#b45309] border border-[#fef3c7]",
+  Preparing: "bg-[#fff7ed] text-[#c2410c] border border-[#fed7aa]",
+  Ready: "bg-[#eefbf3] text-[#228653] border border-[#cdeedb]",
+  "Out for delivery": "bg-[#edf5ff] text-[#296db8] border border-[#d5e7fb]",
   Delivered: "bg-[#e8f8ef] text-[#1f8c52] border border-[#cce4d6]",
   Canceled: "bg-[#fdeded] text-[#c23b3b] border border-[#fbcaca]",
   Pending: "bg-[#fffbeb] text-[#b45309] border border-[#fef3c7]",

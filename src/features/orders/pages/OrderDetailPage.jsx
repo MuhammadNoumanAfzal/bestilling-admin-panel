@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { hasDetailValue } from "../components/details/hasDetailValue.js";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
@@ -52,13 +51,7 @@ function CommissionPreviewCard({ preview }) {
 
   const rows = [
     { label: "Applied Rule", value: preview.appliedRuleLabel },
-    { label: "Rule Type", value: preview.appliedRuleType },
-    { label: "Commission Model", value: preview.commissionModel },
     { label: "Commission Rate", value: preview.ratePercent },
-    { label: "Gross Order Amount", value: preview.grossOrderAmount },
-    { label: "Gross Commission", value: preview.grossCommission },
-    { label: "Fixed Fee", value: preview.fixedFee },
-    { label: "VAT on Commission", value: preview.vatOnCommission },
     { label: "Total Commission", value: preview.totalCommission },
     { label: "Vendor Payable", value: preview.vendorPayable },
   ];
@@ -67,12 +60,9 @@ function CommissionPreviewCard({ preview }) {
     <article className="h-full rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
       <header className="mb-4 border-b border-[#eee4dd] pb-3">
         <h3 className="text-[18px] font-bold text-[#18120f]">Commission Preview</h3>
-        <p className="mt-1 text-[13px] leading-6 text-[#7a6d66]">
-          Live commission resolution for this order before payout settlement.
-        </p>
       </header>
 
-      <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-4">
         {rows.map((item) => (
           <div key={item.label} className="space-y-1">
             <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
@@ -378,31 +368,6 @@ export default function OrderDetailPage() {
         <CommissionPreviewCard preview={commissionPreview} />
       </section>
 
-      <section>
-        <article className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
-          <header className="mb-4 border-b border-[#eee4dd] pb-3">
-            <h3 className="text-[18px] font-bold text-[#18120f]">Payment & Delivery Meta</h3>
-          </header>
-
-          <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 xl:grid-cols-3">
-            {[
-              ["Transaction ID", order.payment.transactionId],
-              ["Provider", order.payment.provider],
-              ["Provider Reference", order.payment.providerReference],
-              ["Delivery Type", order.delivery.type],
-              ["Delivery Status", order.delivery.status],
-              ["Scheduled Delivery", order.delivery.scheduledAt],
-              ["Delivered At", order.delivery.deliveredAt],
-              ["Delivery Address", order.delivery.address],
-            ].filter(([, value]) => hasDetailValue(value)).map(([label, value]) => (
-              <div key={label} className={label === "Delivery Address" ? "sm:col-span-2" : ""}>
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">{label}</span>
-                <span className="block break-words text-[13px] font-semibold leading-6 text-[#18120f]">{value}</span>
-              </div>
-            ))}
-          </div>
-        </article>
-      </section>
     </div>
   );
 }

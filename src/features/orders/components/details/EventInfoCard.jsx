@@ -11,6 +11,11 @@ export default function EventInfoCard({ order }) {
     { label: "Recipient", value: order.delivery.recipientName },
     { label: "Recipient Phone", value: order.delivery.recipientPhone },
     {
+      label: "Delivery Address",
+      value: order.delivery.address,
+      isFullWidth: true,
+    },
+    {
       label: "Special Instructions",
       value: order.specialInstructions,
       isFullWidth: true,

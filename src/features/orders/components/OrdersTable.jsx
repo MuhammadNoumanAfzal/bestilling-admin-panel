@@ -241,26 +241,6 @@ export default function OrdersTable({
                                 {activeActionOrderId === row.id ? "Updating..." : "Mark Paid"}
                               </button>
                             ) : null}
-                            {row.actions?.canMarkDelivered ? (
-                              <button
-                                className="block w-full px-3 py-1.5 text-left text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
-                                disabled={activeActionOrderId === row.id}
-                                onClick={() => handleOrderAction(row, "markDelivered")}
-                                type="button"
-                              >
-                                {activeActionOrderId === row.id ? "Updating..." : "Mark Delivered"}
-                              </button>
-                            ) : null}
-                            {row.actions?.canCancel ? (
-                              <button
-                                className="block w-full px-3 py-1.5 text-left text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
-                                disabled={activeActionOrderId === row.id}
-                                onClick={() => handleOrderAction(row, "cancel")}
-                                type="button"
-                              >
-                                {activeActionOrderId === row.id ? "Updating..." : "Cancel Order"}
-                              </button>
-                            ) : null}
                             {row.actions?.canDownloadInvoice ? (
                               <button
                                 className="block w-full px-3 py-1.5 text-left text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"

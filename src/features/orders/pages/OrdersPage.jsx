@@ -17,13 +17,11 @@ import OrdersTable from "../components/OrdersTable.jsx";
 import TopCateringCategoriesChart from "../components/TopCateringCategoriesChart.jsx";
 import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 import {
-  cancelOrderRequest,
   exportAdminOrdersRequest,
   getAdminOrderInvoiceRequest,
   getAdminOrderCategoryBreakdownRequest,
   getAdminOrdersRequest,
   updateOrderPaymentStatusRequest,
-  updateOrderStatusRequest,
 } from "../api/ordersApi.js";
 
 const PAGE_SIZE = 10;
@@ -419,51 +417,6 @@ export default function OrdersPage() {
           icon: "success",
           title: "Payment updated",
           text: result.message || "Order payment marked as paid.",
-          confirmButtonColor: "#cf6e38",
-        });
-        refreshOrders();
-        return;
-      }
-
-      if (action === "markDelivered") {
-        const result = await updateOrderStatusRequest({
-          orderId: row.id,
-          status: "DELIVERED",
-        });
-        await Swal.fire({
-          icon: "success",
-          title: "Order updated",
-          text: result.message || "Order marked as delivered.",
-          confirmButtonColor: "#cf6e38",
-        });
-        refreshOrders();
-        return;
-      }
-
-      if (action === "cancel") {
-        const confirmation = await Swal.fire({
-          title: "Cancel this order?",
-          input: "text",
-          inputLabel: "Cancellation reason",
-          inputPlaceholder: "Add a reason for the cancellation",
-          showCancelButton: true,
-          confirmButtonText: "Cancel order",
-          confirmButtonColor: "#d83f3f",
-          cancelButtonColor: "#c8b9aa",
-        });
-
-        if (!confirmation.isConfirmed) {
-          return;
-        }
-
-        const result = await cancelOrderRequest({
-          orderId: row.id,
-          reason: confirmation.value || "",
-        });
-        await Swal.fire({
-          icon: "success",
-          title: "Order canceled",
-          text: result.message || "Order canceled successfully.",
           confirmButtonColor: "#cf6e38",
         });
         refreshOrders();

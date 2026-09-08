@@ -567,6 +567,7 @@ const allApprovals = [
 ];
 
 export const dashboardFilterOptions = [
+  "All time",
   "Last 7 days",
   "Last Month",
   "Last 3 Months",
@@ -582,6 +583,10 @@ export function getDateRangeForFilter(
   customEnd,
   referenceDate = new Date(),
 ) {
+  if (selectedFilter === "All time") {
+    return null;
+  }
+
   if (selectedFilter === "Custom Date" && customStart && customEnd) {
     const start = new Date(`${customStart}T00:00:00Z`);
     const end = new Date(`${customEnd}T23:59:59.999Z`);

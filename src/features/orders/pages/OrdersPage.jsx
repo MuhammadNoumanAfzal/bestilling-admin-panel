@@ -26,6 +26,7 @@ import {
 
 const PAGE_SIZE = 10;
 const ORDER_CACHE_TTL_MS = 30_000;
+const DEFAULT_TIMEFRAME = "All time";
 const orderListCache = new Map();
 
 const iconMap = {
@@ -125,7 +126,7 @@ export default function OrdersPage() {
   const [vendorFilter, setVendorFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("");
-  const [timeframe, setTimeframe] = useState("Last 7 days");
+  const [timeframe, setTimeframe] = useState(DEFAULT_TIMEFRAME);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -329,7 +330,7 @@ export default function OrdersPage() {
     setVendorFilter("");
     setStatusFilter("");
     setPaymentFilter("");
-    setTimeframe("Last 7 days");
+    setTimeframe(DEFAULT_TIMEFRAME);
     setCustomStart("");
     setCustomEnd("");
     setCurrentPage(1);
@@ -446,7 +447,7 @@ export default function OrdersPage() {
   }
 
   useEffect(() => {
-    setPageHeaderAction(<DateFilterDropdown selectedFilter={timeframe} onChangeFilter={handleTimeframeChange} startDate={customStart} endDate={customEnd} onCustomDateChange={handleCustomDateChange} />);
+    setPageHeaderAction(<DateFilterDropdown clearFilterValue={DEFAULT_TIMEFRAME} selectedFilter={timeframe} onChangeFilter={handleTimeframeChange} startDate={customStart} endDate={customEnd} onCustomDateChange={handleCustomDateChange} />);
     return () => setPageHeaderAction(null);
   }, [customEnd, customStart, setPageHeaderAction, timeframe]);
 
@@ -455,6 +456,7 @@ export default function OrdersPage() {
       <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:hidden">
         <DateFilterDropdown
           selectedFilter={timeframe}
+          clearFilterValue={DEFAULT_TIMEFRAME}
           onChangeFilter={handleTimeframeChange}
           startDate={customStart}
           endDate={customEnd}

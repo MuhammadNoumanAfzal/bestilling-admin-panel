@@ -1,13 +1,13 @@
 .payout-table-container { container-type: inline-size; container-name: payouts; }
-.payout-table { min-width: 1420px; }
-.payout-view-switch { display: none; }
+.payout-table { min-width: 980px; }
 .payout-table button:enabled { cursor: pointer; }
 .payout-table th { white-space: nowrap; }
 
-/* Keep the full layout on wide screens; split financials when space is limited. */
-@container payouts (max-width: 1419px) {
-  .payout-view-switch { display: flex; gap: 4px; }
-  .payout-table { min-width: 1000px; }
-  .payout-view-overview .payout-financial-column,
-  .payout-view-financials .payout-overview-column { display: none; }
+.payout-view-order .payout-customer-column:not(.payout-order-column),
+.payout-view-order .payout-vendor-column:not(.payout-order-column),
+.payout-view-customer .payout-order-column:not(.payout-customer-column),
+.payout-view-customer .payout-vendor-column:not(.payout-customer-column),
+.payout-view-vendor .payout-order-column:not(.payout-vendor-column),
+.payout-view-vendor .payout-customer-column:not(.payout-vendor-column) {
+  display: none;
 }

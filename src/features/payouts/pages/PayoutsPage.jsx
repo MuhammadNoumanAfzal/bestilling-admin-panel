@@ -251,6 +251,30 @@ export default function PayoutsPage() {
   async function handleQuickAction(row, action) {
     const actionKey = `${row.id}:${action}`;
 
+    if (action === "markReceived" && row.customerPaymentStatus !== "Pending") {
+      return;
+    }
+
+    if (action === "approveInvoice" && row.customerPaymentStatus !== "Reported") {
+      return;
+    }
+
+    if (action === "markVendorPaid") {
+      if (row.customerPaymentStatus !== "Paid") {
+        await Swal.fire({
+          icon: "info",
+          title: "Customer payment required",
+          text: "Customer payment must be received before vendor payout can be completed.",
+          confirmButtonColor: "#cf6e38",
+        });
+        return;
+      }
+
+      if (row.vendorPayoutStatus !== "Released" || !row.payoutId) {
+        return;
+      }
+    }
+
     try {
       setActiveActionKey(actionKey);
 

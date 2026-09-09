@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { loadCompleteList, paginateFilteredRows } from "../../shared/completeList.js";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
@@ -10,7 +9,6 @@ import {
   applyCommissionDisplayFallbackToPaymentList,
   getAdminPaymentDetailRequest,
   getAdminPaymentsRequest,
-  summarizePaymentRows,
   markCustomerPaymentReceivedRequest,
   markVendorPayoutPaidRequest,
 } from "../api/paymentsApi.js";
@@ -54,52 +52,6 @@ function writePaymentCache(cacheKey, data) {
   paymentListCache.set(cacheKey, { data, savedAt: Date.now() });
 }
 
-function filterPaymentRows(rows, { search, status, vendorId, dateRange }) {
-  const normalizedSearch = `${search || ""}`.trim().toLowerCase();
-  const expectedStatus = status === "all" ? "" : mapPaymentStatusFilter(status).label;
-  const startTime = dateRange?.start ? new Date(dateRange.start).getTime() : null;
-  const endTime = dateRange?.end ? new Date(dateRange.end).getTime() : null;
-
-  return (rows || []).filter((row) => {
-    if (expectedStatus) {
-      const isCanceled = [
-        row.orderStatus,
-        row.customerPaymentStatus,
-        row.vendorPayoutStatus,
-      ].includes("Canceled");
-
-      const actualStatus = expectedStatus === "Released" ? row.vendorPayoutStatus : row.customerPaymentStatus;
-      if (expectedStatus === "Canceled" ? !isCanceled : actualStatus !== expectedStatus) {
-        return false;
-      }
-    }
-
-    if (vendorId !== "all" && `${row.vendorId || ""}` !== `${vendorId}`) {
-      return false;
-    }
-
-    if (normalizedSearch) {
-      const searchable = [row.invoiceNumber, row.orderId, row.customer, row.customerEmail, row.vendor]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      if (!searchable.includes(normalizedSearch)) {
-        return false;
-      }
-    }
-
-    if (startTime != null || endTime != null) {
-      const rowTime = new Date(row.createdAt || row.paidAt || "").getTime();
-      if (Number.isNaN(rowTime) || (startTime != null && rowTime < startTime) || (endTime != null && rowTime > endTime)) {
-        return false;
-      }
-    }
-
-    return true;
-  });
-}
-
 export default function PayoutsPage() {
   const navigate = useNavigate();
   const { setPageHeaderAction } = useOutletContext();
@@ -126,42 +78,64 @@ export default function PayoutsPage() {
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [activeActionKey, setActiveActionKey] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebouncedSearchTerm(searchTerm), 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [searchTerm]);
+
   const dateRange = useMemo(
     () => getDateRangeForFilter(timeframe, customStart, customEnd),
     [customEnd, customStart, timeframe],
   );
 
   const normalizedFilters = useMemo(() => ({
-    status: "ALL", page: 1, pageSize: 100,
+    search: debouncedSearchTerm,
+    status: statusFilter === "all" ? null : mapPaymentStatusFilter(statusFilter).value,
+    vendorId: vendorFilter === "all" ? null : vendorFilter,
+    dateFrom: dateRange?.start || null,
+    dateTo: dateRange?.end || null,
+    page: currentPage,
+    pageSize: PAGE_SIZE,
     sortBy: "CREATED_AT", sortOrder: "DESC",
-  }), []);
-  const paymentCacheKey = "payments-complete-v2";
+  }), [currentPage, dateRange, debouncedSearchTerm, statusFilter, vendorFilter]);
+  const paymentCacheKey = useMemo(() => JSON.stringify(normalizedFilters), [normalizedFilters]);
 
-  const filteredRows = useMemo(() => {
-    const displayResult = applyCommissionDisplayFallbackToPaymentList(
-      paymentResult || { rows: [], summaryCards: [] }, commissionSettings,
+  const displayResult = useMemo(() => {
+    return applyCommissionDisplayFallbackToPaymentList(
+      paymentResult || { rows: [], summaryCards: [], pageInfo: null },
+      commissionSettings,
     );
-    return filterPaymentRows(displayResult.rows, {
-      search: searchTerm, status: statusFilter, vendorId: vendorFilter, dateRange,
-    });
-  }, [paymentResult, commissionSettings, searchTerm, statusFilter, vendorFilter, dateRange]);
-  const { rows, pageInfo } = paginateFilteredRows(filteredRows, currentPage, PAGE_SIZE);
-  const summaryCards = summarizePaymentRows(filteredRows);
+  }, [paymentResult, commissionSettings]);
+  const rows = displayResult.rows || [];
+  const pageInfo = displayResult.pageInfo || {
+    page: currentPage,
+    pageSize: PAGE_SIZE,
+    totalItems: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  };
+  const summaryCards = displayResult.summaryCards || [];
 
   useEffect(() => {
     let isMounted = true;
     const cachedResponse = readPaymentCache(paymentCacheKey);
 
     if (cachedResponse) {
-      setPaymentResult(cachedResponse);
-      setFilterOptions({
-        statuses: STATIC_STATUS_OPTIONS,
-        vendors: cachedResponse.filterOptions.vendors.map((vendor) => ({
-          value: vendor.id,
-          label: vendor.name,
-        })),
+      window.queueMicrotask(() => {
+        if (!isMounted) return;
+        setPaymentResult(cachedResponse);
+        setFilterOptions({
+          statuses: STATIC_STATUS_OPTIONS,
+          vendors: cachedResponse.filterOptions.vendors.map((vendor) => ({
+            value: vendor.id,
+            label: vendor.name,
+          })),
+        });
+        setIsLoading(false);
       });
-      setIsLoading(false);
     }
 
     let requestPending = false;
@@ -174,7 +148,7 @@ export default function PayoutsPage() {
       setLoadError("");
 
       try {
-        const paymentsResponse = await loadCompleteList(getAdminPaymentsRequest, normalizedFilters);
+        const paymentsResponse = await getAdminPaymentsRequest(normalizedFilters);
 
         if (!isMounted) {
           return;

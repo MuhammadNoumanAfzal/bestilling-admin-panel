@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { getVendorDetailPath } from "../utils/vendorRoutes.js";
 
 export default function TopPerformingVendorsCard({ vendors = [], onViewAll }) {
   const navigate = useNavigate();
@@ -14,9 +15,14 @@ export default function TopPerformingVendorsCard({ vendors = [], onViewAll }) {
         </header>
 
         {topPerformingVendors.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {topPerformingVendors.map((vendor, idx) => (
-              <div key={vendor.id} className="flex items-center justify-between gap-3">
+              <button
+                key={vendor.id}
+                className="flex w-full items-center justify-between gap-3 rounded-[10px] px-2 py-1.5 text-left transition hover:bg-[#fff8f4]"
+                onClick={() => navigate(getVendorDetailPath(vendor))}
+                type="button"
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="text-[14px] font-bold text-[#cf6432] w-4 shrink-0">
                     {idx + 1}
@@ -39,7 +45,7 @@ export default function TopPerformingVendorsCard({ vendors = [], onViewAll }) {
                 <span className="text-[14px] font-bold text-[#18120f] shrink-0">
                   {vendor.revenue}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         ) : (

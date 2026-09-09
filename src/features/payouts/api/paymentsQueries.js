@@ -33,6 +33,7 @@ export const ADMIN_PAYMENTS_QUERY = `
         order {
           id
           status
+          fulfillmentStatus
         }
         customer {
           id

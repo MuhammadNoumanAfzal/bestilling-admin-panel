@@ -791,7 +791,7 @@ export default function AdminLayout() {
           ].join(" ")}
         >
           <div className="relative mx-4 mt-4 rounded-[22px] border border-white/10 bg-white/12 px-4 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm">
-            <img className="block h-auto w-32 object-contain" src="/logo.png" alt="GoCatering Admin" />
+            <img className="block h-auto w-32 object-contain" src="/whiteLogo.png" alt="GoCatering Admin" />
             <p className="type-subpara mt-3 text-white/75">Admin dashboard</p>
             <button
               aria-label="Close navigation"

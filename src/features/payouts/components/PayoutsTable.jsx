@@ -135,11 +135,11 @@ export default function PayoutsTable({
 
   return (
     <div className="payout-table-container overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-2">
-      <div className="payout-view-switch border-b border-[#eee4dd] p-3" role="group" aria-label="Payment table view">
+      <div className="payout-view-switch border-b border-[#eee4dd] p-3" role="group" aria-label="Payment record view">
         {["overview", "financials"].map((option) => (
           <button key={option} type="button" aria-pressed={view === option} onClick={() => setView(option)}
             className={`cursor-pointer rounded-lg px-4 py-2 text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-[#cf6e38] ${view === option ? "bg-[#cf6e38] text-white" : "text-[#6c6058] hover:bg-[#faf5f1]"}`}>
-            {option === "overview" ? "Overview" : "Financials"}
+            {option === "overview" ? "Order Overview" : "Payout Details"}
           </button>
         ))}
       </div>

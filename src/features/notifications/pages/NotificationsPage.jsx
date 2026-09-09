@@ -90,7 +90,7 @@ function invalidateNotificationCache() {
   }
 }
 
-function buildSummary(pageInfo, visibleCount) {
+function buildSummary(pageInfo) {
   return [
     {
       id: "total",
@@ -103,18 +103,6 @@ function buildSummary(pageInfo, visibleCount) {
       label: "Unread Notifications",
       value: String(pageInfo.unreadCount || 0),
       accent: "warm",
-    },
-    {
-      id: "scheduled",
-      label: "Visible On Page",
-      value: String(visibleCount || 0),
-      accent: "neutral",
-    },
-    {
-      id: "drafts",
-      label: "Current Page",
-      value: `${pageInfo.page || 1}/${pageInfo.totalPages || 1}`,
-      accent: "strong",
     },
   ];
 }
@@ -164,10 +152,7 @@ export default function NotificationsPage() {
     });
   }, [audienceFilter, rows, searchTerm, statusFilter, typeFilter]);
 
-  const notificationSummary = useMemo(
-    () => buildSummary(pageInfo, filteredRows.length),
-    [filteredRows.length, pageInfo],
-  );
+  const notificationSummary = useMemo(() => buildSummary(pageInfo), [pageInfo]);
   const hasLocalFilters = Boolean(searchTerm.trim() || audienceFilter);
   const visibleTotalItems = hasLocalFilters ? filteredRows.length : pageInfo.totalItems;
 
@@ -401,12 +386,6 @@ export default function NotificationsPage() {
         setStatusFilter("UNREAD");
         setCurrentPage(1);
         break;
-      case "scheduled":
-        setCurrentPage(1);
-        break;
-      case "drafts":
-        setCurrentPage(1);
-        break;
       default:
         break;
     }
@@ -415,7 +394,7 @@ export default function NotificationsPage() {
   return (
     <>
       <div className="space-y-5">
-        <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {notificationSummary.map((item) => (
             <NotificationOverviewCard key={item.id} {...item} onClick={() => handleSummaryCardClick(item.id)} />
           ))}

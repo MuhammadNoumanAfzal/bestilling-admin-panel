@@ -500,7 +500,7 @@ export default function VendorsPage() {
 
       <section className="grid gap-6 grid-cols-1 xl:grid-cols-[minmax(0,1.4fr)_360px]">
         <TopPerformingVendorsCard
-          onViewAll={() => handleTabChange("Top Performing")}
+          onViewAll={() => { handleTabChange("Top Performing"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
           vendors={sidePanels.topPerformers}
         />
         <VendorStatusOverviewCard breakdown={sidePanels.statusBreakdown} vendors={rows} />

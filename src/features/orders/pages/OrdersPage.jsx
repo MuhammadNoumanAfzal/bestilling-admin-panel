@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { loadCompleteList, paginateFilteredRows } from "../../shared/completeList.js";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
@@ -17,7 +16,6 @@ import OrdersTable from "../components/OrdersTable.jsx";
 import TopCateringCategoriesChart from "../components/TopCateringCategoriesChart.jsx";
 import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 import {
-  exportAdminOrdersRequest,
   getAdminOrderInvoiceRequest,
   getAdminOrderCategoryBreakdownRequest,
   getAdminOrdersRequest,
@@ -35,14 +33,6 @@ const iconMap = {
   pending: Clock3,
   delivered: CheckCircle2,
   revenue: CircleDollarSign,
-};
-
-const presetByFilter = {
-  "Last 7 days": "LAST_7_DAYS",
-  "Last Month": "LAST_MONTH",
-  "Last 3 Months": "LAST_3_MONTHS",
-  "Last 6 Months": "LAST_6_MONTHS",
-  "This Year": "THIS_YEAR",
 };
 
 function readOrderCache(cacheKey) {
@@ -68,53 +58,6 @@ function uniqueVendorOptions(vendors) {
     }
 
     seen.add(id);
-    return true;
-  });
-}
-
-function filterOrderRows(rows, { search, vendorId, status, paymentStatus, dateRange }) {
-  const normalizedSearch = `${search ?? ""}`.trim().toLowerCase();
-  const startTime = dateRange?.start ? new Date(dateRange.start).getTime() : null;
-  const endTime = dateRange?.end ? new Date(dateRange.end).getTime() : null;
-
-  return (rows || []).filter((row) => {
-    if (vendorId && `${row.vendorId ?? ""}` !== `${vendorId}`) {
-      return false;
-    }
-
-    if (status && row.status !== status) {
-      return false;
-    }
-
-    if (paymentStatus && row.paymentStatus !== paymentStatus) {
-      return false;
-    }
-
-    if (normalizedSearch) {
-      const searchable = [
-        row.id,
-        row.orderNumber,
-        row.customer,
-        row.customerEmail,
-        row.vendor,
-        row.vendorCity,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      if (!searchable.includes(normalizedSearch)) {
-        return false;
-      }
-    }
-
-    if (startTime != null || endTime != null) {
-      const placedAt = new Date(row.placedAt || "").getTime();
-      if (Number.isNaN(placedAt) || (startTime != null && placedAt < startTime) || (endTime != null && placedAt > endTime)) {
-        return false;
-      }
-    }
-
     return true;
   });
 }
@@ -147,7 +90,6 @@ export default function OrdersPage() {
     paymentStatuses: [],
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [isExporting, setIsExporting] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [activeActionOrderId, setActiveActionOrderId] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
@@ -192,36 +134,23 @@ export default function OrdersPage() {
     [dateRange, vendorFilter],
   );
 
-  function applyActiveFilters(response) {
-    const filteredRows = filterOrderRows(response.rows, {
-      search: searchTerm,
-      vendorId: vendorFilter,
-      status: statusFilter,
-      paymentStatus: paymentFilter,
-      dateRange,
-    });
-
-    return {
-      ...response,
-      ...paginateFilteredRows(filteredRows, currentPage, PAGE_SIZE),
-    };
-  }
-
   useEffect(() => {
     let isMounted = true;
     const cachedResponse = readOrderCache(orderCacheKey);
 
     if (cachedResponse) {
-      const filteredResponse = applyActiveFilters(cachedResponse);
-      setRows(filteredResponse.rows);
-      setSummaryCards(filteredResponse.summaryCards);
-      setPageInfo(filteredResponse.pageInfo);
-      setFilterOptions({
-        vendors: uniqueVendorOptions(cachedResponse.filterOptions.vendors),
-        statuses: uniqueTextOptions(cachedResponse.filterOptions.statuses),
-        paymentStatuses: uniqueTextOptions(cachedResponse.filterOptions.paymentStatuses),
+      window.queueMicrotask(() => {
+        if (!isMounted) return;
+        setRows(cachedResponse.rows);
+        setSummaryCards(cachedResponse.summaryCards);
+        setPageInfo(cachedResponse.pageInfo);
+        setFilterOptions({
+          vendors: uniqueVendorOptions(cachedResponse.filterOptions.vendors),
+          statuses: uniqueTextOptions(cachedResponse.filterOptions.statuses),
+          paymentStatuses: uniqueTextOptions(cachedResponse.filterOptions.paymentStatuses),
+        });
+        setIsLoading(false);
       });
-      setIsLoading(false);
     }
 
     let requestPending = false;
@@ -235,16 +164,15 @@ export default function OrdersPage() {
       setLoadError("");
 
       try {
-        const ordersResponse = await loadCompleteList(getAdminOrdersRequest, normalizedFilters);
+        const ordersResponse = await getAdminOrdersRequest(normalizedFilters);
 
         if (!isMounted) {
           return;
         }
 
-        const filteredResponse = applyActiveFilters(ordersResponse);
-        setRows(filteredResponse.rows);
-        setSummaryCards(filteredResponse.summaryCards);
-        setPageInfo(filteredResponse.pageInfo);
+        setRows(ordersResponse.rows);
+        setSummaryCards(ordersResponse.summaryCards);
+        setPageInfo(ordersResponse.pageInfo);
         setFilterOptions({
           vendors: uniqueVendorOptions(ordersResponse.filterOptions.vendors),
           statuses: uniqueTextOptions(ordersResponse.filterOptions.statuses),
@@ -256,10 +184,10 @@ export default function OrdersPage() {
           setLoadError(error instanceof Error ? error.message : "Unable to load orders.");
         }
       } finally {
-        requestPending = false;
-        if (isMounted) {
-          setIsLoading(false);
-        }
+      requestPending = false;
+      if (isMounted) {
+        setIsLoading(false);
+      }
       }
     }
 
@@ -279,17 +207,6 @@ export default function OrdersPage() {
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [normalizedFilters, orderCacheKey, reloadKey]);
-
-  useEffect(() => {
-    const cachedResponse = readOrderCache(orderCacheKey);
-    if (!cachedResponse) {
-      return;
-    }
-
-    const filteredResponse = applyActiveFilters(cachedResponse);
-    setRows(filteredResponse.rows);
-    setPageInfo(filteredResponse.pageInfo);
-  }, [dateRange, orderCacheKey, paymentFilter, searchTerm, statusFilter, vendorFilter]);
 
   useEffect(() => {
     let isMounted = true;
@@ -373,30 +290,6 @@ export default function OrdersPage() {
         break;
       default:
         break;
-    }
-  }
-
-  async function handleExport() {
-    try {
-      setIsExporting(true);
-      const result = await exportAdminOrdersRequest({
-        dateFrom: dateRange?.start?.toISOString() || null,
-        dateTo: dateRange?.end?.toISOString() || null,
-        preset: presetByFilter[timeframe] || null,
-        format: "CSV",
-        sections: ["SUMMARY", "ORDERS", "PAYMENTS"],
-      });
-
-      window.open(result.fileUrl, "_blank", "noopener,noreferrer");
-    } catch (error) {
-      await Swal.fire({
-        icon: "error",
-        title: "Export failed",
-        text: error instanceof Error ? error.message : "Unable to export orders.",
-        confirmButtonColor: "#cf6e38",
-      });
-    } finally {
-      setIsExporting(false);
     }
   }
 

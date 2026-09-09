@@ -122,39 +122,6 @@ function resolvePaymentOrderStatus(order) {
   );
 }
 
-// Payment order snapshots can lag behind fulfillment. Read the current order
-// records in bounded batches, using variables rather than interpolating IDs.
-async function loadCurrentPaymentOrders(items) {
-  const ids = [...new Set(items.map((item) => item?.order?.id).filter(Boolean))];
-  const orders = new Map();
-  for (let offset = 0; offset < ids.length; offset += 20) {
-    const batch = ids.slice(offset, offset + 20);
-    const variables = Object.fromEntries(batch.map((id, index) => [`id${index}`, id]));
-    const definitions = batch.map((_, index) => `$id${index}: ID!`).join(", ");
-    const selections = batch.map((_, index) => `
-      order${index}: adminOrder(id: $id${index}) {
-        id status fulfillmentStatus acceptedAt preparedAt outForDeliveryAt
-        deliveredAt canceledAt delivery { status deliveredAt }
-      }
-    `).join("\n");
-    const data = await executeProtectedGraphqlRequest(
-      `query PaymentOrderStatuses(${definitions}) { ${selections} }`,
-      variables,
-    );
-    batch.forEach((id, index) => {
-      const order = data?.[`order${index}`];
-      if (!order || String(order.id) !== String(id)) {
-        throw new Error("Unable to load the current order status. Please refresh payments.");
-      }
-      orders.set(String(id), order);
-    });
-  }
-  return items.map((item) => ({
-    ...item,
-    order: orders.get(String(item?.order?.id)) || item?.order,
-  }));
-}
-
 function resolveCustomerPaymentStatusForOrder(status, order) {
   if (!isCancelledOrder(order) || status === "Paid") {
     return status;
@@ -930,7 +897,6 @@ function normalizePaymentDetail(payment, contractInvoice = null) {
         helperText: payment.lifecycle?.paymentReceivedAt
           ? "Customer payment has been marked as received."
           : "Waiting for customer payment confirmation.",
-        timestamp: formatDateTimeLabel(payment.lifecycle?.paymentReceivedAt),
         timestamp: formatDateTimeLabel(rawPayment.lifecycle?.paymentReceivedAt || contractInvoice?.paidAtLabel),
         isComplete: Boolean(rawPayment.lifecycle?.paymentReceivedAt || contractInvoice?.paidAtLabel),
       },
@@ -1054,30 +1020,9 @@ export async function getAdminPaymentsRequest(filters) {
       ? response.edges.map((edge) => edge?.node).filter(Boolean)
       : [];
 
-  // Older payment rows may omit their locked commission snapshot. Fetch a
-  // contract only for those rows so the list matches the payment detail.
-  const contractInvoices = await Promise.all(
-    responseItems.map(async (item) => {
-      if ((parseMoneyAmount(item?.platformCommission) || 0) > 0) {
-        return null;
-      }
-
-      try {
-        const contractData = await executeProtectedGraphqlRequest(
-          ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY,
-          { id: item?.id },
-        );
-        return normalizeContractInvoice(contractData?.adminPaymentFinanceContract);
-      } catch {
-        return null;
-      }
-    }),
-  );
-
-  const currentItems = await loadCurrentPaymentOrders(responseItems);
-  const rows = currentItems.map((item, index) =>
-    normalizePaymentRow(item, contractInvoices[index]),
-  );
+  // Keep the list endpoint lightweight. Detail/contract enrichment is loaded
+  // only when opening an individual payout record.
+  const rows = responseItems.map((item) => normalizePaymentRow(item));
 
   return {
     rows,
@@ -1143,7 +1088,11 @@ export async function getAdminPaymentDetailRequest(id) {
     );
   }
 
-  const [currentPayment] = await loadCurrentPaymentOrders([data?.adminPayment]);
+  const contractOrder = contractData?.adminPaymentFinanceContract?.order;
+  const currentPayment = {
+    ...(data?.adminPayment || {}),
+    order: contractOrder || data?.adminPayment?.order,
+  };
   const payment = normalizePaymentDetail(currentPayment, contractInvoice);
 
   if (!payment?.id) {

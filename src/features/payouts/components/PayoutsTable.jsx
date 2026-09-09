@@ -183,7 +183,7 @@ export default function PayoutsTable({
                 const customerPaymentPaid = row.customerPaymentStatus === "Paid";
                 const canApproveReportedPayment = view === "customer" && row.customerPaymentStatus === "Reported" && Boolean(row.invoiceId);
                 const canMarkCustomerReceived = view === "customer" && row.customerPaymentStatus === "Pending" && Boolean(row.invoiceId);
-                const canMarkVendorPaid = view === "vendor" && customerPaymentPaid && row.vendorPayoutStatus === "Released" && Boolean(row.payoutId);
+                const canMarkVendorPaid = view === "vendor" && customerPaymentPaid && !["Paid", "Canceled"].includes(row.vendorPayoutStatus);
                 const showVendorPaymentWaiting = view === "vendor" && !customerPaymentPaid && row.orderStatus !== "Canceled";
 
                 return (
@@ -237,7 +237,7 @@ export default function PayoutsTable({
                             onClick={() => onQuickAction?.(row, "markVendorPaid")}
                             type="button"
                           >
-                            {activeActionKey === `${row.id}:markVendorPaid` ? "Updating..." : "Mark Payout Paid"}
+                            {activeActionKey === `${row.id}:markVendorPaid` ? "Updating..." : "Mark Received"}
                           </button>
                         ) : null}
                         {showVendorPaymentWaiting ? (

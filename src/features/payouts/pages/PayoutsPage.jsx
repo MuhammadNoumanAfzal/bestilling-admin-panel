@@ -11,6 +11,7 @@ import {
   getAdminPaymentsRequest,
   markCustomerPaymentReceivedRequest,
   markVendorPayoutPaidRequest,
+  releaseVendorPayoutRequest,
 } from "../api/paymentsApi.js";
 import CommissionBreakdownCard from "../components/CommissionBreakdownCard.jsx";
 import PayoutOverviewCard from "../components/PayoutOverviewCard.jsx";
@@ -269,11 +270,7 @@ export default function PayoutsPage() {
         });
         return;
       }
-
-      if (row.vendorPayoutStatus !== "Released" || !row.payoutId) {
-        return;
-      }
-    }
+}
 
     try {
       setActiveActionKey(actionKey);
@@ -341,7 +338,7 @@ export default function PayoutsPage() {
       if (action === "markVendorPaid") {
         const paymentDate = new Date().toISOString().slice(0, 10);
         const prompt = await Swal.fire({
-          title: "Mark vendor payout paid?",
+          title: "Mark vendor payment received?",
           html: `
             <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
               <div>
@@ -360,7 +357,7 @@ export default function PayoutsPage() {
           `,
           focusConfirm: false,
           showCancelButton: true,
-          confirmButtonText: "Mark payout paid",
+          confirmButtonText: "Mark received",
           confirmButtonColor: "#cf6e38",
           cancelButtonColor: "#c8b9aa",
           preConfirm: () => ({
@@ -374,7 +371,28 @@ export default function PayoutsPage() {
           return;
         }
 
-        const result = await markVendorPayoutPaidRequest(row.payoutId, {
+        let latest = await getAdminPaymentDetailRequest(row.id);
+        if (latest.statuses.customerPaymentStatus !== "Paid") {
+          throw new Error("Customer payment must be received before vendor payout can be completed.");
+        }
+
+        if (latest.statuses.vendorPayoutStatus !== "Released") {
+          if (!latest.settlementId || !latest.vendor?.id) {
+            throw new Error("The settlement is not ready for vendor payout yet.");
+          }
+
+          await releaseVendorPayoutRequest(
+            { vendorId: latest.vendor.id, settlementIds: [latest.settlementId] },
+            { note: prompt.value?.note || "Released while recording completed vendor transfer." },
+          );
+          latest = await getAdminPaymentDetailRequest(row.id);
+        }
+
+        if (!latest.payoutId) {
+          throw new Error("The payout record is not available yet. Refresh and retry.");
+        }
+
+        const result = await markVendorPayoutPaidRequest(latest.payoutId, {
           ...prompt.value,
         });
 
@@ -384,7 +402,7 @@ export default function PayoutsPage() {
           );
         }
 
-        const refreshedDetail = await getAdminPaymentDetailRequest(row.payoutId);
+        const refreshedDetail = await getAdminPaymentDetailRequest(row.id);
         if (refreshedDetail.statuses.vendorPayoutStatus !== "Paid") {
           throw new Error(
             "The payout was not saved as paid. The vendor will continue to see it as released until the payment API returns PAID.",
@@ -424,7 +442,7 @@ export default function PayoutsPage() {
         setCurrentPage(1);
         break;
       case "completed":
-        setStatusFilter("RELEASED");
+        setStatusFilter("PAID");
         setCurrentPage(1);
         break;
       default:
@@ -505,3 +523,6 @@ export default function PayoutsPage() {
     </div>
   );
 }
+
+
+

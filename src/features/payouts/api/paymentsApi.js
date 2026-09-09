@@ -350,14 +350,30 @@ export function applyCommissionDisplayFallbackToPaymentList(result, commissionSe
     0,
   );
 
+  const summaryCards = result.summaryCards || [];
+  const totalRevenue = parseMoneyAmount(summaryCards.find((card) => card.id === "total")?.value);
+  const completedPayouts = parseMoneyAmount(summaryCards.find((card) => card.id === "completed")?.value) || 0;
+  const activeCommission = commissionTotal > 0
+    ? commissionTotal
+    : parseMoneyAmount(summaryCards.find((card) => card.id === "commission")?.value) || 0;
+  const computedPendingPayouts = Number.isFinite(totalRevenue)
+    ? Math.max(totalRevenue - activeCommission - completedPayouts, 0)
+    : Number.NaN;
+
   return {
     ...result,
     rows,
-    summaryCards: (result.summaryCards || []).map((card) =>
-      card.id === "commission" && commissionTotal > 0
-        ? { ...card, value: formatComputedMoney(commissionTotal) }
-        : card,
-    ),
+    summaryCards: summaryCards.map((card) => {
+      if (card.id === "commission" && activeCommission > 0) {
+        return { ...card, value: formatComputedMoney(activeCommission) };
+      }
+
+      if (card.id === "pending" && Number.isFinite(computedPendingPayouts)) {
+        return { ...card, value: formatComputedMoney(computedPendingPayouts) };
+      }
+
+      return card;
+    }),
   };
 }
 
@@ -416,6 +432,20 @@ function normalizeSummary(summary, rows = []) {
   const summaryCommissionCurrency =
     summary?.platformCommission?.currency ||
     "NOK";
+  const activeCommissionAmount = shouldUseComputedCommission
+    ? computedCommissionAmount
+    : Number.isFinite(summaryCommissionAmount)
+      ? summaryCommissionAmount
+      : 0;
+  const totalRevenueAmount = parseMoneyAmount(summary?.totalRevenue);
+  const completedPayoutAmount = parseMoneyAmount(summary?.completedPayouts) || 0;
+  const rawPendingPayoutAmount = parseMoneyAmount(summary?.pendingPayouts);
+  const computedPendingPayoutAmount = Number.isFinite(totalRevenueAmount)
+    ? Math.max(totalRevenueAmount - activeCommissionAmount - completedPayoutAmount, 0)
+    : rawPendingPayoutAmount;
+  const pendingPayoutLabel = Number.isFinite(computedPendingPayoutAmount)
+    ? formatComputedMoney(computedPendingPayoutAmount, summary?.pendingPayouts?.currency || summaryCommissionCurrency)
+    : summary?.pendingPayouts?.formatted || "NOK 0.00";
 
   return [
     {
@@ -435,7 +465,7 @@ function normalizeSummary(summary, rows = []) {
     {
       id: "pending",
       label: "Pending Payouts",
-      value: summary?.pendingPayouts?.formatted || "NOK 0.00",
+      value: pendingPayoutLabel,
       accent: "neutral",
     },
     {
@@ -1303,3 +1333,5 @@ export async function markVendorPayoutPaidRequest(
     payoutReference: result.payout.transferReference || "",
   };
 }
+
+

@@ -954,6 +954,17 @@ export default function AdminLayout() {
                     </div>
                     <div className="mt-2 flex flex-col gap-1">
                       <button
+                        className="flex w-full cursor-pointer items-center gap-2 rounded-[12px] px-3 py-2.5 text-left text-[13px] font-semibold text-[#4f433c] transition hover:bg-[#faf6f2]"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          navigate("/settings");
+                        }}
+                        type="button"
+                      >
+                        <SettingsIcon size={15} />
+                        <span>Settings</span>
+                      </button>
+                      <button
                         className="flex w-full cursor-pointer items-center gap-2 rounded-[12px] px-3 py-2.5 text-left text-[13px] font-semibold text-[#c85e2f] transition hover:bg-[#fff4ee]"
                         onClick={handleLogout}
                         type="button"
@@ -1017,3 +1028,4 @@ export default function AdminLayout() {
     </div>
   );
 }
+

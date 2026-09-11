@@ -1,3 +1,4 @@
+import { ct, useCustomerLanguage, customerDate } from "../../customerTranslation.js";
 import { useMemo, useState } from "react";
 import { MessageSquare, Star } from "lucide-react";
 import DateFilterDropdown from "../../../dashboard/components/DateFilterDropdown.jsx";
@@ -6,6 +7,7 @@ import { getDateRangeForFilter } from "../../../dashboard/data/dashboardData.js"
 const DEFAULT_DATE_FILTER = "Last 7 days";
 
 export default function CustomerReviewsCard({ reviewsData = [] }) {
+  useCustomerLanguage();
   const [ratingFilter, setRatingFilter] = useState("All");
   const [timeframe, setTimeframe] = useState(DEFAULT_DATE_FILTER);
   const [customStart, setCustomStart] = useState("");
@@ -67,15 +69,13 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
           <span className="inline-flex h-6 w-6 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#d96834] shadow-sm">
             <Star size={13} fill="currentColor" strokeWidth={2.5} />
           </span>
-          <h3 className="text-[18px] font-extrabold tracking-tight text-[#18120f]">
-            Customer Reviews
-          </h3>
+          <h3 className="text-[18px] font-extrabold tracking-tight text-[#18120f]">{ct("Customer Reviews")}{" "}</h3>
           <span className="rounded-full border border-[#fff0e7] bg-[#fff0e7] px-2.5 py-0.5 text-[11px] font-bold text-[#cf6e38] shadow-sm">
             {reviewsData.length
-              ? `${(
+              ? ct("{{value0}} Average Rating Given", { value0: (
                   reviewsData.reduce((sum, item) => sum + Number(item.rating || 0), 0) / reviewsData.length
-                ).toFixed(1)} Average Rating Given`
-              : "No Ratings Yet"}
+                ).toFixed(1) })
+              : ct("No Ratings Yet")}
           </span>
         </div>
       </div>
@@ -94,7 +94,7 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
                     : "border-[#e0d5cc] bg-white text-[#6f655e] hover:bg-[#faf5f1]"
                 }`}
               >
-                {value === "All" ? "All Stars" : `${value} Star`}
+                {value === "All" ? ct("All Stars") : ct("{{value0}} Star", { value0: value })}
               </button>
             ))}
           </div>
@@ -113,9 +113,7 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
               onClick={handleResetFilters}
               type="button"
               className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[10px] border border-[#ddd4cb] bg-[#f0ebe6] px-4 text-[12px] font-bold text-[#5a4d46] shadow-sm transition duration-150 hover:bg-[#e6dad1] active:scale-95"
-            >
-              Clear Filters
-            </button>
+            >{ct("Clear Filters")}{" "}</button>
           </div>
         </div>
 
@@ -123,7 +121,7 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
           {displayedReviews.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-[12px] border border-dashed border-[#ddd6cf] bg-[#faf9f8] py-12 text-[#a89f97]">
               <MessageSquare size={24} className="mb-2 text-[#baaea0]" />
-              <p className="text-[13px] font-bold">No reviews matching the filters</p>
+              <p className="text-[13px] font-bold">{ct("No reviews matching the filters")}</p>
             </div>
           ) : (
             displayedReviews.map((review) => (
@@ -149,7 +147,7 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
                       <span className="block text-[15px] font-bold text-[#18120f]">{review.name}</span>
                       {review.createdAt ? (
                         <span className="mt-1 block text-[11px] font-semibold text-[#8d7e72]">
-                          {review.createdAt}
+                          {customerDate(review.createdAtValue || review.createdAt)}
                         </span>
                       ) : null}
                       <div className="mt-1.5 flex items-center gap-0.5">
@@ -164,8 +162,7 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
                       </div>
                     </div>
 
-                    <span className="rounded-[6px] border border-[#ffdcd0] bg-[#fff0e7] px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wider text-[#cf6e38]">
-                      Order Ref {review.orderRef || "#ORD-8829"}
+                    <span className="rounded-[6px] border border-[#ffdcd0] bg-[#fff0e7] px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wider text-[#cf6e38]">{ct("Order Ref")}{" "}{review.orderRef || "#ORD-8829"}
                     </span>
                   </div>
 
@@ -185,7 +182,7 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
               type="button"
               className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#e6dad1] bg-white px-6 text-[13px] font-bold text-[#cf6e38] shadow-sm transition duration-150 hover:border-[#f0d4ca] hover:bg-[#fff0e7] active:scale-95"
             >
-              {showAll ? "View Less Reviews" : "View All Reviews"}
+              {showAll ? ct("View Less Reviews") : ct("View All Reviews")}
             </button>
           </div>
         ) : null}

@@ -1,7 +1,9 @@
+import { pt, usePayoutLanguage } from "../payoutTranslation.js";
 import { useEffect, useRef, useState } from "react";
 import { Search, RotateCw, ChevronDown } from "lucide-react";
 
 function Dropdown({
+  translateOptions = true,
   isOpen,
   label,
   onToggle,
@@ -11,6 +13,7 @@ function Dropdown({
   clearLabel,
   onSelect,
 }) {
+  usePayoutLanguage();
   return (
     <div className="relative">
       <button
@@ -18,7 +21,7 @@ function Dropdown({
         onClick={onToggle}
         type="button"
       >
-        <span>{label || defaultLabel}</span>
+        <span>{label ? (translateOptions ? pt(label) : label) : pt(defaultLabel)}</span>
         <ChevronDown size={14} className="text-[#8c8077]" />
       </button>
 
@@ -33,7 +36,7 @@ function Dropdown({
             onClick={() => onSelect("all")}
             type="button"
           >
-            {clearLabel || defaultLabel}
+            {pt(clearLabel || defaultLabel)}
           </button>
 
           {options.map((option) => (
@@ -47,7 +50,7 @@ function Dropdown({
               onClick={() => onSelect(option.value)}
               type="button"
             >
-              {option.label}
+              {translateOptions ? pt(option.label) : option.label}
             </button>
           ))}
         </div>
@@ -67,6 +70,7 @@ export default function PayoutToolbar({
   vendorOptions = [],
   vendorFilter,
 }) {
+  usePayoutLanguage();
   const [activeDropdown, setActiveDropdown] = useState("");
   const toolbarRef = useRef(null);
 
@@ -98,7 +102,7 @@ export default function PayoutToolbar({
           type="text"
           value={searchTerm}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search by order ID, customer, or vendor..."
+          placeholder={pt("Search by order ID, customer, or vendor...")}
           className="h-10 w-full rounded-[10px] border border-[#ddd4cb] bg-white pl-10 pr-4 text-[13px] text-[#231913] outline-none transition placeholder:text-[#baaea0] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]"
         />
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#baaea0]">
@@ -108,8 +112,8 @@ export default function PayoutToolbar({
 
       <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
         <Dropdown
-          clearLabel="Any customer payment status"
-          defaultLabel="Customer Payment Status"
+          clearLabel={pt("Any customer payment status")}
+          defaultLabel={pt("Customer Payment Status")}
           isOpen={activeDropdown === "status"}
           label={statusOptions.find((option) => option.value === statusFilter)?.label}
           onSelect={(value) => handleSelect(onStatusFilterChange, value)}
@@ -119,13 +123,13 @@ export default function PayoutToolbar({
         />
 
         <Dropdown
-          clearLabel="Any vendor"
-          defaultLabel="Vendor"
+          clearLabel={pt("Any vendor")}
+          defaultLabel={pt("Vendor")}
           isOpen={activeDropdown === "vendor"}
           label={vendorOptions.find((option) => option.value === vendorFilter)?.label}
           onSelect={(value) => handleSelect(onVendorFilterChange, value)}
           onToggle={() => setActiveDropdown((current) => (current === "vendor" ? "" : "vendor"))}
-          options={vendorOptions}
+          translateOptions={false} options={vendorOptions}
           selectedValue={vendorFilter === "all" ? "" : vendorFilter}
         />
 
@@ -134,9 +138,7 @@ export default function PayoutToolbar({
           onClick={onResetFilters}
           type="button"
         >
-          <RotateCw size={14} />
-          Clear Filters
-        </button>
+          <RotateCw size={14} />{pt("Clear Filters")}</button>
       </div>
     </div>
   );

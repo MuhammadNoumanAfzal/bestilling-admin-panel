@@ -1,3 +1,4 @@
+import { dt, useDeliveryLanguage, deliveryError, deliveryMessage, deliveryDialog } from "../deliveryTranslation.js";
 import { ChevronLeft, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
@@ -28,6 +29,7 @@ function createInitialSettingsForm(area) {
 }
 
 export default function DeliveryAreaDetailPage() {
+  useDeliveryLanguage();
   const { areaId } = useParams();
   const navigate = useNavigate();
   const [area, setArea] = useState(null);
@@ -88,19 +90,19 @@ export default function DeliveryAreaDetailPage() {
       setArea(refreshedArea);
       setSettingsForm(createInitialSettingsForm(refreshedArea));
 
-      await Swal.fire({
+      await Swal.fire(deliveryDialog({
         icon: "success",
         title: "Delivery area updated",
-        text: result.message,
+        text: deliveryMessage(result.message),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(deliveryDialog({
         icon: "error",
         title: "Unable to save changes",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: deliveryError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsSaving(false);
     }
@@ -126,19 +128,19 @@ export default function DeliveryAreaDetailPage() {
           : current,
       );
 
-      await Swal.fire({
+      await Swal.fire(deliveryDialog({
         icon: "success",
         title: "Area status updated",
-        text: result.message,
+        text: deliveryMessage(result.message),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(deliveryDialog({
         icon: "error",
         title: "Unable to update area status",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: deliveryError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -157,12 +159,12 @@ export default function DeliveryAreaDetailPage() {
           : current,
       );
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(deliveryDialog({
         icon: "error",
         title: "Unable to add postal area",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: deliveryError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       throw error;
     } finally {
       setIsSubmittingPostalArea(false);
@@ -184,12 +186,12 @@ export default function DeliveryAreaDetailPage() {
           : current,
       );
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(deliveryDialog({
         icon: "error",
         title: "Unable to update postal area",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: deliveryError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       throw error;
     } finally {
       setIsSubmittingPostalArea(false);
@@ -197,7 +199,7 @@ export default function DeliveryAreaDetailPage() {
   }
 
   async function handleDeletePostalArea(postalAreaId) {
-    const confirmation = await Swal.fire({
+    const confirmation = await Swal.fire(deliveryDialog({
       icon: "warning",
       title: "Delete postal area?",
       text: "This postal area will be removed from the delivery zone.",
@@ -205,7 +207,7 @@ export default function DeliveryAreaDetailPage() {
       confirmButtonColor: "#d15b42",
       cancelButtonColor: "#c8b9aa",
       confirmButtonText: "Delete",
-    });
+    }));
 
     if (!confirmation.isConfirmed) {
       return;
@@ -222,12 +224,12 @@ export default function DeliveryAreaDetailPage() {
           : current,
       );
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(deliveryDialog({
         icon: "error",
         title: "Unable to delete postal area",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: deliveryError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     }
   }
 
@@ -236,15 +238,15 @@ export default function DeliveryAreaDetailPage() {
       return;
     }
 
-    const confirmation = await Swal.fire({
+    const confirmation = await Swal.fire(deliveryDialog({
       icon: "warning",
       title: "Delete delivery area?",
-      text: `This will permanently remove ${area.city} and its linked delivery coverage.`,
+      text: dt("This will permanently remove {{v0}} and its linked delivery coverage.", { v0: area.city }),
       showCancelButton: true,
       confirmButtonColor: "#d15b42",
       cancelButtonColor: "#c8b9aa",
       confirmButtonText: "Delete Area",
-    });
+    }));
 
     if (!confirmation.isConfirmed) {
       return;
@@ -252,20 +254,20 @@ export default function DeliveryAreaDetailPage() {
 
     try {
       const result = await deleteDeliveryAreaRequest(area.id);
-      await Swal.fire({
+      await Swal.fire(deliveryDialog({
         icon: "success",
         title: "Delivery area deleted",
-        text: result.message,
+        text: deliveryMessage(result.message),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       navigate("/delivery");
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(deliveryDialog({
         icon: "error",
         title: "Unable to delete delivery area",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: deliveryError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     }
   }
 
@@ -293,14 +295,13 @@ export default function DeliveryAreaDetailPage() {
       })),
     });
 
-    await Swal.fire({
+    await Swal.fire(deliveryDialog({
       icon: "success",
       title: "Postal codes imported",
       text:
-        result.message ||
-        `${result.importedCount} postal codes imported successfully.`,
+        deliveryMessage(result.message, dt("{{v0}} postal codes imported successfully.", { v0: result.importedCount })),
       confirmButtonColor: "#cf6e38",
-    });
+    }));
   }
 
   if (!isLoading && loadError && !area) {
@@ -308,14 +309,12 @@ export default function DeliveryAreaDetailPage() {
   }
 
   if (isLoading) {
-    return <AdminLoadingState cards={2} columns={4} title="Loading delivery area" description="Retrieving delivery coverage and postal-code details." />;
+    return <AdminLoadingState cards={2} columns={4} title={dt("Loading delivery area")} description={dt("Retrieving delivery coverage and postal-code details.")} />;
   }
 
   if (!area) {
     return (
-      <div className="rounded-[16px] border border-[#ece4de] bg-white px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">
-        Unable to load this delivery area.
-      </div>
+      <div className="rounded-[16px] border border-[#ece4de] bg-white px-5 py-12 text-center text-[15px] font-medium text-[#6f645d]">{dt("Unable to load this delivery area.")}</div>
     );
   }
 
@@ -327,7 +326,7 @@ export default function DeliveryAreaDetailPage() {
           to="/delivery"
         >
           <ChevronLeft size={15} />
-          <span>Back to Delivery</span>
+          <span>{dt("Back to Delivery")}</span>
         </Link>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -341,9 +340,7 @@ export default function DeliveryAreaDetailPage() {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="text-[38px] font-bold tracking-[-0.04em] text-[#18120f]">{area.city}</h1>
-            <p className="text-[18px] leading-7 ">
-              View postal code coverage, service controls, and local delivery configuration.
-            </p>
+            <p className="text-[18px] leading-7 ">{dt("View postal code coverage, service controls, and local delivery configuration.")}</p>
           </div>
 
           <div className="grid w-full gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap lg:justify-end">
@@ -351,9 +348,7 @@ export default function DeliveryAreaDetailPage() {
               className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-[12px] border border-[#f0b8ab] bg-white px-4 py-2.5 text-[13px] font-bold text-[#d15b42] transition hover:bg-[#fff4f1] sm:min-h-10 lg:w-auto"
               onClick={handleDeleteArea}
               type="button"
-            >
-              Delete Area
-            </button>
+            >{dt("Delete Area")}</button>
             <button
               className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-[12px] border border-[#e8d5ca] bg-white px-4 py-2.5 text-[13px] font-bold text-[#7a5d4b] transition hover:bg-[#fbf5ef] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-10 lg:w-auto"
               disabled={isUpdatingStatus}
@@ -361,10 +356,10 @@ export default function DeliveryAreaDetailPage() {
               type="button"
             >
               {isUpdatingStatus
-                ? "Updating..."
+                ? dt("Updating...")
                 : area.rawStatus === "ACTIVE"
-                  ? "Disable Area"
-                  : "Activate Area"}
+                  ? dt("Disable Area")
+                  : dt("Activate Area")}
             </button>
             <button
               className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-[12px] bg-[linear-gradient(135deg,#d86f39_0%,#c45b2d_100%)] px-4 py-2.5 text-[13px] font-bold text-white shadow-[0_14px_28px_rgba(207,110,56,0.2)] transition hover:-translate-y-[1px] hover:shadow-[0_18px_34px_rgba(207,110,56,0.26)] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-10 lg:w-auto"
@@ -372,7 +367,7 @@ export default function DeliveryAreaDetailPage() {
               onClick={handleSaveChanges}
               type="button"
             >
-              {isSaving ? "Saving..." : "Save Changes"}
+              {isSaving ? dt("Saving...") : dt("Save Changes")}
             </button>
           </div>
         </div>
@@ -385,13 +380,11 @@ export default function DeliveryAreaDetailPage() {
       <section className="rounded-[18px] border border-[#ddd4cd] bg-white p-5 shadow-[0_10px_24px_rgba(55,31,13,0.05)]">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-[24px] font-bold tracking-[-0.03em] text-[#18120f]">Linked Vendors</h2>
-            <p className="mt-2 text-[15px] leading-6 text-[#6f645d]">
-              Vendors currently associated with this delivery area.
-            </p>
+            <h2 className="text-[24px] font-bold tracking-[-0.03em] text-[#18120f]">{dt("Linked Vendors")}</h2>
+            <p className="mt-2 text-[15px] leading-6 text-[#6f645d]">{dt("Vendors currently associated with this delivery area.")}</p>
           </div>
           <span className="inline-flex rounded-full bg-[#fff4ea] px-3 py-1.5 text-[12px] font-bold text-[#cf6e38]">
-            {area.linkedVendors.length} linked
+            {dt("{{count}} linked", { count: area.linkedVendors.length })}
           </span>
         </div>
 
@@ -409,7 +402,7 @@ export default function DeliveryAreaDetailPage() {
               </div>
             ))
           ) : (
-            <p className="text-[14px] text-[#7a6d66]">No vendors are linked to this delivery area yet.</p>
+            <p className="text-[14px] text-[#7a6d66]">{dt("No vendors are linked to this delivery area yet.")}</p>
           )}
         </div>
       </section>

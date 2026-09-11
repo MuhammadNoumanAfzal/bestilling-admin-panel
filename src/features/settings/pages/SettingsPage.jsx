@@ -1,3 +1,5 @@
+import { st, useSettingsLanguage, settingsDialog, settingsMessage } from "../settingsTranslation.js";
+import DisplayLanguageSettings from "../components/DisplayLanguageSettings.jsx";
 import { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Banknote, Globe2, KeyRound, Languages, RefreshCcw, Trash2 } from "lucide-react";
@@ -30,6 +32,7 @@ import {
 import { mapVendorSettingsTaxonomy } from "../../vendor-settings/api/vendorSettingsMappers.js";
 
 function SaveButton({ children, className = "", disabled = false, type = "button", onClick }) {
+  useSettingsLanguage();
   return (
     <button
       className={[
@@ -173,6 +176,7 @@ function getInitials(user) {
 }
 
 function HeaderStatusCard({ icon: Icon, label, value, tone = "neutral" }) {
+  useSettingsLanguage();
   const toneClasses = {
     neutral: "bg-white text-[#8b776a]",
     warm: "bg-[#fff4ec] text-[#cf6e38]",
@@ -191,9 +195,9 @@ function HeaderStatusCard({ icon: Icon, label, value, tone = "neutral" }) {
       </span>
       <div className="min-w-0">
         <p className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#9a8677]">
-          {label}
+          {st(label)}
         </p>
-        <p className="mt-1 truncate text-[13px] font-semibold text-[#241912]">{value}</p>
+        <p className="mt-1 truncate text-[13px] font-semibold text-[#241912]">{value === "Locale pending" ? st(value) : value}</p>
       </div>
     </div>
   );
@@ -217,9 +221,10 @@ function ProfileInformationCard({
   isAvatarUploadAvailable,
   avatarUploadUnavailableMessage,
 }) {
+  useSettingsLanguage();
   return (
     <SettingsShellCard className="rounded-[16px] px-5 py-5">
-      <h2 className="text-[15px] font-bold text-[#2a1f18]">Profile Information</h2>
+      <h2 className="text-[15px] font-bold text-[#2a1f18]">{st("Profile Information")}</h2>
 
       <div className="mt-4 flex flex-col gap-5 md:flex-row">
         <SettingsAvatarUploader
@@ -233,31 +238,31 @@ function ProfileInformationCard({
 
         <div className="grid flex-1 gap-3 sm:grid-cols-2">
           <SettingsField
-            label="First Name"
+            label={st("First Name")}
             onChange={onProfileFieldChange("firstName")}
             value={profileForm.firstName}
           />
           <SettingsField
-            label="Last Name"
+            label={st("Last Name")}
             onChange={onProfileFieldChange("lastName")}
             value={profileForm.lastName}
           />
           <SettingsField
             autoComplete="email"
-            label="Email Address"
+            label={st("Email Address")}
             onChange={onProfileFieldChange("email")}
             value={profileForm.email}
           />
           <SettingsField
             autoComplete="tel"
-            label="Phone Number"
+            label={st("Phone Number")}
             onChange={onProfileFieldChange("phone")}
             value={profileForm.phone}
           />
           <SettingsField
-            label="Role"
+            label={st("Role")}
             readOnly
-            value={String(user?.role || "").trim() || "Administrator"}
+            value={st(String(user?.role || "").trim() || "Administrator")}
           />
           <div className="flex items-end pb-1">
             <button
@@ -266,7 +271,7 @@ function ProfileInformationCard({
               type="button"
             >
               <KeyRound size={12} />
-              {isPasswordFormOpen ? "Hide Password Fields" : "Change Password"}
+              {isPasswordFormOpen ? st("Hide Password Fields") : st("Change Password")}
             </button>
           </div>
         </div>
@@ -274,34 +279,34 @@ function ProfileInformationCard({
 
       {isPasswordFormOpen ? (
         <div className="mt-5 rounded-[14px] border border-[#efe4dc] bg-[#fcf8f5] p-4">
-          <h3 className="text-[13px] font-bold text-[#2a1f18]">Update Password</h3>
+          <h3 className="text-[13px] font-bold text-[#2a1f18]">{st("Update Password")}</h3>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <SettingsField
               autoComplete="current-password"
               className="sm:col-span-2"
               enablePasswordToggle
-              label="Current Password"
+              label={st("Current Password")}
               onChange={onPasswordFieldChange("currentPassword")}
-              placeholder="Enter current password"
+              placeholder={st("Enter current password")}
               type="password"
               value={passwordForm.currentPassword}
             />
             <SettingsField
               autoComplete="new-password"
               enablePasswordToggle
-              label="New Password"
+              label={st("New Password")}
               onChange={onPasswordFieldChange("newPassword")}
-              placeholder="Enter new password"
+              placeholder={st("Enter new password")}
               type="password"
               value={passwordForm.newPassword}
             />
             <SettingsField
               autoComplete="new-password"
               enablePasswordToggle
-              label="Confirm New Password"
+              label={st("Confirm New Password")}
               onChange={onPasswordFieldChange("confirmPassword")}
-              placeholder="Confirm new password"
+              placeholder={st("Confirm new password")}
               type="password"
               value={passwordForm.confirmPassword}
             />
@@ -312,11 +317,9 @@ function ProfileInformationCard({
               className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[10px] border border-[#d9d1ca] bg-white px-4 text-[12px] font-bold text-[#3f3530] transition hover:bg-[#faf6f2]"
               onClick={onClosePasswordForm}
               type="button"
-            >
-              Cancel
-            </button>
+            >{st("Cancel")}</button>
             <SaveButton className="h-10 px-4" disabled={isSavingPassword} onClick={onSavePassword}>
-              {isSavingPassword ? "Updating..." : "Update Password"}
+              {isSavingPassword ? st("Updating...") : st("Update Password")}
             </SaveButton>
           </div>
         </div>
@@ -324,7 +327,7 @@ function ProfileInformationCard({
 
       <div className="mt-5 flex items-center justify-end border-t border-[#eee5de] pt-4">
         <SaveButton className="h-10 min-w-[120px]" disabled={isSavingProfile} onClick={onSaveProfile}>
-          {isSavingProfile ? "Saving..." : "Save Changes"}
+          {isSavingProfile ? st("Saving...") : st("Save Changes")}
         </SaveButton>
       </div>
     </SettingsShellCard>
@@ -332,12 +335,13 @@ function ProfileInformationCard({
 }
 
 function MasterDataField({ field, value, onChange }) {
+  useSettingsLanguage();
   if (field.type === "checkbox") {
     return (
       <div className="flex flex-col gap-1.5">
-        <span className="text-[12px] font-bold text-[#2f241d]">{field.label}</span>
+        <span className="text-[12px] font-bold text-[#2f241d]">{st(field.label)}</span>
         <label className="flex h-12 items-center justify-between rounded-[10px] border border-[#d9d1ca] bg-[#f6f4f2] px-3.5 text-[13px] font-semibold text-[#2a1f19] transition hover:border-[#ce6938] hover:bg-white">
-          <span className="text-[#5f5148]">Enabled</span>
+          <span className="text-[#5f5148]">{st("Enabled")}</span>
           <input
             checked={Boolean(value)}
             className="h-4 w-4 accent-[#ce6938]"
@@ -351,7 +355,7 @@ function MasterDataField({ field, value, onChange }) {
 
   return (
     <SettingsField
-      label={field.label}
+      label={st(field.label)}
       onChange={(event) => onChange(field.key, event.target.value)}
       placeholder={field.placeholder}
       type={field.type || "text"}
@@ -374,6 +378,7 @@ function MasterDataManagerCard({
   onSaveEdit,
   onDelete,
 }) {
+  useSettingsLanguage();
   const Icon = section.icon;
 
   return (
@@ -397,14 +402,12 @@ function MasterDataManagerCard({
               disabled={savingKey === `${section.key}:create`}
               onClick={() => onCreate(section)}
             >
-              {savingKey === `${section.key}:create` ? "Saving..." : `Add ${section.singularLabel}`}
+              {savingKey === `${section.key}:create` ? st("Saving...") : st("Add {{type}}", { type: st(section.singularLabel) })}
             </SaveButton>
           </div>
         </>
       ) : (
-        <div className="rounded-[12px] border border-[#eadfd6] bg-[#fcf8f5] px-4 py-3 text-[12px] leading-5 text-[#7b6d63]">
-          This list is intentionally locked to platform-approved options only.
-        </div>
+        <div className="rounded-[12px] border border-[#eadfd6] bg-[#fcf8f5] px-4 py-3 text-[12px] leading-5 text-[#7b6d63]">{st("This list is intentionally locked to platform-approved options only.")}</div>
       )}
 
       <div className="mt-6 space-y-3 border-t border-[#eee5de] pt-5">
@@ -436,15 +439,13 @@ function MasterDataManagerCard({
                         disabled={savingKey === `${section.key}:edit:${item.id}`}
                         onClick={() => onSaveEdit(section, item)}
                       >
-                        {savingKey === `${section.key}:edit:${item.id}` ? "Updating..." : "Save"}
+                        {savingKey === `${section.key}:edit:${item.id}` ? st("Updating...") : st("Save")}
                       </SaveButton>
                       <button
                         className="inline-flex h-10 items-center justify-center rounded-[10px] border border-[#d9d1ca] bg-white px-4 text-[12px] font-bold text-[#3f3530] transition hover:bg-[#faf6f2]"
                         onClick={onCancelEdit}
                         type="button"
-                      >
-                        Cancel
-                      </button>
+                      >{st("Cancel")}</button>
                     </div>
                   </>
                 ) : (
@@ -452,7 +453,7 @@ function MasterDataManagerCard({
                     <div className="min-w-0">
                       <p className="text-[14px] font-bold text-[#2a1f18]">{item.name}</p>
                       <p className="mt-1 text-[12px] leading-5 text-[#85786f]">
-                        {item.meta || "API-managed option"}
+                        {item.meta || st("API-managed option")}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -461,13 +462,9 @@ function MasterDataManagerCard({
                           className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#d9d1ca] bg-white px-3 text-[12px] font-bold text-[#3f3530] transition hover:bg-[#faf6f2]"
                           onClick={() => onStartEdit(section.key, item)}
                           type="button"
-                        >
-                          Edit
-                        </button>
+                        >{st("Edit")}</button>
                       ) : (
-                        <span className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#e7ddd5] bg-[#faf7f4] px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b7b70]">
-                          Locked
-                        </span>
+                        <span className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#e7ddd5] bg-[#faf7f4] px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#8b7b70]">{st("Locked")}</span>
                       )}
                       {section.canDelete !== false ? (
                         <button
@@ -487,7 +484,7 @@ function MasterDataManagerCard({
           })
         ) : (
           <div className="rounded-[12px] border border-dashed border-[#e6d8ce] bg-[#fffcfa] px-4 py-6 text-center text-[13px] text-[#7c6f66]">
-            No {section.title.toLowerCase()} configured yet.
+            {st("No {{type}} configured yet.", { type: st(section.title).toLowerCase() })}
           </div>
         )}
       </div>
@@ -496,6 +493,7 @@ function MasterDataManagerCard({
 }
 
 function LoadingCard() {
+  useSettingsLanguage();
   return (
     <SettingsShellCard className="rounded-[16px] px-5 py-6">
       <div className="space-y-3">
@@ -509,6 +507,7 @@ function LoadingCard() {
 }
 
 export default function SettingsPage() {
+  const language = useSettingsLanguage();
   const { updateSessionUser } = useAuth();
   const { setPageHeaderAction } = useOutletContext();
   const isAvatarUploadAvailable = hasAdminUploadConfiguration();
@@ -583,12 +582,12 @@ export default function SettingsPage() {
         avatar: user.avatar,
       });
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "error",
         title: "Unable to load settings",
-        text: error?.message || "Please refresh and try again.",
+        text: settingsMessage(error, "Please refresh and try again."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -661,12 +660,12 @@ export default function SettingsPage() {
       !profileForm.email.trim() ||
       !profileForm.phone.trim()
     ) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "warning",
         title: "Missing details",
         text: "Please complete first name, last name, email, and phone.",
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
@@ -686,19 +685,19 @@ export default function SettingsPage() {
         avatar: result.user.avatar,
       });
 
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "success",
         title: "Profile updated",
-        text: result.message,
+        text: settingsMessage(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "error",
         title: "Unable to save profile",
-        text: error?.message || "Please try again.",
+        text: settingsMessage(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsSavingProfile(false);
     }
@@ -710,34 +709,34 @@ export default function SettingsPage() {
       !passwordForm.newPassword.trim() ||
       !passwordForm.confirmPassword.trim()
     ) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "warning",
         title: "Missing password",
         text: "Please complete all password fields.",
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "error",
         title: "Passwords do not match",
         text: "Please confirm the same new password.",
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
     const passwordValidationError = validateAdminPassword(passwordForm.newPassword);
 
     if (passwordValidationError) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "warning",
         title: "Weak password",
-        text: passwordValidationError,
+        text: st(passwordValidationError),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
@@ -753,21 +752,21 @@ export default function SettingsPage() {
         },
       }));
 
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "success",
         title: "Password updated",
         text: result.logoutOtherSessions
-          ? `${result.message} Other active sessions were signed out.`
-          : result.message,
+          ? `${settingsMessage(result.message, "Changes saved successfully.")} ${st("Other active sessions were signed out.")}`
+          : settingsMessage(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "error",
         title: "Unable to change password",
-        text: error?.message || "Please try again.",
+        text: settingsMessage(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsSavingPassword(false);
     }
@@ -778,12 +777,12 @@ export default function SettingsPage() {
     const missingField = validateMasterDataValues(section, values);
 
     if (missingField) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "warning",
         title: "Missing value",
-        text: `Please complete ${missingField} before creating a new ${section.singularLabel}.`,
+        text: st("Please complete {{field}} before creating a new {{type}}.", { field: st(missingField), type: st(section.singularLabel) }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
@@ -795,19 +794,19 @@ export default function SettingsPage() {
         [section.key]: createEmptyMasterDataDraft(section),
       }));
       await loadSettings({ silent: true });
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "success",
-        title: `${section.title} updated`,
-        text: `The new ${section.singularLabel} is now available through the API.`,
+        title: st("{{type}} updated", { type: st(section.title) }),
+        text: st("The new {{type}} is now available through the API.", { type: st(section.singularLabel) }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "error",
-        title: `Unable to create ${section.singularLabel}`,
-        text: error?.message || "Please try again.",
+        title: st("Unable to create {{type}}", { type: st(section.singularLabel) }),
+        text: settingsMessage(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setMasterDataSavingKey("");
     }
@@ -818,12 +817,12 @@ export default function SettingsPage() {
     const missingField = validateMasterDataValues(section, values);
 
     if (missingField) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "warning",
         title: "Missing value",
-        text: `Please complete ${missingField} before saving your changes.`,
+        text: st("Please complete {{field}} before saving your changes.", { field: st(missingField) }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
@@ -832,27 +831,27 @@ export default function SettingsPage() {
       await section.save(buildMasterDataPayload(section, values, item));
       cancelMasterDataEdit();
       await loadSettings({ silent: true });
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "success",
         title: "Updated",
-        text: `${section.singularLabel} updated successfully.`,
+        text: st("{{type}} updated successfully.", { type: st(section.singularLabel) }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "error",
         title: "Unable to update item",
-        text: error?.message || "Please try again.",
+        text: settingsMessage(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setMasterDataSavingKey("");
     }
   }
 
   async function handleDeleteMasterData(section, item) {
-    const result = await Swal.fire({
-      title: `Delete ${item.name}?`,
+    const result = await Swal.fire(settingsDialog({
+      title: st("Delete {{name}}?", { name: item.name }),
       text: "This removes it from future admin and vendor selections.",
       icon: "warning",
       showCancelButton: true,
@@ -860,7 +859,7 @@ export default function SettingsPage() {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c6b7aa",
-    });
+    }));
 
     if (!result.isConfirmed) {
       return;
@@ -873,19 +872,19 @@ export default function SettingsPage() {
         cancelMasterDataEdit();
       }
       await loadSettings({ silent: true });
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "success",
         title: "Deleted",
-        text: `${item.name} has been removed.`,
+        text: st("{{name}} has been removed.", { name: item.name }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "error",
         title: "Unable to delete item",
-        text: error?.message || "Please try again.",
+        text: settingsMessage(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setMasterDataSavingKey("");
     }
@@ -900,22 +899,22 @@ export default function SettingsPage() {
     }
 
     if (!isAvatarUploadAvailable) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "info",
         title: "Avatar upload unavailable",
-        text: avatarUploadUnavailableMessage,
+        text: st(avatarUploadUnavailableMessage),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
     if (!file.type.startsWith("image/")) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "warning",
         title: "Invalid file",
         text: "Please choose an image file for the avatar.",
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
@@ -930,19 +929,19 @@ export default function SettingsPage() {
       updateSessionUser({
         avatar: response.avatar,
       });
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "success",
         title: "Avatar updated",
-        text: response.message,
+        text: settingsMessage(response.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(settingsDialog({
         icon: "error",
         title: "Unable to update avatar",
-        text: error?.message || "Please try again.",
+        text: settingsMessage(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsUpdatingAvatar(false);
     }
@@ -968,14 +967,15 @@ export default function SettingsPage() {
     setPageHeaderAction(
       <button className="inline-flex cursor-pointer items-center gap-2 rounded-[12px] border border-[#dfd5cd] bg-white px-4 py-2.5 text-[12px] font-bold text-[#3c312a] shadow-[0_10px_22px_rgba(49,30,19,0.04)] transition hover:bg-[#faf6f2] disabled:cursor-not-allowed disabled:opacity-60" disabled={isRefreshing} onClick={() => loadSettings({ silent: true })} type="button">
         <RefreshCcw size={14} />
-        {isRefreshing ? "Refreshing..." : "Refresh"}
+        {isRefreshing ? st("Refreshing...") : st("Refresh")}
       </button>,
     );
     return () => setPageHeaderAction(null);
-  }, [isRefreshing, setPageHeaderAction]);
+  }, [isRefreshing, setPageHeaderAction, language]);
 
   return (
     <div className="space-y-6">
+      <DisplayLanguageSettings />
       <input
         key={avatarInputKey}
         accept="image/*"
@@ -998,7 +998,7 @@ export default function SettingsPage() {
           type="button"
         >
           <RefreshCcw size={14} />
-          {isRefreshing ? "Refreshing..." : "Refresh"}
+          {isRefreshing ? st("Refreshing...") : st("Refresh")}
         </button>
       </div>
 

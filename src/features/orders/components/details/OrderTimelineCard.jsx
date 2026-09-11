@@ -1,3 +1,4 @@
+import { ot, useOrderLanguage, orderDate } from "../../orderTranslation.js";
 import { Clock, Check, Circle, AlertTriangle } from "lucide-react";
 
 function TimelineIcon({ status }) {
@@ -13,16 +14,17 @@ function TimelineIcon({ status }) {
 }
 
 export default function OrderTimelineCard({ timeline }) {
+  useOrderLanguage();
   return (
     <article className="h-full rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
       <header className="mb-6 flex items-center gap-2 border-b border-[#eee4dd] pb-3">
         <Clock size={18} className="text-[#cf6432]" />
-        <h3 className="text-[18px] font-bold text-[#18120f]">Order Timeline</h3>
+        <h3 className="text-[18px] font-bold text-[#18120f]">{ot("Order Timeline")}</h3>
       </header>
 
       <div className="flex flex-col">
         {timeline.length === 0 ? (
-          <p className="text-[14px] text-[#7a6d66]">No timeline activity is available yet.</p>
+          <p className="text-[14px] text-[#7a6d66]">{ot("No timeline activity is available yet.")}</p>
         ) : (
           timeline.map((step, index) => {
             const nodeStyles =
@@ -52,14 +54,14 @@ export default function OrderTimelineCard({ timeline }) {
 
                 <div className="flex flex-col gap-0.5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-[14px] font-bold text-[#18120f]">{step.label}</p>
+                    <p className="text-[14px] font-bold text-[#18120f]">{ot(step.label)}</p>
                     <span className="text-[11px] font-medium text-[#9a8f86]">
-                      {step.happenedAtLabel}
+                      {orderDate(step.happenedAt || step.happenedAtLabel)}
                     </span>
                   </div>
-                  <p className="text-[12px] leading-4 text-[#8a7f76]">{step.description}</p>
+                  <p className="text-[12px] leading-4 text-[#8a7f76]">{step.description?.startsWith("Order was canceled. Reason: ") ? ot("Order was canceled. Reason: {{reason}}", { reason: step.description.slice("Order was canceled. Reason: ".length) }) : ot(step.description)}</p>
                   {step.actor ? (
-                    <p className="text-[11px] font-medium text-[#a0897f]">By {step.actor}</p>
+                    <p className="text-[11px] font-medium text-[#a0897f]">{ot("By")}{" "}{step.actor}</p>
                   ) : null}
                 </div>
               </div>

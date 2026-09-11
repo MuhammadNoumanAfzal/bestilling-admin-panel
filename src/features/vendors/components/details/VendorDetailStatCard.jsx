@@ -1,3 +1,4 @@
+import { vt, useVendorLanguage } from "../../utils/vendorTranslation.js";
 import { BookOpen, Clock3, DollarSign, MenuSquare, Star, Truck } from "lucide-react";
 
 const icons = {
@@ -10,6 +11,7 @@ const icons = {
 };
 
 export default function VendorDetailStatCard({ id, label, value }) {
+  useVendorLanguage();
   const Icon = icons[id] || BookOpen;
 
   return (
@@ -19,7 +21,7 @@ export default function VendorDetailStatCard({ id, label, value }) {
           <Icon size={16} />
         </span>
         <div>
-          <p className="text-[12px] font-semibold text-[#8c7f76]">{label}</p>
+          <p className="text-[12px] font-semibold text-[#8c7f76]">{vt(label)}</p>
           <p className="mt-1.5 text-[24px] font-extrabold leading-none tracking-[-0.04em] text-[#1d1510]">
             {value}
           </p>

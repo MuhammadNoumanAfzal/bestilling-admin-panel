@@ -1,3 +1,4 @@
+import { ct, useCustomerLanguage } from "../customerTranslation.js";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
@@ -8,6 +9,7 @@ const statusClasses = {
 };
 
 function PersonCell({ name, src, email, avatar }) {
+  useCustomerLanguage();
   const [imageFailed, setImageFailed] = useState(false);
   const shouldShowAvatar = Boolean(src) && !imageFailed;
 
@@ -42,6 +44,7 @@ export default function CustomersTable({
   rows,
   totalItems,
 }) {
+  useCustomerLanguage();
   const navigate = useNavigate();
   const [activeMenuId, setActiveMenuId] = useState(null);
 
@@ -73,23 +76,21 @@ export default function CustomersTable({
         <table className="w-full min-w-[860px] border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] w-32">Customer ID</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] w-52">Customer</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Phone</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">City</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] text-center">Total Orders</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Amount</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
-              <th className="w-16 px-2 py-4 text-center text-[13px] font-bold text-[#9b8f86]">Actions</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] w-32">{ct("Customer ID")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] w-52">{ct("Customer")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{ct("Phone")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{ct("City")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] text-center">{ct("Total Orders")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{ct("Amount")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{ct("Status")}</th>
+              <th className="w-16 px-2 py-4 text-center text-[13px] font-bold text-[#9b8f86]">{ct("Actions")}</th>
             </tr>
           </thead>
 
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={8}>
-                  No customers match the current filters.
-                </td>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={8}>{ct("No customers match the current filters.")}{" "}</td>
               </tr>
             ) : (
               rows.map((row) => {
@@ -134,7 +135,7 @@ export default function CustomersTable({
                           statusClasses[row.status] || "bg-[#fcfbfa] text-[#6f655e]"
                         }`}
                       >
-                        {row.status}
+                        {ct(row.status)}
                       </span>
                     </td>
                     <td className="relative px-2 py-4 text-center align-middle">
@@ -157,9 +158,7 @@ export default function CustomersTable({
                               }}
                               className="block w-full px-3 py-1.5 text-[12px] font-semibold text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38] cursor-pointer"
                               type="button"
-                            >
-                              View Details
-                            </button>
+                            >{ct("View Details")}{" "}</button>
                             <button
                               onClick={() => {
                                 onToggleStatus?.(row);
@@ -170,10 +169,10 @@ export default function CustomersTable({
                               type="button"
                             >
                               {isUpdatingStatusId === row.id
-                                ? "Updating..."
+                                ? ct("Updating...")
                                 : row.status === "Blocked"
-                                  ? "Unblock Account"
-                                  : "Block Account"}
+                                  ? ct("Unblock Account")
+                                  : ct("Block Account")}
                             </button>
                           </div>
                         </>
@@ -189,12 +188,11 @@ export default function CustomersTable({
 
       {/* Pagination controls */}
       <footer className="flex flex-col items-center justify-between gap-4 border-t border-[#eee4dd] bg-[#fcfbfa] px-6 py-4 sm:flex-row">
-        <p className="text-[13px] font-semibold text-[#6f645d]">
-          Showing {start} - {end} of {totalItems} Customers
-        </p>
+        <p className="text-[13px] font-semibold text-[#6f645d]">{ct("Showing {{start}} - {{end}} of {{total}} Customers", { start, end, total: totalItems })}{" "}</p>
 
         <div className="flex items-center gap-1">
           <button
+            aria-label={ct("Previous page")}
             disabled={currentPage === 1}
             onClick={() => onPageChange(currentPage - 1)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#d8ccc2] bg-white text-[#4d423b] transition hover:bg-[#faf5f1] disabled:opacity-40 disabled:hover:bg-white cursor-pointer"
@@ -229,6 +227,7 @@ export default function CustomersTable({
           })}
 
           <button
+            aria-label={ct("Next page")}
             disabled={currentPage === totalPages}
             onClick={() => onPageChange(currentPage + 1)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#d8ccc2] bg-white text-[#4d423b] transition hover:bg-[#faf5f1] disabled:opacity-40 disabled:hover:bg-white cursor-pointer"

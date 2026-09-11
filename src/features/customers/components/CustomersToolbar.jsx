@@ -1,3 +1,4 @@
+import { ct, useCustomerLanguage } from "../customerTranslation.js";
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown, MapPin, Search } from "lucide-react";
 
@@ -12,6 +13,7 @@ export default function CustomersToolbar({
   cities = [],
   onResetFilters,
 }) {
+  useCustomerLanguage();
   const [activeDropdown, setActiveDropdown] = useState(null);
   const toolbarRef = useRef(null);
 
@@ -54,7 +56,7 @@ export default function CustomersToolbar({
             type="text"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by ID, customer name or phone..."
+            placeholder={ct("Search by ID, customer name or phone...")}
             className="h-9 w-full rounded-[8px] border border-[#ddd4cb] bg-white pl-9 pr-4 text-[13px] text-[#231913] outline-none transition placeholder:text-[#baaea0] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]"
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#baaea0]">
@@ -66,9 +68,7 @@ export default function CustomersToolbar({
           onClick={onResetFilters}
           className="inline-flex h-9 items-center justify-center rounded-[8px] border border-[#d8ccc2] bg-white px-4 text-[12px] font-bold text-[#4d423b] transition hover:bg-[#faf9f8] cursor-pointer outline-none self-end md:self-auto"
           type="button"
-        >
-          Clear Filters
-        </button>
+        >{ct("Clear Filters")}{" "}</button>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -82,7 +82,7 @@ export default function CustomersToolbar({
             }`}
             type="button"
           >
-            <span>{statusFilter ? `Status: ${statusFilter}` : "Customer Status"}</span>
+            <span>{statusFilter ? ct("Status: {{value0}}", { value0: ct(statusFilter) }) : ct("Customer Status")}</span>
             <ChevronDown size={13} className="text-[#8c8077]" />
           </button>
 
@@ -99,7 +99,7 @@ export default function CustomersToolbar({
                   }`}
                   type="button"
                 >
-                  {opt.label}
+                  {ct(opt.label)}
                 </button>
               ))}
             </div>
@@ -111,7 +111,7 @@ export default function CustomersToolbar({
             className="h-9 w-full rounded-[8px] border border-[#d8ccc2] bg-white pl-9 pr-4 text-[12px] font-semibold text-[#4d423b] outline-none transition placeholder:text-[#8c8077] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]"
             list="customer-city-filter-options"
             onChange={(event) => handleSelectCity(event.target.value)}
-            placeholder="Search city..."
+            placeholder={ct("Search city...")}
             type="text"
             value={cityFilter}
           />

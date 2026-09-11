@@ -1,18 +1,21 @@
+import { pt, usePayoutLanguage } from "../../payoutTranslation.js";
 import { BadgeCheck, CreditCard, FileText } from "lucide-react";
 
 function StatusDot({ label }) {
+  usePayoutLanguage();
   return (
     <span className="inline-flex items-center gap-2 text-[14px] font-semibold text-[#cf6e38]">
       <span className="h-2 w-2 rounded-full bg-current" />
-      {label}
+      {pt(label)}
     </span>
   );
 }
 
 function DetailRow({ label, value }) {
+  usePayoutLanguage();
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-[14px] text-[#4f433d]">{label}</span>
+      <span className="text-[14px] text-[#4f433d]">{pt(label)}</span>
       <span className="text-[14px] font-semibold text-[#18120f]">{value}</span>
     </div>
   );
@@ -31,12 +34,13 @@ function PaymentActionCard({
   status,
   title,
 }) {
+  usePayoutLanguage();
   return (
     <section className="rounded-[18px] border border-[#ddd4cd] bg-white p-4 shadow-[0_10px_24px_rgba(55,31,13,0.05)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-[17px] font-bold text-[#221914]">{title}</h3>
-          <p className="mt-1.5 text-[14px] leading-6 text-[#5f534c]">{description}</p>
+          <h3 className="text-[17px] font-bold text-[#221914]">{pt(title)}</h3>
+          <p className="mt-1.5 text-[14px] leading-6 text-[#5f534c]">{pt(description)}</p>
         </div>
         <span className="inline-flex h-9 w-9 items-center justify-center rounded-[12px] bg-[#f4f7ff] text-[#657aab]">
           <Icon size={18} />
@@ -49,7 +53,7 @@ function PaymentActionCard({
             <DetailRow key={detail.label} label={detail.label} value={detail.value} />
           ))}
           <div className="flex items-center justify-between gap-3">
-            <span className="text-[14px] text-[#4f433d]">Status</span>
+            <span className="text-[14px] text-[#4f433d]">{pt("Status")}</span>
             <StatusDot label={status} />
           </div>
         </div>
@@ -63,7 +67,7 @@ function PaymentActionCard({
           type="button"
         >
           <BadgeCheck size={15} />
-          <span>{buttonLabel}</span>
+          <span>{pt(buttonLabel)}</span>
         </button>
         {secondaryButtonLabel ? (
           <button
@@ -72,7 +76,7 @@ function PaymentActionCard({
             onClick={onSecondaryClick}
             type="button"
           >
-            <span>{secondaryButtonLabel}</span>
+            <span>{pt(secondaryButtonLabel)}</span>
           </button>
         ) : null}
       </div>
@@ -97,6 +101,7 @@ export default function PaymentStatusCards({
   onMarkInvoicePaid,
   isMarkingInvoicePaid = false,
 }) {
+  usePayoutLanguage();
   const customerStatus = payout.statuses.customerPaymentStatus;
   const payoutStatus = payout.statuses.vendorPayoutStatus;
   const isOrderCanceled = payout.order?.status === "Canceled";
@@ -145,14 +150,14 @@ export default function PaymentStatusCards({
         buttonLabel={customerPrimaryLabel}
         description={
           isOrderCanceled
-            ? "This order was canceled, so no customer payment can be recorded."
+            ? pt("This order was canceled, so no customer payment can be recorded.")
             : isReported
-            ? "Review the reported payment and confirm it against the bank statement."
+            ? pt("Review the reported payment and confirm it against the bank statement.")
             : isPendingCustomerPayment
-              ? "Customer payment is still waiting for manual confirmation."
+              ? pt("Customer payment is still waiting for manual confirmation.")
               : isRejected
-                ? "The reported payment was rejected and is waiting for corrected resubmission."
-                : "Use this card to confirm customer-side invoice payment activity."
+                ? pt("The reported payment was rejected and is waiting for corrected resubmission.")
+                : pt("Use this card to confirm customer-side invoice payment activity.")
         }
         details={[
           { label: "Invoice", value: payout.invoiceNumber },
@@ -174,21 +179,21 @@ export default function PaymentStatusCards({
         icon={FileText}
         onClick={customerPrimaryAction}
         onSecondaryClick={isReported ? onRejectInvoice : undefined}
-        secondaryButtonLabel={isReported ? (isRejectingInvoice ? "Rejecting..." : "Reject Report") : ""}
+        secondaryButtonLabel={isReported ? (isRejectingInvoice ? pt("Rejecting...") : pt("Reject Report")) : ""}
         secondaryDisabled={isRejectingInvoice}
         status={customerStatus}
-        title="Customer Payment"
+        title={pt("Customer Payment")}
       />
       <PaymentActionCard
         buttonLabel={vendorPrimaryLabel}
         description={
           isOrderCanceled
-            ? "This order was canceled, so no vendor payout can be released."
+            ? pt("This order was canceled, so no vendor payout can be released.")
             : !isBankProfileVerified
-            ? "Verify the vendor bank profile before releasing this payout."
+            ? pt("Verify the vendor bank profile before releasing this payout.")
             : payoutStatus === "Released"
-            ? "The payout is already released. Use this to confirm the outbound transfer is completed."
-            : "Once customer payment is received, record the completed bank transfer with Mark vendor paid."
+            ? pt("The payout is already released. Use this to confirm the outbound transfer is completed.")
+            : pt("Once customer payment is received, record the completed bank transfer with Mark vendor paid.")
         }
         details={[
           { label: "Vendor", value: payout.vendor.name },
@@ -198,7 +203,7 @@ export default function PaymentStatusCards({
         icon={CreditCard}
         onClick={vendorPrimaryAction}
         status={payoutStatus}
-        title="Vendor Payout"
+        title={pt("Vendor Payout")}
       />
     </div>
   );

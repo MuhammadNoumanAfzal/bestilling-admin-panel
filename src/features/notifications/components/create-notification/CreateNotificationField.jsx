@@ -1,3 +1,4 @@
+import { nt, useNotificationLanguage } from "../../notificationTranslation.js";
 export default function CreateNotificationField({
   label,
   placeholder,
@@ -13,6 +14,7 @@ export default function CreateNotificationField({
   step,
   lang,
 }) {
+  useNotificationLanguage();
   const sharedClassName =
     [
       "w-full rounded-[12px] border px-4 text-[15px] text-[#2a1f19] outline-none transition placeholder:text-[#aa9f96]",
@@ -24,13 +26,13 @@ export default function CreateNotificationField({
 
   return (
     <label className="flex flex-col gap-2">
-      <span className="text-[15px] font-bold text-[#2f241d]">{label}</span>
+      <span className="text-[15px] font-bold text-[#2f241d]">{nt(label)}</span>
       {as === "textarea" ? (
         <textarea
           className={`${sharedClassName} min-h-[136px] py-4 resize-none leading-7`}
           disabled={disabled}
           onChange={onChange}
-          placeholder={placeholder}
+          placeholder={nt(placeholder)}
           value={value}
         />
       ) : null}
@@ -39,7 +41,7 @@ export default function CreateNotificationField({
         <select className={`${sharedClassName} h-13 cursor-pointer`} disabled={disabled} onChange={onChange} value={value}>
           {options.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {nt(option.label)}
             </option>
           ))}
         </select>
@@ -52,15 +54,15 @@ export default function CreateNotificationField({
           lang={lang}
           min={min}
           onChange={onChange}
-          placeholder={placeholder}
+          placeholder={nt(placeholder)}
           step={step}
           type={type}
           value={value}
         />
       ) : null}
 
-      {error ? <span className="text-[13px] font-medium text-[#d15b42]">{error}</span> : null}
-      {!error && helperText ? <span className="text-[13px] leading-5 text-[#8d8077]">{helperText}</span> : null}
+      {error ? <span className="text-[13px] font-medium text-[#d15b42]">{nt(error)}</span> : null}
+      {!error && helperText ? <span className="text-[13px] leading-5 text-[#8d8077]">{nt(helperText)}</span> : null}
     </label>
   );
 }

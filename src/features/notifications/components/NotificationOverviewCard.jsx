@@ -1,3 +1,4 @@
+import { nt, useNotificationLanguage } from "../notificationTranslation.js";
 import { BellRing, Clock3, FilePenLine, Send } from "lucide-react";
 
 const accentClasses = {
@@ -23,6 +24,7 @@ const summaryIcons = {
 };
 
 export default function NotificationOverviewCard({ id, label, value, accent = "soft", onClick }) {
+  useNotificationLanguage();
   const styles = accentClasses[accent] || accentClasses.soft;
   const Icon = summaryIcons[id] || BellRing;
   const className = [
@@ -36,7 +38,7 @@ export default function NotificationOverviewCard({ id, label, value, accent = "s
         <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${styles.chip}`}>
           <Icon size={17} strokeWidth={2.2} />
         </span>
-        <p className="text-[13px] font-bold leading-5 text-[#4d423b]">{label}</p>
+        <p className="text-[13px] font-bold leading-5 text-[#4d423b]">{nt(label)}</p>
       </div>
 
       <p className="text-[28px] font-extrabold leading-[1.05] tracking-[-0.035em] text-[#221914]">{value}</p>

@@ -1,3 +1,4 @@
+import { ct, useCustomerLanguage } from "../customerTranslation.js";
 import { UsersRound, UserCheck, UserPlus, ShoppingBag, Wallet, CreditCard } from "lucide-react";
 
 const accentClasses = {
@@ -17,6 +18,7 @@ const summaryIcons = {
 };
 
 export default function CustomerOverviewCard({ id, label, value, accent = "soft", onClick }) {
+  useCustomerLanguage();
   const Icon = summaryIcons[id] || UsersRound;
   const className = [
     "rounded-[14px] border border-[#ece4de] bg-white p-4 shadow-[0_8px_20px_rgba(55,31,13,0.07)] flex flex-col gap-4 items-start transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(55,31,13,0.09)]",
@@ -30,7 +32,7 @@ export default function CustomerOverviewCard({ id, label, value, accent = "soft"
       </div>
       
       <div className="space-y-1.5 w-full">
-        <p className="text-[13px] font-bold leading-5 text-[#8c8077]">{label}</p>
+        <p className="text-[13px] font-bold leading-5 text-[#8c8077]">{ct(label)}</p>
         <strong className="block text-[24px] font-extrabold leading-none tracking-[-0.03em] text-[#18120f]">
           {value}
         </strong>

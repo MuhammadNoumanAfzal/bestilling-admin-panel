@@ -1,3 +1,4 @@
+import { cmt, useCommissionLanguage } from "../../commissionTranslation.js";
 import { AlertTriangle, Trash2, X } from "lucide-react";
 
 export default function DeleteConfirmModal({
@@ -8,6 +9,7 @@ export default function DeleteConfirmModal({
   onConfirm,
   title,
 }) {
+  useCommissionLanguage();
   if (!isOpen) {
     return null;
   }
@@ -21,14 +23,14 @@ export default function DeleteConfirmModal({
               <AlertTriangle size={18} />
             </span>
             <div>
-              <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#18120f]">{title}</h2>
-              <p className="mt-1 text-[14px] leading-6 text-[#6f645d]">{description}</p>
+              <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#18120f]">{cmt(title)}</h2>
+              <p className="mt-1 text-[14px] leading-6 text-[#6f645d]">{cmt(description)}</p>
             </div>
           </div>
 
           <button
             className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#efddd1] bg-white text-[#685b53] transition hover:border-[#cf6e38]/30 hover:bg-[#fff2ea] hover:text-[#cf6e38]"
-            onClick={onClose}
+            title={cmt("Close")} aria-label={cmt("Close")} onClick={onClose}
             type="button"
           >
             <X size={16} />
@@ -39,11 +41,9 @@ export default function DeleteConfirmModal({
           <button
             className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[10px] border border-[#d5ccc5] bg-white px-4 text-[13px] font-semibold text-[#332822] transition hover:bg-[#faf6f2] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSubmitting}
-            onClick={onClose}
+            title={cmt("Close")} aria-label={cmt("Close")} onClick={onClose}
             type="button"
-          >
-            Cancel
-          </button>
+          >{cmt("Cancel")}</button>
           <button
             className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-[#d15b42] px-4 text-[13px] font-semibold text-white transition hover:bg-[#bb4630] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSubmitting}
@@ -51,7 +51,7 @@ export default function DeleteConfirmModal({
             type="button"
           >
             <Trash2 size={14} />
-            <span>{isSubmitting ? "Deleting..." : "Delete"}</span>
+            <span>{isSubmitting ? cmt("Deleting...") : cmt("Delete")}</span>
           </button>
         </div>
       </div>

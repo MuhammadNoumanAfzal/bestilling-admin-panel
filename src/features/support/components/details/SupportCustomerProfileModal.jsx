@@ -1,12 +1,14 @@
+import { st, useSupportLanguage } from "../../supportTranslation.js";
 import { Mail, MapPin, Phone, ShoppingBag, X } from "lucide-react";
 import { formatReadableDate, formatStatusLabel, formatUserTypeLabel } from "../../supportUtils.js";
 
 function InfoItem({ icon: Icon, label, value }) {
+  useSupportLanguage();
   return (
     <div className="rounded-[14px] border border-[#f0e2d8] bg-white px-4 py-3 shadow-[0_6px_18px_rgba(69,38,19,0.04)]">
       <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">
         <Icon size={13} />
-        <span>{label}</span>
+        <span>{st(label)}</span>
       </div>
       <p className="mt-2 text-[14px] font-semibold text-[#2a1f19]">{value}</p>
     </div>
@@ -14,6 +16,7 @@ function InfoItem({ icon: Icon, label, value }) {
 }
 
 export default function SupportCustomerProfileModal({ isOpen, onClose, ticket }) {
+  useSupportLanguage();
   if (!isOpen || !ticket) {
     return null;
   }
@@ -37,11 +40,9 @@ export default function SupportCustomerProfileModal({ isOpen, onClose, ticket })
               </div>
 
               <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#cf6e38]">
-                  Requester Profile
-                </p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#cf6e38]">{st("Requester Profile")}</p>
                 <h2 className="mt-2 text-[22px] font-bold leading-7 tracking-[-0.03em] text-[#1d1612]">
-                  {requester?.fullName || "Unknown requester"}
+                  {requester?.fullName && requester.fullName !== "Unknown requester" ? requester.fullName : st("Unknown requester")}
                 </h2>
                 <p className="mt-1 text-[14px] font-medium text-[#8d8077]">{formatUserTypeLabel(requester?.type)}</p>
               </div>
@@ -49,7 +50,7 @@ export default function SupportCustomerProfileModal({ isOpen, onClose, ticket })
 
             <button
               className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#efddd1] bg-white text-[#685b53] transition hover:border-[#cf6e38]/30 hover:bg-[#fff2ea] hover:text-[#cf6e38]"
-              onClick={onClose}
+              title={st("Close")} aria-label={st("Close")} onClick={onClose}
               type="button"
             >
               <X size={16} />
@@ -58,49 +59,39 @@ export default function SupportCustomerProfileModal({ isOpen, onClose, ticket })
 
           <div className="space-y-4 overflow-y-auto px-5 py-4">
             <div className="grid gap-3 md:grid-cols-2">
-              <InfoItem icon={Mail} label="Email" value={requester?.email || "Not available"} />
-              <InfoItem icon={Phone} label="Phone" value={requester?.phone || "Not available"} />
-              <InfoItem icon={ShoppingBag} label="Order Reference" value={ticket.orderReference || "Not linked"} />
+              <InfoItem icon={Mail} label={st("Email")} value={requester?.email || st("Not available")} />
+              <InfoItem icon={Phone} label={st("Phone")} value={requester?.phone || st("Not available")} />
+              <InfoItem icon={ShoppingBag} label={st("Order Reference")} value={ticket.orderReference || st("Not linked")} />
               <InfoItem
                 icon={MapPin}
-                label="Joined"
+                label={st("Joined")}
                 value={formatReadableDate(requester?.joinedAt, { includeTime: false })}
               />
             </div>
 
             <div className="rounded-[16px] border border-[#f0e2d8] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">
-                Account Snapshot
-              </p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{st("Account Snapshot")}</p>
 
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[12px] border border-[#f4e5db] bg-[#fffaf6] px-3 py-3">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">
-                    Total Orders
-                  </p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{st("Total Orders")}</p>
                   <p className="mt-2 text-[24px] font-extrabold text-[#201712]">{requester?.totalOrders ?? 0}</p>
                 </div>
                 <div className="rounded-[12px] border border-[#f4e5db] bg-[#fffaf6] px-3 py-3">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">
-                    Ticket Status
-                  </p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{st("Ticket Status")}</p>
                   <p className="mt-2 text-[16px] font-bold text-[#201712]">{formatStatusLabel(ticket.status)}</p>
                 </div>
                 <div className="rounded-[12px] border border-[#f4e5db] bg-[#fffaf6] px-3 py-3">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">
-                    User Type
-                  </p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{st("User Type")}</p>
                   <p className="mt-2 text-[16px] font-bold text-[#201712]">{formatUserTypeLabel(requester?.type)}</p>
                 </div>
               </div>
             </div>
 
             <div className="rounded-[16px] border border-[#f0e2d8] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">
-                Notes
-              </p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{st("Notes")}</p>
               <p className="mt-2 text-[14px] leading-6 text-[#40342e]">
-                {ticket.notes || "No internal notes on this ticket."}
+                {ticket.notes || st("No internal notes on this ticket.")}
               </p>
             </div>
 
@@ -109,9 +100,7 @@ export default function SupportCustomerProfileModal({ isOpen, onClose, ticket })
                 className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[10px] border border-[#d5ccc5] bg-white px-4 text-[13px] font-semibold text-[#332822] transition hover:bg-[#faf6f2]"
                 onClick={onClose}
                 type="button"
-              >
-                Close
-              </button>
+              >{st("Close")}</button>
             </div>
           </div>
         </div>

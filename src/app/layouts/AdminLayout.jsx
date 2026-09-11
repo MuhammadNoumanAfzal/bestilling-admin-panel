@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -360,6 +361,8 @@ function getCurrentMeta(pathname) {
 }
 
 function NavItem({ item, pathname, onNavigate, badgeCount = 0 }) {
+  const { t } = useTranslation("adminShell");
+  const tr = (text, options) => t(text, { keySeparator: false, ...options });
   const Icon = item.icon;
   const active = isNavItemActive(item, pathname);
   const shouldShowBadge = item.label === "Notifications" && badgeCount > 0;
@@ -378,7 +381,7 @@ function NavItem({ item, pathname, onNavigate, badgeCount = 0 }) {
       <span className="inline-flex h-5 w-5 items-center justify-center rounded-[6px] transition">
         <Icon size={14} />
       </span>
-      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+      <span className="min-w-0 flex-1 truncate">{tr(item.label)}</span>
       {shouldShowBadge ? (
         <span
           className={[
@@ -394,6 +397,8 @@ function NavItem({ item, pathname, onNavigate, badgeCount = 0 }) {
 }
 
 function SearchResults({ results, isLoading, onSelect, query }) {
+  const { t } = useTranslation("adminShell");
+  const tr = (text, options) => t(text, { keySeparator: false, ...options });
   if (!query.trim()) {
     return null;
   }
@@ -402,7 +407,7 @@ function SearchResults({ results, isLoading, onSelect, query }) {
     <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-40 overflow-hidden rounded-[18px] border border-[#e8dfd8] bg-white shadow-[0_24px_60px_rgba(45,28,16,0.14)]">
       {isLoading ? (
         <div className="px-4 py-5 text-[12px] text-[#8c7f75]">
-          Searching orders, customers, and vendors...
+          {tr("Searching orders, customers, and vendors...")}
         </div>
       ) : results.length ? (
         <div className="max-h-[320px] overflow-y-auto p-2">
@@ -421,10 +426,10 @@ function SearchResults({ results, isLoading, onSelect, query }) {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-bold text-[#231913]">
-                    {item.label}
+                    {tr(item.label)}
                   </span>
                   <span className="block truncate text-[12px] text-[#7b6f66]">
-                    {item.description}
+                    {tr(item.description)}
                   </span>
                 </span>
                 <ChevronRight className="shrink-0 text-[#b4a79d]" size={16} />
@@ -434,7 +439,7 @@ function SearchResults({ results, isLoading, onSelect, query }) {
         </div>
       ) : (
         <div className="px-4 py-5 text-[12px] text-[#8c7f75]">
-          No matching resources found for “{query.trim()}”.
+          {tr('No matching resources found for "{{query}}".', { query: query.trim() })}
         </div>
       )}
     </div>
@@ -442,6 +447,8 @@ function SearchResults({ results, isLoading, onSelect, query }) {
 }
 
 export default function AdminLayout() {
+  const { t, i18n } = useTranslation("adminShell");
+  const tr = (text, options) => t(text, { keySeparator: false, ...options });
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -478,13 +485,13 @@ export default function AdminLayout() {
     }
 
     return navigation.filter((item) => {
-      const haystack = [item.label, item.description, ...(item.keywords || [])]
+      const haystack = [item.label, t(item.label, { keySeparator: false }), item.description, ...(item.keywords || [])]
         .join(" ")
         .toLowerCase();
 
       return haystack.includes(normalizedQuery);
     });
-  }, [searchQuery]);
+  }, [searchQuery, t]);
 
   const mergedSearchResults = useMemo(() => {
     const seenKeys = new Set();
@@ -511,13 +518,14 @@ export default function AdminLayout() {
       toast: true,
       position: "top-end",
       icon: notification.type === "SUPPORT_REPLY" ? "info" : "success",
-      title: notification.title || "New notification",
-      text: notification.message || "You have a new unread notification.",
+      title: notification.title || tr("New notification"),
+      text: notification.message || tr("You have a new unread notification."),
       showConfirmButton: true,
-      confirmButtonText: "Open",
+      confirmButtonText: tr("Open"),
       timer: 6000,
       timerProgressBar: true,
       showCloseButton: true,
+      closeButtonAriaLabel: tr("Close"),
       didOpen: (toast) => {
         toast.addEventListener("click", () => {
           navigate(resolveAdminNotificationTarget(notification));
@@ -531,8 +539,8 @@ export default function AdminLayout() {
   }
 
   useEffect(() => {
-    document.title = `${meta.title} | Bestilling Admin`;
-  }, [meta.title]);
+    document.title = `${t(meta.title, { keySeparator: false })} | Bestilling Admin`;
+  }, [meta.title, t]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -575,11 +583,11 @@ export default function AdminLayout() {
               .filter((item) => item?.id)
               .map((item) => ({
                 to: `/orders/${encodeURIComponent(item.id)}`,
-                label: item.orderNumber || `Order ${item.id}`,
+                label: item.orderNumber || `${t("Order")} ${item.id}`,
                 description: [
-                  "Order",
-                  item.customer?.fullName ? `Customer: ${item.customer.fullName}` : "",
-                  item.vendor?.businessName ? `Vendor: ${item.vendor.businessName}` : "",
+                  t("Order"),
+                  item.customer?.fullName ? `${t("Customer")}: ${item.customer.fullName}` : "",
+                  item.vendor?.businessName ? `${t("Vendor")}: ${item.vendor.businessName}` : "",
                 ]
                   .filter(Boolean)
                   .join(" • "),
@@ -592,9 +600,9 @@ export default function AdminLayout() {
               .filter((item) => item?.id)
               .map((item) => ({
                 to: `/customers/${encodeURIComponent(item.id)}`,
-                label: item.fullName || item.email || `Customer ${item.id}`,
+                label: item.fullName || item.email || `${t("Customer")} ${item.id}`,
                 description: [
-                  "Customer",
+                  t("Customer"),
                   item.email || "",
                   item.city || "",
                 ]
@@ -609,9 +617,9 @@ export default function AdminLayout() {
               .filter((item) => item?.id)
               .map((item) => ({
                 to: `/vendors/${encodeURIComponent(item.id)}`,
-                label: item.name || `Vendor ${item.id}`,
+                label: item.name || `${t("Vendor")} ${item.id}`,
                 description: [
-                  "Vendor",
+                  t("Vendor"),
                   item.businessType || "",
                   item.city || "",
                 ]
@@ -633,7 +641,7 @@ export default function AdminLayout() {
       isCancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [searchQuery]);
+  }, [searchQuery, t]);
 
   useEffect(() => {
     let isMounted = true;
@@ -702,7 +710,7 @@ export default function AdminLayout() {
       window.removeEventListener("admin-notifications-updated", handleNotificationsUpdated);
       window.clearInterval(intervalId);
     };
-  }, [location.pathname]);
+  }, [location.pathname, i18n.language]);
 
   useEffect(() => {
     setIsMobileNavOpen(false);
@@ -727,12 +735,12 @@ export default function AdminLayout() {
 
   async function handleLogout() {
     const result = await Swal.fire({
-      title: "Log out?",
-      text: "This will clear the local admin session.",
+      title: tr("Log out?"),
+      text: tr("This will clear the local admin session."),
       icon: "question",
       showCancelButton: true,
-      confirmButtonText: "Yes, log out",
-      cancelButtonText: "Stay signed in",
+      confirmButtonText: tr("Yes, log out"),
+      cancelButtonText: tr("Stay signed in"),
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
     });
@@ -744,8 +752,9 @@ export default function AdminLayout() {
     await logout();
     await Swal.fire({
       icon: "success",
-      title: "Signed out",
-      text: "The local session has been cleared.",
+      title: tr("Signed out"),
+      confirmButtonText: tr("OK"),
+      text: tr("The local session has been cleared."),
       confirmButtonColor: "#d96834",
     });
     navigate("/auth/login", { replace: true });
@@ -777,7 +786,7 @@ export default function AdminLayout() {
       <div className="min-h-screen w-full overflow-x-clip bg-[#f4f1ee] lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">
         {isMobileNavOpen ? (
           <button
-            aria-label="Close navigation overlay"
+            aria-label={tr("Close navigation overlay")}
             className="fixed inset-0 z-40 bg-[#170f0a]/45 backdrop-blur-[2px] lg:hidden"
             onClick={() => setIsMobileNavOpen(false)}
             type="button"
@@ -792,9 +801,9 @@ export default function AdminLayout() {
         >
           <div className="relative mx-4 mt-4 rounded-[22px] border border-white/10 bg-white/12 px-4 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm">
             <img className="block h-auto w-32 object-contain" src="/whiteLogo.png" alt="GoCatering Admin" />
-            <p className="type-subpara mt-3 text-white/75">Admin dashboard</p>
+            <p className="type-subpara mt-3 text-white/75">{tr("Admin dashboard")}</p>
             <button
-              aria-label="Close navigation"
+              aria-label={tr("Close navigation")}
               className="absolute right-3 top-3 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-white/90 transition hover:bg-white/10 lg:hidden"
               onClick={() => setIsMobileNavOpen(false)}
               type="button"
@@ -804,9 +813,9 @@ export default function AdminLayout() {
           </div>
 
           <div className="border-b border-white/10 px-4 py-4 lg:hidden">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">Signed in as</p>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">{tr("Signed in as")}</p>
             <p className="mt-2 truncate text-[15px] font-bold text-white">{getAdminDisplayName(user)}</p>
-            <p className="truncate text-[12px] text-white/75">{getAdminRoleLabel(user?.role)}</p>
+            <p className="truncate text-[12px] text-white/75">{tr(getAdminRoleLabel(user?.role))}</p>
           </div>
 
           <div className="flex-1 overflow-auto px-3 py-6 hide-scrollbar">
@@ -830,7 +839,7 @@ export default function AdminLayout() {
               type="button"
             >
               <LogOut size={14} />
-              <span>Logout</span>
+              <span>{tr("Logout")}</span>
             </button>
           </div>
         </aside>
@@ -843,13 +852,13 @@ export default function AdminLayout() {
                 onClick={() => setIsMobileNavOpen(true)}
                 type="button"
               >
-                <Menu size={18} />
+                <Menu size={18} aria-label={tr("Open navigation")} />
               </button>
 
               <div className="min-w-0 lg:hidden">
                 <div className="min-w-0 lg:hidden">
                   <p className="truncate text-[22px] font-bold tracking-[-0.03em] text-[#1f1711] lg:hidden">
-                    {meta.title}
+                    {tr(meta.title)}
                   </p>
                 </div>
               </div>
@@ -864,7 +873,7 @@ export default function AdminLayout() {
                     className="h-11 w-full rounded-full border border-transparent bg-[#f1f4f8] px-4 pl-11 pr-4 text-[12px] text-[#231913] outline-none transition placeholder:text-[#a9afba] focus:border-[#ebddd1] focus:bg-white focus:shadow-[0_0_0_4px_rgba(206,105,56,0.11)]"
                     onChange={(event) => setSearchQuery(event.target.value)}
                     onFocus={() => setIsSearchFocused(true)}
-                    placeholder="Search orders, customers, vendors, IDs, or admin pages..."
+                    placeholder={tr("Search orders, customers, vendors, IDs, or admin pages...")}
                     type="search"
                     value={searchQuery}
                   />
@@ -885,7 +894,7 @@ export default function AdminLayout() {
 
               <div className="ml-auto flex items-center gap-2 border-l border-[#ebe4de] pl-3">
                 <button
-                  aria-label="Open notifications"
+                  aria-label={tr("Open notifications")}
                   className="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#2f241c] transition hover:bg-[#f5f1ed]"
                   onClick={() => navigate("/notifications")}
                   type="button"
@@ -924,7 +933,7 @@ export default function AdminLayout() {
                       {getAdminDisplayName(user)}
                     </p>
                     <p className="truncate text-[11px] text-[#7f746d]">
-                      {getAdminRoleLabel(user?.role)}
+                      {tr(getAdminRoleLabel(user?.role))}
                     </p>
                   </div>
                 </button>
@@ -948,7 +957,7 @@ export default function AdminLayout() {
                           {getAdminDisplayName(user)}
                         </p>
                         <p className="mt-1 truncate text-[12px] font-medium text-[#8f7f73]">
-                          {getAdminRoleLabel(user?.role)}
+                          {tr(getAdminRoleLabel(user?.role))}
                         </p>
                       </div>
                     </div>
@@ -962,7 +971,7 @@ export default function AdminLayout() {
                         type="button"
                       >
                         <SettingsIcon size={15} />
-                        <span>Settings</span>
+                        <span>{tr("Settings")}</span>
                       </button>
                       <button
                         className="flex w-full cursor-pointer items-center gap-2 rounded-[12px] px-3 py-2.5 text-left text-[13px] font-semibold text-[#c85e2f] transition hover:bg-[#fff4ee]"
@@ -970,7 +979,7 @@ export default function AdminLayout() {
                         type="button"
                       >
                         <LogOut size={15} />
-                        <span>Logout</span>
+                        <span>{tr("Logout")}</span>
                       </button>
                     </div>
                   </div>
@@ -982,8 +991,8 @@ export default function AdminLayout() {
           <main className="overflow-x-hidden px-3 py-4 pb-24 sm:px-6 lg:px-5 lg:py-5 lg:pb-8">
             {!meta.hidePageHeader && <div className="mb-5 hidden items-start justify-between gap-4 lg:flex">
               <div>
-                <h1 className="text-[34px] font-bold tracking-[-0.04em] text-[#18120f]">{meta.title}</h1>
-                <p className="mt-1 text-[15px] leading-7 text-[#6f645d]">{meta.subtitle}</p>
+                <h1 className="text-[34px] font-bold tracking-[-0.04em] text-[#18120f]">{tr(meta.title)}</h1>
+                <p className="mt-1 text-[15px] leading-7 text-[#6f645d]">{tr(meta.subtitle)}</p>
               </div>
               {pageHeaderAction ? <div className="shrink-0">{pageHeaderAction}</div> : null}
             </div>}
@@ -1018,7 +1027,7 @@ export default function AdminLayout() {
                       </span>
                     ) : null}
                   </div>
-                  <span>{item.label}</span>
+                  <span>{tr(item.label)}</span>
                 </NavLink>
               );
             })}

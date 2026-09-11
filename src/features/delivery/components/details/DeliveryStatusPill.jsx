@@ -1,3 +1,4 @@
+import { dt, useDeliveryLanguage } from "../../deliveryTranslation.js";
 const statusClasses = {
   Active: "bg-[#e9fff0] text-[#219653]",
   Inactive: "bg-[#f1eeeb] text-[#7d7068]",
@@ -5,6 +6,7 @@ const statusClasses = {
 };
 
 export default function DeliveryStatusPill({ status }) {
+  useDeliveryLanguage();
   return (
     <span
       className={[
@@ -12,7 +14,7 @@ export default function DeliveryStatusPill({ status }) {
         statusClasses[status] || statusClasses.Active,
       ].join(" ")}
     >
-      {status}
+      {dt(status)}
     </span>
   );
 }

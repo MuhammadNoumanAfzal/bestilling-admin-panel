@@ -1,3 +1,5 @@
+import "./DeliveryAreasTable.css";
+import { dt, useDeliveryLanguage } from "../deliveryTranslation.js";
 import { ChevronLeft, ChevronRight, MapPinned, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -23,6 +25,7 @@ function buildPaginationItems(currentPage, totalPages) {
 }
 
 function PaginationButton({ children, isActive = false, onClick }) {
+  useDeliveryLanguage();
   return (
     <button
       className={[
@@ -40,6 +43,7 @@ function PaginationButton({ children, isActive = false, onClick }) {
 }
 
 function PaginationIconButton({ children, disabled = false, onClick }) {
+  useDeliveryLanguage();
   return (
     <button
       className={[
@@ -58,6 +62,7 @@ function PaginationIconButton({ children, disabled = false, onClick }) {
 }
 
 function StatusBadge({ status }) {
+  useDeliveryLanguage();
   return (
     <span
       className={[
@@ -65,12 +70,13 @@ function StatusBadge({ status }) {
         statusClasses[status] || statusClasses.Active,
       ].join(" ")}
     >
-      {status}
+      {dt(status)}
     </span>
   );
 }
 
 export default function DeliveryAreasTable({ currentPage, onPageChange, pageSize, rows, totalItems }) {
+  useDeliveryLanguage();
   const navigate = useNavigate();
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
@@ -78,9 +84,9 @@ export default function DeliveryAreasTable({ currentPage, onPageChange, pageSize
   const paginationItems = buildPaginationItems(currentPage, totalPages);
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-2">
-      <div className="w-full overflow-x-auto">
-        <table className="min-w-[980px] w-full table-fixed border-collapse">
+    <div className="min-w-0 rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)] m-2">
+      <div className="delivery-areas-table-container min-w-0 w-full">
+        <table className="delivery-areas-table w-full table-fixed border-collapse">
           <colgroup>
             <col className="w-[13%]" />
             <col className="w-[15%]" />
@@ -92,47 +98,45 @@ export default function DeliveryAreasTable({ currentPage, onPageChange, pageSize
           </colgroup>
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">City</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Region</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Active Postal Codes</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Registered Vendors</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Coverage Status</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Coverage Type</th>
-              <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
+              <th scope="col" className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">{dt("City")}</th>
+              <th scope="col" className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">{dt("Region")}</th>
+              <th scope="col" className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">{dt("Active Postal Codes")}</th>
+              <th scope="col" className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">{dt("Registered Vendors")}</th>
+              <th scope="col" className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">{dt("Coverage Status")}</th>
+              <th scope="col" className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">{dt("Coverage Type")}</th>
+              <th scope="col" className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">{dt("Actions")}</th>
             </tr>
           </thead>
 
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={7}>
-                  No delivery areas match the current filters.
-                </td>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={7}>{dt("No delivery areas match the current filters.")}</td>
               </tr>
             ) : (
               rows.map((row) => (
                 <tr key={row.id} className="border-b border-[#f1e9e2] last:border-b-0">
-                  <td className="px-4 py-4 text-[15px] font-semibold text-[#18120f]">{row.city}</td>
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.region}</td>
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.activePostalCodes}</td>
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">
+                  <td data-label={dt("City")} className="px-4 py-4 text-[15px] font-semibold text-[#18120f]">{row.city}</td>
+                  <td data-label={dt("Region")} className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.region}</td>
+                  <td data-label={dt("Active Postal Codes")} className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.activePostalCodes}</td>
+                  <td data-label={dt("Registered Vendors")} className="px-3 py-4 text-[15px] font-medium text-[#18120f]">
                     <span className="inline-flex items-center gap-2">
                       <UsersRound className="text-[#8d8077]" size={15} />
                       <span>{row.vendors}</span>
                     </span>
                   </td>
-                  <td className="px-3 py-4">
+                  <td data-label={dt("Coverage Status")} className="px-3 py-4">
                     <StatusBadge status={row.status} />
                   </td>
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.coverageType}</td>
-                  <td className="px-4 py-4 text-right">
+                  <td data-label={dt("Coverage Type")} className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{dt(row.coverageType)}</td>
+                  <td data-label={dt("Actions")} className="px-4 py-4 text-right">
                     <button
-                      className="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap text-[14px] font-semibold text-[#cf6e38] transition hover:text-[#b75d31]"
+                      className="inline-flex cursor-pointer items-center gap-1 whitespace-normal text-right text-[13px] font-semibold text-[#cf6e38] transition hover:text-[#b75d31]"
                       onClick={() => navigate(`/delivery/${row.id}`)}
                       type="button"
                     >
-                      <MapPinned size={15} />
-                      <span>Manage Area</span>
+                      <MapPinned className="shrink-0" size={15} />
+                      <span>{dt("Manage Area")}</span>
                     </button>
                   </td>
                 </tr>
@@ -144,10 +148,10 @@ export default function DeliveryAreasTable({ currentPage, onPageChange, pageSize
 
       <div className="flex flex-col gap-4 border-t border-[#eee4dd] px-4 py-4 text-[13px] text-[#6c6058] sm:flex-row sm:items-center sm:justify-between">
         <p>
-          Showing {start} - {end} of {totalItems} Areas
+          {dt("Showing {{start}} - {{end}} of {{total}} Areas", { start, end, total: totalItems })}
         </p>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex flex-wrap items-center justify-end gap-2 self-end sm:self-auto">
           <PaginationIconButton disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)}>
             <ChevronLeft size={15} />
           </PaginationIconButton>

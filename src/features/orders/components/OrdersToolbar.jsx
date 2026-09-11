@@ -1,3 +1,4 @@
+import { ot, useOrderLanguage } from "../orderTranslation.js";
 import { useEffect, useRef, useState } from "react";
 import { Search, RotateCw, ChevronDown } from "lucide-react";
 
@@ -10,7 +11,9 @@ function Dropdown({
   defaultLabel,
   clearLabel,
   onSelect,
+  translateOptions = true,
 }) {
+  useOrderLanguage();
   return (
     <div className="relative">
       <button
@@ -18,7 +21,7 @@ function Dropdown({
         onClick={onToggle}
         type="button"
       >
-        <span>{label || defaultLabel}</span>
+        <span>{label ? (translateOptions ? ot(label) : label) : defaultLabel}</span>
         <ChevronDown size={14} className="text-[#8c8077]" />
       </button>
 
@@ -52,7 +55,7 @@ function Dropdown({
                 onClick={() => onSelect(value)}
                 type="button"
               >
-                {text}
+                {translateOptions ? ot(text) : text}
               </button>
             );
           })}
@@ -76,6 +79,7 @@ export default function OrdersToolbar({
   statuses,
   paymentStatuses,
 }) {
+  useOrderLanguage();
   const [activeDropdown, setActiveDropdown] = useState("");
   const toolbarRef = useRef(null);
 
@@ -107,7 +111,7 @@ export default function OrdersToolbar({
           type="text"
           value={searchTerm}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search by order number, customer, vendor, or email..."
+          placeholder={ot("Search by order number, customer, vendor, or email...")}
           className="h-10 w-full rounded-[10px] border border-[#ddd4cb] bg-white pl-10 pr-4 text-[13px] text-[#231913] outline-none transition placeholder:text-[#baaea0] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]"
         />
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#baaea0]">
@@ -117,8 +121,9 @@ export default function OrdersToolbar({
 
       <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
         <Dropdown
-          clearLabel="Any vendor"
-          defaultLabel="Vendor"
+          translateOptions={false}
+          clearLabel={ot("Any vendor")}
+          defaultLabel={ot("Vendor")}
           isOpen={activeDropdown === "vendor"}
           label={vendors.find((item) => item.id === vendorFilter)?.label}
           onSelect={(value) => handleSelect(onVendorFilterChange, value)}
@@ -130,8 +135,8 @@ export default function OrdersToolbar({
         />
 
         <Dropdown
-          clearLabel="Any order status"
-          defaultLabel="Order Status"
+          clearLabel={ot("Any order status")}
+          defaultLabel={ot("Order Status")}
           isOpen={activeDropdown === "status"}
           label={statusFilter}
           onSelect={(value) => handleSelect(onStatusFilterChange, value)}
@@ -143,8 +148,8 @@ export default function OrdersToolbar({
         />
 
         <Dropdown
-          clearLabel="Any payment status"
-          defaultLabel="Payment Status"
+          clearLabel={ot("Any payment status")}
+          defaultLabel={ot("Payment Status")}
           isOpen={activeDropdown === "payment"}
           label={paymentFilter}
           onSelect={(value) => handleSelect(onPaymentFilterChange, value)}
@@ -160,9 +165,7 @@ export default function OrdersToolbar({
           onClick={onResetFilters}
           type="button"
         >
-          <RotateCw size={14} />
-          Clear Filters
-        </button>
+          <RotateCw size={14} />{ot("Clear Filters")}</button>
       </div>
     </div>
   );

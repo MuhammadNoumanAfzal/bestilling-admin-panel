@@ -1,8 +1,13 @@
+﻿import i18n from "../../../i18n";
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
 import {
   ADMIN_DASHBOARD_OVERVIEW_QUERY,
   ADMIN_UPDATE_VENDOR_APPROVAL_STATUS_MUTATION,
 } from "./dashboardQueries.js";
+
+function tr(key, options) {
+  return i18n.t(`adminDashboard.${key}`, options);
+}
 
 function toInitials(value) {
   return `${value ?? ""}`
@@ -77,18 +82,16 @@ export async function getAdminDashboardOverviewRequest(filters) {
 
   const overview = data?.adminDashboardOverview;
   if (!overview) {
-    throw new Error("Unable to load dashboard overview.");
+    throw new Error(tr("api.loadOverviewError"));
   }
 
-  const topPerformingVendors = Array.isArray(overview?.topPerformingVendors)
-    ? overview.topPerformingVendors
-    : [];
+  const topPerformingVendors = Array.isArray(overview?.topPerformingVendors) ? overview.topPerformingVendors : [];
 
   return {
     stats: Array.isArray(overview.stats)
       ? overview.stats.map((item) => ({
           id: `${item?.id ?? ""}`.trim().toUpperCase(),
-          title: item?.title || "Metric",
+          title: item?.title || tr("common.metric"),
           value: item?.value || "0",
           rawValue: Number(item?.rawValue ?? 0),
           currency: item?.currency || "",
@@ -97,9 +100,7 @@ export async function getAdminDashboardOverviewRequest(filters) {
         }))
       : [],
     chart: {
-      metricOptions: Array.isArray(overview?.chart?.metricOptions)
-        ? overview.chart.metricOptions
-        : ["REVENUE", "ORDERS"],
+      metricOptions: Array.isArray(overview?.chart?.metricOptions) ? overview.chart.metricOptions : ["REVENUE", "ORDERS"],
       defaultMetric: `${overview?.chart?.defaultMetric ?? "REVENUE"}`.trim().toUpperCase(),
       points: Array.isArray(overview?.chart?.points)
         ? overview.chart.points.map((point) => ({
@@ -119,7 +120,7 @@ export async function getAdminDashboardOverviewRequest(filters) {
     },
     topPerformingVendors: topPerformingVendors.map((vendor) => ({
       id: vendor?.id || "",
-      name: vendor?.name || "Unknown vendor",
+      name: vendor?.name || tr("api.unknownVendor"),
       rating: Number(vendor?.rating ?? 0),
       avatar: toInitials(vendor?.name),
       avatarUrl: vendor?.avatarUrl || "",
@@ -131,16 +132,16 @@ export async function getAdminDashboardOverviewRequest(filters) {
       ? overview.approvals.map((approval) => ({
           id: approval?.id || "",
           vendorId: approval?.vendorId || "",
-          vendorName: approval?.vendorName || "Unknown vendor",
+          vendorName: approval?.vendorName || tr("api.unknownVendor"),
           avatarUrl: approval?.avatarUrl || "",
           avatar: approval?.avatarInitials || toInitials(approval?.vendorName),
-          type: approval?.type || "Vendor",
-          location: approval?.location || "Unknown",
+          type: approval?.type || tr("common.vendor"),
+          location: approval?.location || tr("common.unknown"),
           submittedAt: approval?.submittedAt || "",
-          submitted: approval?.submittedLabel || "Not available",
+          submitted: approval?.submittedLabel || tr("common.notAvailable"),
           status: normalizeApprovalStatus(approval?.status),
           rawStatus: `${approval?.status ?? ""}`.trim().toUpperCase(),
-          priority: approval?.priority || "Normal",
+          priority: approval?.priority || tr("common.normal"),
           canApprove: Boolean(approval?.canApprove),
           canReject: Boolean(approval?.canReject),
           canMarkReviewing: Boolean(approval?.canMarkReviewing),
@@ -150,7 +151,7 @@ export async function getAdminDashboardOverviewRequest(filters) {
     quickActions: Array.isArray(overview?.quickActions)
       ? overview.quickActions.map((action) => ({
           key: action?.key || "",
-          label: action?.label || "Action",
+          label: action?.label || tr("common.action"),
           route: normalizeQuickActionRoute(action?.route),
           enabled: Boolean(action?.enabled),
           requiredPermission: action?.requiredPermission || "",
@@ -160,17 +161,15 @@ export async function getAdminDashboardOverviewRequest(filters) {
 }
 
 export async function updateVendorApprovalStatusRequest(input) {
-  const data = await executeProtectedGraphqlRequest(ADMIN_UPDATE_VENDOR_APPROVAL_STATUS_MUTATION, {
-    input,
-  });
+  const data = await executeProtectedGraphqlRequest(ADMIN_UPDATE_VENDOR_APPROVAL_STATUS_MUTATION, { input });
 
   const result = data?.adminUpdateVendorApprovalStatus;
   if (!result?.success || !result?.approval?.id) {
-    throw new Error(result?.message || "Unable to update vendor approval status.");
+    throw new Error(result?.message || tr("api.updateApprovalError"));
   }
 
   return {
-    message: result.message || "Approval updated successfully.",
+    message: result.message || tr("api.updated"),
     approval: {
       id: result.approval.id,
       status: normalizeApprovalStatus(result.approval.status),

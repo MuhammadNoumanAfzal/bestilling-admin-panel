@@ -1,4 +1,6 @@
+import { payoutDate, pt, usePayoutLanguage } from "../../payoutTranslation.js";
 function TimelineItem({ helperText, isComplete, timestamp, title }) {
+  usePayoutLanguage();
   return (
     <div className="relative flex gap-3">
       <div className="relative flex w-6 shrink-0 justify-center">
@@ -10,10 +12,10 @@ function TimelineItem({ helperText, isComplete, timestamp, title }) {
         />
       </div>
       <div className="pb-5">
-        <p className={`text-[15px] font-semibold ${isComplete ? "text-[#18120f]" : "text-[#8c8179]"}`}>{title}</p>
-        <p className={`mt-1 text-[13px] ${isComplete ? "text-[#3f342e]" : "text-[#b0a49b]"}`}>{timestamp}</p>
+        <p className={`text-[15px] font-semibold ${isComplete ? "text-[#18120f]" : "text-[#8c8179]"}`}>{pt(title)}</p>
+        <p className={`mt-1 text-[13px] ${isComplete ? "text-[#3f342e]" : "text-[#b0a49b]"}`}>{payoutDate(timestamp)}</p>
         <p className={`mt-1 text-[13px] leading-6 ${isComplete ? "text-[#6c6058]" : "text-[#c0b3aa]"}`}>
-          {helperText}
+          {pt(helperText)}
         </p>
       </div>
     </div>
@@ -21,10 +23,11 @@ function TimelineItem({ helperText, isComplete, timestamp, title }) {
 }
 
 export default function PaymentActivityCard({ activity }) {
+  usePayoutLanguage();
   return (
     <section className="rounded-[24px] border border-[#ddd4cd] bg-white shadow-[0_14px_34px_rgba(55,31,13,0.06)]">
       <div className="border-b border-[#eee5de] bg-[linear-gradient(180deg,#fff7f1_0%,#fffdfa_100%)] px-5 py-4">
-        <h2 className="text-[18px] font-bold text-[#221914]">Activity Timeline</h2>
+        <h2 className="text-[18px] font-bold text-[#221914]">{pt("Activity Timeline")}</h2>
       </div>
 
       <div className="px-5 py-5">
@@ -38,9 +41,7 @@ export default function PaymentActivityCard({ activity }) {
             </div>
           ))
         ) : (
-          <div className="rounded-[18px] border border-dashed border-[#e5d8cf] bg-[#fffdfa] px-4 py-8 text-center text-[14px] text-[#7e7067]">
-            No finance activity yet.
-          </div>
+          <div className="rounded-[18px] border border-dashed border-[#e5d8cf] bg-[#fffdfa] px-4 py-8 text-center text-[14px] text-[#7e7067]">{pt("No finance activity yet.")}</div>
         )}
       </div>
     </section>

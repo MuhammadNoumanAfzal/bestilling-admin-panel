@@ -1,30 +1,33 @@
+import { cmt, useCommissionLanguage } from "../../commissionTranslation.js";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 function OrderShareBadge({ value }) {
+  useCommissionLanguage();
   return (
     <span className="inline-flex rounded-full bg-[#e9fff0] px-2.5 py-1 text-[10px] font-bold text-[#219653]">{value}</span>
   );
 }
 
 function MobileAreaCommissionCard({ row, onDelete, onEdit }) {
+  useCommissionLanguage();
   return (
     <article className="rounded-[16px] border border-[#eadfd6] bg-[linear-gradient(180deg,#fffdfa_0%,#fff8f2_100%)] p-4 shadow-[0_10px_20px_rgba(56,33,17,0.05)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[15px] font-bold text-[#18120f]">{row.area}</p>
-          <p className="mt-1 text-[12px] text-[#7d7068]">{row.activeVendors} active vendors</p>
+          <p className="mt-1 text-[12px] text-[#7d7068]">{cmt("{{count}} active vendors", { count: row.activeVendors })}</p>
         </div>
         <OrderShareBadge value={row.orderShare} />
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Commission</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">{cmt("Commission")}</p>
           <p className="mt-1 text-[14px] font-semibold text-[#18120f]">{row.commissionRate}</p>
         </div>
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Order Share</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">{cmt("Order Share")}</p>
           <p className="mt-1 text-[14px] font-semibold text-[#18120f]">{row.orderShare}</p>
         </div>
       </div>
@@ -32,15 +35,13 @@ function MobileAreaCommissionCard({ row, onDelete, onEdit }) {
       <div className="mt-4 flex items-center gap-2">
         <button
           className="inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-[#dfd2ca] bg-white px-3 text-[12px] font-bold text-[#3a2f28] transition hover:bg-[#faf6f2]"
-          onClick={() => onEdit(row)}
+          title={cmt("Edit")} aria-label={cmt("Edit")} onClick={() => onEdit(row)}
           type="button"
         >
-          <Pencil size={14} />
-          Edit
-        </button>
+          <Pencil size={14} />{cmt("Edit")}</button>
         <button
           className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-[10px] border border-[#f0d6d0] bg-[#fff6f4] text-[#d15b42] transition hover:bg-[#fff0ec]"
-          onClick={() => onDelete(row)}
+          title={cmt("Delete")} aria-label={cmt("Delete")} onClick={() => onDelete(row)}
           type="button"
         >
           <Trash2 size={14} />
@@ -51,6 +52,7 @@ function MobileAreaCommissionCard({ row, onDelete, onEdit }) {
 }
 
 export default function AreaCommissionCard({ onAdd, onDelete, onEdit, rows }) {
+  useCommissionLanguage();
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredRows = useMemo(() => {
@@ -73,7 +75,7 @@ export default function AreaCommissionCard({ onAdd, onDelete, onEdit, rows }) {
     <section className="overflow-hidden rounded-[16px] border border-[#d8ccc2] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]">
       <div className="flex items-center justify-between gap-3 px-4 py-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-[20px] font-bold text-[#221914] sm:text-[22px]">Area Commission</h2>
+          <h2 className="text-[20px] font-bold text-[#221914] sm:text-[22px]">{cmt("Area Commission")}</h2>
           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ffd7c1] px-1 text-[10px] font-bold text-[#cf6e38]">
             {rows.length}
           </span>
@@ -85,7 +87,7 @@ export default function AreaCommissionCard({ onAdd, onDelete, onEdit, rows }) {
           <input
             className="h-10 w-full rounded-full border border-[#ebe2db] bg-[#f6f4f2] pl-9 pr-3 text-[14px] font-medium text-[#2a1f19] outline-none transition placeholder:text-[#b3aaa2] focus:border-[#cf6e38] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search area or commission..."
+            placeholder={cmt("Search area or commission...")}
             type="search"
             value={searchTerm}
           />
@@ -102,15 +104,13 @@ export default function AreaCommissionCard({ onAdd, onDelete, onEdit, rows }) {
           <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/16">
             <Plus size={14} />
           </span>
-          <span>Add Area Commission</span>
+          <span>{cmt("Add Area Commission")}</span>
         </button>
       </div>
 
       <div className="space-y-3 border-t border-[#eee4dd] p-3 md:hidden">
         {filteredRows.length === 0 ? (
-          <div className="rounded-[14px] border border-dashed border-[#e2d7cf] bg-[#fcfaf8] px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]">
-            No area commissions match the current search.
-          </div>
+          <div className="rounded-[14px] border border-dashed border-[#e2d7cf] bg-[#fcfaf8] px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]">{cmt("No area commissions match the current search.")}</div>
         ) : (
           filteredRows.map((row) => (
             <MobileAreaCommissionCard
@@ -127,19 +127,17 @@ export default function AreaCommissionCard({ onAdd, onDelete, onEdit, rows }) {
         <table className="w-full table-fixed border-collapse">
           <thead className="bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">Area</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Commission Rate</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Active Vendors</th>
-              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Order Share</th>
-              <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
+              <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">{cmt("Area")}</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">{cmt("Commission Rate")}</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">{cmt("Active Vendors")}</th>
+              <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">{cmt("Order Share")}</th>
+              <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">{cmt("Actions")}</th>
             </tr>
           </thead>
           <tbody>
             {filteredRows.length === 0 ? (
               <tr className="border-t border-[#f1e9e2]">
-                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={5}>
-                  No area commissions match the current search.
-                </td>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={5}>{cmt("No area commissions match the current search.")}</td>
               </tr>
             ) : (
               filteredRows.map((row) => (
@@ -154,14 +152,14 @@ export default function AreaCommissionCard({ onAdd, onDelete, onEdit, rows }) {
                     <div className="inline-flex items-center gap-1">
                       <button
                         className="inline-flex cursor-pointer items-center justify-center rounded-[8px] p-1.5 text-[#cf6e38] transition hover:bg-[#fff4ec]"
-                        onClick={() => onEdit(row)}
+                        title={cmt("Edit")} aria-label={cmt("Edit")} onClick={() => onEdit(row)}
                         type="button"
                       >
                         <Pencil size={14} />
                       </button>
                       <button
                         className="inline-flex cursor-pointer items-center justify-center rounded-[8px] p-1.5 text-[#d15b42] transition hover:bg-[#fff4f1]"
-                        onClick={() => onDelete(row)}
+                        title={cmt("Delete")} aria-label={cmt("Delete")} onClick={() => onDelete(row)}
                         type="button"
                       >
                         <Trash2 size={14} />

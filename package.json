@@ -12,9 +12,11 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.3.2",
     "firebase": "^12.18.0",
+    "i18next": "^26.4.2",
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-i18next": "^17.0.13",
     "react-router-dom": "^7.18.1",
     "sweetalert2": "^11.26.25",
     "tailwindcss": "^4.3.2"

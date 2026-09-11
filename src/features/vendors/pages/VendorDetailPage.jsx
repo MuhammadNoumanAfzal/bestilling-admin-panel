@@ -1,3 +1,4 @@
+import { vt, useVendorLanguage, vendorError, vendorMessage, vendorHtml } from "../utils/vendorTranslation.js";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -24,6 +25,7 @@ import VendorRecentOrdersSection from "../components/details/VendorRecentOrdersS
 import VendorReviewsSection from "../components/details/VendorReviewsSection.jsx";
 
 function LoadingState() {
+  useVendorLanguage();
   return (
     <div className="[&_button:enabled]:cursor-pointer [&_button:disabled]:cursor-not-allowed [&_a[href]]:cursor-pointer mx-auto max-w-6xl space-y-5 px-0 sm:space-y-6">
       <div className="h-44 animate-pulse rounded-[18px] border border-[#ddd6cf] bg-white" />
@@ -38,6 +40,7 @@ function LoadingState() {
 }
 
 export default function VendorDetailPage() {
+  useVendorLanguage();
   const { vendorId: vendorSlug } = useParams();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("overview");
@@ -129,9 +132,10 @@ export default function VendorDetailPage() {
 
     if (vendor.applicationStatus === "Rejected") {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "info",
-        title: "Application already rejected",
-        text: "This vendor is currently in rejected application status. Use the review flow to approve again before changing account status.",
+        title: vt("Application already rejected"),
+        text: vt("This vendor is currently in rejected application status. Use the review flow to approve again before changing account status."),
         confirmButtonColor: "#cf6e38",
       });
       return;
@@ -140,16 +144,16 @@ export default function VendorDetailPage() {
     const isReactivating = vendor.status === "Suspended" || vendor.status === "Deactivated";
 
     const result = await Swal.fire({
-      title: isReactivating ? "Reactivate vendor?" : "Suspend vendor?",
+      title: isReactivating ? vt("Reactivate vendor?") : vt("Suspend vendor?"),
       text: isReactivating
-        ? `Restore ${vendor.name} to active marketplace status?`
-        : `${vendor.name} will be hidden from listings and stop receiving new orders.`,
+        ? vt("Restore {{value0}} to active marketplace status?", { value0: vendor.name })
+        : vt("{{value0}} will be hidden from listings and stop receiving new orders.", { value0: vendor.name }),
       input: "text",
-      inputLabel: "Reason",
-      inputPlaceholder: isReactivating ? "Issue resolved" : "Compliance issue",
+      inputLabel: vt("Reason"),
+      inputPlaceholder: isReactivating ? vt("Issue resolved") : vt("Compliance issue"),
       showCancelButton: true,
-      confirmButtonText: isReactivating ? "Reactivate vendor" : "Suspend vendor",
-      cancelButtonText: "Cancel",
+      confirmButtonText: isReactivating ? vt("Reactivate vendor") : vt("Suspend vendor"),
+      cancelButtonText: vt("Cancel"),
       confirmButtonColor: isReactivating ? "#2b9e62" : "#d83f3f",
       cancelButtonColor: "#c8b9aa",
     });
@@ -174,16 +178,18 @@ export default function VendorDetailPage() {
       );
 
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "success",
-        title: isReactivating ? "Vendor reactivated" : "Vendor suspended",
-        text: response.message,
+        title: isReactivating ? vt("Vendor reactivated") : vt("Vendor suspended"),
+        text: vendorMessage(response.message),
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "error",
-        title: isReactivating ? "Unable to reactivate vendor" : "Unable to suspend vendor",
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: isReactivating ? vt("Unable to reactivate vendor") : vt("Unable to suspend vendor"),
+        text: vendorError(error),
         confirmButtonColor: "#cf6e38",
       });
     } finally {
@@ -197,14 +203,14 @@ export default function VendorDetailPage() {
     }
 
     const result = await Swal.fire({
-      title: "Deactivate vendor?",
-      text: `This will deactivate ${vendor.name} while preserving historical records.`,
+      title: vt("Deactivate vendor?"),
+      text: vt("This will deactivate {{value0}} while preserving historical records.", { value0: vendor.name }),
       input: "text",
-      inputLabel: "Reason",
-      inputPlaceholder: "Optional reason",
+      inputLabel: vt("Reason"),
+      inputPlaceholder: vt("Optional reason"),
       showCancelButton: true,
-      confirmButtonText: "Deactivate vendor",
-      cancelButtonText: "Cancel",
+      confirmButtonText: vt("Deactivate vendor"),
+      cancelButtonText: vt("Cancel"),
       confirmButtonColor: "#d83f3f",
       cancelButtonColor: "#c8b9aa",
     });
@@ -227,16 +233,18 @@ export default function VendorDetailPage() {
       );
 
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "success",
-        title: "Vendor deactivated",
-        text: response.message,
+        title: vt("Vendor deactivated"),
+        text: vendorMessage(response.message),
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "error",
-        title: "Unable to deactivate vendor",
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: vt("Unable to deactivate vendor"),
+        text: vendorError(error),
         confirmButtonColor: "#cf6e38",
       });
     } finally {
@@ -250,11 +258,11 @@ export default function VendorDetailPage() {
     }
 
     const result = await Swal.fire({
-      title: "Delete vendor permanently?",
-      text: `This will permanently remove ${vendor.name}. This cannot be undone.`,
+      title: vt("Delete vendor permanently?"),
+      text: vt("This will permanently remove {{value0}}. This cannot be undone.", { value0: vendor.name }),
       showCancelButton: true,
-      confirmButtonText: "Delete permanently",
-      cancelButtonText: "Cancel",
+      confirmButtonText: vt("Delete permanently"),
+      cancelButtonText: vt("Cancel"),
       confirmButtonColor: "#d83f3f",
       cancelButtonColor: "#c8b9aa",
     });
@@ -267,17 +275,19 @@ export default function VendorDetailPage() {
       setIsDeleting(true);
       const response = await deleteVendorRequest(vendor.id);
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "success",
-        title: "Vendor deleted",
-        text: response.message,
+        title: vt("Vendor deleted"),
+        text: vendorMessage(response.message),
         confirmButtonColor: "#cf6e38",
       });
       window.location.assign("/vendors");
     } catch (error) {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "error",
-        title: "Unable to delete vendor",
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: vt("Unable to delete vendor"),
+        text: vendorError(error),
         confirmButtonColor: "#cf6e38",
       });
     } finally {
@@ -296,42 +306,42 @@ export default function VendorDetailPage() {
         <div style="display:flex;flex-direction:column;gap:12px;text-align:left;color:#241a15;padding:0;">
           <div style="display:flex;flex-direction:column;gap:8px;">
             <span style="display:inline-flex;align-self:flex-start;align-items:center;gap:8px;border:1px solid #efcfbd;background:#fff4ec;color:#c96533;border-radius:999px;padding:7px 12px;font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;">
-              High priority review
+              ${vendorHtml("High priority review")}
             </span>
             <div>
-              <h2 style="margin:0;font-size:18px;font-weight:800;line-height:1.2;">Approve bank details</h2>
+              <h2 style="margin:0;font-size:18px;font-weight:800;line-height:1.2;">${vendorHtml("Approve bank details")}</h2>
               <p style="margin:6px 0 0 0;font-size:13px;line-height:1.6;color:#6d5b51;">
-                Confirm these payout details only after they match the vendor business records. This approval unlocks finance payout processing.
+                ${vendorHtml("Confirm these payout details only after they match the vendor business records. This approval unlocks finance payout processing.")}
               </p>
             </div>
           </div>
 
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;">
             <div style="border:1px solid #efdfd3;border-radius:18px;padding:10px 12px;background:linear-gradient(180deg,#ffffff 0%,#fcfaf8 100%);">
-              <div style="font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a18f84;">Account holder</div>
-              <div style="margin-top:6px;font-size:14px;font-weight:700;color:#1f1713;line-height:1.45;">${payoutProfile.accountHolderName || "Not provided"}</div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a18f84;">${vendorHtml("Account holder")}</div>
+              <div style="margin-top:6px;font-size:14px;font-weight:700;color:#1f1713;line-height:1.45;">${vendorHtml(payoutProfile.accountHolderName || "Not provided")}</div>
             </div>
             <div style="border:1px solid #efdfd3;border-radius:18px;padding:10px 12px;background:linear-gradient(180deg,#ffffff 0%,#fcfaf8 100%);">
-              <div style="font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a18f84;">Bank name</div>
-              <div style="margin-top:6px;font-size:14px;font-weight:700;color:#1f1713;line-height:1.45;">${payoutProfile.bankName || "Not provided"}</div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a18f84;">${vendorHtml("Bank name")}</div>
+              <div style="margin-top:6px;font-size:14px;font-weight:700;color:#1f1713;line-height:1.45;">${vendorHtml(payoutProfile.bankName || "Not provided")}</div>
             </div>
             <div style="border:1px solid #efdfd3;border-radius:18px;padding:10px 12px;background:linear-gradient(180deg,#ffffff 0%,#fcfaf8 100%);">
-              <div style="font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a18f84;">Account number</div>
-              <div style="margin-top:6px;font-size:14px;font-weight:700;color:#1f1713;line-height:1.45;">${payoutProfile.accountNumber || "Not provided"}</div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a18f84;">${vendorHtml("Account number")}</div>
+              <div style="margin-top:6px;font-size:14px;font-weight:700;color:#1f1713;line-height:1.45;">${vendorHtml(payoutProfile.accountNumber || "Not provided")}</div>
             </div>
           </div>
 
           <div style="border:1px solid #efdfd3;border-radius:22px;background:linear-gradient(180deg,#fffaf6 0%,#ffffff 100%);padding:12px;">
-            <label for="vendor-payout-approve-note" style="display:block;margin-bottom:6px;font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a57b64;">Verification note</label>
-            <textarea id="vendor-payout-approve-note" class="swal2-textarea" placeholder="Example: Details matched company records and are approved for payout release." style="margin:0;width:100%;min-height:102px;border-radius:16px;border:1px solid #ead7ca;box-shadow:none;padding:12px 14px;"></textarea>
+            <label for="vendor-payout-approve-note" style="display:block;margin-bottom:6px;font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#a57b64;">${vendorHtml("Verification note")}</label>
+            <textarea id="vendor-payout-approve-note" class="swal2-textarea" placeholder="${vendorHtml("Example: Details matched company records and are approved for payout release.")}" style="margin:0;width:100%;min-height:102px;border-radius:16px;border:1px solid #ead7ca;box-shadow:none;padding:12px 14px;"></textarea>
           </div>
         </div>
       `,
       focusConfirm: false,
       showCancelButton: true,
       width: 760,
-      confirmButtonText: "Approve bank details",
-      cancelButtonText: "Cancel",
+      confirmButtonText: vt("Approve bank details"),
+      cancelButtonText: vt("Cancel"),
       confirmButtonColor: "#cf6e38",
       cancelButtonColor: "#c8b9aa",
       customClass: {
@@ -388,16 +398,18 @@ export default function VendorDetailPage() {
       );
 
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "success",
-        title: "Bank details approved",
-        text: response.message,
+        title: vt("Bank details approved"),
+        text: vendorMessage(response.message),
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "error",
-        title: "Unable to approve bank details",
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: vt("Unable to approve bank details"),
+        text: vendorError(error),
         confirmButtonColor: "#cf6e38",
       });
     } finally {
@@ -411,19 +423,19 @@ export default function VendorDetailPage() {
     }
 
     const result = await Swal.fire({
-      title: "Request bank detail changes",
+      title: vt("Request bank detail changes"),
       html: `
         <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
           <div>
-            <label for="vendor-payout-change-reason" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Reason</label>
-            <textarea id="vendor-payout-change-reason" class="swal2-textarea" placeholder="Explain what the vendor needs to correct before payout can be verified." style="margin:0;width:100%;min-height:120px;"></textarea>
+            <label for="vendor-payout-change-reason" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">${vendorHtml("Reason")}</label>
+            <textarea id="vendor-payout-change-reason" class="swal2-textarea" placeholder="${vendorHtml("Explain what the vendor needs to correct before payout can be verified.")}" style="margin:0;width:100%;min-height:120px;"></textarea>
           </div>
         </div>
       `,
       focusConfirm: false,
       showCancelButton: true,
-      confirmButtonText: "Request changes",
-      cancelButtonText: "Cancel",
+      confirmButtonText: vt("Request changes"),
+      cancelButtonText: vt("Cancel"),
       confirmButtonColor: "#cf6e38",
       cancelButtonColor: "#c8b9aa",
       preConfirm: () => {
@@ -431,7 +443,7 @@ export default function VendorDetailPage() {
           document.getElementById("vendor-payout-change-reason")?.value?.trim() || "";
 
         if (!reason) {
-          Swal.showValidationMessage("Please add a reason for the requested changes.");
+          Swal.showValidationMessage(vt("Please add a reason for the requested changes."));
           return null;
         }
 
@@ -459,16 +471,18 @@ export default function VendorDetailPage() {
       );
 
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "success",
-        title: "Changes requested",
-        text: response.message,
+        title: vt("Changes requested"),
+        text: vendorMessage(response.message),
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "error",
-        title: "Unable to request changes",
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: vt("Unable to request changes"),
+        text: vendorError(error),
         confirmButtonColor: "#cf6e38",
       });
     } finally {
@@ -483,7 +497,7 @@ export default function VendorDetailPage() {
   if (!vendor) {
     return (
       <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-10 text-center text-[15px] font-medium text-[#9f4d33]">
-        {loadError || "Unable to load this vendor."}
+        {loadError ? vendorError(loadError) : vt("Unable to load this vendor.")}
       </div>
     );
   }
@@ -492,7 +506,7 @@ export default function VendorDetailPage() {
     <div className="[&_button:enabled]:cursor-pointer [&_button:disabled]:cursor-not-allowed [&_a[href]]:cursor-pointer mx-auto max-w-6xl space-y-5 px-0 sm:space-y-6">
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
-          {loadError}
+          {vendorError(loadError)}
         </div>
       ) : null}
 

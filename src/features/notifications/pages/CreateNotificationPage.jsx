@@ -1,3 +1,4 @@
+import { nt, useNotificationLanguage, notificationError, notificationDialog, notificationDate, notificationLocale, notificationChannels } from "../notificationTranslation.js";
 import { CalendarDays, Check, Mail, Radio, SendHorizonal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -36,15 +37,17 @@ const scheduleModeOptions = [
 ];
 
 function ScheduleModeRadio({ label, value, checked, onChange }) {
+  useNotificationLanguage();
   return (
     <label className="inline-flex cursor-pointer items-center gap-2.5 text-[15px] font-medium text-[#574c45] "  >
       <input checked={checked} className="accent-[#cf6e38]" name="scheduleMode" onChange={() => onChange(value)} type="radio" />
-      <span>{label}</span>
+      <span>{nt(label)}</span>
     </label>
   );
 }
 
 export default function CreateNotificationPage() {
+  useNotificationLanguage();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     title: "",
@@ -143,27 +146,27 @@ export default function CreateNotificationPage() {
 
       const delivery = result?.delivery;
       const deliveryText = [
-        delivery?.inboxCreated ? `${delivery.inboxCreated} inbox recipient${delivery.inboxCreated === 1 ? "" : "s"}` : "",
-        delivery?.browserPushQueued ? `${delivery.browserPushQueued} browser alert${delivery.browserPushQueued === 1 ? "" : "s"} queued` : "",
-        delivery?.emailQueued ? `${delivery.emailQueued} email${delivery.emailQueued === 1 ? "" : "s"} queued` : "",
+        delivery?.inboxCreated ? nt(delivery.inboxCreated === 1 ? "{{count}} inbox recipient" : "{{count}} inbox recipients", { count: delivery.inboxCreated }) : "",
+        delivery?.browserPushQueued ? nt(delivery.browserPushQueued === 1 ? "{{count}} browser alert queued" : "{{count}} browser alerts queued", { count: delivery.browserPushQueued }) : "",
+        delivery?.emailQueued ? nt(delivery.emailQueued === 1 ? "{{count}} email queued" : "{{count}} emails queued", { count: delivery.emailQueued }) : "",
       ]
         .filter(Boolean)
         .join(". ");
 
-      await Swal.fire({
+      await Swal.fire(notificationDialog({
         icon: "success",
         title: form.scheduleMode === "immediately" ? "Notification created" : "Notification scheduled",
-        text: deliveryText || result?.message || "The notification was accepted by the delivery service.",
+        text: deliveryText || notificationError(result?.message, "The notification was accepted by the delivery service."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       navigate("/notifications");
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(notificationDialog({
         icon: "error",
         title: "Notification was not created",
-        text: error?.message || "Please try again.",
+        text: notificationError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsSubmitting(false);
     }
@@ -173,44 +176,44 @@ export default function CreateNotificationPage() {
     <div className="space-y-6">
       <div className="max-w-[980px] space-y-5">
         <CreateNotificationSectionCard
-          subtitle="Provide the core message and notification content."
-          title="Basic Information"
+          subtitle={nt("Provide the core message and notification content.")}
+          title={nt("Basic Information")}
         >
           <div className="space-y-4">
             <CreateNotificationField
               error={errors.title}
-              label="Notification Title"
+              label={nt("Notification Title")}
               onChange={(event) => updateField("title", event.target.value)}
-              placeholder="Enter notification title"
+              placeholder={nt("Enter notification title")}
               value={form.title}
             />
             <CreateNotificationField
               error={errors.emailSubject}
-              helperText="Used only when email delivery is selected."
-              label="Email Subject (Optional)"
+              helperText={nt("Used only when email delivery is selected.")}
+              label={nt("Email Subject (Optional)")}
               onChange={(event) => updateField("emailSubject", event.target.value)}
-              placeholder="Enter email subject"
+              placeholder={nt("Enter email subject")}
               value={form.emailSubject}
             />
             <CreateNotificationField
               as="textarea"
               error={errors.message}
-              helperText="Keep it short, clear, and action-focused for better response rates."
-              label="Message Body"
+              helperText={nt("Keep it short, clear, and action-focused for better response rates.")}
+              label={nt("Message Body")}
               onChange={(event) => updateField("message", event.target.value)}
-              placeholder="Write your message here..."
+              placeholder={nt("Write your message here...")}
               value={form.message}
             />
           </div>
         </CreateNotificationSectionCard>
 
         <CreateNotificationSectionCard
-          subtitle="Choose who should receive this notification."
-          title="Target Audience"
+          subtitle={nt("Choose who should receive this notification.")}
+          title={nt("Target Audience")}
         >
           <CreateNotificationField
             as="select"
-            label="Select Audience Type"
+            label={nt("Select Audience Type")}
             onChange={(event) => updateField("audience", event.target.value)}
             options={audienceOptions}
             value={form.audience}
@@ -218,8 +221,8 @@ export default function CreateNotificationPage() {
         </CreateNotificationSectionCard>
 
         <CreateNotificationSectionCard
-          subtitle="Choose how this message should be delivered."
-          title="Delivery Channels"
+          subtitle={nt("Choose how this message should be delivered.")}
+          title={nt("Delivery Channels")}
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {deliveryChannelOptions.map((option) => (
@@ -232,20 +235,18 @@ export default function CreateNotificationPage() {
             ))}
           </div>
           <div className="mt-4 rounded-[12px] border border-[#eadfd6] bg-[#fffaf6] px-4 py-3 text-[12px] leading-5 text-[#74665d]">
-            <span className="font-bold text-[#3d2c22]">Web notification note: </span>
-            Every notification is saved in the recipient's web inbox. Browser alerts require the recipient to allow notifications; if their browser or device is unavailable, they will see the notification when they next open the web app. Email must be sent by the backend delivery service. SMS is not available here.
-          </div>
-          {errors.channels ? <p className="mt-3 text-[13px] font-medium text-[#d15b42]">{errors.channels}</p> : null}
+            <span className="font-bold text-[#3d2c22]">{nt("Web notification note:")}</span>{nt("Every notification is saved in the recipient's web inbox. Browser alerts require the recipient to allow notifications; if their browser or device is unavailable, they will see the notification when they next open the web app. Email must be sent by the backend delivery service. SMS is not available here.")}</div>
+          {errors.channels ? <p className="mt-3 text-[13px] font-medium text-[#d15b42]">{nt(errors.channels)}</p> : null}
           {!errors.channels ? (
             <p className="mt-3 text-[13px] leading-5 text-[#8d8077]">
-              Selected: {form.channels.length > 0 ? form.channels.join(", ") : "None"}
+              {nt("Selected: {{channels}}", { channels: notificationChannels(form.channels) })}
             </p>
           ) : null}
         </CreateNotificationSectionCard>
 
         <CreateNotificationSectionCard
-          subtitle="Control when this notification should be sent."
-          title="Timing & Schedule"
+          subtitle={nt("Control when this notification should be sent.")}
+          title={nt("Timing & Schedule")}
         >
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-5">
@@ -264,13 +265,13 @@ export default function CreateNotificationPage() {
               <div className="rounded-[14px] border border-[#ece2db] bg-[#fcfbfa] p-4">
                 <div className="mb-3 flex items-center gap-2 text-[#7f736b]">
                   <CalendarDays size={16} />
-                  <span className="text-[13px] font-bold uppercase tracking-[0.08em]">Schedule Date</span>
+                  <span className="text-[13px] font-bold uppercase tracking-[0.08em]">{nt("Schedule Date")}</span>
                 </div>
                 <CreateNotificationField
                   error={errors.scheduleDate}
                   as="input"
                   disabled={form.scheduleMode === "immediately"}
-                  label="Choose Date"
+                  label={nt("Choose Date")}
                   min={minScheduleDate}
                   onChange={(event) => updateField("scheduleDate", event.target.value)}
                   type="date"
@@ -281,18 +282,18 @@ export default function CreateNotificationPage() {
               <div className="rounded-[14px] border border-[#ece2db] bg-[#fcfbfa] p-4">
                 <div className="mb-3 flex items-center gap-2 text-[#7f736b]">
                   <SendHorizonal size={16} />
-                  <span className="text-[13px] font-bold uppercase tracking-[0.08em]">Send Time</span>
+                  <span className="text-[13px] font-bold uppercase tracking-[0.08em]">{nt("Send Time")}</span>
                 </div>
                 <CreateNotificationField
                   as="input"
                   disabled={form.scheduleMode === "immediately"}
                   helperText={
                     form.scheduleMode === "immediately"
-                      ? "Time is disabled when sending immediately."
-                      : "Choose the time in 24-hour format when the notification should go live."
+                      ? nt("Time is disabled when sending immediately.")
+                      : nt("Choose the time in 24-hour format when the notification should go live.")
                   }
-                  label="Choose Time"
-                  lang="en-GB"
+                  label={nt("Choose Time")}
+                  lang={notificationLocale()}
                   onChange={(event) => updateField("scheduleTime", event.target.value)}
                   step="60"
                   type="time"
@@ -307,17 +308,16 @@ export default function CreateNotificationPage() {
                   <Check size={16} />
                 </span>
                 <div>
-                  <p className="text-[15px] font-bold text-[#2a1f19]">Delivery summary</p>
+                  <p className="text-[15px] font-bold text-[#2a1f19]">{nt("Delivery summary")}</p>
                   <p className="mt-1 text-[14px] leading-6 text-[#7a6e66]">
-                    Audience: {audienceOptions.find((option) => option.value === form.audience)?.label}. Channels:{" "}
-                    {form.channels.length > 0 ? form.channels.join(", ") : "None selected"}.
+                    {nt("Audience: {{audience}}. Channels: {{channels}}.", { audience: nt(audienceOptions.find((option) => option.value === form.audience)?.label), channels: notificationChannels(form.channels) })}
                   </p>
                   <p className="text-[14px] leading-6 text-[#7a6e66]">
                     {form.scheduleMode === "immediately"
-                      ? "This notification will be sent immediately after confirmation."
+                      ? nt("This notification will be sent immediately after confirmation.")
                       : form.scheduleDate
-                        ? `This notification will be scheduled for ${form.scheduleDate} at ${form.scheduleTime}.`
-                        : "Choose a date and time to schedule this notification."}
+                        ? nt("This notification will be scheduled for {{date}} at {{time}}.", { date: notificationDate(form.scheduleDate, true), time: form.scheduleTime })
+                        : nt("Choose a date and time to schedule this notification.")}
                   </p>
                 </div>
               </div>

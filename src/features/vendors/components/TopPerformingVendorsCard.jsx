@@ -1,7 +1,9 @@
+import { vt, useVendorLanguage, vendorNumber } from "../utils/vendorTranslation.js";
 import { useNavigate } from "react-router-dom";
 import { getVendorDetailPath } from "../utils/vendorRoutes.js";
 
 export default function TopPerformingVendorsCard({ vendors = [], onViewAll }) {
+  useVendorLanguage();
   const navigate = useNavigate();
   const topPerformingVendors = [...vendors]
     .sort((left, right) => right.revenueValue - left.revenueValue)
@@ -11,7 +13,7 @@ export default function TopPerformingVendorsCard({ vendors = [], onViewAll }) {
     <article className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)] flex flex-col justify-between h-full">
       <div>
         <header className="mb-4 flex items-center justify-between border-b border-[#eee4dd] pb-3">
-          <h3 className="text-[18px] font-bold text-[#18120f]">Top Performing Vendors</h3>
+          <h3 className="text-[18px] font-bold text-[#18120f]">{vt("Top Performing Vendors")}</h3>
         </header>
 
         {topPerformingVendors.length > 0 ? (
@@ -43,15 +45,13 @@ export default function TopPerformingVendorsCard({ vendors = [], onViewAll }) {
                   </span>
                 </div>
                 <span className="text-[14px] font-bold text-[#18120f] shrink-0">
-                  {vendor.revenue}
+                  {vendor.revenueValue != null ? "NOK " + vendorNumber(vendor.revenueValue) : vendor.revenue}
                 </span>
               </button>
             ))}
           </div>
         ) : (
-          <p className="py-8 text-center text-[14px] font-medium text-[#6f645d]">
-            No vendors match the current filters.
-          </p>
+          <p className="py-8 text-center text-[14px] font-medium text-[#6f645d]">{vt("No vendors match the current filters.")}</p>
         )}
       </div>
 
@@ -66,9 +66,7 @@ export default function TopPerformingVendorsCard({ vendors = [], onViewAll }) {
         }}
         className="mt-6 w-full text-center text-[12px] font-bold text-[#cf6e38] hover:underline cursor-pointer outline-none"
         type="button"
-      >
-        View All
-      </button>
+      >{vt("View All")}</button>
     </article>
   );
 }

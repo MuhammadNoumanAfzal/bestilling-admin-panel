@@ -1,3 +1,4 @@
+import { ot, useOrderLanguage, orderError, orderMessage } from "../orderTranslation.js";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -63,6 +64,7 @@ function uniqueVendorOptions(vendors) {
 }
 
 export default function OrdersPage() {
+  useOrderLanguage();
   const navigate = useNavigate();
   const { setPageHeaderAction } = useOutletContext();
   const [searchTerm, setSearchTerm] = useState("");
@@ -308,9 +310,10 @@ export default function OrdersPage() {
           paymentStatus: "PAID",
         });
         await Swal.fire({
+          confirmButtonText: ot("OK"),
           icon: "success",
-          title: "Payment updated",
-          text: result.message || "Order payment marked as paid.",
+          title: ot("Payment updated"),
+          text: orderMessage(result.message, "Order payment marked as paid."),
           confirmButtonColor: "#cf6e38",
         });
         refreshOrders();
@@ -329,9 +332,10 @@ export default function OrdersPage() {
       }
     } catch (error) {
       await Swal.fire({
+          confirmButtonText: ot("OK"),
         icon: "error",
-        title: "Action failed",
-        text: error instanceof Error ? error.message : "Unable to update order.",
+        title: ot("Action failed"),
+        text: orderError(error, "Unable to update order."),
         confirmButtonColor: "#cf6e38",
       });
     } finally {
@@ -359,7 +363,7 @@ export default function OrdersPage() {
 
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
-          {loadError}
+          {orderError(loadError, "Unable to load orders.")}
         </div>
       ) : null}
 
@@ -367,7 +371,7 @@ export default function OrdersPage() {
         {summaryCards.filter((stat) => stat.id !== "review").map((stat) => (
           <StatCard
             key={stat.id}
-            title={stat.title}
+            title={ot(stat.title)}
             value={stat.value}
             icon={iconMap[stat.id] || ShoppingBag}
             onClick={() => handleSummaryCardClick(stat.id)}
@@ -393,8 +397,8 @@ export default function OrdersPage() {
 
         {isLoading && rows.length === 0 ? (
           <AdminLoadingState
-            title="Loading order activity"
-            description="Gathering customer, vendor, event, payment, and fulfillment records for the selected filters."
+            title={ot("Loading order activity")}
+            description={ot("Gathering customer, vendor, event, payment, and fulfillment records for the selected filters.")}
             rows={5}
             columns={8}
           />

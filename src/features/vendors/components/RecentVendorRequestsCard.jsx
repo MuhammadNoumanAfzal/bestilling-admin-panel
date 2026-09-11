@@ -1,3 +1,4 @@
+import { vt, useVendorLanguage } from "../utils/vendorTranslation.js";
 import { useNavigate } from "react-router-dom";
 
 function getRelativeTimeLabel(dateValue) {
@@ -22,6 +23,7 @@ function getRelativeTimeLabel(dateValue) {
 }
 
 export default function RecentVendorRequestsCard({ vendors = [] }) {
+  useVendorLanguage();
   const navigate = useNavigate();
   const recentVendorRequests = vendors
     .filter((vendor) => vendor.status === "Pending Approval")
@@ -37,7 +39,7 @@ export default function RecentVendorRequestsCard({ vendors = [] }) {
     <article className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)] flex flex-col justify-between h-full">
       <div>
         <header className="mb-4 flex items-center justify-between border-b border-[#eee4dd] pb-3">
-          <h3 className="text-[18px] font-bold text-[#18120f]">Recent Vendor Requests</h3>
+          <h3 className="text-[18px] font-bold text-[#18120f]">{vt("Recent Vendor Requests")}</h3>
         </header>
 
         {recentVendorRequests.length > 0 ? (
@@ -68,18 +70,16 @@ export default function RecentVendorRequestsCard({ vendors = [] }) {
                 </div>
 
                 <div className="text-right shrink-0">
-                  <p className="text-[11px] text-[#8a7f76] font-semibold">{req.time}</p>
+                  <p className="text-[11px] text-[#8a7f76] font-semibold">{vt(req.time)}</p>
                   <span className="inline-block mt-0.5 rounded-[4px] bg-[#fff0e7] px-1.5 py-0.5 text-[9px] font-extrabold text-[#cf6e38] uppercase tracking-wider">
-                    {req.status}
+                    {vt(req.status)}
                   </span>
                 </div>
               </button>
             ))}
           </div>
         ) : (
-          <p className="py-8 text-center text-[14px] font-medium text-[#6f645d]">
-            No pending requests match the current filters.
-          </p>
+          <p className="py-8 text-center text-[14px] font-medium text-[#6f645d]">{vt("No pending requests match the current filters.")}</p>
         )}
       </div>
 
@@ -87,9 +87,7 @@ export default function RecentVendorRequestsCard({ vendors = [] }) {
         onClick={() => navigate("/vendors?tab=Pending%20Approval")}
         className="mt-6 w-full text-center text-[12px] font-bold text-[#cf6e38] hover:underline cursor-pointer flex items-center justify-center gap-1 outline-none"
         type="button"
-      >
-        View All Request
-        <span className="text-[14px]">&rarr;</span>
+      >{vt("View All Request")}<span className="text-[14px]">&rarr;</span>
       </button>
     </article>
   );

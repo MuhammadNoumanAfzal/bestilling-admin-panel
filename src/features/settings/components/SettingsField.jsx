@@ -1,3 +1,4 @@
+import { st, useSettingsLanguage } from "../settingsTranslation.js";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
@@ -14,6 +15,7 @@ export default function SettingsField({
   helperText,
   enablePasswordToggle = false,
 }) {
+  useSettingsLanguage();
   const isPasswordField = type === "password";
   const canTogglePassword = enablePasswordToggle && isPasswordField;
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -21,7 +23,7 @@ export default function SettingsField({
 
   return (
     <label className={["flex flex-col gap-1.5", className].join(" ")}>
-      <span className="text-[12px] font-bold text-[#2f241d]">{label}</span>
+      <span className="text-[12px] font-bold text-[#2f241d]">{st(label)}</span>
       <div className="relative">
         <input
           className={[
@@ -31,14 +33,14 @@ export default function SettingsField({
           autoComplete={autoComplete}
           disabled={disabled}
           onChange={onChange}
-          placeholder={placeholder}
+          placeholder={st(placeholder)}
           readOnly={readOnly}
           type={resolvedType}
           value={value}
         />
         {canTogglePassword ? (
           <button
-            aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+            aria-label={isPasswordVisible ? st("Hide password") : st("Show password")}
             className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#8d7e72] transition hover:text-[#cf6e38]"
             onClick={() => setIsPasswordVisible((current) => !current)}
             type="button"
@@ -47,7 +49,7 @@ export default function SettingsField({
           </button>
         ) : null}
       </div>
-      {helperText ? <span className="text-[11px] leading-5 text-[#9c9087]">{helperText}</span> : null}
+      {helperText ? <span className="text-[11px] leading-5 text-[#9c9087]">{st(helperText)}</span> : null}
     </label>
   );
 }

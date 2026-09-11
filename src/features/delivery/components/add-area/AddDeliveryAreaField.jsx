@@ -1,3 +1,4 @@
+import { dt, useDeliveryLanguage } from "../../deliveryTranslation.js";
 export default function AddDeliveryAreaField({
   label,
   value,
@@ -8,6 +9,7 @@ export default function AddDeliveryAreaField({
   type = "text",
   disabled = false,
 }) {
+  useDeliveryLanguage();
   const sharedClassName =
     [
       "w-full rounded-[10px] border border-[#d9d1ca] px-3.5 text-[13px] text-[#2a1f19] outline-none transition placeholder:text-[#aa9f96]",
@@ -18,12 +20,12 @@ export default function AddDeliveryAreaField({
 
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[12px] font-bold text-[#2f241d]">{label}</span>
+      <span className="text-[12px] font-bold text-[#2f241d]">{dt(label)}</span>
       {as === "select" ? (
         <select className={`${sharedClassName} h-9 cursor-pointer`} disabled={disabled} onChange={onChange} value={value}>
           {options.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {dt(option.label)}
             </option>
           ))}
         </select>
@@ -32,7 +34,7 @@ export default function AddDeliveryAreaField({
           className={`${sharedClassName} h-9`}
           disabled={disabled}
           onChange={onChange}
-          placeholder={placeholder}
+          placeholder={dt(placeholder)}
           type={type}
           value={value}
         />

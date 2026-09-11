@@ -1,3 +1,4 @@
+import { ct, useCustomerLanguage, customerDate } from "../../customerTranslation.js";
 import { useState, useMemo } from "react";
 import { ShoppingBag, XCircle, TrendingUp, Search, Users, ArrowUpRight, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +14,7 @@ const STATUS_BADGE = {
 };
 
 export default function CustomerOrderHistoryCard({ ordersData = [], summary = null }) {
+  useCustomerLanguage();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [showAll, setShowAll] = useState(false);
@@ -64,9 +66,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [], summary = nu
         <span className="inline-flex h-6 w-6 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#d96834] shadow-sm">
           <ShoppingBag size={13} strokeWidth={2.5} />
         </span>
-        <h3 className="text-[18px] font-extrabold tracking-tight text-[#18120f]">
-          Order History
-        </h3>
+        <h3 className="text-[18px] font-extrabold tracking-tight text-[#18120f]">{ct("Order History")}{" "}</h3>
       </div>
 
       {/* Stats Cards Row */}
@@ -83,7 +83,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [], summary = nu
               </span>
               <div className="min-w-0">
                 <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
-                  {s.label}
+                  {ct(s.label)}
                 </span>
                 <span className="mt-1 block truncate text-[16px] font-extrabold leading-none tracking-tight text-[#18120f] sm:text-[19px]">
                   {s.value}
@@ -106,21 +106,18 @@ export default function CustomerOrderHistoryCard({ ordersData = [], summary = nu
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by Order ID or Vendor..."
+              placeholder={ct("Search by Order ID or Vendor...")}
               className="h-10 w-full rounded-[10px] border border-[#ddd4cb] bg-white pl-9.5 pr-3 text-[13px] text-[#231913] outline-none transition duration-150
                          placeholder:text-[#c0b4a8] focus:border-[#cf6e38] focus:shadow-[0_0_0_2px_rgba(207,110,56,0.1)]"
             />
           </div>
           <span className="text-[12px] font-extrabold text-[#8d7e72] sm:inline-block">
-            {filteredOrders.length} orders found
-          </span>
+            {filteredOrders.length}{ct("orders found")}{" "}</span>
         </div>
 
         <div className="space-y-3 p-3 sm:hidden">
           {displayedOrders.length === 0 ? (
-            <div className="rounded-[14px] border border-dashed border-[#ddd6cf] px-4 py-10 text-center text-[13px] font-semibold text-[#a89f97]">
-              No orders matching your search.
-            </div>
+            <div className="rounded-[14px] border border-dashed border-[#ddd6cf] px-4 py-10 text-center text-[13px] font-semibold text-[#a89f97]">{ct("No orders matching your search.")}{" "}</div>
           ) : (
             displayedOrders.map((order, idx) => (
               <article
@@ -135,25 +132,25 @@ export default function CustomerOrderHistoryCard({ ordersData = [], summary = nu
                   <span className={`inline-block rounded-[6px] px-2.5 py-1 text-[10.5px] font-extrabold uppercase leading-none tracking-wider shadow-sm ${
                     STATUS_BADGE[order.status] || "bg-[#f0ebe6] text-[#6f655e]"
                   }`}>
-                    {order.status}
+                    {ct(order.status)}
                   </span>
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <div className="rounded-[12px] bg-white px-3 py-2.5">
-                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9a8f86]">Event</p>
-                    <p className="mt-1.5 text-[13px] font-bold text-[#18120f]">{order.eventType}</p>
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9a8f86]">{ct("Event")}</p>
+                    <p className="mt-1.5 text-[13px] font-bold text-[#18120f]">{ct(order.eventType)}</p>
                   </div>
                   <div className="rounded-[12px] bg-white px-3 py-2.5">
-                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9a8f86]">Guests</p>
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9a8f86]">{ct("Guests")}</p>
                     <p className="mt-1.5 text-[13px] font-bold text-[#18120f]">{order.guests}</p>
                   </div>
                   <div className="rounded-[12px] bg-white px-3 py-2.5">
-                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9a8f86]">Delivery</p>
-                    <p className="mt-1.5 text-[13px] font-medium leading-5 text-[#5a4d46]">{order.dateTime}</p>
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9a8f86]">{ct("Delivery")}</p>
+                    <p className="mt-1.5 text-[13px] font-medium leading-5 text-[#5a4d46]">{customerDate(order.createdAtValue || order.dateTime, true)}</p>
                   </div>
                   <div className="rounded-[12px] bg-white px-3 py-2.5">
-                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9a8f86]">Amount</p>
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9a8f86]">{ct("Amount")}</p>
                     <p className="mt-1.5 text-[13px] font-extrabold text-[#18120f]">{order.amount}</p>
                   </div>
                 </div>
@@ -162,9 +159,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [], summary = nu
                   onClick={() => navigate(`/orders/${encodeURIComponent(order.id)}`)}
                   type="button"
                   className="mt-4 inline-flex items-center gap-1 text-[13px] font-bold text-[#cf6e38] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none active:scale-95"
-                >
-                  View
-                  <ArrowUpRight size={11} />
+                >{ct("View")}{" "}<ArrowUpRight size={11} />
                 </button>
               </article>
             ))
@@ -193,7 +188,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [], summary = nu
                       th.align || ""
                     }`}
                   >
-                    {th.label}
+                    {ct(th.label)}
                   </th>
                 ))}
               </tr>
@@ -201,9 +196,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [], summary = nu
             <tbody>
               {displayedOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-[13px] font-semibold text-[#a89f97]">
-                    No orders matching your search.
-                  </td>
+                  <td colSpan={8} className="py-12 text-center text-[13px] font-semibold text-[#a89f97]">{ct("No orders matching your search.")}{" "}</td>
                 </tr>
               ) : (
                 displayedOrders.map((order, idx) => (
@@ -213,20 +206,20 @@ export default function CustomerOrderHistoryCard({ ordersData = [], summary = nu
                   >
                     <td className="px-5.5 py-3.5 font-bold text-[#cf6432]">{order.id}</td>
                     <td className="px-5.5 py-3.5 font-bold text-[#18120f]">{order.vendor}</td>
-                    <td className="px-5.5 py-3.5 font-semibold text-[#5a4d46]">{order.eventType}</td>
+                    <td className="px-5.5 py-3.5 font-semibold text-[#5a4d46]">{ct(order.eventType)}</td>
                     <td className="px-5.5 py-3.5 text-center">
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#faf9f8] px-2.5 py-0.5 border border-[#eee4dd] text-[13px] font-bold text-[#5a4d46]">
                         <Users size={12} className="text-[#9a8f86]" />
                         {order.guests}
                       </span>
                     </td>
-                    <td className="px-5.5 py-3.5 text-[13px] text-[#7a6e66]">{order.dateTime}</td>
+                    <td className="px-5.5 py-3.5 text-[13px] text-[#7a6e66]">{customerDate(order.createdAtValue || order.dateTime, true)}</td>
                     <td className="px-5.5 py-3.5 font-extrabold text-[#18120f]">{order.amount}</td>
                     <td className="px-5.5 py-3.5">
                       <span className={`inline-block rounded-[6px] px-2.5 py-0.5 text-[10.5px] font-extrabold tracking-wider uppercase leading-none shadow-sm ${
                         STATUS_BADGE[order.status] || "bg-[#f0ebe6] text-[#6f655e]"
                       }`}>
-                        {order.status}
+                        {ct(order.status)}
                       </span>
                     </td>
                     <td className="px-5.5 py-3.5 text-center">
@@ -234,9 +227,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [], summary = nu
                         onClick={() => navigate(`/orders/${encodeURIComponent(order.id)}`)}
                         type="button"
                         className="inline-flex items-center gap-1 text-[13px] font-bold text-[#cf6e38] transition hover:text-[#bf5d2d] hover:underline cursor-pointer outline-none bg-transparent border-none active:scale-95"
-                      >
-                        View
-                        <ArrowUpRight size={11} />
+                      >{ct("View")}{" "}<ArrowUpRight size={11} />
                       </button>
                     </td>
                   </tr>
@@ -254,7 +245,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [], summary = nu
               type="button"
               className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#e6dad1] bg-white px-6 text-[13px] font-bold text-[#cf6e38] transition duration-150 hover:bg-[#fff0e7] hover:border-[#f0d4ca] cursor-pointer outline-none shadow-sm active:scale-95"
             >
-              {showAll ? "View Less Orders" : "View All Orders"}
+              {showAll ? ct("View Less Orders") : ct("View All Orders")}
             </button>
           </div>
         )}

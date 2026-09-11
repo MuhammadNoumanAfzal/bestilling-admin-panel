@@ -1,0 +1,65 @@
+.delivery-areas-table-container {
+  container: delivery-areas / inline-size;
+}
+
+.delivery-areas-table th,
+.delivery-areas-table td {
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  vertical-align: middle;
+}
+
+.delivery-areas-table td button {
+  max-width: 100%;
+}
+
+@container delivery-areas (max-width: 700px) {
+  .delivery-areas-table,
+  .delivery-areas-table tbody,
+  .delivery-areas-table tr {
+    display: block;
+    width: 100%;
+  }
+
+  .delivery-areas-table colgroup {
+    display: none;
+  }
+
+  .delivery-areas-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .delivery-areas-table td[data-label] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    font-size: 13px;
+    text-align: left;
+  }
+
+  .delivery-areas-table td[data-label]::before {
+    content: attr(data-label);
+    color: #786b63;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .delivery-areas-table td[data-label] > * {
+    min-width: 0;
+    justify-self: start;
+  }
+
+  .delivery-areas-table td button {
+    text-align: left;
+  }
+
+  .delivery-areas-table td[colspan] {
+    display: block;
+  }
+}

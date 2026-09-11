@@ -273,8 +273,9 @@ export async function getAdminDeliverySummaryRequest() {
       value: String(summary.activeCities ?? 0),
       subtitle:
         summary.coveredCities != null && summary.totalCities != null
-          ? `${summary.coveredCities}/${summary.totalCities} cities covered`
+          ? "{{covered}}/{{total}} cities covered"
           : "",
+      subtitleValues: { covered: summary.coveredCities, total: summary.totalCities },
       accent: "soft",
     },
     {
@@ -283,15 +284,19 @@ export async function getAdminDeliverySummaryRequest() {
       value: String(summary.activePostalCodes ?? 0),
       subtitle:
         summary.coveredPostalCodes != null && summary.totalPostalCodes != null
-          ? `${summary.coveredPostalCodes}/${summary.totalPostalCodes} postal codes covered`
+          ? "{{covered}}/{{total}} postal codes covered"
           : "",
+      subtitleValues: { covered: summary.coveredPostalCodes, total: summary.totalPostalCodes },
       accent: "warm",
     },
     {
       id: "coverage",
       label: "Platform Coverage",
       value: formatCoveragePercent(summary.platformCoveragePercent),
-      subtitle: summary.platformCoverageSubtitle || "",
+      subtitle: summary.coveredMunicipalities != null && summary.totalMunicipalities != null
+        ? "Covering {{covered}} of {{total}} municipalities"
+        : summary.platformCoverageSubtitle || "",
+      subtitleValues: { covered: summary.coveredMunicipalities, total: summary.totalMunicipalities },
       detail:
         summary.calculationMethod ||
         "Calculated from active delivery areas vs registered municipalities",

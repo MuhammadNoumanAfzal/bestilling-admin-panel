@@ -1,9 +1,11 @@
+import { st, useSupportLanguage } from "../supportTranslation.js";
 import { RotateCw, Search } from "lucide-react";
 
 function FilterSelect({ value, onChange, options, label }) {
+  useSupportLanguage();
   return (
     <label className="flex flex-col gap-1">
-      {label ? <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9b8f86]">{label}</span> : null}
+      {label ? <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9b8f86]">{st(label)}</span> : null}
       <select
         className="h-9 cursor-pointer appearance-none rounded-[10px] border border-[#ddd2ca] bg-white px-3.5 pr-9 text-[13px] font-semibold text-[#3f3530] outline-none transition hover:border-[#cf6e38]/50 hover:bg-[#fff9f5] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
         onChange={(event) => onChange(event.target.value)}
@@ -11,7 +13,7 @@ function FilterSelect({ value, onChange, options, label }) {
       >
         {options.map((option) => (
           <option key={option.value || "all"} value={option.value}>
-            {option.label}
+            {st(option.label)}
           </option>
         ))}
       </select>
@@ -30,6 +32,7 @@ export default function SupportToolbar({
   statusOptions = [],
   userTypeOptions = [],
 }) {
+  useSupportLanguage();
   const isAllActive = !searchTerm && !statusFilter && !userFilter;
 
   return (
@@ -39,7 +42,7 @@ export default function SupportToolbar({
           <input
             className="h-10 w-full rounded-full border border-[#ebe2db] bg-[#f6f4f2] pl-9 pr-3 text-[14px] text-[#2a1f19] outline-none transition placeholder:text-[#b3aaa2] focus:border-[#cf6e38] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search by ticket ID, requester, subject or category..."
+            placeholder={st("Search by ticket ID, requester, subject or category...")}
             type="search"
             value={searchTerm}
           />
@@ -57,10 +60,10 @@ export default function SupportToolbar({
                 : "border-[#ddd2ca] bg-white text-[#3f3530] hover:border-[#cf6e38]/50 hover:bg-[#fff9f5]",
             ].join(" ")}
             onClick={onResetFilters}
+            title={st("Reset filters")}
+            aria-label={st("Reset filters")}
             type="button"
-          >
-            All
-          </button>
+          >{st("All")}</button>
           <button
             className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[10px] border border-[#ddd2ca] bg-white text-[#6f645d] transition hover:border-[#cf6e38]/40 hover:bg-[#fff9f5] hover:text-[#cf6e38]"
             onClick={onResetFilters}
@@ -73,13 +76,13 @@ export default function SupportToolbar({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <FilterSelect
-          label="Status"
+          label={st("Status")}
           onChange={onStatusFilterChange}
           options={[{ label: "All Status", value: "" }, ...statusOptions]}
           value={statusFilter}
         />
         <FilterSelect
-          label="User Type"
+          label={st("User Type")}
           onChange={onUserFilterChange}
           options={[{ label: "All Users", value: "" }, ...userTypeOptions]}
           value={userFilter}

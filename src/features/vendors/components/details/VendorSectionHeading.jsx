@@ -1,6 +1,8 @@
+import { useVendorLanguage } from "../../utils/vendorTranslation.js";
 import { PanelLeft } from "lucide-react";
 
 export default function VendorSectionHeading({ title, danger = false }) {
+  useVendorLanguage();
   return (
     <div className="flex items-center gap-2 px-1">
       <span className={`h-6 w-[4px] rounded-full ${danger ? "bg-[#d83f3f]" : "bg-[#d96834]"}`} />

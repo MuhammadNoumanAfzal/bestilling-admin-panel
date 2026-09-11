@@ -768,6 +768,7 @@ function normalizeOrderDetail(order) {
     canceledAtLabel: formatDateTimeLabel(order.canceledAt),
     cancellationReason: order.cancellationReason || "",
     eventType: order.delivery?.type || "Not specified",
+    eventDateValue: order.eventDate || "",
     eventDate: order.eventDate ? formatDateLabel(order.eventDate) : "Not scheduled",
     eventTime: order.eventTime || "Not specified",
     guestCount,
@@ -912,6 +913,7 @@ function normalizeOrderDetail(order) {
       canAssignVendor: Boolean(order?.flags?.canAssignRider),
       canDownloadInvoice: Boolean(order?.payment?.invoiceUrl || order?.payment?.receiptUrl),
     },
+    updatedAtValue: order?.deliveredAt || order?.outForDeliveryAt || order?.preparedAt || order?.acceptedAt || order?.canceledAt || order?.placedAt || "",
     updatedAtLabel: formatDateTimeLabel(
       order?.deliveredAt ||
       order?.outForDeliveryAt ||

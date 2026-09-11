@@ -1,3 +1,4 @@
+import { nt, useNotificationLanguage, notificationError, notificationDialog } from "../notificationTranslation.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -108,6 +109,7 @@ function buildSummary(pageInfo) {
 }
 
 export default function NotificationsPage() {
+  useNotificationLanguage();
   const navigate = useNavigate();
   const initialResultRef = useRef(readNotificationCache({ page: 1, status: null }));
   const [currentPage, setCurrentPage] = useState(1);
@@ -258,12 +260,12 @@ export default function NotificationsPage() {
         invalidateNotificationCache();
         window.dispatchEvent(new Event("admin-notifications-updated"));
       } catch (error) {
-        await Swal.fire({
+        await Swal.fire(notificationDialog({
           icon: "error",
           title: "Unable to update notification",
-          text: error instanceof Error ? error.message : "Please try again.",
+          text: notificationError(error),
           confirmButtonColor: "#d96834",
-        });
+        }));
       }
     }
 
@@ -271,7 +273,7 @@ export default function NotificationsPage() {
   }
 
   async function handleArchive(notification) {
-    const result = await Swal.fire({
+    const result = await Swal.fire(notificationDialog({
       title: "Archive notification?",
       text: "This notification will be removed from the active list.",
       icon: "question",
@@ -280,7 +282,7 @@ export default function NotificationsPage() {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
-    });
+    }));
 
     if (!result.isConfirmed) {
       return;
@@ -306,19 +308,19 @@ export default function NotificationsPage() {
       invalidateNotificationCache();
       window.dispatchEvent(new Event("admin-notifications-updated"));
 
-      await Swal.fire({
+      await Swal.fire(notificationDialog({
         icon: "success",
         title: "Archived",
         text: "The notification has been archived.",
         confirmButtonColor: "#d96834",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(notificationDialog({
         icon: "error",
         title: "Archive failed",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: notificationError(error),
         confirmButtonColor: "#d96834",
-      });
+      }));
     }
   }
 
@@ -346,19 +348,19 @@ export default function NotificationsPage() {
       invalidateNotificationCache();
       window.dispatchEvent(new Event("admin-notifications-updated"));
 
-      await Swal.fire({
+      await Swal.fire(notificationDialog({
         icon: "success",
         title: "Notifications updated",
         text: "All notifications have been marked as read.",
         confirmButtonColor: "#d96834",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(notificationDialog({
         icon: "error",
         title: "Update failed",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: notificationError(error),
         confirmButtonColor: "#d96834",
-      });
+      }));
     }
   }
 
@@ -422,12 +424,12 @@ export default function NotificationsPage() {
 
           {loadError ? (
             <div className="border-t border-[#eee4dd] px-4 py-10 text-center text-[15px] font-medium text-[#9f4d33]">
-              {loadError}
+              {notificationError(loadError, "Unable to load notifications.")}
             </div>
           ) : null}
 
           {isLoading ? (
-            <AdminLoadingState columns={5} title="Loading notifications" description="Synchronizing the latest platform activity." />
+            <AdminLoadingState columns={5} title={nt("Loading notifications")} description={nt("Synchronizing the latest platform activity.")} />
           ) : (
             <NotificationsTable
               currentPage={currentPage}

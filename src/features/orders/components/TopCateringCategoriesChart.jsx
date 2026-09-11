@@ -1,7 +1,9 @@
+import { ot, useOrderLanguage, orderLocale } from "../orderTranslation.js";
 import { useState } from "react";
 import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 export default function TopCateringCategoriesChart({ items, isLoading = false }) {
+  useOrderLanguage();
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
   const chartItems = Array.isArray(items) ? items : [];
@@ -20,24 +22,20 @@ export default function TopCateringCategoriesChart({ items, isLoading = false })
     <article className="rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-[18px] font-bold text-[#18120f]">Order Category Breakdown</h2>
-          <p className="text-[13px] text-[#7a6d66]">
-            Revenue share across catering categories for the selected period.
-          </p>
+          <h2 className="text-[18px] font-bold text-[#18120f]">{ot("Order Category Breakdown")}</h2>
+          <p className="text-[13px] text-[#7a6d66]">{ot("Revenue share across catering categories for the selected period.")}</p>
         </div>
       </div>
 
       {isLoading ? (
         <AdminLoadingState
-          title="Loading category mix"
-          description="Calculating category contribution, revenue share, and order count trends."
+          title={ot("Loading category mix")}
+          description={ot("Calculating category contribution, revenue share, and order count trends.")}
           showTable={false}
           className="rounded-[14px]"
         />
       ) : chartItems.length === 0 ? (
-        <div className="flex h-[260px] items-center justify-center rounded-[14px] border border-dashed border-[#e5dad2] text-[15px] font-medium text-[#6f645d]">
-          No category data available for this filter set.
-        </div>
+        <div className="flex h-[260px] items-center justify-center rounded-[14px] border border-dashed border-[#e5dad2] text-[15px] font-medium text-[#6f645d]">{ot("No category data available for this filter set.")}</div>
       ) : (
         <div className="relative overflow-hidden">
           <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="h-auto w-full select-none">
@@ -96,7 +94,7 @@ export default function TopCateringCategoriesChart({ items, isLoading = false })
                     textAnchor="middle"
                     className="fill-[#6f655e] text-[11px] font-semibold"
                   >
-                    {item.label}
+                    {ot(item.label)}
                   </text>
                 </g>
               );
@@ -123,13 +121,11 @@ export default function TopCateringCategoriesChart({ items, isLoading = false })
                 transform: "translateX(-50%)",
               }}
             >
-              <p className="font-bold text-[#18120f]">{chartItems[hoveredIndex].label}</p>
+              <p className="font-bold text-[#18120f]">{ot(chartItems[hoveredIndex].label)}</p>
               <p className="mt-0.5 text-[#cf6432]">
-                {Number(chartItems[hoveredIndex].percentage ?? 0).toFixed(1)}% share
-              </p>
+                {Number(chartItems[hoveredIndex].percentage ?? 0).toLocaleString(orderLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })}{ot("% share")}</p>
               <p className="mt-0.5 text-[#7a6d66]">
-                {chartItems[hoveredIndex].orderCount} orders
-              </p>
+                {chartItems[hoveredIndex].orderCount}{ot("orders")}</p>
               <p className="mt-0.5 text-[#7a6d66]">{chartItems[hoveredIndex].revenue}</p>
             </div>
           ) : null}

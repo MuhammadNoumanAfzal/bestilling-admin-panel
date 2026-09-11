@@ -1,3 +1,4 @@
+import { rt, useReportLanguage, reportLocale } from "../reportsTranslation.js";
 import { useState } from "react";
 
 export default function ReportsBarChart({
@@ -7,10 +8,11 @@ export default function ReportsBarChart({
   valueType = "number",
   className = "",
 }) {
+  useReportLanguage();
   const [hoveredBar, setHoveredBar] = useState(null);
   const safeBars = Array.isArray(bars)
     ? bars.map((item, index) => ({
-        label: item?.label || `Item ${index + 1}`,
+        label: item?.label || rt("Item {{number}}", { number: index + 1 }),
         value: Math.max(0, Number(item?.value) || 0),
       }))
     : [];
@@ -37,7 +39,7 @@ export default function ReportsBarChart({
   const stepX = chartWidth / barCount;
 
   function formatAxisValue(value) {
-    const compactValue = new Intl.NumberFormat("en-NO", {
+    const compactValue = new Intl.NumberFormat(reportLocale(), {
       notation: "compact",
       maximumFractionDigits: 1,
     }).format(value);
@@ -47,13 +49,13 @@ export default function ReportsBarChart({
 
   function formatTooltipValue(value) {
     if (valueType === "currency") {
-      return `NOK ${new Intl.NumberFormat("en-NO", {
+      return `NOK ${new Intl.NumberFormat(reportLocale(), {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }).format(value)}`;
     }
 
-    return `${valuePrefix}${new Intl.NumberFormat("en-NO", {
+    return `${valuePrefix}${new Intl.NumberFormat(reportLocale(), {
       maximumFractionDigits: 0,
     }).format(value)}`;
   }
@@ -77,9 +79,7 @@ export default function ReportsBarChart({
   return (
     <div className={["h-[236px] min-w-0", className].join(" ")}>
       {safeBars.length === 0 ? (
-        <div className="flex h-full items-center justify-center rounded-[14px] border border-dashed border-[#e3d7cf] bg-[#fffdfa] px-4 text-center text-[13px] font-medium text-[#7a6d66]">
-          No chart data is available for the selected period.
-        </div>
+        <div className="flex h-full items-center justify-center rounded-[14px] border border-dashed border-[#e3d7cf] bg-[#fffdfa] px-4 text-center text-[13px] font-medium text-[#7a6d66]">{rt("No chart data is available for the selected period.")}</div>
       ) : (
       <div className="flex h-full gap-3">
         <div className="flex h-[190px] w-[58px] shrink-0 flex-col justify-between pt-1">
@@ -141,7 +141,7 @@ export default function ReportsBarChart({
                   top: `${Math.max(6, hoveredBar.y - 50)}px`,
                 }}
               >
-                <p className="text-[10px] font-semibold text-[#f2d6c5]">{hoveredBar.bar.label}</p>
+                <p className="text-[10px] font-semibold text-[#f2d6c5]">{rt(hoveredBar.bar.label)}</p>
                 <p className="mt-0.5 whitespace-nowrap text-[12px] font-bold text-white">
                   {formatTooltipValue(hoveredBar.bar.value)}
                 </p>
@@ -153,7 +153,7 @@ export default function ReportsBarChart({
             {safeBars.map((bar) => (
               <div key={bar.label} className="flex min-w-0 flex-1 justify-center">
                 <span className="truncate text-[10px] font-semibold text-[#5c5048]">
-                  {bar.label}
+                  {rt(bar.label)}
                 </span>
               </div>
             ))}

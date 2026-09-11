@@ -1,3 +1,4 @@
+import { vst, useVendorSettingsLanguage, vendorSettingsError, vendorSettingsDialog, vendorSettingsMeta } from "../vendorSettingsTranslation.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlarmClockPlus,
@@ -599,7 +600,7 @@ function renderFieldInput({ field, value, onChange }) {
           onChange={(event) => onChange(field.key, event.target.checked)}
           type="checkbox"
         />
-        <span>{field.label}</span>
+        <span>{vst(field.label)}</span>
       </label>
     );
   }
@@ -607,12 +608,12 @@ function renderFieldInput({ field, value, onChange }) {
   return (
     <div className="space-y-1">
       <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8d7c70]">
-        {field.label}
+        {vst(field.label)}
       </p>
       <input
         className="h-11 w-full rounded-[12px] border border-[#dfd2c8] bg-white px-3.5 text-[14px] text-[#231913] outline-none transition placeholder:text-[#a28f82] focus:border-[#ce6938] focus:shadow-[0_0_0_4px_rgba(206,105,56,0.10)]"
         onChange={(event) => onChange(field.key, event.target.value)}
-        placeholder={field.placeholder}
+        placeholder={vst(field.placeholder)}
         type={field.type === "number" ? "number" : "text"}
         value={value}
       />
@@ -621,6 +622,7 @@ function renderFieldInput({ field, value, onChange }) {
 }
 
 function StatCard({ icon: Icon, label, onClick, value, hint, toneClasses }) {
+  useVendorSettingsLanguage();
   return (
     <button
       className="w-full rounded-[20px] border border-[#eadfd6] bg-white p-4 text-left shadow-[0_18px_45px_rgba(49,30,19,0.05)] transition hover:-translate-y-0.5 hover:border-[#e0cdbf] hover:shadow-[0_22px_50px_rgba(49,30,19,0.08)]"
@@ -630,10 +632,10 @@ function StatCard({ icon: Icon, label, onClick, value, hint, toneClasses }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#9a8576]">
-            {label}
+            {vst(label)}
           </p>
           <p className="mt-2 text-[26px] font-black tracking-[-0.05em] text-[#18120f] sm:text-[30px]">{value}</p>
-          <p className="mt-1 text-[12px] leading-5 text-[#786d66]">{hint}</p>
+          <p className="mt-1 text-[12px] leading-5 text-[#786d66]">{vst(hint)}</p>
         </div>
         <span
           className={[
@@ -662,6 +664,7 @@ function SectionCard({
   onSaveEdit,
   onDelete,
 }) {
+  useVendorSettingsLanguage();
   const Icon = section.icon;
   const isSavingCreate = savingKey === `${section.key}:create`;
 
@@ -679,10 +682,10 @@ function SectionCard({
           </span>
           <div className="min-w-0">
             <h2 className="text-[17px] font-black tracking-[-0.03em] text-[#201712] sm:text-[19px]">
-              {section.title}
+              {vst(section.title)}
             </h2>
             <p className="mt-1 max-w-[640px] text-[13px] leading-6 text-[#6f625b]">
-              {section.subtitle}
+              {vst(section.subtitle)}
             </p>
           </div>
         </div>
@@ -708,13 +711,13 @@ function SectionCard({
                 onClick={() => onCreate(section)}
                 type="button"
               >
-                {isSavingCreate ? "Saving..." : section.addLabel}
+                {isSavingCreate ? vst("Saving...") : vst(section.addLabel)}
               </button>
             </div>
           </>
         ) : (
           <div className="mt-5 rounded-[14px] border border-[#eadfd6] bg-white/80 px-4 py-3 text-[12px] leading-5 text-[#786b63]">
-            This list is intentionally locked. Vendors can only use the approved platform options shown below.
+            {vst("This list is intentionally locked. Vendors can only use the approved platform options shown below.")}
           </div>
         )}
       </div>
@@ -753,15 +756,13 @@ function SectionCard({
                           onClick={() => onSaveEdit(section, item)}
                           type="button"
                         >
-                          {isSavingEdit ? "Updating..." : "Save"}
+                          {isSavingEdit ? vst("Updating...") : vst("Save")}
                         </button>
                         <button
                           className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[11px] border border-[#ddd1c8] bg-white px-4 text-[12px] font-bold text-[#40342d] transition hover:bg-[#faf6f2]"
                           onClick={onCancelEdit}
                           type="button"
-                        >
-                          Cancel
-                        </button>
+                        >{vst("Cancel")}</button>
                       </div>
                     </div>
                   ) : (
@@ -772,12 +773,10 @@ function SectionCard({
                             {item.name}
                           </p>
                           {item.raw?.isActive === false ? (
-                            <span className="rounded-full border border-[#ead1c5] bg-[#fff1ea] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#bf6b42]">
-                              Inactive
-                            </span>
+                            <span className="rounded-full border border-[#ead1c5] bg-[#fff1ea] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#bf6b42]">{vst("Inactive")}</span>
                           ) : null}
                         </div>
-                        <p className="mt-1 text-[12px] leading-5 text-[#86786f]">{item.meta}</p>
+                        <p className="mt-1 text-[12px] leading-5 text-[#86786f]">{vendorSettingsMeta(item)}</p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2 self-stretch sm:self-auto">
                         {section.canEdit !== false ? (
@@ -785,19 +784,15 @@ function SectionCard({
                             className="inline-flex h-9 flex-1 cursor-pointer items-center justify-center rounded-[10px] border border-[#dfd2c8] bg-white px-3 text-[12px] font-bold text-[#3e332c] transition hover:bg-[#faf6f2] sm:flex-none"
                             onClick={() => onStartEdit(section.key, item)}
                             type="button"
-                          >
-                            Edit
-                          </button>
+                          >{vst("Edit")}</button>
                         ) : (
-                          <span className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#e8ddd5] bg-[#faf7f4] px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#8d7d72]">
-                            Locked
-                          </span>
+                          <span className="inline-flex h-9 items-center justify-center rounded-[10px] border border-[#e8ddd5] bg-[#faf7f4] px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#8d7d72]">{vst("Locked")}</span>
                         )}
                         {section.canDelete ? (
                           <button
                             className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-[10px] border border-[#f0d6d0] bg-[#fff6f4] text-[#c35d4c] transition hover:bg-[#ffece7] disabled:cursor-not-allowed disabled:opacity-60"
                             disabled={isDeleting}
-                            onClick={() => onDelete(section, item)}
+                            title={vst("Delete")} aria-label={vst("Delete")} onClick={() => onDelete(section, item)}
                             type="button"
                           >
                             <Trash2 size={14} />
@@ -812,15 +807,15 @@ function SectionCard({
           </div>
         ) : (
           <div className="rounded-[18px] border border-dashed border-[#e6d8ce] bg-[#fffcfa] px-4 py-8 text-center">
-            <p className="text-[14px] font-semibold text-[#6c6058]">{section.emptyLabel}</p>
+            <p className="text-[14px] font-semibold text-[#6c6058]">{vst(section.emptyLabel)}</p>
           </div>
         )}
 
         {!section.canDelete ? (
           <p className="mt-4 text-[12px] leading-5 text-[#a0715b]">
             {section.key === "allergens"
-              ? "Allergens can be added and renamed here. Delete is hidden because the current backend API does not expose an allergen delete mutation."
-              : "This master data is intentionally locked so only approved platform options stay available to vendors."}
+              ? vst("Allergens can be added and renamed here. Delete is hidden because the current backend API does not expose an allergen delete mutation.")
+              : vst("This master data is intentionally locked so only approved platform options stay available to vendors.")}
           </p>
         ) : null}
       </div>
@@ -829,6 +824,7 @@ function SectionCard({
 }
 
 export default function VendorSettingsPage() {
+  useVendorSettingsLanguage();
   const initialTaxonomyRef = useRef(readVendorSettingsCache());
   const [taxonomy, setTaxonomy] = useState(initialTaxonomyRef.current || {
     categories: [],
@@ -875,12 +871,12 @@ export default function VendorSettingsPage() {
       setTaxonomy(nextTaxonomy);
     } catch (error) {
       if (!cachedTaxonomy) {
-        await Swal.fire({
+        await Swal.fire(vendorSettingsDialog({
           icon: "error",
           title: "Unable to load vendor settings",
-          text: error?.message || "Please refresh and try again.",
+          text: vendorSettingsError(error || "Please refresh and try again."),
           confirmButtonColor: "#cf6e38",
-        });
+        }));
       }
     } finally {
       setIsLoading(false);
@@ -1039,22 +1035,22 @@ export default function VendorSettingsPage() {
     const duplicateItem = getDuplicateItem(section, taxonomy[section.key], values);
 
     if (missingField) {
-      await Swal.fire({
+      await Swal.fire(vendorSettingsDialog({
         icon: "warning",
         title: "Missing value",
-        text: `Please complete ${missingField} before adding a new ${section.singularLabel}.`,
+        text: vst("Please complete {{field}} before adding a new {{type}}.", { field: vst(missingField), type: vst(section.singularLabel) }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
     if (duplicateItem) {
-      await Swal.fire({
+      await Swal.fire(vendorSettingsDialog({
         icon: "warning",
         title: "Duplicate Value",
-        text: `${section.title} already includes "${duplicateItem.name}".`,
+        text: vst('{{section}} already includes "{{name}}".', { section: vst(section.title), name: duplicateItem.name }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
@@ -1071,19 +1067,19 @@ export default function VendorSettingsPage() {
       }));
       invalidateVendorSettingsCache();
       await loadVendorSettings({ silent: true });
-      await Swal.fire({
+      await Swal.fire(vendorSettingsDialog({
         icon: "success",
-        title: `${toTitleCase(section.singularLabel)} Added`,
-        text: `${section.title} now includes the new option on the vendor side.`,
+        title: vst("{{type}} Added", { type: vst(toTitleCase(section.singularLabel)) }),
+        text: vst("{{section}} now includes the new option on the vendor side.", { section: vst(section.title) }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(vendorSettingsDialog({
         icon: "error",
-        title: `Unable to Add ${toTitleCase(section.singularLabel)}`,
-        text: getCreateErrorMessage(section, error),
+        title: vst("Unable to Add {{type}}", { type: vst(toTitleCase(section.singularLabel)) }),
+        text: vendorSettingsError(getCreateErrorMessage(section, error)),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setSavingKey("");
     }
@@ -1095,22 +1091,22 @@ export default function VendorSettingsPage() {
     const duplicateItem = getDuplicateItem(section, taxonomy[section.key], values, item.id);
 
     if (missingField) {
-      await Swal.fire({
+      await Swal.fire(vendorSettingsDialog({
         icon: "warning",
         title: "Missing value",
-        text: `Please complete ${missingField} before saving your changes.`,
+        text: vst("Please complete {{field}} before saving your changes.", { field: vst(missingField) }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
     if (duplicateItem) {
-      await Swal.fire({
+      await Swal.fire(vendorSettingsDialog({
         icon: "warning",
         title: "Duplicate Value",
-        text: `${section.title} already includes "${duplicateItem.name}".`,
+        text: vst('{{section}} already includes "{{name}}".', { section: vst(section.title), name: duplicateItem.name }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
@@ -1124,19 +1120,19 @@ export default function VendorSettingsPage() {
       cancelEditing();
       invalidateVendorSettingsCache();
       await loadVendorSettings({ silent: true });
-      await Swal.fire({
+      await Swal.fire(vendorSettingsDialog({
         icon: "success",
         title: "Updated",
-        text: `${section.singularLabel} updated successfully.`,
+        text: vst("{{type}} updated successfully.", { type: vst(section.singularLabel) }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(vendorSettingsDialog({
         icon: "error",
         title: "Unable to update item",
-        text: error?.message || "Please try again.",
+        text: vendorSettingsError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setSavingKey("");
     }
@@ -1147,8 +1143,8 @@ export default function VendorSettingsPage() {
       return;
     }
 
-    const result = await Swal.fire({
-      title: `Delete ${item.name}?`,
+    const result = await Swal.fire(vendorSettingsDialog({
+      title: vst("Delete {{name}}?", { name: item.name }),
       text: "This will remove it from future vendor selections.",
       icon: "warning",
       showCancelButton: true,
@@ -1156,7 +1152,7 @@ export default function VendorSettingsPage() {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c6b7aa",
-    });
+    }));
 
     if (!result.isConfirmed) {
       return;
@@ -1171,19 +1167,19 @@ export default function VendorSettingsPage() {
       }
       invalidateVendorSettingsCache();
       await loadVendorSettings({ silent: true });
-      await Swal.fire({
+      await Swal.fire(vendorSettingsDialog({
         icon: "success",
         title: "Deleted",
-        text: `${item.name} has been removed.`,
+        text: vst("{{name}} has been removed.", { name: item.name }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(vendorSettingsDialog({
         icon: "error",
         title: "Unable to delete item",
-        text: error?.message || "Please try again.",
+        text: vendorSettingsError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setSavingKey("");
     }
@@ -1195,17 +1191,9 @@ export default function VendorSettingsPage() {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-[820px]">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#eed7c8] bg-white/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#bf6739]">
-              <Sparkles size={12} />
-              Vendor panel data controls
-            </div>
-            <h1 className="mt-4 text-[28px] font-black tracking-[-0.05em] text-[#1b140f] sm:text-[34px]">
-              Vendor Settings Master Data
-            </h1>
-            <p className="mt-2 text-[15px] leading-7 text-[#6f645d]">
-              Manage both vendor menu taxonomies and vendor profile master data from one place.
-              Changes saved here flow into the vendor panel through API-backed selectors for menus,
-              operating information, and language or region preferences.
-            </p>
+              <Sparkles size={12} />{vst("Vendor panel data controls")}</div>
+            <h1 className="mt-4 text-[28px] font-black tracking-[-0.05em] text-[#1b140f] sm:text-[34px]">{vst("Vendor Settings Master Data")}</h1>
+            <p className="mt-2 text-[15px] leading-7 text-[#6f645d]">{vst("Manage both vendor menu taxonomies and vendor profile master data from one place. Changes saved here flow into the vendor panel through API-backed selectors for menus, operating information, and language or region preferences.")}</p>
           </div>
 
           <button
@@ -1215,7 +1203,7 @@ export default function VendorSettingsPage() {
             type="button"
           >
             <RefreshCcw size={15} />
-            {isRefreshing ? "Refreshing..." : "Refresh data"}
+            {isRefreshing ? vst("Refreshing...") : vst("Refresh data")}
           </button>
         </div>
 
@@ -1247,9 +1235,9 @@ export default function VendorSettingsPage() {
           >
             <div className="mb-4 sm:mb-5">
               <h2 className="text-[20px] font-black tracking-[-0.04em] text-[#1d1510] sm:text-[24px]">
-                {group.title}
+                {vst(group.title)}
               </h2>
-              <p className="mt-1 text-[14px] leading-6 text-[#72675f]">{group.subtitle}</p>
+              <p className="mt-1 text-[14px] leading-6 text-[#72675f]">{vst(group.subtitle)}</p>
             </div>
 
             <div className="grid gap-5">
@@ -1297,7 +1285,7 @@ export default function VendorSettingsPage() {
       <div className="fixed bottom-20 right-4 z-40 flex flex-col gap-3 sm:bottom-6 sm:right-6">
         {showScrollTop ? (
           <button
-            aria-label="Back to top"
+            aria-label={vst("Back to top")}
             className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#d16737] text-white shadow-[0_18px_36px_rgba(209,103,55,0.28)] transition hover:-translate-y-0.5 hover:bg-[#bd592b] sm:h-12 sm:w-12"
             onClick={scrollToTop}
             type="button"
@@ -1308,7 +1296,7 @@ export default function VendorSettingsPage() {
 
         {showScrollDown ? (
           <button
-            aria-label="Scroll down"
+            aria-label={vst("Scroll down")}
             className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#d16737] text-white shadow-[0_18px_36px_rgba(209,103,55,0.28)] transition hover:translate-y-0.5 hover:bg-[#bd592b] sm:h-12 sm:w-12"
             onClick={scrollDown}
             type="button"

@@ -1,3 +1,4 @@
+import { ot, useOrderLanguage, orderDate, orderError, orderMessage } from "../orderTranslation.js";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -28,13 +29,14 @@ import {
 } from "../api/ordersApi.js";
 
 function OverviewCard({ icon: Icon, label, value, valueClassName = "text-[#221914]", children }) {
+  useOrderLanguage();
   return (
     <article className="flex flex-col gap-4 rounded-[14px] border border-[#ece4de] bg-white px-4 py-4 shadow-[0_8px_20px_rgba(55,31,13,0.07)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(55,31,13,0.09)]">
       <div className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#d96834]">
         <Icon size={17} strokeWidth={2.2} />
       </div>
       <div className="space-y-1.5">
-        <p className="text-[13px] font-bold leading-5 text-[#4d423b]">{label}</p>
+        <p className="text-[13px] font-bold leading-5 text-[#4d423b]">{ot(label)}</p>
         <strong className={`block text-[26px] font-extrabold leading-[1.05] tracking-[-0.035em] ${valueClassName}`}>
           {value}
         </strong>
@@ -45,12 +47,13 @@ function OverviewCard({ icon: Icon, label, value, valueClassName = "text-[#22191
 }
 
 function CommissionPreviewCard({ preview }) {
+  useOrderLanguage();
   if (!preview) {
     return null;
   }
 
   const rows = [
-    { label: "Applied Rule", value: preview.appliedRuleLabel },
+    { label: "Applied Rule", value: ot(preview.appliedRuleLabel) },
     { label: "Commission Rate", value: preview.ratePercent },
     { label: "Total Commission", value: preview.totalCommission },
     { label: "Vendor Payable", value: preview.vendorPayable },
@@ -59,14 +62,14 @@ function CommissionPreviewCard({ preview }) {
   return (
     <article className="h-full rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
       <header className="mb-4 border-b border-[#eee4dd] pb-3">
-        <h3 className="text-[18px] font-bold text-[#18120f]">Commission Preview</h3>
+        <h3 className="text-[18px] font-bold text-[#18120f]">{ot("Commission Preview")}</h3>
       </header>
 
       <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-4">
         {rows.map((item) => (
           <div key={item.label} className="space-y-1">
             <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
-              {item.label}
+              {ot(item.label)}
             </span>
             <span className="block text-[13px] font-semibold leading-5 text-[#18120f]">
               {item.value}
@@ -79,6 +82,7 @@ function CommissionPreviewCard({ preview }) {
 }
 
 export default function OrderDetailPage() {
+  useOrderLanguage();
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
@@ -124,11 +128,12 @@ export default function OrderDetailPage() {
             current.updatedAtLabel !== detail.updatedAtLabel)
         ) {
           void Swal.fire({
+          confirmButtonText: ot("OK"),
             toast: true,
             position: "top-end",
             icon: "info",
-            title: `Order updated to ${detail.status}`,
-            text: `Latest sync: ${detail.updatedAtLabel}`,
+            title: ot("Order updated to {{status}}", { status: ot(detail.status) }),
+            text: ot("Latest sync: {{date}}", { date: orderDate(detail.updatedAtValue || detail.updatedAtLabel) }),
             showConfirmButton: false,
             timer: 2800,
             timerProgressBar: true,
@@ -175,16 +180,18 @@ export default function OrderDetailPage() {
       const message = await task();
       await loadOrder({ silent: true });
       await Swal.fire({
+          confirmButtonText: ot("OK"),
         icon: "success",
-        title: "Order updated",
-        text: message || "The order was updated successfully.",
+        title: ot("Order updated"),
+        text: orderMessage(message),
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
+          confirmButtonText: ot("OK"),
         icon: "error",
-        title: "Action failed",
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: ot("Action failed"),
+        text: orderError(error, "Please try again."),
         confirmButtonColor: "#cf6e38",
       });
     } finally {
@@ -250,13 +257,13 @@ export default function OrderDetailPage() {
   }
 
   if (isLoading) {
-    return <AdminLoadingState cards={3} columns={5} title="Loading order details" description="Preparing the order, customer, and fulfillment details." />;
+    return <AdminLoadingState cards={3} columns={5} title={ot("Loading order details")} description={ot("Preparing the order, customer, and fulfillment details.")} />;
   }
 
   if (loadError || !order) {
     return (
       <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-10 text-center text-[15px] font-medium text-[#9f4d33]">
-        {loadError || "Unable to load order details."}
+        {orderError(loadError, "Unable to load order details.")}
       </div>
     );
   }
@@ -290,20 +297,15 @@ export default function OrderDetailPage() {
           onClick={() => navigate("/orders")}
           type="button"
         >
-          <ChevronLeft size={16} />
-          Back to orders
-        </button>
+          <ChevronLeft size={16} />{ot("Back to orders")}</button>
 
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-1">
-            <h1 className="text-[34px] font-bold tracking-[-0.04em] text-[#18120f] sm:text-[40px]">
-              Order {order.orderNumber}
+            <h1 className="text-[34px] font-bold tracking-[-0.04em] text-[#18120f] sm:text-[40px]">{ot("Order {{number}}", { number: order.orderNumber })}
             </h1>
-            <p className="text-[16px] leading-7 text-[#6f645d]">
-              Placed on {order.placedAtLabel}
+            <p className="text-[16px] leading-7 text-[#6f645d]">{ot("Placed on {{date}}", { date: orderDate(order.placedAt) })}
             </p>
-            <p className="text-[13px] text-[#8c8077]">
-              Internal ID {order.id} · Last updated {order.updatedAtLabel}
+            <p className="text-[13px] text-[#8c8077]">{ot("Internal ID {{id}} · Last updated {{date}}", { id: order.id, date: orderDate(order.updatedAtValue || order.updatedAtLabel) })}
             </p>
           </div>
 
@@ -315,30 +317,28 @@ export default function OrderDetailPage() {
                 onClick={handleMarkPaid}
                 type="button"
               >
-                <BadgeCheck size={15} />
-                Mark Paid
-              </button>
+                <BadgeCheck size={15} />{ot("Mark Paid")}</button>
             ) : null}
           </div>
         </div>
       </section>
 
       <section className="grid gap-3.5 grid-cols-2 lg:grid-cols-4">
-        <OverviewCard icon={DollarSign} label="Order Amount" value={order.amount.total} />
-        <OverviewCard icon={Calendar} label="Order Type" value={order.eventType} />
+        <OverviewCard icon={DollarSign} label={ot("Order Amount")} value={order.amount.total} />
+        <OverviewCard icon={Calendar} label={ot("Order Type")} value={ot(order.eventType)} />
         <OverviewCard
           icon={order.status === "Canceled" ? XCircle : order.status === "Delivered" ? CheckCircle : Clock}
-          label="Order Status"
-          value={order.status}
+          label={ot("Order Status")}
+          value={ot(order.status)}
           valueClassName={statusColors[order.status] || "text-[#221914]"}
         />
         <OverviewCard
           icon={CreditCard}
-          label="Payment Status"
-          value={order.paymentStatus}
+          label={ot("Payment Status")}
+          value={ot(order.paymentStatus)}
           valueClassName={paymentColors[order.paymentStatus] || "text-[#221914]"}
         >
-          <p className="text-[12px] text-[#7a6d66]">Method: {order.payment.method}</p>
+          <p className="text-[12px] text-[#7a6d66]">{ot("Method:")}{" "}{ot(order.payment.method)}</p>
         </OverviewCard>
       </section>
 

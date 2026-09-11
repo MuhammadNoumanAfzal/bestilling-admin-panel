@@ -1,3 +1,4 @@
+import { hct, useHomeCurationLanguage, homeCurationError, homeCurationDialog } from "../homeCurationTranslation.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, RefreshCcw, Sparkles, Star, Store, UtensilsCrossed } from "lucide-react";
 import Swal from "sweetalert2";
@@ -71,6 +72,7 @@ function invalidateHomeCurationCache() {
 }
 
 export default function HomeCurationPage() {
+  useHomeCurationLanguage();
   const [collections, setCollections] = useState(initialCollections);
   const [options, setOptions] = useState(initialOptions);
   const [searchState, setSearchState] = useState(initialSearch);
@@ -105,14 +107,12 @@ export default function HomeCurationPage() {
       setPaginationState(initialPagination);
       homeCurationCache = { data: mapped, savedAt: Date.now() };
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(homeCurationDialog({
         icon: "error",
         title: "Unable to load home curation",
-        text:
-          error?.message ||
-          "Please connect the backend home-curation APIs and refresh this page again.",
+        text: homeCurationError(error || "Please connect the backend home-curation APIs and refresh this page again."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -289,19 +289,19 @@ export default function HomeCurationPage() {
           vendor.id === item.id ? { ...vendor, isPopular: true } : vendor,
         ),
       }));
-      await Swal.fire({
+      await Swal.fire(homeCurationDialog({
         icon: "success",
         title: "Added to Popular Vendors",
-        text: `${item.name} will now appear in the Popular Vendors homepage section.`,
+        text: hct("{{name}} will now appear in the Popular Vendors homepage section.", { name: item.name }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(homeCurationDialog({
         icon: "error",
         title: "Unable to mark vendor as popular",
-        text: error?.message || "Please try again.",
+        text: homeCurationError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setBusyKey("");
     }
@@ -326,12 +326,12 @@ export default function HomeCurationPage() {
         ),
       }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(homeCurationDialog({
         icon: "error",
         title: "Unable to remove popular vendor",
-        text: error?.message || "Please try again.",
+        text: homeCurationError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setBusyKey("");
     }
@@ -358,19 +358,19 @@ export default function HomeCurationPage() {
           vendor.id === item.id ? { ...vendor, isFeatured: true } : vendor,
         ),
       }));
-      await Swal.fire({
+      await Swal.fire(homeCurationDialog({
         icon: "success",
         title: "Added to Featured Vendors",
-        text: `${item.name} will now appear in the Featured Vendors homepage section.`,
+        text: hct("{{name}} will now appear in the Featured Vendors homepage section.", { name: item.name }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(homeCurationDialog({
         icon: "error",
         title: "Unable to mark vendor as featured",
-        text: error?.message || "Please try again.",
+        text: homeCurationError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setBusyKey("");
     }
@@ -395,12 +395,12 @@ export default function HomeCurationPage() {
         ),
       }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(homeCurationDialog({
         icon: "error",
         title: "Unable to remove featured vendor",
-        text: error?.message || "Please try again.",
+        text: homeCurationError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setBusyKey("");
     }
@@ -424,19 +424,19 @@ export default function HomeCurationPage() {
           product.id === item.id ? { ...product, isPopular: true } : product,
         ),
       }));
-      await Swal.fire({
+      await Swal.fire(homeCurationDialog({
         icon: "success",
         title: "Added to Popular Products",
-        text: `${item.name} will now appear in the Popular Products homepage section.`,
+        text: hct("{{name}} will now appear in the Popular Products homepage section.", { name: item.name }),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(homeCurationDialog({
         icon: "error",
         title: "Unable to mark product as popular",
-        text: error?.message || "Please try again.",
+        text: homeCurationError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setBusyKey("");
     }
@@ -458,12 +458,12 @@ export default function HomeCurationPage() {
         ),
       }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(homeCurationDialog({
         icon: "error",
         title: "Unable to remove popular product",
-        text: error?.message || "Please try again.",
+        text: homeCurationError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setBusyKey("");
     }
@@ -475,16 +475,9 @@ export default function HomeCurationPage() {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-[760px]">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#eed7c8] bg-white/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#bf6739]">
-              <Sparkles size={12} />
-              Client homepage curation
-            </div>
-            <h1 className="mt-4 text-[34px] font-black tracking-[-0.05em] text-[#1b140f]">
-              Home Curation
-            </h1>
-            <p className="mt-2 text-[15px] leading-7 text-[#6f645d]">
-              Curate the homepage shelves the client app already renders for popular vendors,
-              featured vendors, and popular products.
-            </p>
+              <Sparkles size={12} />{hct("Client homepage curation")}</div>
+            <h1 className="mt-4 text-[34px] font-black tracking-[-0.05em] text-[#1b140f]">{hct("Home Curation")}</h1>
+            <p className="mt-2 text-[15px] leading-7 text-[#6f645d]">{hct("Curate the homepage shelves the client app already renders for popular vendors, featured vendors, and popular products.")}</p>
           </div>
 
           <button
@@ -494,7 +487,7 @@ export default function HomeCurationPage() {
             type="button"
           >
             <RefreshCcw size={15} />
-            {isRefreshing ? "Refreshing..." : "Refresh data"}
+            {isRefreshing ? hct("Refreshing...") : hct("Refresh data")}
           </button>
         </div>
 
@@ -527,7 +520,7 @@ export default function HomeCurationPage() {
             }}
           >
             <CurationCollectionSection
-              emptyState="No vendors are currently marked as popular."
+              emptyState={hct("No vendors are currently marked as popular.")}
               filteredOptions={filteredPopularVendorOptions}
               itemType="vendor"
               itemsPage={paginationState.popularVendors.itemsPage}
@@ -538,11 +531,11 @@ export default function HomeCurationPage() {
               onRemove={handleRemovePopularVendor}
               onSearchChange={(value) => updateSearch("popularVendors", value)}
               optionsPage={paginationState.popularVendors.optionsPage}
-              removeLabel={busyKey ? "Update flag" : "Remove Popular"}
-              searchPlaceholder="Search vendors to add into Popular Vendors"
+              removeLabel={busyKey ? hct("Update flag") : hct("Remove Popular")}
+              searchPlaceholder={hct("Search vendors to add into Popular Vendors")}
               searchValue={searchState.popularVendors}
-              subtitle="These vendors feed the Popular Vendors row on the client homepage. Best practice is to drive this shelf from performance, not manual preference."
-              title="Popular Vendors"
+              subtitle={hct("These vendors feed the Popular Vendors row on the client homepage. Best practice is to drive this shelf from performance, not manual preference.")}
+              title={hct("Popular Vendors")}
             />
           </div>
 
@@ -553,7 +546,7 @@ export default function HomeCurationPage() {
             }}
           >
             <CurationCollectionSection
-              emptyState="No vendors are currently marked as featured."
+              emptyState={hct("No vendors are currently marked as featured.")}
               filteredOptions={filteredFeaturedVendorOptions}
               itemType="vendor"
               itemsPage={paginationState.featuredVendors.itemsPage}
@@ -564,11 +557,11 @@ export default function HomeCurationPage() {
               onRemove={handleRemoveFeaturedVendor}
               onSearchChange={(value) => updateSearch("featuredVendors", value)}
               optionsPage={paginationState.featuredVendors.optionsPage}
-              removeLabel={busyKey ? "Update flag" : "Remove Featured"}
-              searchPlaceholder="Search vendors to add into Featured Vendors"
+              removeLabel={busyKey ? hct("Update flag") : hct("Remove Featured")}
+              searchPlaceholder={hct("Search vendors to add into Featured Vendors")}
               searchValue={searchState.featuredVendors}
-              subtitle="These vendors feed the Featured Vendors row on the client homepage. Use this as a manual editorial shelf for campaigns or strategic visibility."
-              title="Featured Vendors"
+              subtitle={hct("These vendors feed the Featured Vendors row on the client homepage. Use this as a manual editorial shelf for campaigns or strategic visibility.")}
+              title={hct("Featured Vendors")}
             />
           </div>
 
@@ -579,7 +572,7 @@ export default function HomeCurationPage() {
             }}
           >
             <CurationCollectionSection
-              emptyState="No products are currently marked as popular."
+              emptyState={hct("No products are currently marked as popular.")}
               filteredOptions={filteredPopularProductOptions}
               itemType="product"
               itemsPage={paginationState.popularProducts.itemsPage}
@@ -590,11 +583,11 @@ export default function HomeCurationPage() {
               onRemove={handleRemovePopularProduct}
               onSearchChange={(value) => updateSearch("popularProducts", value)}
               optionsPage={paginationState.popularProducts.optionsPage}
-              removeLabel={busyKey ? "Update flag" : "Remove Popular"}
-              searchPlaceholder="Search products to add into Popular Products"
+              removeLabel={busyKey ? hct("Update flag") : hct("Remove Popular")}
+              searchPlaceholder={hct("Search products to add into Popular Products")}
               searchValue={searchState.popularProducts}
-              subtitle="These products feed the Popular Products row on the client homepage."
-              title="Popular Products"
+              subtitle={hct("These products feed the Popular Products row on the client homepage.")}
+              title={hct("Popular Products")}
             />
           </div>
         </div>
@@ -603,7 +596,7 @@ export default function HomeCurationPage() {
       <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
         {showScrollUp ? (
           <button
-            aria-label="Scroll to top"
+            aria-label={hct("Scroll to top")}
             className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#d16737] text-white shadow-[0_18px_36px_rgba(209,103,55,0.28)] transition hover:-translate-y-0.5 hover:bg-[#bd592b]"
             onClick={scrollToTop}
             type="button"
@@ -614,7 +607,7 @@ export default function HomeCurationPage() {
 
         {showScrollDown ? (
           <button
-            aria-label="Scroll down"
+            aria-label={hct("Scroll down")}
             className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#d16737] text-white shadow-[0_18px_36px_rgba(209,103,55,0.28)] transition hover:translate-y-0.5 hover:bg-[#bd592b]"
             onClick={scrollDown}
             type="button"

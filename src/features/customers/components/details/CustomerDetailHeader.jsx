@@ -1,3 +1,4 @@
+import { ct, useCustomerLanguage, customerDate } from "../../customerTranslation.js";
 import { ArrowLeft, Mail, Ban, CheckCircle, Copy, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -8,6 +9,7 @@ export default function CustomerDetailHeader({
   onContact,
   onToggleBlock,
 }) {
+  useCustomerLanguage();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
@@ -28,7 +30,7 @@ export default function CustomerDetailHeader({
           onClick={() => navigate("/customers")}
           type="button"
           className="group inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] border border-[#ddd4ca] bg-white text-[#6f655e] shadow-sm transition duration-200 hover:scale-105 hover:border-[#f0d4ca] hover:bg-[#fff0e7] hover:text-[#d96834] active:scale-95 cursor-pointer outline-none sm:h-11 sm:w-11"
-          title="Back to Customers"
+          title={ct("Back to Customers")}
         >
           <ArrowLeft size={18} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
         </button>
@@ -63,9 +65,9 @@ export default function CustomerDetailHeader({
               onClick={handleCopyId}
               type="button"
               className="group inline-flex items-center gap-1.5 rounded-[6px] bg-[#f7f5f3] hover:bg-[#eeebe8] px-2 py-0.5.5 text-[12px] font-bold text-[#6f655e] cursor-pointer border-none transition duration-150 active:scale-95"
-              title="Copy Customer ID"
+              title={ct("Copy Customer ID")}
             >
-              <span>ID: {customer.id}</span>
+              <span>{ct("ID:")}{" "}{customer.id}</span>
               {copied ? (
                 <Check size={11} className="text-[#2b9e62]" />
               ) : (
@@ -73,8 +75,7 @@ export default function CustomerDetailHeader({
               )}
             </button>
             <span className="hidden h-3 w-px bg-[#e6dad1] sm:inline-block" />
-            <span className="flex items-center gap-1">
-              Member since {customer.joinDate || "Jan 12, 2022"}
+            <span className="flex items-center gap-1">{ct("Member since")}{" "}{customerDate(customer.joinDateValue || customer.joinDate)}
             </span>
           </div>
         </div>
@@ -87,9 +88,7 @@ export default function CustomerDetailHeader({
           type="button"
           className="inline-flex h-10.5 w-full cursor-pointer items-center justify-center gap-2 rounded-[11px] border border-[#e6dad1] bg-white px-4 text-[13px] font-bold text-[#cf6e38] shadow-sm transition duration-200 hover:scale-102 hover:border-[#f0d4ca] hover:bg-[#fff0e7] active:scale-98 outline-none sm:w-auto sm:px-5"
         >
-          <Mail size={14} className="text-[#cf6e38]" />
-          Contact Customer
-        </button>
+          <Mail size={14} className="text-[#cf6e38]" />{ct("Contact Customer")}{" "}</button>
         <button
           disabled={isUpdatingStatus}
           onClick={onToggleBlock}
@@ -101,17 +100,13 @@ export default function CustomerDetailHeader({
           }`}
         >
           {isUpdatingStatus ? (
-            "Updating..."
+            ct("Updating...")
           ) : isActive ? (
             <>
-              <Ban size={14} />
-              Block Account
-            </>
+              <Ban size={14} />{ct("Block Account")}{" "}</>
           ) : (
             <>
-              <CheckCircle size={14} />
-              Unblock Account
-            </>
+              <CheckCircle size={14} />{ct("Unblock Account")}{" "}</>
           )}
         </button>
       </div>

@@ -1,3 +1,4 @@
+import { nt, useNotificationLanguage, notificationDate } from "../notificationTranslation.js";
 import { Archive, Bell, ChevronLeft, ChevronRight, Eye, Mail, MessageSquareText, Smartphone } from "lucide-react";
 
 const audienceClasses = {
@@ -28,6 +29,7 @@ const channelMeta = {
 };
 
 function AudienceBadge({ audience }) {
+  useNotificationLanguage();
   return (
     <span
       className={[
@@ -35,12 +37,13 @@ function AudienceBadge({ audience }) {
         audienceClasses[audience] || audienceClasses.Customers,
       ].join(" ")}
     >
-      {audience}
+      {nt(audience)}
     </span>
   );
 }
 
 function StatusBadge({ status }) {
+  useNotificationLanguage();
   return (
     <span
       className={[
@@ -48,12 +51,13 @@ function StatusBadge({ status }) {
         statusClasses[status] || statusClasses.Read,
       ].join(" ")}
     >
-      {status}
+      {nt(status)}
     </span>
   );
 }
 
 function ChannelDots({ channels }) {
+  useNotificationLanguage();
   return (
     <div className="flex items-center gap-2">
       {channels.map((channel) => {
@@ -64,7 +68,7 @@ function ChannelDots({ channels }) {
           <span
             key={channel}
             className="inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-full border border-[#d8d1cb] bg-[#f6f3f1] px-2 text-[#5b4f47] transition hover:border-[#cf6e38]/35 hover:bg-[#fff2ea] hover:text-[#cf6e38]"
-            title={meta.label}
+            title={nt(meta.label)}
           >
             <Icon size={14} />
           </span>
@@ -91,6 +95,7 @@ function buildPaginationItems(currentPage, totalPages) {
 }
 
 function PaginationIconButton({ children, disabled = false, onClick }) {
+  useNotificationLanguage();
   return (
     <button
       className={[
@@ -118,6 +123,7 @@ export default function NotificationsTable({
   rows,
   totalItems,
 }) {
+  useNotificationLanguage();
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const end = Math.min(currentPage * pageSize, totalItems);
@@ -127,9 +133,7 @@ export default function NotificationsTable({
     <div className="m-2 overflow-hidden rounded-[18px] border border-[#e8ddd4] bg-[linear-gradient(180deg,#fffdfb_0%,#ffffff_100%)] p-4 shadow-[0_10px_24px_rgba(45,31,20,0.05)]">
       <div className="space-y-3">
         {rows.length === 0 ? (
-          <div className="rounded-[22px] border border-dashed border-[#ddd4cb] bg-white px-6 py-12 text-center text-[15px] font-medium text-[#6f645d]">
-            No notifications match the current filters.
-          </div>
+          <div className="rounded-[22px] border border-dashed border-[#ddd4cb] bg-white px-6 py-12 text-center text-[15px] font-medium text-[#6f645d]">{nt("No notifications match the current filters.")}</div>
         ) : (
           rows.map((row, index) => {
             const isUnread = `${row.status || ""}`.toUpperCase() === "UNREAD";
@@ -152,20 +156,18 @@ export default function NotificationsTable({
                     <AudienceBadge audience={row.audience} />
                     <StatusBadge status={row.statusLabel || row.status} />
                   </div>
-                  <p className="mt-2 text-[13px] leading-5 text-[#6a625c]">{row.message || "Open this notification to review the full update."}</p>
+                  <p className="mt-2 text-[13px] leading-5 text-[#6a625c]">{row.message || nt("Open this notification to review the full update.")}</p>
                 </button>
 
                 <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
-                  <span className="text-xs font-medium text-[#978d84]">{row.createdAtDisplay || row.scheduledAt}</span>
+                  <span className="text-xs font-medium text-[#978d84]">{notificationDate(row.createdAt || row.scheduledAt)}</span>
                   <ChannelDots channels={row.channels || []} />
                   <div className="flex items-center gap-2">
                     <button className="inline-flex items-center gap-1.5 rounded-full bg-[#fff2eb] px-3 py-1.5 text-[11px] font-semibold text-[#cf6e38]" onClick={() => onViewDetails(row)} type="button">
-                      <Eye size={13} /> View
-                    </button>
+                      <Eye size={13} />{nt("View")}</button>
                     {row.status !== "ARCHIVED" ? (
                       <button className="inline-flex items-center gap-1.5 rounded-full bg-[#f6f1eb] px-3 py-1.5 text-[11px] font-semibold text-[#80766d]" onClick={() => onArchive(row)} type="button">
-                        <Archive size={13} /> Archive
-                      </button>
+                        <Archive size={13} />{nt("Archive")}</button>
                     ) : null}
                   </div>
                 </div>
@@ -177,7 +179,7 @@ export default function NotificationsTable({
 
       <div className="flex flex-col gap-4 border-t border-[#eee4dd] px-4 py-4 text-[13px] text-[#6c6058] sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[14px] text-[#5b4f47]">
-          Showing {start} - {end} of {totalItems} Notifications
+          {nt("Showing {{start}} - {{end}} of {{total}} Notifications", { start, end, total: totalItems })}
         </p>
 
         <div className="flex items-center gap-2 self-end sm:self-auto">
@@ -210,6 +212,7 @@ export default function NotificationsTable({
 }
 
 function PaginationButton({ children, isActive = false, onClick }) {
+  useNotificationLanguage();
   return (
     <button
       className={[

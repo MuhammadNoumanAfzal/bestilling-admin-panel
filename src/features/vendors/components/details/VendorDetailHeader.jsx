@@ -1,3 +1,4 @@
+import { vt, useVendorLanguage, vendorDate } from "../../utils/vendorTranslation.js";
 import { ArrowLeft, Calendar, Check, Copy, MapPin, UserRound } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +28,7 @@ export default function VendorDetailHeader({
   activeSection = "overview",
   onSectionChange,
 }) {
+  useVendorLanguage();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
@@ -48,16 +50,14 @@ export default function VendorDetailHeader({
               onClick={() => navigate("/vendors")}
               type="button"
             >
-              <ArrowLeft size={16} />
-              Vendor management
-            </button>
+              <ArrowLeft size={16} />{vt("Vendor management")}</button>
 
             <button
               className="inline-flex items-center gap-2 self-start rounded-[10px] border border-[#efc5b1] bg-white px-4 py-2 text-[13px] font-bold text-[#d96834] transition hover:bg-[#fff2ea]"
               onClick={() => navigate("/vendors")}
               type="button"
             >
-              {vendor.supportContactLabel}
+              {vt(vendor.supportContactLabel)}
             </button>
           </div>
 
@@ -78,28 +78,24 @@ export default function VendorDetailHeader({
                     {vendor.applicationStatus ? (
                       <span
                         className={`rounded-full border px-3 py-1 text-[11px] font-bold ${getStatusBadgeClass(vendor.applicationStatus)}`}
-                      >
-                        Application: {vendor.applicationStatus}
+                      >{vt("Application:")}{" "}{vt(vendor.applicationStatus)}
                       </span>
                     ) : null}
                     {vendor.status ? (
                       <span
                         className={`rounded-full border px-3 py-1 text-[11px] font-bold ${getStatusBadgeClass(vendor.status)}`}
-                      >
-                        Account: {vendor.status}
+                      >{vt("Account:")}{" "}{vt(vendor.status)}
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-2 text-[16px] leading-7 text-[#6f645d]">
-                    Review vendor operations, menus, orders, reviews, payouts, and compliance information in one place.
-                  </p>
+                  <p className="mt-2 text-[16px] leading-7 text-[#6f645d]">{vt("Review vendor operations, menus, orders, reviews, payouts, and compliance information in one place.")}</p>
                   <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] font-semibold text-[#7b6f67] sm:text-[14px]">
                     <button
                       className="inline-flex items-center gap-1.5 rounded-[8px] bg-[#f7f5f3] px-2.5 py-1 text-[#6f655e] transition hover:bg-[#efe9e4] hover:text-[#d96834]"
                       onClick={handleCopyId}
                       type="button"
                     >
-                      <span>ID: {vendor.id}</span>
+                      <span>{vt("ID:")}{" "}{vendor.id}</span>
                       {copied ? <Check size={13} className="text-[#2b9e62]" /> : <Copy size={13} />}
                     </button>
                     <span className="inline-flex items-center gap-1.5">
@@ -112,7 +108,7 @@ export default function VendorDetailHeader({
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <Calendar size={13} />
-                      {vendor.joinedLabel}
+                      {vendorDate(vendor.joinedAt || vendor.joinedLabel)}
                     </span>
                   </div>
                 </div>
@@ -120,11 +116,9 @@ export default function VendorDetailHeader({
             </div>
           <div className="space-y-2">
             <div className="rounded-[14px] border border-[#eadfd6] bg-white/90 p-4 shadow-[0_6px_18px_rgba(53,34,20,0.04)]">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#8c8077]">
-                Business Type
-              </p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#8c8077]">{vt("Business Type")}</p>
               <p className="mt-1 text-[18px] font-extrabold text-[#18120f]">
-                {vendor.businessType}
+                {vt(vendor.businessType)}
               </p>
               <p className="mt-2 text-[14px] leading-6 text-[#6f645d]">
                 {vendor.legalName}
@@ -152,7 +146,7 @@ export default function VendorDetailHeader({
                 onClick={() => onSectionChange?.(section.id)}
                 type="button"
               >
-                {section.label}
+                {vt(section.label)}
               </button>
             );
           })}

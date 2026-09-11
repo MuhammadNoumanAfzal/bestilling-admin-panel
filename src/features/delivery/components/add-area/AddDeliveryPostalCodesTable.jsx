@@ -1,21 +1,23 @@
+import { dt, useDeliveryLanguage } from "../../deliveryTranslation.js";
 import { Pencil, Trash2, UsersRound } from "lucide-react";
 
 export default function AddDeliveryPostalCodesTable({ rows, onDelete, onEdit }) {
+  useDeliveryLanguage();
   return (
     <div className="rounded-[12px] border border-[#e6ddd6] bg-white">
       <div className="flex items-center justify-between gap-3 border-b border-[#eee4dd] px-4 py-2.5">
-        <p className="text-[12px] font-bold text-[#6f645d]">Postal Area Coverage</p>
+        <p className="text-[12px] font-bold text-[#6f645d]">{dt("Postal Area Coverage")}</p>
       </div>
 
       <div className="overflow-hidden">
         <table className="w-full border-collapse">
           <thead className="bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="px-4 py-2.5 text-[11px] font-bold text-[#9b8f86]">Postal Code</th>
-              <th className="px-3 py-2.5 text-[11px] font-bold text-[#9b8f86]">Area Name</th>
-              <th className="px-3 py-2.5 text-[11px] font-bold text-[#9b8f86]">Status</th>
-              <th className="px-3 py-2.5 text-[11px] font-bold text-[#9b8f86]">Vendors</th>
-              <th className="px-4 py-2.5 text-right text-[11px] font-bold text-[#9b8f86]">Actions</th>
+              <th className="px-4 py-2.5 text-[11px] font-bold text-[#9b8f86]">{dt("Postal Code")}</th>
+              <th className="px-3 py-2.5 text-[11px] font-bold text-[#9b8f86]">{dt("Area Name")}</th>
+              <th className="px-3 py-2.5 text-[11px] font-bold text-[#9b8f86]">{dt("Status")}</th>
+              <th className="px-3 py-2.5 text-[11px] font-bold text-[#9b8f86]">{dt("Vendors")}</th>
+              <th className="px-4 py-2.5 text-right text-[11px] font-bold text-[#9b8f86]">{dt("Actions")}</th>
             </tr>
           </thead>
           <tbody>

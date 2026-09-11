@@ -1,13 +1,15 @@
+import { ot, useOrderLanguage, orderDate } from "../../orderTranslation.js";
 import { CalendarRange } from "lucide-react";
 import { hasDetailValue } from "./hasDetailValue.js";
 
 export default function EventInfoCard({ order }) {
+  useOrderLanguage();
   const details = [
-    { label: "Event Type", value: order.eventType },
-    { label: "Event Date", value: order.eventDate },
+    { label: "Event Type", value: ot(order.eventType) },
+    { label: "Event Date", value: orderDate(order.eventDateValue || order.eventDate, false) },
     { label: "Event Time", value: order.eventTime },
-    { label: "Guest Count", value: `${order.guestCount} guests` },
-    { label: "Order Source", value: order.source },
+    { label: "Guest Count", value: ot("{{count}} guests", { count: order.guestCount }) },
+    { label: "Order Source", value: ot(order.source) },
     { label: "Recipient", value: order.delivery.recipientName },
     { label: "Recipient Phone", value: order.delivery.recipientPhone },
     {
@@ -26,7 +28,7 @@ export default function EventInfoCard({ order }) {
     <article className="h-full rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
       <header className="mb-4 flex items-center gap-2 border-b border-[#eee4dd] pb-3">
         <CalendarRange size={18} className="text-[#cf6432]" />
-        <h3 className="text-[18px] font-bold text-[#18120f]">Event Information</h3>
+        <h3 className="text-[18px] font-bold text-[#18120f]">{ot("Event Information")}</h3>
       </header>
 
       <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
@@ -39,7 +41,7 @@ export default function EventInfoCard({ order }) {
             ].join(" ")}
           >
             <span className="block text-[11px] font-bold uppercase tracking-wider text-[#9a8f86]">
-              {item.label}
+              {ot(item.label)}
             </span>
             <span className="block text-[13px] font-semibold leading-5 text-[#18120f]">
               {item.value}

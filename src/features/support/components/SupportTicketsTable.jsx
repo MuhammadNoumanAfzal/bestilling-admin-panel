@@ -1,6 +1,8 @@
+import { st, useSupportLanguage } from "../supportTranslation.js";
 import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
+  formatRelativeTime,
   formatPriorityLabel,
   formatReadableDate,
   formatStatusLabel,
@@ -22,6 +24,7 @@ const priorityClasses = {
 };
 
 function PaginationButton({ children, isActive = false, onClick }) {
+  useSupportLanguage();
   return (
     <button
       className={[
@@ -38,7 +41,8 @@ function PaginationButton({ children, isActive = false, onClick }) {
   );
 }
 
-function PaginationIconButton({ children, disabled = false, onClick }) {
+function PaginationIconButton({ children, disabled = false, onClick, label }) {
+  useSupportLanguage();
   return (
     <button
       className={[
@@ -47,6 +51,8 @@ function PaginationIconButton({ children, disabled = false, onClick }) {
           ? "cursor-not-allowed border-[#ebe1d9] bg-[#f7f3f0] text-[#c4b8b0]"
           : "cursor-pointer border-[#e6dad1] hover:bg-[#faf5f1]",
       ].join(" ")}
+      title={label}
+      aria-label={label}
       disabled={disabled}
       onClick={onClick}
       type="button"
@@ -57,6 +63,7 @@ function PaginationIconButton({ children, disabled = false, onClick }) {
 }
 
 function Avatar({ label, src }) {
+  useSupportLanguage();
   return (
     <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-[#f4eee9]">
       {src ? (
@@ -71,6 +78,7 @@ function Avatar({ label, src }) {
 }
 
 function StatusBadge({ status }) {
+  useSupportLanguage();
   return (
     <span
       className={[
@@ -84,6 +92,7 @@ function StatusBadge({ status }) {
 }
 
 function PriorityBadge({ priority }) {
+  useSupportLanguage();
   return (
     <span
       className={[
@@ -97,6 +106,7 @@ function PriorityBadge({ priority }) {
 }
 
 function MobileTicketCard({ row, onOpen }) {
+  useSupportLanguage();
   return (
     <article
       className="rounded-[18px] border border-[#eaded5] bg-[linear-gradient(180deg,#fffdfa_0%,#fff8f2_100%)] p-4 shadow-[0_10px_22px_rgba(56,33,17,0.05)]"
@@ -105,9 +115,9 @@ function MobileTicketCard({ row, onOpen }) {
         <div className="flex min-w-0 items-center gap-3">
           <Avatar label={row.avatarInitials} src={row.avatarUrl} />
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Ticket #{row.id}</p>
-            <p className="truncate text-[15px] font-bold text-[#18120f]">{row.user}</p>
-            <p className="truncate text-[12px] text-[#7a6d66]">{row.email || "No email"}</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">{st("Ticket #{{id}}", { id: row.id })}</p>
+            <p className="truncate text-[15px] font-bold text-[#18120f]">{row.user === "Unknown requester" ? st("Unknown requester") : row.user}</p>
+            <p className="truncate text-[12px] text-[#7a6d66]">{row.email || st("No email")}</p>
           </div>
         </div>
         <StatusBadge status={row.status} />
@@ -115,34 +125,34 @@ function MobileTicketCard({ row, onOpen }) {
 
       <div className="mt-3 space-y-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Subject</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">{st("Subject")}</p>
           <p className="mt-1 text-[14px] font-semibold leading-6 text-[#241a15]">{row.subject}</p>
           {row.unreadAdminCount ? (
             <p className="mt-1 text-[11px] font-semibold text-[#cf6e38]">
-              {row.unreadAdminCount} unread for admin
+              {st("{{count}} unread for admin", { count: row.unreadAdminCount })}
             </p>
           ) : null}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">User Type</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">{st("User Type")}</p>
             <p className="mt-1 text-[13px] font-semibold text-[#241a15]">{formatUserTypeLabel(row.type)}</p>
           </div>
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Category</p>
-            <p className="mt-1 break-words text-[13px] font-semibold text-[#241a15]">{row.category}</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">{st("Category")}</p>
+            <p className="mt-1 break-words text-[13px] font-semibold text-[#241a15]">{st(row.category)}</p>
           </div>
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Priority</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">{st("Priority")}</p>
             <div className="mt-1">
               <PriorityBadge priority={row.priority} />
             </div>
           </div>
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">Last Activity</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9b8f86]">{st("Last Activity")}</p>
             <p className="mt-1 text-[13px] font-semibold text-[#241a15]">
-              {row.lastMessageAt ? formatReadableDate(row.lastMessageAt) : row.created}
+              {row.lastMessageAt ? formatReadableDate(row.lastMessageAt) : formatRelativeTime(row.createdAt)}
             </p>
           </div>
         </div>
@@ -153,9 +163,7 @@ function MobileTicketCard({ row, onOpen }) {
         onClick={onOpen}
         type="button"
       >
-        <Eye size={15} />
-        View Ticket
-      </button>
+        <Eye size={15} />{st("View Ticket")}</button>
     </article>
   );
 }
@@ -182,6 +190,7 @@ export default function SupportTicketsTable({
   pageInfo,
   rows,
 }) {
+  useSupportLanguage();
   const navigate = useNavigate();
   const totalItems = pageInfo?.totalItems ?? 0;
   const totalPages = Math.max(1, pageInfo?.totalPages ?? 1);
@@ -194,9 +203,7 @@ export default function SupportTicketsTable({
     <div className="m-2 overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]">
       <div className="space-y-3 p-3 md:hidden">
         {rows.length === 0 ? (
-          <div className="rounded-[16px] border border-dashed border-[#e3d7cf] bg-[#fcfaf8] px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]">
-            No support tickets match the current filters.
-          </div>
+          <div className="rounded-[16px] border border-dashed border-[#e3d7cf] bg-[#fcfaf8] px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]">{st("No support tickets match the current filters.")}</div>
         ) : (
           rows.map((row) => (
             <MobileTicketCard
@@ -212,24 +219,22 @@ export default function SupportTicketsTable({
         <table className="w-full table-fixed border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
-              <th className="w-[7%] px-4 py-3 text-[12px] font-bold text-[#9b8f86]">Ticket ID</th>
-              <th className="w-[16%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Requester</th>
-              <th className="w-[10%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Type</th>
-              <th className="w-[15%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Subject</th>
-              <th className="w-[9%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Priority</th>
-              <th className="w-[10%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Category</th>
-              <th className="w-[12%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Last Activity</th>
-              <th className="w-[8%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">Status</th>
-              <th className="w-[13%] px-4 py-3 text-right text-[12px] font-bold text-[#9b8f86]">Action</th>
+              <th className="w-[7%] px-4 py-3 text-[12px] font-bold text-[#9b8f86]">{st("Ticket ID")}</th>
+              <th className="w-[16%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">{st("Requester")}</th>
+              <th className="w-[10%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">{st("Type")}</th>
+              <th className="w-[15%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">{st("Subject")}</th>
+              <th className="w-[9%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">{st("Priority")}</th>
+              <th className="w-[10%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">{st("Category")}</th>
+              <th className="w-[12%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">{st("Last Activity")}</th>
+              <th className="w-[8%] px-2.5 py-3 text-[12px] font-bold text-[#9b8f86]">{st("Status")}</th>
+              <th className="w-[13%] px-4 py-3 text-right text-[12px] font-bold text-[#9b8f86]">{st("Action")}</th>
             </tr>
           </thead>
 
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={9}>
-                  No support tickets match the current filters.
-                </td>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={9}>{st("No support tickets match the current filters.")}</td>
               </tr>
             ) : (
               rows.map((row) => (
@@ -243,8 +248,8 @@ export default function SupportTicketsTable({
                     <div className="flex items-center gap-2.5">
                       <Avatar label={row.avatarInitials} src={row.avatarUrl} />
                       <div className="min-w-0">
-                        <p className="truncate text-[14px] font-bold text-[#18120f]">{row.user}</p>
-                        <p className="truncate text-[11px] text-[#5a4d46]">{row.email || "No email"}</p>
+                        <p className="truncate text-[14px] font-bold text-[#18120f]">{row.user === "Unknown requester" ? st("Unknown requester") : row.user}</p>
+                        <p className="truncate text-[11px] text-[#5a4d46]">{row.email || st("No email")}</p>
                       </div>
                     </div>
                   </td>
@@ -253,16 +258,16 @@ export default function SupportTicketsTable({
                     <p className="break-words text-[14px] leading-5 text-[#18120f]">{row.subject}</p>
                     {row.unreadAdminCount ? (
                       <p className="mt-1 text-[11px] font-semibold text-[#cf6e38]">
-                        {row.unreadAdminCount} unread for admin
+                        {st("{{count}} unread for admin", { count: row.unreadAdminCount })}
                       </p>
                     ) : null}
                   </td>
                   <td className="px-2.5 py-3.5">
                     <PriorityBadge priority={row.priority} />
                   </td>
-                  <td className="px-2.5 py-3.5 text-[14px] font-medium text-[#18120f] break-words">{row.category}</td>
+                  <td className="px-2.5 py-3.5 text-[14px] font-medium text-[#18120f] break-words">{st(row.category)}</td>
                   <td className="px-2.5 py-3.5 text-[13px] font-medium text-[#18120f]">
-                    {row.lastMessageAt ? formatReadableDate(row.lastMessageAt) : row.created}
+                    {row.lastMessageAt ? formatReadableDate(row.lastMessageAt) : formatRelativeTime(row.createdAt)}
                   </td>
                   <td className="px-2.5 py-3.5">
                     <StatusBadge status={row.status} />
@@ -277,7 +282,7 @@ export default function SupportTicketsTable({
                       type="button"
                     >
                       <Eye size={15} />
-                      <span>View Ticket</span>
+                      <span>{st("View Ticket")}</span>
                     </button>
                   </td>
                 </tr>
@@ -289,11 +294,11 @@ export default function SupportTicketsTable({
 
       <div className="flex flex-col gap-4 border-t border-[#eee4dd] px-4 py-4 text-[13px] text-[#6c6058] sm:flex-row sm:items-center sm:justify-between">
         <p>
-          Showing {start} - {end} of {totalItems} Tickets
+          {st("Showing {{start}} - {{end}} of {{total}} Tickets", { start, end, total: totalItems })}
         </p>
 
         <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
-          <PaginationIconButton disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)}>
+          <PaginationIconButton label={st("Previous page")} disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)}>
             <ChevronLeft size={15} />
           </PaginationIconButton>
 
@@ -309,7 +314,7 @@ export default function SupportTicketsTable({
             ),
           )}
 
-          <PaginationIconButton disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)}>
+          <PaginationIconButton label={st("Next page")} disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)}>
             <ChevronRight size={15} />
           </PaginationIconButton>
         </div>

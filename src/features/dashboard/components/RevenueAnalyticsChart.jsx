@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 function formatMetricValue(metric, value) {
@@ -9,15 +10,32 @@ function formatMetricValue(metric, value) {
   return `${value}`;
 }
 
-function getMetricLabel(metric, value) {
+function getMetricLabel(metric, value, t, locale) {
   if (metric === "REVENUE") {
-    return `NOK ${value.toLocaleString("en-GB")}`;
+    return `NOK ${value.toLocaleString(locale)}`;
   }
 
-  return `${value.toLocaleString("en-GB")} orders`;
+  return t("adminDashboard.chart.ordersValue", { count: value, formattedCount: value.toLocaleString(locale) });
+}
+
+function getTimeframeLabel(timeframe, t) {
+  const labelMap = {
+    "All time": "allTime",
+    "Last 7 days": "last7Days",
+    "Last Month": "lastMonth",
+    "Last 3 Months": "last3Months",
+    "Last 6 Months": "last6Months",
+    "This Year": "thisYear",
+    "Custom Date": "customDate",
+  };
+
+  const key = labelMap[timeframe];
+  return key ? t(`adminDashboard.filters.${key}`) : timeframe;
 }
 
 export default function RevenueAnalyticsChart({ timeframe, chart, isLoading = false }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "nb" ? "nb-NO" : "en-GB";
   const metricOptions = Array.isArray(chart?.metricOptions) ? chart.metricOptions : ["REVENUE", "ORDERS"];
   const [activeMetric, setActiveMetric] = useState(chart?.defaultMetric || "REVENUE");
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -26,7 +44,16 @@ export default function RevenueAnalyticsChart({ timeframe, chart, isLoading = fa
     setActiveMetric(chart?.defaultMetric || "REVENUE");
   }, [chart?.defaultMetric]);
 
-  const points = useMemo(() => (Array.isArray(chart?.points) ? chart.points : []), [chart?.points]);
+  const points = useMemo(() => (Array.isArray(chart?.points) ? chart.points : []).map(point => {
+    const date = new Date(point.startDate);
+    if (!point.startDate || Number.isNaN(date.getTime())) return point;
+    const options = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/i.test(point.label)
+      ? { weekday: "short" }
+      : /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$/i.test(point.label)
+        ? { month: "short" }
+        : { day: "numeric", month: "short" };
+    return { ...point, label: date.toLocaleDateString(locale, { ...options, timeZone: "Europe/Oslo" }) };
+  }), [chart, locale]);
 
   const maxValue = useMemo(() => {
     const values = points.map((item) => (activeMetric === "ORDERS" ? item.orders : item.revenue));
@@ -50,11 +77,11 @@ export default function RevenueAnalyticsChart({ timeframe, chart, isLoading = fa
     <div className="flex h-full flex-col rounded-[14px] border border-[#ddd6cf] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="space-y-1">
-          <h2 className="text-[18px] font-bold text-[#1f1711]">Revenue & Order Analytics</h2>
+          <h2 className="text-[18px] font-bold text-[#1f1711]">{t("adminDashboard.chart.title")}</h2>
           <p className="text-[13px] leading-5 text-[#6f655e]">
             {timeframe === "Last 7 days"
-              ? "Daily platform performance for the last 7 days."
-              : `Performance metrics for ${timeframe.toLowerCase()}.`}
+              ? t("adminDashboard.chart.last7Description")
+              : t("adminDashboard.chart.description", { timeframe: getTimeframeLabel(timeframe, t).toLowerCase() })}
           </p>
         </div>
 
@@ -70,7 +97,7 @@ export default function RevenueAnalyticsChart({ timeframe, chart, isLoading = fa
               }`}
               type="button"
             >
-              {metric === "ORDERS" ? "Orders" : "Revenue"}
+              {metric === "ORDERS" ? t("adminDashboard.chart.orders") : t("adminDashboard.chart.revenue")}
             </button>
           ))}
         </div>
@@ -78,14 +105,14 @@ export default function RevenueAnalyticsChart({ timeframe, chart, isLoading = fa
 
       {isLoading ? (
         <AdminLoadingState
-          title="Loading analytics snapshot"
-          description="Updating revenue and order performance for the selected reporting window."
+          title={t("adminDashboard.chart.loadingTitle")}
+          description={t("adminDashboard.chart.loadingDescription")}
           showTable={false}
           className="rounded-[14px]"
         />
       ) : points.length === 0 ? (
         <div className="flex h-[280px] items-center justify-center rounded-[14px] border border-dashed border-[#e5dad2] text-[15px] font-medium text-[#6f645d]">
-          No analytics data available for this time range.
+          {t("adminDashboard.chart.empty")}
         </div>
       ) : (
         <div className="relative w-full flex-1 overflow-hidden">
@@ -95,21 +122,8 @@ export default function RevenueAnalyticsChart({ timeframe, chart, isLoading = fa
 
               return (
                 <g key={tick} className="opacity-60">
-                  <line
-                    x1={paddingLeft}
-                    y1={y}
-                    x2={svgWidth - paddingRight}
-                    y2={y}
-                    stroke="#eee4dd"
-                    strokeWidth="1"
-                    strokeDasharray={index === 0 ? "0" : "4 4"}
-                  />
-                  <text
-                    x={paddingLeft - 10}
-                    y={y + 4}
-                    textAnchor="end"
-                    className="fill-[#9a8f86] text-[11px] font-bold"
-                  >
+                  <line x1={paddingLeft} y1={y} x2={svgWidth - paddingRight} y2={y} stroke="#eee4dd" strokeWidth="1" strokeDasharray={index === 0 ? "0" : "4 4"} />
+                  <text x={paddingLeft - 10} y={y + 4} textAnchor="end" className="fill-[#9a8f86] text-[11px] font-bold">
                     {formatMetricValue(activeMetric, Number(tick))}
                   </text>
                 </g>
@@ -119,103 +133,43 @@ export default function RevenueAnalyticsChart({ timeframe, chart, isLoading = fa
             {points.map((item, index) => {
               const value = activeMetric === "ORDERS" ? item.orders : item.revenue;
               const barWidth = Math.min(32, chartWidth / points.length - 20);
-              const x =
-                paddingLeft +
-                (index * chartWidth) / points.length +
-                (chartWidth / points.length - barWidth) / 2;
+              const x = paddingLeft + (index * chartWidth) / points.length + (chartWidth / points.length - barWidth) / 2;
               const barHeight = (value / maxValue) * chartHeight;
               const y = paddingTop + chartHeight - barHeight;
               const radius = Math.min(6, barHeight);
               const isHovered = hoveredIndex === index;
               const pathData =
                 barHeight > 0
-                  ? `M ${x} ${y + barHeight}
-                     L ${x} ${y + radius}
-                     A ${radius} ${radius} 0 0 1 ${x + radius} ${y}
-                     L ${x + barWidth - radius} ${y}
-                     A ${radius} ${radius} 0 0 1 ${x + barWidth} ${y + radius}
-                     L ${x + barWidth} ${y + barHeight}
-                     Z`
+                  ? `M ${x} ${y + barHeight} L ${x} ${y + radius} A ${radius} ${radius} 0 0 1 ${x + radius} ${y} L ${x + barWidth - radius} ${y} A ${radius} ${radius} 0 0 1 ${x + barWidth} ${y + radius} L ${x + barWidth} ${y + barHeight} Z`
                   : "";
 
               return (
-                <g
-                  key={`${item.label}-${index}`}
-                  onMouseEnter={() => setHoveredIndex(index)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                  className="cursor-pointer"
-                >
-                  {barHeight > 0 ? (
-                    <path
-                      d={pathData}
-                      fill={isHovered ? "#b75424" : "#d96834"}
-                      className="transition-all duration-200"
-                    />
-                  ) : null}
-
-                  <text
-                    x={x + barWidth / 2}
-                    y={svgHeight - paddingBottom + 20}
-                    textAnchor="middle"
-                    className={`text-[12px] font-semibold transition-colors duration-200 ${
-                      isHovered ? "fill-[#d96834]" : "fill-[#6f655e]"
-                    }`}
-                  >
+                <g key={`${item.label}-${index}`} onMouseEnter={() => setHoveredIndex(index)} onMouseLeave={() => setHoveredIndex(null)} className="cursor-pointer">
+                  {barHeight > 0 ? <path d={pathData} fill={isHovered ? "#b75424" : "#d96834"} className="transition-all duration-200" /> : null}
+                  <text x={x + barWidth / 2} y={svgHeight - paddingBottom + 20} textAnchor="middle" className={`text-[12px] font-semibold transition-colors duration-200 ${isHovered ? "fill-[#d96834]" : "fill-[#6f655e]"}`}>
                     {item.label}
                   </text>
-
-                  <rect
-                    x={x - 10}
-                    y={paddingTop}
-                    width={barWidth + 20}
-                    height={chartHeight + 10}
-                    fill="transparent"
-                  />
+                  <rect x={x - 10} y={paddingTop} width={barWidth + 20} height={chartHeight + 10} fill="transparent" />
                 </g>
               );
             })}
 
-            <line
-              x1={paddingLeft}
-              y1={paddingTop + chartHeight}
-              x2={svgWidth - paddingRight}
-              y2={paddingTop + chartHeight}
-              stroke="#d8ccc2"
-              strokeWidth="1.5"
-            />
+            <line x1={paddingLeft} y1={paddingTop + chartHeight} x2={svgWidth - paddingRight} y2={paddingTop + chartHeight} stroke="#d8ccc2" strokeWidth="1.5" />
           </svg>
 
           {hoveredIndex !== null ? (
             <div
               className="pointer-events-none absolute z-10 rounded-[8px] border border-[#d8ccc2] bg-white px-3 py-2 text-[12px] font-bold text-[#1f1711] shadow-[0_4px_12px_rgba(53,34,20,0.12)]"
               style={{
-                left: `${
-                  paddingLeft +
-                  (hoveredIndex * chartWidth) / points.length +
-                  chartWidth / points.length / 2
-                }px`,
-                top: `${
-                  paddingTop +
-                  chartHeight -
-                  ((activeMetric === "ORDERS" ? points[hoveredIndex].orders : points[hoveredIndex].revenue) /
-                    maxValue) *
-                    chartHeight -
-                  15
-                }px`,
+                left: `${paddingLeft + (hoveredIndex * chartWidth) / points.length + chartWidth / points.length / 2}px`,
+                top: `${paddingTop + chartHeight - ((activeMetric === "ORDERS" ? points[hoveredIndex].orders : points[hoveredIndex].revenue) / maxValue) * chartHeight - 15}px`,
                 transform: "translate(-50%, -100%)",
               }}
             >
               <div className="text-center">
-                <p className="text-[10px] uppercase tracking-wider text-[#9a8f86]">
-                  {points[hoveredIndex].label}
-                </p>
+                <p className="text-[10px] uppercase tracking-wider text-[#9a8f86]">{points[hoveredIndex].label}</p>
                 <p className="mt-0.5 text-[#d96834]">
-                  {getMetricLabel(
-                    activeMetric,
-                    activeMetric === "ORDERS"
-                      ? points[hoveredIndex].orders
-                      : points[hoveredIndex].revenue,
-                  )}
+                  {getMetricLabel(activeMetric, activeMetric === "ORDERS" ? points[hoveredIndex].orders : points[hoveredIndex].revenue, t, locale)}
                 </p>
               </div>
               <div className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 border-b border-r border-[#d8ccc2] bg-white"></div>

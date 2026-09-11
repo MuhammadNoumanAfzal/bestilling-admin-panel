@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 function SkeletonLine({ className = "" }) {
   return <div className={`animate-pulse rounded-full bg-[#f2e7de] ${className}`.trim()} />;
 }
@@ -38,6 +39,7 @@ export default function AdminLoadingState({
   showTable = true,
   className = "",
 }) {
+  const { t } = useTranslation("adminShell");
   return (
     <div className={`overflow-hidden ${className}`.trim()}>
       {cards > 0 ? (
@@ -53,7 +55,7 @@ export default function AdminLoadingState({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <span className="inline-flex w-fit items-center rounded-full border border-[#f1d7c8] bg-[#fff3ea] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#cc6d39]">
-              Syncing data
+              {t("Syncing data")}
             </span>
             <div>
               <h3 className="text-[20px] font-extrabold text-[#211711]">{title}</h3>
@@ -66,7 +68,7 @@ export default function AdminLoadingState({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#de7b44] opacity-60" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#cf6e38]" />
             </span>
-            <span className="text-[12px] font-semibold text-[#6e6158]">Updating live results</span>
+            <span className="text-[12px] font-semibold text-[#6e6158]">{t("Updating live results")}</span>
           </div>
         </div>
       </div>

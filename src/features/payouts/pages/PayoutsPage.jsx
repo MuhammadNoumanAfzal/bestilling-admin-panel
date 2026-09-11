@@ -1,3 +1,4 @@
+import { pt, usePayoutLanguage, payoutError, payoutDialog, payoutHtml } from "../payoutTranslation.js";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -54,6 +55,7 @@ function writePaymentCache(cacheKey, data) {
 }
 
 export default function PayoutsPage() {
+  usePayoutLanguage();
   const navigate = useNavigate();
   const { setPageHeaderAction } = useOutletContext();
   const [currentPage, setCurrentPage] = useState(1);
@@ -262,12 +264,12 @@ export default function PayoutsPage() {
 
     if (action === "markVendorPaid") {
       if (row.customerPaymentStatus !== "Paid") {
-        await Swal.fire({
+        await Swal.fire(payoutDialog({
           icon: "info",
           title: "Customer payment required",
           text: "Customer payment must be received before vendor payout can be completed.",
           confirmButtonColor: "#cf6e38",
-        });
+        }));
         return;
       }
 }
@@ -276,7 +278,7 @@ export default function PayoutsPage() {
       setActiveActionKey(actionKey);
 
       if (action === "approveInvoice") {
-        const prompt = await Swal.fire({
+        const prompt = await Swal.fire(payoutDialog({
           title: "Approve customer payment?",
           input: "textarea",
           inputLabel: "Verification note",
@@ -285,7 +287,7 @@ export default function PayoutsPage() {
           confirmButtonText: "Approve payment",
           confirmButtonColor: "#cf6e38",
           cancelButtonColor: "#c8b9aa",
-        });
+        }));
 
         if (!prompt.isConfirmed) {
           return;
@@ -295,18 +297,18 @@ export default function PayoutsPage() {
           note: prompt.value || "",
         });
 
-        await Swal.fire({
+        await Swal.fire(payoutDialog({
           icon: "success",
           title: "Payment approved",
-          text: result.message,
+          text: payoutError(result.message, "Changes saved successfully."),
           confirmButtonColor: "#cf6e38",
-        });
+        }));
         refreshPaymentsPage();
         return;
       }
 
       if (action === "markReceived") {
-        const prompt = await Swal.fire({
+        const prompt = await Swal.fire(payoutDialog({
           title: "Mark customer payment received?",
           input: "textarea",
           inputLabel: "Internal note",
@@ -315,7 +317,7 @@ export default function PayoutsPage() {
           confirmButtonText: "Mark received",
           confirmButtonColor: "#cf6e38",
           cancelButtonColor: "#c8b9aa",
-        });
+        }));
 
         if (!prompt.isConfirmed) {
           return;
@@ -325,33 +327,33 @@ export default function PayoutsPage() {
           note: prompt.value || "",
         });
 
-        await Swal.fire({
+        await Swal.fire(payoutDialog({
           icon: "success",
           title: "Customer payment updated",
-          text: result.message,
+          text: payoutError(result.message, "Changes saved successfully."),
           confirmButtonColor: "#cf6e38",
-        });
+        }));
         refreshPaymentsPage();
         return;
       }
 
       if (action === "markVendorPaid") {
         const paymentDate = new Date().toISOString().slice(0, 10);
-        const prompt = await Swal.fire({
+        const prompt = await Swal.fire(payoutDialog({
           title: "Mark vendor payment received?",
           html: `
             <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
               <div>
-                <label for="payout-reference" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Payout reference</label>
-                <input id="payout-reference" class="swal2-input" placeholder="Outbound bank transfer reference" style="margin:0;width:100%;" />
+                <label for="payout-reference" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">${payoutHtml("Payout reference")}</label>
+                <input id="payout-reference" class="swal2-input" placeholder="${payoutHtml("Outbound bank transfer reference")}" style="margin:0;width:100%;" />
               </div>
               <div>
-                <label for="payout-payment-date" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Transfer date</label>
+                <label for="payout-payment-date" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">${payoutHtml("Transfer date")}</label>
                 <input id="payout-payment-date" type="date" class="swal2-input" value="${paymentDate}" style="margin:0;width:100%;" />
               </div>
               <div>
-                <label for="payout-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Internal note</label>
-                <textarea id="payout-note" class="swal2-textarea" placeholder="Optional admin note" style="margin:0;width:100%;min-height:110px;"></textarea>
+                <label for="payout-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">${payoutHtml("Internal note")}</label>
+                <textarea id="payout-note" class="swal2-textarea" placeholder="${payoutHtml("Optional admin note")}" style="margin:0;width:100%;min-height:110px;"></textarea>
               </div>
             </div>
           `,
@@ -365,7 +367,7 @@ export default function PayoutsPage() {
             paymentDate: document.getElementById("payout-payment-date")?.value || paymentDate,
             note: document.getElementById("payout-note")?.value?.trim() || "",
           }),
-        });
+        }));
 
         if (!prompt.isConfirmed) {
           return;
@@ -409,21 +411,21 @@ export default function PayoutsPage() {
           );
         }
 
-        await Swal.fire({
+        await Swal.fire(payoutDialog({
           icon: "success",
           title: "Vendor payout updated",
-          text: result.message,
+          text: payoutError(result.message, "Changes saved successfully."),
           confirmButtonColor: "#cf6e38",
-        });
+        }));
         refreshPaymentsPage();
       }
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "error",
         title: "Action failed",
-        text: error instanceof Error ? error.message : "Unable to update payment.",
+        text: payoutError(error, "Unable to update payment."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setActiveActionKey("");
     }
@@ -470,7 +472,7 @@ export default function PayoutsPage() {
 
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
-          {loadError}
+          {payoutError(loadError)}
         </div>
       ) : null}
 
@@ -495,8 +497,8 @@ export default function PayoutsPage() {
           />
           {isLoading && rows.length === 0 ? (
             <AdminLoadingState
-              title="Loading payout records"
-              description="Preparing settlements, vendor amounts, commission totals, and payout actions for this date range."
+              title={pt("Loading payout records")}
+              description={pt("Preparing settlements, vendor amounts, commission totals, and payout actions for this date range.")}
               rows={5}
               columns={8}
             />

@@ -1,3 +1,4 @@
+import { vt, useVendorLanguage } from "../utils/vendorTranslation.js";
 const statusConfig = [
   { key: "Active", label: "Active", color: "#59c779" },
   { key: "Pending Approval", label: "Pending", color: "#f3b433" },
@@ -24,6 +25,7 @@ function buildDonutGradient(items) {
 }
 
 export default function VendorStatusOverviewCard({ breakdown = [], vendors = [] }) {
+  useVendorLanguage();
   const breakdownMap = new Map(
     (breakdown || []).map((item) => [item.status, Number(item.count ?? 0)]),
   );
@@ -47,9 +49,7 @@ export default function VendorStatusOverviewCard({ breakdown = [], vendors = [] 
 
   return (
     <article className="self-start rounded-[14px] border border-[#ddd6cf] bg-white p-3.5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
-      <h3 className="mb-3 text-[16px] font-bold tracking-[-0.03em] text-[#18120f]">
-        Vendor Status Overview
-      </h3>
+      <h3 className="mb-3 text-[16px] font-bold tracking-[-0.03em] text-[#18120f]">{vt("Vendor Status Overview")}</h3>
 
       <div className="flex items-center gap-4">
         <div className="relative h-[104px] w-[104px] shrink-0">
@@ -61,9 +61,7 @@ export default function VendorStatusOverviewCard({ breakdown = [], vendors = [] 
             <span className="text-[22px] font-extrabold leading-none tracking-[-0.04em] text-[#17110d]">
               {totalVendors}
             </span>
-            <span className="mt-1 text-[9px] font-medium text-[#8c8077]">
-              Total Vendors
-            </span>
+            <span className="mt-1 text-[9px] font-medium text-[#8c8077]">{vt("Total Vendors")}</span>
           </div>
         </div>
 
@@ -76,7 +74,7 @@ export default function VendorStatusOverviewCard({ breakdown = [], vendors = [] 
               />
               <div className="min-w-0">
                 <p className="text-[11px] font-bold leading-none text-[#1f1711]">
-                  {item.label}
+                  {vt(item.label)}
                 </p>
                 <p className="mt-1 text-[10px] font-medium leading-none text-[#8c8077]">
                   {item.count} ({item.percentage}%)

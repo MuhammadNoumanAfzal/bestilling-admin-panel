@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
@@ -37,6 +38,7 @@ const statIcons = {
 };
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { setPageHeaderAction } = useOutletContext();
   const [timeframe, setTimeframe] = useState("Last 7 days");
@@ -89,7 +91,7 @@ export default function DashboardPage() {
         setDashboardData(response);
       } catch (error) {
         if (isMounted) {
-          setLoadError(error instanceof Error ? error.message : "Unable to load dashboard.");
+          setLoadError(t(error?.isAuthenticationError ? "adminDashboard.alerts.sessionExpired" : "adminDashboard.alerts.loadFallback"));
         }
       } finally {
         if (isMounted) {
@@ -103,7 +105,7 @@ export default function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [dashboardFilters]);
+  }, [dashboardFilters, t]);
 
   function handleCustomDateChange(start, end) {
     setCustomStart(start);
@@ -141,15 +143,16 @@ export default function DashboardPage() {
 
     if (nextStatus === "REJECTED") {
       const rejectionPrompt = await Swal.fire({
-        title: "Reject vendor application",
+        title: t("adminDashboard.alerts.rejectTitle"),
         input: "textarea",
-        inputLabel: "Reason",
-        inputPlaceholder: "Explain why this vendor is being rejected",
+        inputLabel: t("adminDashboard.alerts.reasonLabel"),
+        inputPlaceholder: t("adminDashboard.alerts.reasonPlaceholder"),
         showCancelButton: true,
-        confirmButtonText: "Reject",
+        cancelButtonText: t("adminDashboard.common.cancel"),
+        confirmButtonText: t("adminDashboard.alerts.rejectConfirm"),
         confirmButtonColor: "#d83f3f",
         cancelButtonColor: "#c8b9aa",
-        inputValidator: (value) => (!value ? "A rejection reason is required." : undefined),
+        inputValidator: (value) => (!value?.trim() ? t("adminDashboard.alerts.reasonRequired") : undefined),
       });
 
       if (!rejectionPrompt.isConfirmed) {
@@ -218,15 +221,17 @@ export default function DashboardPage() {
 
       await Swal.fire({
         icon: "success",
-        title: "Approval updated",
-        text: response.message,
+        title: t("adminDashboard.alerts.approvalUpdated"),
+        text: t("adminDashboard.api.updated"),
+        confirmButtonText: t("adminDashboard.common.ok"),
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
         icon: "error",
-        title: "Update failed",
-        text: error instanceof Error ? error.message : "Unable to update approval status.",
+        title: t("adminDashboard.alerts.updateFailed"),
+        text: t(error?.isAuthenticationError ? "adminDashboard.alerts.sessionExpired" : "adminDashboard.alerts.updateFallback"),
+        confirmButtonText: t("adminDashboard.common.ok"),
         confirmButtonColor: "#cf6e38",
       });
     } finally {
@@ -270,7 +275,7 @@ export default function DashboardPage() {
         {dashboardData.stats.map((stat) => (
           <StatCard
             key={stat.id}
-            title={stat.title}
+            title={t(`adminDashboard.stats.${stat.id}.title`, { defaultValue: stat.title })}
             value={stat.value}
             note={stat.note}
             trend={stat.trend}

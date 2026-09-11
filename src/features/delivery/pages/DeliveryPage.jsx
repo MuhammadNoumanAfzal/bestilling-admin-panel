@@ -1,3 +1,4 @@
+import { dt, useDeliveryLanguage, deliveryError, deliveryMessage, deliveryDialog } from "../deliveryTranslation.js";
 import { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import {
@@ -25,6 +26,7 @@ function writeDeliveryCache(cacheKey, data) {
 }
 
 export default function DeliveryPage() {
+  useDeliveryLanguage();
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddAreaOpen, setIsAddAreaOpen] = useState(false);
   const [isSubmittingArea, setIsSubmittingArea] = useState(false);
@@ -146,19 +148,19 @@ export default function DeliveryPage() {
       setPageInfo(areasResult.pageInfo);
       setFilterOptions(areasResult.filterOptions);
 
-      await Swal.fire({
+      await Swal.fire(deliveryDialog({
         icon: "success",
         title: "Delivery area created",
-        text: result.message,
+        text: deliveryMessage(result.message),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(deliveryDialog({
         icon: "error",
         title: "Unable to create delivery area",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: deliveryError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsSubmittingArea(false);
     }
@@ -189,7 +191,7 @@ export default function DeliveryPage() {
       <div className="space-y-5">
         {loadError ? (
           <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
-            {loadError}
+            {deliveryError(loadError)}
           </div>
         ) : null}
 
@@ -224,7 +226,7 @@ export default function DeliveryPage() {
             )}
           />
           {isLoading ? (
-            <AdminLoadingState columns={5} title="Loading delivery areas" description="Fetching delivery coverage and service availability." />
+            <AdminLoadingState columns={5} title={dt("Loading delivery areas")} description={dt("Fetching delivery coverage and service availability.")} />
           ) : (
             <DeliveryAreasTable
               currentPage={pageInfo.page}

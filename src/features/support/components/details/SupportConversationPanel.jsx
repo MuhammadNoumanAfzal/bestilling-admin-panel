@@ -1,13 +1,15 @@
+import { st, useSupportLanguage } from "../../supportTranslation.js";
 import { ExternalLink, Image as ImageIcon, MessageSquareReply, Paperclip, SendHorizonal, Shield, X } from "lucide-react";
 import { formatReadableDate } from "../../supportUtils.js";
 
 const URL_PATTERN = /(https?:\/\/[^\s]+)/giu;
 
 function DraftAttachmentChip({ filename, onRemove }) {
+  useSupportLanguage();
   return (
     <span className="inline-flex items-center gap-2 rounded-full border border-[#eaded6] bg-[#f6f1ed] px-3 py-1 text-[11px] font-medium text-[#7c6f67]">
       <span>{filename}</span>
-      <button className="inline-flex cursor-pointer text-[#9f7b66] transition hover:text-[#cf6e38]" onClick={onRemove} type="button">
+      <button className="inline-flex cursor-pointer text-[#9f7b66] transition hover:text-[#cf6e38]" title={st("Remove attachment")} aria-label={st("Remove attachment")} onClick={onRemove} type="button">
         <X size={12} />
       </button>
     </span>
@@ -34,10 +36,10 @@ function getAttachmentFileNameFromUrl(url) {
   try {
     const parsedUrl = new URL(url);
     const pathnameParts = parsedUrl.pathname.split("/").filter(Boolean);
-    return pathnameParts[pathnameParts.length - 1] || "Attachment";
+    return pathnameParts[pathnameParts.length - 1] || st("Attachment");
   } catch {
     const pathnameParts = String(url || "").split("/").filter(Boolean);
-    return pathnameParts[pathnameParts.length - 1] || "Attachment";
+    return pathnameParts[pathnameParts.length - 1] || st("Attachment");
   }
 }
 
@@ -56,6 +58,7 @@ function normalizeUrlAttachments(urls = []) {
 }
 
 function AttachmentPreviewCard({ attachment, isRight }) {
+  useSupportLanguage();
   const imageAttachment = isImageAttachment(attachment.url, attachment.mimeType);
 
   return (
@@ -93,7 +96,7 @@ function AttachmentPreviewCard({ attachment, isRight }) {
             {attachment.fileName}
           </p>
           <p className={["truncate text-[10px]", isRight ? "text-white/72" : "text-[#8d8077]"].join(" ")}>
-            {imageAttachment ? "Image attachment" : "File attachment"}
+            {imageAttachment ? st("Image attachment") : st("File attachment")}
           </p>
         </div>
         <span
@@ -101,9 +104,7 @@ function AttachmentPreviewCard({ attachment, isRight }) {
             "inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold",
             isRight ? "bg-white/16 text-white" : "bg-white text-[#cf6e38]",
           ].join(" ")}
-        >
-          View
-          <ExternalLink size={12} />
+        >{st("View")}<ExternalLink size={12} />
         </span>
       </div>
     </a>
@@ -111,6 +112,7 @@ function AttachmentPreviewCard({ attachment, isRight }) {
 }
 
 function MessageBubble({ message, requesterAvatarUrl }) {
+  useSupportLanguage();
   const isRight = message.side === "admin";
   const isInternal = message.author?.role?.toLowerCase().includes("admin") && message.side === "admin";
   const { text, urls } = parseMessageContent(message.message);
@@ -148,9 +150,7 @@ function MessageBubble({ message, requesterAvatarUrl }) {
           <span>{formatReadableDate(message.createdAt)}</span>
           {isInternal ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-[#fff2e9] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#cf6e38]">
-              <Shield size={10} />
-              Internal
-            </span>
+              <Shield size={10} />{st("Internal")}</span>
           ) : null}
         </div>
 
@@ -196,17 +196,16 @@ export default function SupportConversationPanel({
   onSendReply,
   ticket,
 }) {
+  useSupportLanguage();
   return (
     <section className="overflow-hidden rounded-[18px] border border-[#ddd4cd] bg-white shadow-[0_12px_28px_rgba(56,33,17,0.05)]">
       <div className="border-b border-[#ece2da] bg-[linear-gradient(180deg,#fff8f3_0%,#ffffff_100%)] px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex rounded-full bg-[#f3f0ed] px-3 py-1 text-[11px] font-medium text-[#8e8178]">
-            Ticket Created: {formatReadableDate(ticket.createdAt)}
+            {st("Ticket Created: {{date}}", { date: formatReadableDate(ticket.createdAt) })}
           </div>
           <div className="inline-flex items-center gap-2 rounded-full bg-[#fff0e7] px-3 py-1 text-[11px] font-bold text-[#cf6e38]">
-            <MessageSquareReply size={13} />
-            Conversation Thread
-          </div>
+            <MessageSquareReply size={13} />{st("Conversation Thread")}</div>
         </div>
       </div>
 
@@ -220,9 +219,7 @@ export default function SupportConversationPanel({
             />
           ))
         ) : (
-          <div className="rounded-[14px] border border-dashed border-[#e2d6ce] bg-[#fbf8f6] px-4 py-10 text-center text-[15px] text-[#8d8077]">
-            No conversation messages available for this ticket yet.
-          </div>
+          <div className="rounded-[14px] border border-dashed border-[#e2d6ce] bg-[#fbf8f6] px-4 py-10 text-center text-[15px] text-[#8d8077]">{st("No conversation messages available for this ticket yet.")}</div>
         )}
       </div>
 
@@ -230,15 +227,13 @@ export default function SupportConversationPanel({
         <div className="rounded-[16px] border border-[#eadfd7] bg-white p-4 shadow-[0_8px_18px_rgba(46,26,14,0.04)]">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-[16px] font-bold text-[#241913]">Reply to ticket</p>
+              <p className="text-[16px] font-bold text-[#241913]">{st("Reply to ticket")}</p>
               <p className="text-[14px] leading-6 text-[#8b7e76]">
-                {internalNote ? "This note stays visible to staff only." : "Send a clear update to the requester."}
+                {internalNote ? st("This note stays visible to staff only.") : st("Send a clear update to the requester.")}
               </p>
             </div>
             <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-[10px] border border-[#eadfd7] bg-[#faf6f2] px-3 text-[12px] font-bold text-[#6d6058] transition hover:border-[#cf6e38]/35 hover:bg-[#fff5ef]">
-              <Paperclip size={14} />
-              Attach
-              <input className="hidden" multiple onChange={onAttachmentChange} type="file" />
+              <Paperclip size={14} />{st("Attach")}<input className="hidden" multiple onChange={onAttachmentChange} type="file" />
             </label>
           </div>
 
@@ -257,7 +252,7 @@ export default function SupportConversationPanel({
           <textarea
             className="min-h-[128px] w-full resize-none rounded-[14px] border border-[#ddd4cd] bg-[#fbfaf9] px-4 py-3 text-[15px] leading-8 text-[#2f241d] outline-none transition placeholder:text-[#b4a79f] focus:border-[#cf6e38] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
             onChange={(event) => onDraftReplyChange(event.target.value)}
-            placeholder={internalNote ? "Write an internal note for the admin team..." : "Write your reply to the customer or vendor here..."}
+            placeholder={internalNote ? st("Write an internal note for the admin team...") : st("Write your reply to the customer or vendor here...")}
             value={draftReply}
           />
 
@@ -267,9 +262,7 @@ export default function SupportConversationPanel({
               className="h-4 w-4 cursor-pointer rounded border-[#d9ccc3] text-[#cf6e38] focus:ring-[#cf6e38]"
               onChange={(event) => onInternalNoteChange(event.target.checked)}
               type="checkbox"
-            />
-            Save as internal note
-          </label>
+            />{st("Save as internal note")}</label>
 
           <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
             <button
@@ -279,16 +272,14 @@ export default function SupportConversationPanel({
                 onInternalNoteChange(false);
               }}
               type="button"
-            >
-              Clear
-            </button>
+            >{st("Clear")}</button>
             <button
               className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-[10px] bg-[#cf6e38] px-4 text-[13px] font-bold text-white shadow-[0_10px_24px_rgba(207,110,56,0.18)] transition hover:bg-[#bc6030]"
               onClick={onSendReply}
               type="button"
             >
               <SendHorizonal size={14} />
-              {isSending ? "Sending..." : internalNote ? "Save Note" : "Send Reply"}
+              {isSending ? st("Sending...") : internalNote ? st("Save Note") : st("Send Reply")}
             </button>
           </div>
         </div>

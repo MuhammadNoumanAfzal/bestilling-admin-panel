@@ -1,3 +1,4 @@
+import { vt, useVendorLanguage, vendorDate, vendorError, vendorMessage, vendorHtml } from "../utils/vendorTranslation.js";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -25,6 +26,7 @@ import {
 } from "../api/vendorsApi.js";
 
 function SectionTitle({ title, subtitle = "" }) {
+  useVendorLanguage();
   return (
     <div className="mb-4">
       <div className="flex items-center gap-2.5">
@@ -37,6 +39,7 @@ function SectionTitle({ title, subtitle = "" }) {
 }
 
 function LoadingState() {
+  useVendorLanguage();
   return (
     <div className="mx-auto max-w-[1120px] space-y-6">
       <div className="h-40 animate-pulse rounded-[18px] border border-[#ddd2c9] bg-white" />
@@ -51,6 +54,7 @@ function isApprovedApplication(status) {
 }
 
 function ChecklistItem({ item }) {
+  useVendorLanguage();
   return (
     <div className="flex items-start gap-2.5 rounded-[12px] border border-[#eee3db] bg-[#fffdfa] px-4 py-3">
       <span className="pt-0.5">
@@ -64,10 +68,10 @@ function ChecklistItem({ item }) {
       </span>
       <div>
         <p className={`text-[13px] leading-6 ${item.complete ? "text-[#6c5d54]" : "text-[#8d8078]"}`}>
-          {item.label}
+          {vt(item.label)}
         </p>
         {item.blocking && !item.complete ? (
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#c53a2f]">Blocking</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#c53a2f]">{vt("Blocking")}</p>
         ) : null}
       </div>
     </div>
@@ -75,6 +79,7 @@ function ChecklistItem({ item }) {
 }
 
 function AssetCard({ imageUrl, label }) {
+  useVendorLanguage();
   return (
     <article className="overflow-hidden rounded-[16px] border border-[#d8d0c8] bg-white shadow-[0_6px_14px_rgba(53,34,20,0.05)]">
       <div className="flex h-[220px] items-center justify-center bg-[#f5f1ed]">
@@ -83,7 +88,7 @@ function AssetCard({ imageUrl, label }) {
         ) : (
           <div className="flex flex-col items-center gap-2 text-[#9f9188]">
             <ImageIcon size={22} />
-            <p className="text-[13px] font-medium">Not uploaded</p>
+            <p className="text-[13px] font-medium">{vt("Not uploaded")}</p>
           </div>
         )}
       </div>
@@ -95,12 +100,13 @@ function AssetCard({ imageUrl, label }) {
 }
 
 function DocumentCard({ document, onDownload, onPreview, onReview }) {
+  useVendorLanguage();
   return (
     <article className="group rounded-[22px] border border-[#e7ddd4] bg-[linear-gradient(180deg,#fffdfb_0%,#ffffff_100%)] p-5 shadow-[0_10px_30px_rgba(53,34,20,0.05)] transition duration-300 hover:-translate-y-0.5 hover:border-[#e3c9b8] hover:shadow-[0_20px_40px_rgba(53,34,20,0.08)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-[18px] font-extrabold tracking-[-0.02em] text-[#1c1510]">{document.title}</h3>
-          <p className="mt-1 text-[12px] leading-5 text-[#8d8078]">{document.subtitle || document.type}</p>
+          <h3 className="text-[18px] font-extrabold tracking-[-0.02em] text-[#1c1510]">{vt(document.title)}</h3>
+          <p className="mt-1 text-[12px] leading-5 text-[#8d8078]">{vt(document.subtitle || document.type)}</p>
         </div>
         <span
           className={[
@@ -112,25 +118,25 @@ function DocumentCard({ document, onDownload, onPreview, onReview }) {
                 : "border-[#ead9c9] bg-[#fff8f1] text-[#8f5a2e]",
           ].join(" ")}
         >
-          {document.status}
+          {vt(document.status)}
         </span>
       </div>
 
       <div className="mt-4 grid gap-2 rounded-[18px] border border-[#f1e8e1] bg-[#fcfaf8] p-3 text-[12px] text-[#7f7269]">
-        <p><span className="font-bold text-[#3f322c]">Uploaded:</span> {document.uploadedAtLabel}</p>
-        <p><span className="font-bold text-[#3f322c]">Reviewed:</span> {document.reviewedAt ? document.reviewedAtLabel : "Not reviewed yet"}</p>
-        <p><span className="font-bold text-[#3f322c]">Type:</span> {document.isRequired ? "Required compliance document" : "Optional document"}</p>
+        <p><span className="font-bold text-[#3f322c]">{vt("Uploaded:")}</span> {vendorDate(document.uploadedAt || document.uploadedAtLabel)}</p>
+        <p><span className="font-bold text-[#3f322c]">{vt("Reviewed:")}</span> {document.reviewedAt ? vendorDate(document.reviewedAt) : vt("Not reviewed yet")}</p>
+        <p><span className="font-bold text-[#3f322c]">{vt("Type:")}</span> {document.isRequired ? vt("Required compliance document") : vt("Optional document")}</p>
       </div>
 
       {document.reviewNote ? (
         <div className="mt-3 rounded-[16px] border border-[#ece2da] bg-[#f7f3f0] px-3.5 py-3 text-[12px] leading-5 text-[#6f6259]">
-          <span className="font-bold text-[#433630]">Review note:</span> {document.reviewNote}
+          <span className="font-bold text-[#433630]">{vt("Review note:")}</span> {document.reviewNote}
         </div>
       ) : null}
 
       {document.rejectionReason ? (
         <div className="mt-2 rounded-[16px] border border-[#f3d2cf] bg-[#fff5f5] px-3.5 py-3 text-[12px] leading-5 text-[#b83a3a]">
-          <span className="font-bold">Reason:</span> {document.rejectionReason}
+          <span className="font-bold">{vt("Reason:")}</span> {document.rejectionReason}
         </div>
       ) : null}
 
@@ -140,31 +146,26 @@ function DocumentCard({ document, onDownload, onPreview, onReview }) {
           onClick={() => onPreview(document)}
           type="button"
         >
-          <Eye size={14} />
-          Preview
-        </button>
+          <Eye size={14} />{vt("Preview")}</button>
         <button
           className="inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] border border-[#e6dbd3] bg-[#f6f1ec] px-4 py-2.5 text-[13px] font-bold text-[#1c1510] transition hover:border-[#dcc5b5] hover:bg-[#efe8e1]"
           onClick={() => onDownload(document)}
           type="button"
         >
-          <Download size={14} />
-          Download
-        </button>
+          <Download size={14} />{vt("Download")}</button>
       </div>
 
       <button
         className="mt-3 inline-flex min-h-[46px] w-full cursor-pointer items-center justify-center rounded-[14px] border border-[#e8cdbf] bg-[#fff8f3] px-4 py-2.5 text-[13px] font-bold text-[#cf6e38] transition hover:border-[#cf6e38] hover:bg-[#fff0e5]"
         onClick={() => onReview(document)}
         type="button"
-      >
-        Review Status
-      </button>
+      >{vt("Review Status")}</button>
     </article>
   );
 }
 
 function HistoryItem({ item }) {
+  useVendorLanguage();
   return (
     <div className="rounded-[14px] border border-[#ece2da] bg-[#fffdfa] px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -174,7 +175,7 @@ function HistoryItem({ item }) {
         </p>
         <p className="text-[12px] text-[#8d8078]">{item.createdAtLabel}</p>
       </div>
-      <p className="mt-1 text-[12px] font-medium text-[#7a6d66]">By {item.actorName}</p>
+      <p className="mt-1 text-[12px] font-medium text-[#7a6d66]">{vt("By")}{" "}{item.actorName}</p>
       {item.note ? <p className="mt-2 text-[13px] leading-6 text-[#5d4f47]">{item.note}</p> : null}
     </div>
   );
@@ -195,6 +196,7 @@ function getApplicationBadgeClass(status) {
 }
 
 export default function VendorApplicationReviewPage() {
+  useVendorLanguage();
   const { vendorId } = useParams();
   const navigate = useNavigate();
   const [vendor, setVendor] = useState(null);
@@ -248,9 +250,10 @@ export default function VendorApplicationReviewPage() {
       );
     } catch (error) {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "error",
-        title: `Unable to ${kind} document`,
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: vt("Unable to {{value0}} document", { value0: vt(kind) }),
+        text: vendorError(error),
         confirmButtonColor: "#cf6e38",
       });
     }
@@ -271,25 +274,25 @@ export default function VendorApplicationReviewPage() {
             <div class="border-b border-[#f3e4d9] px-5 py-3.5 sm:px-6">
               <div class="inline-flex items-center gap-2 rounded-full border border-[#efcfbe] bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#cf6e38]">
                 <span class="inline-flex h-2 w-2 rounded-full bg-[#cf6e38]"></span>
-                Document review
+                ${vendorHtml("Document review")}
               </div>
-              <h2 class="mt-2.5 text-[21px] font-black tracking-[-0.03em] text-[#1f1712] sm:text-[24px]">Review vendor document</h2>
+              <h2 class="mt-2.5 text-[21px] font-black tracking-[-0.03em] text-[#1f1712] sm:text-[24px]">${vendorHtml("Review vendor document")}</h2>
               <p class="mt-1.5 max-w-[560px] text-[14px] leading-6 text-[#6a5a50] sm:text-[15px]">
-                Update the review result for <strong class="text-[#2b211b]">${document.title}</strong> and leave a clear note for the audit trail.
+                ${vendorHtml("Update the review result for")} <strong class="text-[#2b211b]">${document.title}</strong> ${vendorHtml("and leave a clear note for the audit trail.")}
               </p>
             </div>
 
             <div class="grid gap-2.5 px-5 py-2.5 sm:grid-cols-3 sm:px-6">
               <div class="rounded-[18px] border border-[#ecdccf] bg-white px-4 py-2 shadow-[0_8px_18px_rgba(49,30,19,0.04)]">
-                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9a8678]">Document</p>
+                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9a8678]">${vendorHtml("Document")}</p>
                 <p class="mt-1 text-[14px] font-bold text-[#1f1712]">${document.title}</p>
               </div>
               <div class="rounded-[18px] border border-[#ecdccf] bg-white px-4 py-2 shadow-[0_8px_18px_rgba(49,30,19,0.04)]">
-                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9a8678]">Uploaded</p>
+                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9a8678]">${vendorHtml("Uploaded")}</p>
                 <p class="mt-1 text-[14px] font-bold text-[#1f1712]">${document.uploadedAtLabel || "Not available"}</p>
               </div>
               <div class="rounded-[18px] border border-[#ecdccf] bg-white px-4 py-2 shadow-[0_8px_18px_rgba(49,30,19,0.04)]">
-                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9a8678]">Current state</p>
+                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9a8678]">${vendorHtml("Current state")}</p>
                 <p class="mt-1 text-[14px] font-bold text-[#1f1712]">${currentStatusLabel}</p>
               </div>
             </div>
@@ -298,38 +301,38 @@ export default function VendorApplicationReviewPage() {
           <div class="grid gap-3.5 lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start">
             <div class="rounded-[20px] border border-[#eadfd7] bg-[#fcfaf8] p-3.5">
               <label class="flex flex-col gap-2 text-left" for="vendor-document-status">
-                <span class="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7d6d62]">Status</span>
+                <span class="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7d6d62]">${vendorHtml("Status")}</span>
                 <select id="vendor-document-status" class="swal2-select !m-0 !flex !h-[50px] !w-full !rounded-[14px] !border !border-[#e5d8cf] !bg-white !px-4 !text-[15px] !font-semibold !text-[#352a24] !shadow-none focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]">
-                  <option value="VERIFIED">Verified</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="REJECTED">Rejected</option>
+                  <option value="VERIFIED">${vendorHtml("Verified")}</option>
+                  <option value="PENDING">${vendorHtml("Pending")}</option>
+                  <option value="REJECTED">${vendorHtml("Rejected")}</option>
                 </select>
               </label>
               <p class="mt-2 text-[12px] leading-5 text-[#8b7d73]">
-                Choose the outcome that best reflects the current review decision.
+                ${vendorHtml("Choose the outcome that best reflects the current review decision.")}
               </p>
             </div>
 
             <div class="space-y-3.5">
               <div class="rounded-[20px] border border-[#eadfd7] bg-white p-3.5 shadow-[0_10px_22px_rgba(49,30,19,0.04)]">
               <label class="flex flex-col gap-2 text-left" for="vendor-document-note">
-                  <span class="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7d6d62]">Review note</span>
-                  <textarea id="vendor-document-note" class="swal2-textarea !m-0 !min-h-[104px] !w-full !resize-none !rounded-[14px] !border !border-[#e5d8cf] !bg-[#fffdfa] !px-4 !py-3 !text-[15px] !leading-6 !text-[#413b36] !shadow-none placeholder:!text-[#c3beb8] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]" placeholder="Summarize what was checked, what looks correct, or what still needs attention"></textarea>
+                  <span class="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#7d6d62]">${vendorHtml("Review note")}</span>
+                  <textarea id="vendor-document-note" class="swal2-textarea !m-0 !min-h-[104px] !w-full !resize-none !rounded-[14px] !border !border-[#e5d8cf] !bg-[#fffdfa] !px-4 !py-3 !text-[15px] !leading-6 !text-[#413b36] !shadow-none placeholder:!text-[#c3beb8] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]" placeholder="${vendorHtml("Summarize what was checked, what looks correct, or what still needs attention")}"></textarea>
               </label>
               </div>
 
               <label class="hidden flex-col gap-2 rounded-[20px] border border-[#f0d5d2] bg-[#fff7f7] p-3.5 text-left" id="vendor-document-reason-field" for="vendor-document-reason">
-                <span class="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#9b4d4d]">Rejection reason</span>
-                <input id="vendor-document-reason" class="swal2-input !m-0 !flex !h-[50px] !w-full !rounded-[14px] !border !border-[#e6d4d0] !bg-white !px-4 !text-[14px] !font-medium !text-[#413b36] !shadow-none placeholder:!text-[#b8afa7] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]" placeholder="Required only when the document is rejected" />
-                <p class="text-[12px] leading-5 text-[#8d6a6a]">Be specific so the vendor and internal team understand what blocked approval.</p>
+                <span class="text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#9b4d4d]">${vendorHtml("Rejection reason")}</span>
+                <input id="vendor-document-reason" class="swal2-input !m-0 !flex !h-[50px] !w-full !rounded-[14px] !border !border-[#e6d4d0] !bg-white !px-4 !text-[14px] !font-medium !text-[#413b36] !shadow-none placeholder:!text-[#b8afa7] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]" placeholder="${vendorHtml("Required only when the document is rejected")}" />
+                <p class="text-[12px] leading-5 text-[#8d6a6a]">${vendorHtml("Be specific so the vendor and internal team understand what blocked approval.")}</p>
               </label>
             </div>
           </div>
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: "Save review",
-      cancelButtonText: "Cancel",
+      confirmButtonText: vt("Save review"),
+      cancelButtonText: vt("Cancel"),
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
       width: 720,
@@ -351,12 +354,12 @@ export default function VendorApplicationReviewPage() {
         const rejectionReason = window.document.getElementById("vendor-document-reason")?.value?.trim() || "";
 
         if (!status) {
-          Swal.showValidationMessage("Status is required.");
+          Swal.showValidationMessage(vt("Status is required."));
           return null;
         }
 
         if (status === "REJECTED" && !rejectionReason) {
-          Swal.showValidationMessage("Rejection reason is required for rejected documents.");
+          Swal.showValidationMessage(vt("Rejection reason is required for rejected documents."));
           return null;
         }
 
@@ -401,16 +404,18 @@ export default function VendorApplicationReviewPage() {
       setVendor(refreshed);
 
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "success",
-        title: "Document reviewed",
-        text: response.message,
+        title: vt("Document reviewed"),
+        text: vendorMessage(response.message),
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "error",
-        title: "Unable to review document",
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: vt("Unable to review document"),
+        text: vendorError(error),
         confirmButtonColor: "#cf6e38",
       });
     }
@@ -423,20 +428,21 @@ export default function VendorApplicationReviewPage() {
 
     if (!vendor.canApprove) {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "warning",
-        title: "Approval blocked",
-        text: "Some required checklist items are still incomplete.",
+        title: vt("Approval blocked"),
+        text: vt("Some required checklist items are still incomplete."),
         confirmButtonColor: "#cf6e38",
       });
       return;
     }
 
     const { isConfirmed } = await Swal.fire({
-      title: "Approve vendor application?",
-      text: `This will approve ${vendor.name} if all readiness requirements are satisfied.`,
+      title: vt("Approve vendor application?"),
+      text: vt("This will approve {{value0}} if all readiness requirements are satisfied.", { value0: vendor.name }),
       showCancelButton: true,
-      confirmButtonText: "Approve vendor",
-      cancelButtonText: "Cancel",
+      confirmButtonText: vt("Approve vendor"),
+      cancelButtonText: vt("Cancel"),
       confirmButtonColor: "#d76833",
       cancelButtonColor: "#c8b9aa",
     });
@@ -449,18 +455,20 @@ export default function VendorApplicationReviewPage() {
       const response = await approveVendorApplicationRequest(vendor.id, {});
 
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "success",
-        title: "Vendor approved",
-        text: response.message,
+        title: vt("Vendor approved"),
+        text: vendorMessage(response.message),
         confirmButtonColor: "#cf6e38",
       });
 
       navigate(`/vendors/${encodeURIComponent(vendor.vendorId || vendor.id)}`);
     } catch (error) {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "error",
-        title: "Unable to approve vendor",
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: vt("Unable to approve vendor"),
+        text: vendorError(error),
         confirmButtonColor: "#cf6e38",
       });
     }
@@ -475,42 +483,42 @@ export default function VendorApplicationReviewPage() {
       html: `
         <div class="vendor-review-alert__shell">
           <div class="vendor-review-alert__hero">
-            <div class="vendor-review-alert__hero-badge">Decision Required</div>
-            <h2 class="vendor-review-alert__title">Suspend vendor application</h2>
+            <div class="vendor-review-alert__hero-badge">${vendorHtml("Decision Required")}</div>
+            <h2 class="vendor-review-alert__title">${vendorHtml("Suspend vendor application")}</h2>
             <p class="vendor-review-alert__lead">
-              Share a clear reason so the team has a proper audit trail and the vendor can understand what blocked approval.
+              ${vendorHtml("Share a clear reason so the team has a proper audit trail and the vendor can understand what blocked approval.")}
             </p>
           </div>
 
           <div class="vendor-review-alert__panel">
             <label class="vendor-review-alert__field" for="vendor-reject-reason">
-              <span>Primary reason</span>
+              <span>${vendorHtml("Primary reason")}</span>
               <input
                 id="vendor-reject-reason"
                 class="swal2-input vendor-review-alert__input"
-                placeholder="Compliance issue, incomplete documents, duplicate application..."
+                placeholder="${vendorHtml("Compliance issue, incomplete documents, duplicate application...")}"
               />
             </label>
 
             <label class="vendor-review-alert__field" for="vendor-reject-note">
-              <span>Internal note</span>
+              <span>${vendorHtml("Internal note")}</span>
               <textarea
                 id="vendor-reject-note"
                 class="swal2-textarea vendor-review-alert__textarea"
-                placeholder="Add extra context for your team or the support history"
+                placeholder="${vendorHtml("Add extra context for your team or the support history")}"
               ></textarea>
             </label>
 
             <div class="vendor-review-alert__note">
               <span class="vendor-review-alert__note-icon">!</span>
-              <p>This action marks the application as suspended. Use a precise reason so future reviews stay consistent.</p>
+              <p>${vendorHtml("This action marks the application as suspended. Use a precise reason so future reviews stay consistent.")}</p>
             </div>
           </div>
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: "Suspend application",
-      cancelButtonText: "Cancel",
+      confirmButtonText: vt("Suspend application"),
+      cancelButtonText: vt("Cancel"),
       confirmButtonColor: "#c53a2f",
       cancelButtonColor: "#c8b9aa",
       customClass: {
@@ -526,7 +534,7 @@ export default function VendorApplicationReviewPage() {
         const note = window.document.getElementById("vendor-reject-note")?.value?.trim() || "";
 
         if (!reason) {
-          Swal.showValidationMessage("Reason is required.");
+          Swal.showValidationMessage(vt("Reason is required."));
           return null;
         }
 
@@ -559,16 +567,18 @@ export default function VendorApplicationReviewPage() {
       );
 
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "success",
-        title: "Application suspended",
-        text: response.message,
+        title: vt("Application suspended"),
+        text: vendorMessage(response.message),
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "error",
-        title: "Unable to suspend application",
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: vt("Unable to suspend application"),
+        text: vendorError(error),
         confirmButtonColor: "#cf6e38",
       });
     }
@@ -589,34 +599,34 @@ export default function VendorApplicationReviewPage() {
           <div class="rounded-[34px] border border-[#ebddd3] bg-[linear-gradient(180deg,#fff8f3_0%,#ffffff_100%)] p-3 shadow-[0_24px_70px_rgba(37,22,12,0.08)]">
             <div class="mb-3">
               <span class="inline-flex items-center rounded-full border border-[#efd1bf] bg-white px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#bf6739]">
-                Vendor Review
+                ${vendorHtml("Vendor Review")}
               </span>
               <h2 class="mt-2.5 text-[32px] font-black tracking-[-0.05em] text-[#1d1510]">
-                Request application changes
+                ${vendorHtml("Request application changes")}
               </h2>
               <p class="mt-1.5 max-w-[44ch] text-[14px] leading-6 text-[#6f6259]">
-                Send a clear correction request so the vendor knows exactly what to update before approval.
+                ${vendorHtml("Send a clear correction request so the vendor knows exactly what to update before approval.")}
               </p>
             </div>
 
             <div class="space-y-2.5">
               <div class="rounded-[22px] border border-[#efdfd3] bg-white/90 p-3">
                 <p class="text-[12px] font-extrabold uppercase tracking-[0.18em] text-[#4b3c33]">
-                  Vendor instructions
+                  ${vendorHtml("Vendor instructions")}
                 </p>
                 <p class="mt-1 text-[13px] leading-5 text-[#72655d]">
-                  Tell the vendor exactly what needs to be corrected before approval.
+                  ${vendorHtml("Tell the vendor exactly what needs to be corrected before approval.")}
                 </p>
               </div>
 
               <div>
                 <label class="mb-1 block text-[12px] font-extrabold uppercase tracking-[0.18em] text-[#4b3c33]" for="vendor-change-message">
-                  Message
+                  ${vendorHtml("Message")}
                 </label>
                 <textarea
                   id="vendor-change-message"
                   class="swal2-textarea !m-0 !min-h-[88px] !w-full !rounded-[22px] !border !border-[#e4d7ce] !bg-white !px-4 !py-3 !text-[15px] !leading-7 !text-[#2a1f19] !shadow-none placeholder:!text-[#ab9c91] focus:!border-[#cf6e38] focus:!shadow-[0_0_0_4px_rgba(207,110,56,0.12)]"
-                  placeholder="Explain what the vendor must update and how to fix it"
+                  placeholder="${vendorHtml("Explain what the vendor must update and how to fix it")}"
                 ></textarea>
               </div>
 
@@ -624,10 +634,10 @@ export default function VendorApplicationReviewPage() {
                 <div class="mb-2 flex items-start justify-between gap-3">
                   <div>
                     <p class="text-[12px] font-extrabold uppercase tracking-[0.18em] text-[#4b3c33]">
-                      Requested checklist items
+                      ${vendorHtml("Requested checklist items")}
                     </p>
                     <p class="mt-0.5 text-[12px] leading-4 text-[#85776e]">
-                      Select the blockers the vendor must resolve.
+                      ${vendorHtml("Select the blockers the vendor must resolve.")}
                     </p>
                   </div>
                 </div>
@@ -640,14 +650,14 @@ export default function VendorApplicationReviewPage() {
                           <label class="flex cursor-pointer items-start gap-3 rounded-[18px] border border-[#efe3d8] bg-[#fffdfa] px-3.5 py-2 transition hover:border-[#e4c9b8] hover:bg-[#fff7f1]">
                             <input type="checkbox" value="${item.code}" checked class="mt-0.5 h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38]" />
                             <span>
-                              <span class="block text-[14px] font-bold text-[#231913]">${item.label}</span>
+                              <span class="block text-[14px] font-bold text-[#231913]">${vendorHtml(item.label)}</span>
                               <span class="mt-1 block text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8b7d74]">${item.code}</span>
                             </span>
                           </label>
                         `,
                       )
                       .join("")
-                  : `<p class="m-0 rounded-[14px] border border-dashed border-[#e8dad0] bg-[#fcfaf8] px-4 py-4 text-[12px] leading-6 text-[#7b6f66]">No checklist codes were returned by the API. You can still submit a free-text change request message.</p>`
+                  : `<p class="m-0 rounded-[14px] border border-dashed border-[#e8dad0] bg-[#fcfaf8] px-4 py-4 text-[12px] leading-6 text-[#7b6f66]">${vendorHtml("No checklist codes were returned by the API. You can still submit a free-text change request message.")}</p>`
               }
                 </div>
               </div>
@@ -656,8 +666,8 @@ export default function VendorApplicationReviewPage() {
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: "Request changes",
-      cancelButtonText: "Cancel",
+      confirmButtonText: vt("Request changes"),
+      cancelButtonText: vt("Cancel"),
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
       width: 760,
@@ -680,7 +690,7 @@ export default function VendorApplicationReviewPage() {
           .filter(Boolean);
 
         if (!message) {
-          Swal.showValidationMessage("A message is required.");
+          Swal.showValidationMessage(vt("A message is required."));
           return null;
         }
 
@@ -693,8 +703,8 @@ export default function VendorApplicationReviewPage() {
         const messageElement = window.document.getElementById("vendor-change-message");
 
         if (messageElement && suggestedFields.length) {
-          messageElement.value = `Please update the following before approval:\n${suggestedFields
-            .map((item) => `- ${item.label}`)
+          messageElement.value = `${vt("Please update the following before approval:")}\n${suggestedFields
+            .map((item) => `- ${vt(item.label)}`)
             .join("\n")}`;
         }
 
@@ -714,16 +724,18 @@ export default function VendorApplicationReviewPage() {
       setVendor(refreshed);
 
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "success",
-        title: "Changes requested",
-        text: response.message,
+        title: vt("Changes requested"),
+        text: vendorMessage(response.message),
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "error",
-        title: "Unable to request changes",
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: vt("Unable to request changes"),
+        text: vendorError(error),
         confirmButtonColor: "#cf6e38",
       });
     }
@@ -736,7 +748,7 @@ export default function VendorApplicationReviewPage() {
   if (!vendor) {
     return (
       <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-10 text-center text-[15px] font-medium text-[#9f4d33]">
-        {loadError || "Unable to load this vendor application."}
+        {loadError ? vendorError(loadError) : vt("Unable to load this vendor application.")}
       </div>
     );
   }
@@ -757,7 +769,7 @@ export default function VendorApplicationReviewPage() {
     <div className="mx-auto max-w-[1120px] space-y-6">
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
-          {loadError}
+          {vendorError(loadError)}
         </div>
       ) : null}
 
@@ -769,9 +781,7 @@ export default function VendorApplicationReviewPage() {
               onClick={() => navigate("/vendors")}
               type="button"
             >
-              <ArrowLeft size={16} />
-              Back to vendors
-            </button>
+              <ArrowLeft size={16} />{vt("Back to vendors")}</button>
           </div>
 
           <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
@@ -787,23 +797,19 @@ export default function VendorApplicationReviewPage() {
                     {vendor.name}
                   </h1>
                   <span className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${getApplicationBadgeClass(applicationStatusLabel)}`}>
-                    {applicationStatusLabel}
+                    {vt(applicationStatusLabel)}
                   </span>
                   {!canApproveForUi ? (
-                    <span className="rounded-full bg-[#fff3f0] px-3 py-1.5 text-[11px] font-bold text-[#c53a2f]">
-                      Approval Blocked
-                    </span>
+                    <span className="rounded-full bg-[#fff3f0] px-3 py-1.5 text-[11px] font-bold text-[#c53a2f]">{vt("Approval Blocked")}</span>
                   ) : (
-                    <span className="rounded-full bg-[#eef9f1] px-3 py-1.5 text-[11px] font-bold text-[#287d46]">
-                      Ready to Approve
-                    </span>
+                    <span className="rounded-full bg-[#eef9f1] px-3 py-1.5 text-[11px] font-bold text-[#287d46]">{vt("Ready to Approve")}</span>
                   )}
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[15px] font-medium text-[#6f6259]">
-                  <span>ID: {vendor.id}</span>
+                  <span>{vt("ID:")}{" "}{vendor.id}</span>
                   <span className="inline-flex items-center gap-1"><UserRound size={12} /> {vendor.owner}</span>
-                  <span className="inline-flex items-center gap-1"><Clock3 size={12} /> Submitted {vendor.submittedDate}</span>
+                  <span className="inline-flex items-center gap-1"><Clock3 size={12} />{" "}{vt("Submitted")}{" "}{vendorDate(vendor.submittedAt || vendor.submittedDate)}</span>
                   <span className="inline-flex items-center gap-1"><MapPin size={12} /> {vendor.location}</span>
                 </div>
               </div>
@@ -815,18 +821,14 @@ export default function VendorApplicationReviewPage() {
                   className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#d8ccc2] bg-white px-4 py-2.5 text-[14px] font-bold text-[#6a5c53]"
                   onClick={handleRequestChanges}
                   type="button"
-                >
-                  Request Changes
-                </button>
+                >{vt("Request Changes")}</button>
               ) : null}
               <button
                 className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#efbbb3] bg-white px-4 py-2.5 text-[14px] font-bold text-[#c53a2f]"
                 onClick={handleReject}
                 type="button"
               >
-                <XCircle size={13} />
-                Suspend
-              </button>
+                <XCircle size={13} />{vt("Suspend")}</button>
               <button
                 className={[
                   "inline-flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 text-[14px] font-bold text-white shadow-[0_8px_20px_rgba(215,104,51,0.24)]",
@@ -836,9 +838,7 @@ export default function VendorApplicationReviewPage() {
                 onClick={handleApprove}
                 type="button"
               >
-                <CheckCircle2 size={13} />
-                Approve Vendor
-              </button>
+                <CheckCircle2 size={13} />{vt("Approve Vendor")}</button>
             </div>
           </div>
         </div>
@@ -849,14 +849,14 @@ export default function VendorApplicationReviewPage() {
           <div className="flex items-start gap-3">
             <AlertTriangle className="mt-1 text-[#c53a2f]" size={18} />
             <div>
-              <h2 className="text-[18px] font-bold text-[#7b251b]">Missing requirements</h2>
+              <h2 className="text-[18px] font-bold text-[#7b251b]">{vt("Missing requirements")}</h2>
               <div className="mt-2 flex flex-wrap gap-2">
                 {missingRequirements.map((item) => (
                   <span
                     key={`${item.code}-${item.label}`}
                     className="rounded-full border border-[#f0bcae] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#8d3f16]"
                   >
-                    {item.label}
+                    {vt(item.label)}
                   </span>
                 ))}
               </div>
@@ -866,26 +866,26 @@ export default function VendorApplicationReviewPage() {
       ) : null}
 
       <section>
-        <SectionTitle title="Storefront Assets" subtitle="Review the logo and cover photo before approving this vendor." />
+        <SectionTitle title={vt("Storefront Assets")} subtitle={vt("Review the logo and cover photo before approving this vendor.")} />
         <div className="grid gap-4 md:grid-cols-2">
-          <AssetCard imageUrl={vendor.assets.logoUrl || vendor.logoUrl} label="Logo" />
-          <AssetCard imageUrl={vendor.assets.coverImageUrl} label="Cover Image" />
+          <AssetCard imageUrl={vendor.assets.logoUrl || vendor.logoUrl} label={vt("Logo")} />
+          <AssetCard imageUrl={vendor.assets.coverImageUrl} label={vt("Cover Image")} />
         </div>
       </section>
 
       <section>
-        <SectionTitle title="Readiness Checklist" subtitle="Approval is only allowed when all required checklist items are complete." />
+        <SectionTitle title={vt("Readiness Checklist")} subtitle={vt("Approval is only allowed when all required checklist items are complete.")} />
         <article className="rounded-[16px] border border-[#ddd2c9] bg-white p-5 shadow-[0_6px_16px_rgba(53,34,20,0.04)] sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-[15px] font-bold text-[#18120f]">Review Progress</p>
-              <p className="mt-1 text-[13px] text-[#8d8078]">Complete all mandatory checks before approval</p>
+              <p className="text-[15px] font-bold text-[#18120f]">{vt("Review Progress")}</p>
+              <p className="mt-1 text-[13px] text-[#8d8078]">{vt("Complete all mandatory checks before approval")}</p>
             </div>
             <div className="text-left sm:text-right">
               <p className="text-[22px] font-extrabold text-[#dd6b34]">
                 {checklistCompleted}/{checklistTotal}
               </p>
-              <p className="text-[13px] text-[#8d8078]">Tasks Completed</p>
+              <p className="text-[13px] text-[#8d8078]">{vt("Tasks Completed")}</p>
             </div>
           </div>
 
@@ -905,10 +905,8 @@ export default function VendorApplicationReviewPage() {
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-1 text-[#cf6e38]" size={18} />
           <div>
-            <h2 className="text-[18px] font-bold text-[#18120f]">Approval Safety</h2>
-            <p className="mt-2 text-[14px] leading-7 text-[#6f6259]">
-              Approval is blocked until all required checklist items are complete.
-            </p>
+            <h2 className="text-[18px] font-bold text-[#18120f]">{vt("Approval Safety")}</h2>
+            <p className="mt-2 text-[14px] leading-7 text-[#6f6259]">{vt("Approval is blocked until all required checklist items are complete.")}</p>
           </div>
         </div>
       </section>

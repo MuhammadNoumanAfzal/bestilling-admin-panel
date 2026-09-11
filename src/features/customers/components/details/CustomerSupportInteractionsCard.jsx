@@ -1,3 +1,4 @@
+import { ct, useCustomerLanguage, customerDate } from "../../customerTranslation.js";
 import { useMemo } from "react";
 import { LifeBuoy, AlertCircle, CheckCircle, ArrowUpRight, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +9,7 @@ const TICKET_STATUS = {
 };
 
 export default function CustomerSupportInteractionsCard({ ticketsData = [], summary = null }) {
+  useCustomerLanguage();
   const navigate = useNavigate();
 
   const stats = useMemo(() => {
@@ -32,9 +34,7 @@ export default function CustomerSupportInteractionsCard({ ticketsData = [], summ
         <span className="inline-flex h-6 w-6 items-center justify-center rounded-[8px] bg-[#fff0e7] text-[#d96834] shadow-sm">
           <LifeBuoy size={13} strokeWidth={2.5} />
         </span>
-        <h3 className="text-[18px] font-extrabold tracking-tight text-[#18120f]">
-          Support Interactions
-        </h3>
+        <h3 className="text-[18px] font-extrabold tracking-tight text-[#18120f]">{ct("Support Interactions")}{" "}</h3>
       </div>
 
       {/* Stats Cards Row */}
@@ -51,7 +51,7 @@ export default function CustomerSupportInteractionsCard({ ticketsData = [], summ
               </span>
               <div className="min-w-0">
                 <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#9a8f86]">
-                  {s.label}
+                  {ct(s.label)}
                 </span>
                 <span className="mt-1 block text-[16px] font-extrabold leading-none tracking-tight text-[#18120f] sm:text-[19px]">
                   {s.value}
@@ -76,19 +76,17 @@ export default function CustomerSupportInteractionsCard({ ticketsData = [], summ
                   <p className="mt-1 text-[14px] font-bold leading-5 text-[#18120f]">{t.subject}</p>
                 </div>
                 <span className={TICKET_STATUS[t.status] || "bg-[#f0ebe6] text-[#6f655e] rounded-[4px] px-2 py-0.5"}>
-                  {t.status}
+                  {ct(t.status)}
                 </span>
               </div>
 
               <div className="mt-4 flex items-center justify-between gap-3">
-                <p className="text-[12px] font-medium text-[#7a6e66]">{t.createdDate}</p>
+                <p className="text-[12px] font-medium text-[#7a6e66]">{customerDate(t.createdAtValue || t.createdDate)}</p>
                 <button
                   onClick={() => navigate(`/support/${encodeURIComponent(t.id)}`)}
                   type="button"
                   className="inline-flex cursor-pointer items-center justify-center rounded-[8px] border border-[#e0d5cc] bg-white px-3 py-2 text-[12px] font-bold text-[#cf6e38] shadow-sm transition hover:border-[#cf6e38] hover:bg-[#fff6f0] outline-none active:scale-95"
-                >
-                  View
-                </button>
+                >{ct("View")}{" "}</button>
               </div>
             </article>
           ))}
@@ -112,7 +110,7 @@ export default function CustomerSupportInteractionsCard({ ticketsData = [], summ
                       th.align || ""
                     }`}
                   >
-                    {th.label}
+                    {ct(th.label)}
                   </th>
                 ))}
               </tr>
@@ -127,16 +125,16 @@ export default function CustomerSupportInteractionsCard({ ticketsData = [], summ
                   <td className="px-5.5 py-3.5 font-bold text-[#18120f]">{t.subject}</td>
                   <td className="px-5.5 py-3.5">
                     <span className={TICKET_STATUS[t.status] || "bg-[#f0ebe6] text-[#6f655e] rounded-[4px] px-2 py-0.5"}>
-                      {t.status}
+                      {ct(t.status)}
                     </span>
                   </td>
-                  <td className="px-5.5 py-3.5 text-[13px] text-[#7a6e66]">{t.createdDate}</td>
+                  <td className="px-5.5 py-3.5 text-[13px] text-[#7a6e66]">{customerDate(t.createdAtValue || t.createdDate)}</td>
                   <td className="px-5.5 py-3.5 text-center">
                     <button
                       onClick={() => navigate(`/support/${encodeURIComponent(t.id)}`)}
                       type="button"
                       className="inline-flex cursor-pointer items-center justify-center h-8.5 w-8.5 rounded-[8px] border border-[#e0d5cc] bg-white text-[#cf6e38] transition hover:border-[#cf6e38] hover:bg-[#fff6f0] outline-none active:scale-95 shadow-sm"
-                      title="View Ticket details"
+                      title={ct("View Ticket details")}
                     >
                       <ArrowUpRight size={14} />
                     </button>

@@ -1,7 +1,9 @@
+import { st, useSupportLanguage } from "../../supportTranslation.js";
 import { Mail, MapPin, Phone, UserRound } from "lucide-react";
 import { formatReadableDate, formatUserTypeLabel } from "../../supportUtils.js";
 
 function InfoRow({ icon: Icon, children }) {
+  useSupportLanguage();
   return (
     <div className="flex items-center gap-2.5 text-[13px] text-[#18120f]">
       <Icon className="text-[#786c65]" size={14} />
@@ -11,6 +13,7 @@ function InfoRow({ icon: Icon, children }) {
 }
 
 export default function SupportCustomerProfileCard({ onViewProfile, ticket }) {
+  useSupportLanguage();
   const requester = ticket?.requester;
 
   return (
@@ -27,29 +30,25 @@ export default function SupportCustomerProfileCard({ onViewProfile, ticket }) {
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-[17px] font-bold text-[#18120f]">{requester?.fullName || "Unknown requester"}</p>
+            <p className="text-[17px] font-bold text-[#18120f]">{requester?.fullName && requester.fullName !== "Unknown requester" ? requester.fullName : st("Unknown requester")}</p>
             <p className="text-[14px] font-medium text-[#8d8077]">{formatUserTypeLabel(requester?.type)}</p>
-            <div className="mt-1.5 inline-flex rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-bold text-[#cf6e38]">
-              Active requester
-            </div>
+            <div className="mt-1.5 inline-flex rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-bold text-[#cf6e38]">{st("Active requester")}</div>
           </div>
         </div>
       </div>
 
       <div className="space-y-2 px-4 py-3.5">
-        <InfoRow icon={Mail}>{requester?.email || "Not available"}</InfoRow>
-        <InfoRow icon={Phone}>{requester?.phone || "Not available"}</InfoRow>
-        <InfoRow icon={UserRound}>Total Orders: {requester?.totalOrders ?? 0}</InfoRow>
-        <InfoRow icon={MapPin}>Joined: {formatReadableDate(requester?.joinedAt, { includeTime: false })}</InfoRow>
+        <InfoRow icon={Mail}>{requester?.email || st("Not available")}</InfoRow>
+        <InfoRow icon={Phone}>{requester?.phone || st("Not available")}</InfoRow>
+        <InfoRow icon={UserRound}>{st("Total Orders: {{count}}", { count: requester?.totalOrders ?? 0 })}</InfoRow>
+        <InfoRow icon={MapPin}>{st("Joined: {{date}}", { date: formatReadableDate(requester?.joinedAt, { includeTime: false }) })}</InfoRow>
       </div>
 
       <button
         className="mx-4 mb-4 inline-flex h-9 w-[calc(100%-2rem)] cursor-pointer items-center justify-center rounded-[10px] border border-[#ddd2ca] bg-[#faf6f2] text-[13px] font-bold text-[#18120f] transition hover:border-[#cf6e38]/35 hover:bg-[#fff5ef]"
         onClick={onViewProfile}
         type="button"
-      >
-        View Requester Profile
-      </button>
+      >{st("View Requester Profile")}</button>
     </section>
   );
 }

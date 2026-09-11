@@ -1,6 +1,8 @@
+import { dt, useDeliveryLanguage } from "../deliveryTranslation.js";
 import { Plus, Search } from "lucide-react";
 
-function FilterSelect({ value, onChange, options }) {
+function FilterSelect({ value, onChange, options, translateOptions = true }) {
+  useDeliveryLanguage();
   return (
     <label>
       <select
@@ -10,7 +12,7 @@ function FilterSelect({ value, onChange, options }) {
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
-            {option.label}
+            {translateOptions || !option.value ? dt(option.label) : option.label}
           </option>
         ))}
       </select>
@@ -33,6 +35,7 @@ export default function DeliveryToolbar({
   regionOptions,
   statusOptions,
 }) {
+  useDeliveryLanguage();
   const isAllActive = !searchTerm && !statusFilter && !regionFilter && !cityFilter;
 
   return (
@@ -42,7 +45,7 @@ export default function DeliveryToolbar({
           <input
             className="h-10 w-full rounded-full border border-[#ebe2db] bg-[#f6f4f2] pl-9 pr-3 text-[14px] text-[#2a1f19] outline-none transition placeholder:text-[#b3aaa2] focus:border-[#cf6e38] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search by city, region, or postal area..."
+            placeholder={dt("Search by city, region, or postal area...")}
             type="search"
             value={searchTerm}
           />
@@ -57,7 +60,7 @@ export default function DeliveryToolbar({
           type="button"
         >
           <Plus size={13} strokeWidth={2.8} />
-          <span>Add Delivery Area</span>
+          <span>{dt("Add Delivery Area")}</span>
         </button>
       </div>
 
@@ -71,9 +74,7 @@ export default function DeliveryToolbar({
           ].join(" ")}
           onClick={onResetFilters}
           type="button"
-        >
-          All
-        </button>
+        >{dt("All")}</button>
 
         <FilterSelect
           onChange={onStatusFilterChange}
@@ -85,13 +86,13 @@ export default function DeliveryToolbar({
         />
 
         <FilterSelect
-          onChange={onRegionFilterChange}
+          translateOptions={false} onChange={onRegionFilterChange}
           options={[{ label: "All Region", value: "" }, ...regionOptions.map((item) => ({ label: item, value: item }))]}
           value={regionFilter}
         />
 
         <FilterSelect
-          onChange={onCityFilterChange}
+          translateOptions={false} onChange={onCityFilterChange}
           options={[{ label: "All City", value: "" }, ...cityOptions.map((item) => ({ label: item, value: item }))]}
           value={cityFilter}
         />

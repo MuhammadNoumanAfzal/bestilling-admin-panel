@@ -1,3 +1,4 @@
+import { dt, useDeliveryLanguage } from "../../deliveryTranslation.js";
 import { MapPinned, Save, X } from "lucide-react";
 import AddDeliveryAreaField from "../add-area/AddDeliveryAreaField.jsx";
 
@@ -16,6 +17,7 @@ export default function DeliveryPostalCodeModal({
   onClose,
   onSubmit,
 }) {
+  useDeliveryLanguage();
   if (!isOpen) {
     return null;
   }
@@ -25,18 +27,16 @@ export default function DeliveryPostalCodeModal({
       <div className="flex max-h-[84vh] w-full max-w-[680px] flex-col overflow-hidden rounded-[26px] border border-[#ecdccf] bg-[linear-gradient(180deg,#fffdfa_0%,#fff7f1_100%)] shadow-[0_30px_80px_rgba(28,18,12,0.22)]">
         <div className="flex items-start justify-between gap-4 border-b border-[#f1e2d8] px-5 py-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#cf6e38]">Postal Code</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#cf6e38]">{dt("Postal Code")}</p>
             <h2 className="mt-1 text-[24px] font-bold tracking-[-0.03em] text-[#18120f]">
-              {mode === "edit" ? "Edit Postal Code" : "Add Postal Code"}
+              {mode === "edit" ? dt("Edit Postal Code") : dt("Add Postal Code")}
             </h2>
-            <p className="mt-2 text-[14px] leading-6 text-[#6f645d]">
-              Keep this delivery zone complete with clear postal code and area naming.
-            </p>
+            <p className="mt-2 text-[14px] leading-6 text-[#6f645d]">{dt("Keep this delivery zone complete with clear postal code and area naming.")}</p>
           </div>
 
           <button
             className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#efddd1] bg-white text-[#685b53] transition hover:border-[#cf6e38]/30 hover:bg-[#fff2ea] hover:text-[#cf6e38]"
-            onClick={onClose}
+            title={dt("Close")} aria-label={dt("Close")} onClick={onClose}
             type="button"
           >
             <X size={16} />
@@ -50,28 +50,28 @@ export default function DeliveryPostalCodeModal({
                 <MapPinned size={17} />
               </span>
               <div>
-                <p className="text-[16px] font-bold text-[#18120f]">Coverage Details</p>
-                <p className="text-[13px] text-[#7b6f68]">Set the postal code, local area, and delivery status.</p>
+                <p className="text-[16px] font-bold text-[#18120f]">{dt("Coverage Details")}</p>
+                <p className="text-[13px] text-[#7b6f68]">{dt("Set the postal code, local area, and delivery status.")}</p>
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
               <AddDeliveryAreaField
                 disabled={mode === "edit"}
-                label="Postal Code"
+                label={dt("Postal Code")}
                 onChange={(event) => onChange("postalCode", event.target.value)}
-                placeholder="Enter postal code"
+                placeholder={dt("Enter postal code")}
                 value={form.postalCode}
               />
               <AddDeliveryAreaField
-                label="Area Name"
+                label={dt("Area Name")}
                 onChange={(event) => onChange("areaName", event.target.value)}
-                placeholder="Enter area name"
+                placeholder={dt("Enter area name")}
                 value={form.areaName}
               />
               <AddDeliveryAreaField
                 as="select"
-                label="Status"
+                label={dt("Status")}
                 onChange={(event) => onChange("status", event.target.value)}
                 options={statusOptions}
                 value={form.status}
@@ -83,11 +83,9 @@ export default function DeliveryPostalCodeModal({
         <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-[#f1e2d8] px-5 py-4">
           <button
             className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[10px] border border-[#d5ccc5] bg-white px-4 text-[13px] font-semibold text-[#332822] transition hover:bg-[#faf6f2]"
-            onClick={onClose}
+            title={dt("Close")} aria-label={dt("Close")} onClick={onClose}
             type="button"
-          >
-            Cancel
-          </button>
+          >{dt("Cancel")}</button>
           <button
             className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-[#cf6e38] px-4 text-[13px] font-semibold text-white transition hover:bg-[#bc6030] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSubmitting}
@@ -95,7 +93,7 @@ export default function DeliveryPostalCodeModal({
             type="button"
           >
             <Save size={14} />
-            <span>{mode === "edit" ? "Save Changes" : "Add Postal Code"}</span>
+            <span>{mode === "edit" ? dt("Save Changes") : dt("Add Postal Code")}</span>
           </button>
         </div>
       </div>

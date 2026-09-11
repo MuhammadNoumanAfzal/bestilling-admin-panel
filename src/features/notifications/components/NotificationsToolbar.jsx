@@ -1,7 +1,9 @@
+import { nt, useNotificationLanguage } from "../notificationTranslation.js";
 import { Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 function FilterSelect({ value, onChange, options }) {
+  useNotificationLanguage();
   return (
     <label>
       <select
@@ -11,7 +13,7 @@ function FilterSelect({ value, onChange, options }) {
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
-            {option.label}
+            {nt(option.label)}
           </option>
         ))}
       </select>
@@ -32,6 +34,7 @@ export default function NotificationsToolbar({
   statusFilter,
   unreadCount = 0,
 }) {
+  useNotificationLanguage();
   const navigate = useNavigate();
 
   return (
@@ -41,7 +44,7 @@ export default function NotificationsToolbar({
           <input
             className="h-10 w-full rounded-full border border-[#ebe2db] bg-[#f6f4f2] pl-9 pr-3 text-[14px] text-[#2a1f19] outline-none transition placeholder:text-[#b3aaa2] focus:border-[#cf6e38] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search by title, audience, or sender..."
+            placeholder={nt("Search by title, audience, or sender...")}
             type="search"
             value={searchTerm}
           />
@@ -56,7 +59,7 @@ export default function NotificationsToolbar({
             onClick={onMarkAllRead}
             type="button"
           >
-            <span>Mark All Read</span>
+            <span>{nt("Mark All Read")}</span>
             <span className="rounded-full bg-[#fff1e8] px-2 py-0.5 text-[11px] font-bold text-[#cf6e38]">
               {unreadCount}
             </span>
@@ -68,7 +71,7 @@ export default function NotificationsToolbar({
             type="button"
           >
             <Plus size={12} strokeWidth={2.8} />
-            <span>Create Notification</span>
+            <span>{nt("Create Notification")}</span>
           </button>
         </div>
       </div>
@@ -83,9 +86,7 @@ export default function NotificationsToolbar({
           ].join(" ")}
           onClick={onResetFilters}
           type="button"
-        >
-          All
-        </button>
+        >{nt("All")}</button>
 
         <FilterSelect
           onChange={onAudienceFilterChange}

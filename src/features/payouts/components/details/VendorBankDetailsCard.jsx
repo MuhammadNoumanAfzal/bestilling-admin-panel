@@ -1,17 +1,20 @@
+import { pt, usePayoutLanguage } from "../../payoutTranslation.js";
 import { BadgeCheck, Building2, Landmark, ShieldCheck } from "lucide-react";
 
 function DetailCell({ label, value }) {
+  usePayoutLanguage();
   return (
     <div className="rounded-[18px] border border-[#eee3db] bg-[linear-gradient(180deg,#ffffff_0%,#fcfaf8_100%)] px-4 py-4 shadow-[0_8px_18px_rgba(55,31,13,0.04)]">
-      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29388]">{label}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29388]">{pt(label)}</p>
       <p className="mt-2 break-words text-[14px] font-semibold leading-6 text-[#1b1512]">
-        {value || "Not provided"}
+        {value || pt("Not provided")}
       </p>
     </div>
   );
 }
 
 function StatusPill({ verified, verificationStatus }) {
+  usePayoutLanguage();
   const label = verificationStatus || (verified ? "Verified" : "Pending review");
   const normalized = `${verificationStatus || ""}`.trim().toLowerCase();
   const tone = verified
@@ -23,7 +26,7 @@ function StatusPill({ verified, verificationStatus }) {
   return (
     <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-bold ${tone}`}>
       <span className="h-2 w-2 rounded-full bg-current" />
-      {label}
+      {pt(label)}
     </span>
   );
 }
@@ -33,6 +36,7 @@ export default function VendorBankDetailsCard({
   onApprove,
   payout,
 }) {
+  usePayoutLanguage();
   const payoutProfile = payout?.vendor?.payoutProfile;
 
   if (!payoutProfile) {
@@ -40,14 +44,10 @@ export default function VendorBankDetailsCard({
       <section className="overflow-hidden rounded-[24px] border border-[#ddd4cd] bg-white shadow-[0_14px_34px_rgba(55,31,13,0.06)]">
         <div className="flex items-center gap-2 border-b border-[#eee5de] bg-[linear-gradient(180deg,#fff8f3_0%,#ffffff_100%)] px-5 py-4 text-[#221914]">
           <Landmark size={17} className="text-[#cf6e38]" />
-          <h2 className="text-[18px] font-bold">Vendor Payout Bank Details</h2>
+          <h2 className="text-[18px] font-bold">{pt("Vendor Payout Bank Details")}</h2>
         </div>
         <div className="px-5 py-5">
-          <div className="rounded-[18px] border border-dashed border-[#ecd8cb] bg-[#fffaf6] px-4 py-5 text-[14px] leading-6 text-[#6c5d54]">
-            Bank details were not returned in this admin payout response yet. The vendor may already have saved them,
-            but backend still needs to expose the payout profile on the admin payout detail contract before operations
-            can review it here.
-          </div>
+          <div className="rounded-[18px] border border-dashed border-[#ecd8cb] bg-[#fffaf6] px-4 py-5 text-[14px] leading-6 text-[#6c5d54]">{pt("Bank details were not returned in this admin payout response yet. The vendor may already have saved them, but backend still needs to expose the payout profile on the admin payout detail contract before operations can review it here.")}</div>
         </div>
       </section>
     );
@@ -58,7 +58,7 @@ export default function VendorBankDetailsCard({
       <div className="flex flex-col gap-3 border-b border-[#eee5de] bg-[linear-gradient(180deg,#fff8f3_0%,#ffffff_100%)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 text-[#221914]">
           <Landmark size={17} className="text-[#cf6e38]" />
-          <h2 className="text-[18px] font-bold">Vendor Payout Bank Details</h2>
+          <h2 className="text-[18px] font-bold">{pt("Vendor Payout Bank Details")}</h2>
         </div>
         <StatusPill
           verified={payoutProfile.bankDetailsVerified}
@@ -70,16 +70,12 @@ export default function VendorBankDetailsCard({
         <div className="rounded-[20px] border border-[#f0ded2] bg-[linear-gradient(135deg,#fff8f2_0%,#fffdfa_100%)] px-4 py-4 shadow-[0_10px_22px_rgba(55,31,13,0.04)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b07a5b]">Review before payout</p>
-              <p className="mt-2 text-[15px] font-semibold text-[#221914]">
-                Use these saved bank details when you manually transfer the vendor payout.
-              </p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b07a5b]">{pt("Review before payout")}</p>
+              <p className="mt-2 text-[15px] font-semibold text-[#221914]">{pt("Use these saved bank details when you manually transfer the vendor payout.")}</p>
             </div>
             {payoutProfile.bankDetailsVerified ? (
               <div className="inline-flex items-center gap-2 rounded-full border border-[#cde8d4] bg-[#effaf2] px-3 py-2 text-[12px] font-semibold text-[#208348]">
-                <ShieldCheck size={14} />
-                Bank details approved
-              </div>
+                <ShieldCheck size={14} />{pt("Bank details approved")}</div>
             ) : (
               <button
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] bg-[#cf6e38] px-4 text-[12px] font-bold text-white shadow-[0_10px_20px_rgba(207,110,56,0.2)] transition hover:bg-[#b95d2b] disabled:cursor-not-allowed disabled:opacity-60"
@@ -88,24 +84,21 @@ export default function VendorBankDetailsCard({
                 type="button"
               >
                 <BadgeCheck size={15} />
-                {isApproving ? "Approving..." : "Approve vendor bank details"}
+                {isApproving ? pt("Approving...") : pt("Approve vendor bank details")}
               </button>
             )}
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <DetailCell label="Account Holder" value={payoutProfile.accountHolderName} />
-          <DetailCell label="Bank Name" value={payoutProfile.bankName} />
-          <DetailCell label="Account Number" value={payoutProfile.accountNumber} />
+          <DetailCell label={pt("Account Holder")} value={payoutProfile.accountHolderName} />
+          <DetailCell label={pt("Bank Name")} value={payoutProfile.bankName} />
+          <DetailCell label={pt("Account Number")} value={payoutProfile.accountNumber} />
         </div>
 
         <div className="flex items-start gap-3 rounded-[18px] border border-[#e8ddd5] bg-[#fcfaf8] px-4 py-4 text-[13px] leading-6 text-[#665850]">
           <Building2 size={16} className="mt-0.5 shrink-0 text-[#cf6e38]" />
-          <p>
-            Review the account holder, bank name, and account number, then approve the vendor bank details. Payout
-            release remains unavailable until this approval is completed.
-          </p>
+          <p>{pt("Review the account holder, bank name, and account number, then approve the vendor bank details. Payout release remains unavailable until this approval is completed.")}</p>
         </div>
       </div>
     </section>

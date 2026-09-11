@@ -1,3 +1,4 @@
+import { st, useSupportLanguage, supportError, supportDialog } from "../supportTranslation.js";
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
@@ -24,6 +25,7 @@ import SupportTicketSummaryCard from "../components/details/SupportTicketSummary
 import { formatReadableDate, formatStatusLabel } from "../supportUtils.js";
 
 function TicketStatusPill({ status }) {
+  useSupportLanguage();
   const className =
     status === "OPEN"
       ? "bg-[#fff1d8] text-[#d99615]"
@@ -37,6 +39,7 @@ function TicketStatusPill({ status }) {
 }
 
 export default function SupportTicketDetailPage() {
+  useSupportLanguage();
   const { ticketId } = useParams();
   const { user } = useAuth();
   const [ticket, setTicket] = useState(null);
@@ -139,17 +142,17 @@ export default function SupportTicketDetailPage() {
 
     const latestIncomingMessage = newIncomingMessages[newIncomingMessages.length - 1];
 
-    void Swal.fire({
+    void Swal.fire(supportDialog({
       toast: true,
       position: "top-end",
       icon: "info",
       title: "New support response",
-      text: `${latestIncomingMessage.author?.fullName || "Customer"} replied at ${formatReadableDate(latestIncomingMessage.createdAt)}.`,
+      text: st("{{name}} replied at {{date}}.", { name: latestIncomingMessage.author?.fullName || st("Customer"), date: formatReadableDate(latestIncomingMessage.createdAt) }),
       showConfirmButton: false,
       timer: 4500,
       timerProgressBar: true,
       showCloseButton: true,
-    });
+    }));
 
     return undefined;
   }, [ticket]);
@@ -189,12 +192,12 @@ export default function SupportTicketDetailPage() {
     const trimmedMessage = draftReply.trim();
 
     if (!trimmedMessage) {
-      await Swal.fire({
+      await Swal.fire(supportDialog({
         icon: "warning",
         title: internalNote ? "Note is empty" : "Reply is empty",
         text: "Write a message before sending.",
         confirmButtonColor: "#d96834",
-      });
+      }));
       return;
     }
 
@@ -231,19 +234,19 @@ export default function SupportTicketDetailPage() {
       setAttachments([]);
       setInternalNote(false);
 
-      await Swal.fire({
+      await Swal.fire(supportDialog({
         icon: "success",
         title: internalNote ? "Internal note saved" : "Reply sent",
         text: internalNote ? "The note was added to the ticket activity." : "The requester reply was sent successfully.",
         confirmButtonColor: "#d96834",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(supportDialog({
         icon: "error",
         title: internalNote ? "Unable to save note" : "Unable to send reply",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: supportError(error),
         confirmButtonColor: "#d96834",
-      });
+      }));
     } finally {
       setIsSending(false);
     }
@@ -273,7 +276,7 @@ export default function SupportTicketDetailPage() {
       },
     };
     const selectedAction = actionLabels[action];
-    const confirmation = await Swal.fire({
+    const confirmation = await Swal.fire(supportDialog({
       icon: "question",
       title: selectedAction?.title || "Update ticket status?",
       text: selectedAction?.text || "This change will update the support workflow.",
@@ -282,7 +285,7 @@ export default function SupportTicketDetailPage() {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
-    });
+    }));
 
     if (!confirmation.isConfirmed) {
       return;
@@ -302,19 +305,19 @@ export default function SupportTicketDetailPage() {
       }
 
       await refreshTicket();
-      await Swal.fire({
+      await Swal.fire(supportDialog({
         icon: "success",
         title: "Status updated",
         text: selectedAction?.success || "The ticket status has been updated.",
         confirmButtonColor: "#d96834",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(supportDialog({
         icon: "error",
         title: "Unable to update status",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: supportError(error),
         confirmButtonColor: "#d96834",
-      });
+      }));
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -322,7 +325,7 @@ export default function SupportTicketDetailPage() {
 
   async function handleAssignment(assigneeId) {
     const isRemovingAssignment = !assigneeId;
-    const confirmation = await Swal.fire({
+    const confirmation = await Swal.fire(supportDialog({
       icon: "question",
       title: isRemovingAssignment ? "Remove assignment?" : "Assign ticket to you?",
       text: isRemovingAssignment
@@ -333,7 +336,7 @@ export default function SupportTicketDetailPage() {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
-    });
+    }));
 
     if (!confirmation.isConfirmed) {
       return;
@@ -344,21 +347,21 @@ export default function SupportTicketDetailPage() {
     try {
       await assignSupportTicketRequest(ticketId, assigneeId);
       await refreshTicket();
-      await Swal.fire({
+      await Swal.fire(supportDialog({
         icon: "success",
         title: isRemovingAssignment ? "Assignment removed" : "Ticket assigned",
         text: isRemovingAssignment
           ? "The ticket is now unassigned."
           : "You are now assigned to this support ticket.",
         confirmButtonColor: "#d96834",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(supportDialog({
         icon: "error",
         title: "Unable to update assignment",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: supportError(error),
         confirmButtonColor: "#d96834",
-      });
+      }));
     } finally {
       setIsAssigning(false);
     }
@@ -369,16 +372,16 @@ export default function SupportTicketDetailPage() {
       return;
     }
 
-    const confirmation = await Swal.fire({
+    const confirmation = await Swal.fire(supportDialog({
       icon: "question",
       title: "Update ticket priority?",
-      text: `This will change the priority from ${formatStatusLabel(ticket.priority)} to ${formatStatusLabel(nextPriority)}.`,
+      text: st("This will change the priority from {{from}} to {{to}}.", { from: formatStatusLabel(ticket.priority), to: formatStatusLabel(nextPriority) }),
       showCancelButton: true,
       confirmButtonText: "Update priority",
       cancelButtonText: "Cancel",
       confirmButtonColor: "#d96834",
       cancelButtonColor: "#c8b9aa",
-    });
+    }));
 
     if (!confirmation.isConfirmed) {
       return;
@@ -389,32 +392,32 @@ export default function SupportTicketDetailPage() {
     try {
       await updateSupportTicketPriorityRequest(ticketId, nextPriority);
       await refreshTicket();
-      await Swal.fire({
+      await Swal.fire(supportDialog({
         icon: "success",
         title: "Priority updated",
-        text: `The ticket priority is now ${formatStatusLabel(nextPriority)}.`,
+        text: st("The ticket priority is now {{priority}}.", { priority: formatStatusLabel(nextPriority) }),
         confirmButtonColor: "#d96834",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(supportDialog({
         icon: "error",
         title: "Unable to update priority",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: supportError(error),
         confirmButtonColor: "#d96834",
-      });
+      }));
     } finally {
       setIsUpdatingPriority(false);
     }
   }
 
   if (isLoading) {
-    return <AdminLoadingState cards={2} columns={4} title="Loading support ticket" description="Retrieving the conversation, requester, and ticket activity." />;
+    return <AdminLoadingState cards={2} columns={4} title={st("Loading support ticket")} description={st("Retrieving the conversation, requester, and ticket activity.")} />;
   }
 
   if (loadError && !ticket) {
     return (
       <div className="rounded-[18px] border border-[#f0d8ce] bg-white px-5 py-12 text-center text-[15px] font-medium text-[#9f4d33]">
-        {loadError}
+        {supportError(loadError)}
       </div>
     );
   }
@@ -431,15 +434,14 @@ export default function SupportTicketDetailPage() {
           <Link
             className="mt-[6px] inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#7d7068] transition hover:bg-[#fff4ec] hover:text-[#cf6e38]"
             to="/support"
+            title={st("Back to support")} aria-label={st("Back to support")}
           >
             <ChevronLeft size={16} />
           </Link>
 
           <div>
             <h1 className="text-[34px] font-bold leading-tight tracking-[-0.04em] text-[#18120f]">{ticket.subject}</h1>
-            <p className="mt-2 max-w-[78ch] text-[17px] leading-8 text-[#746861]">
-              Review the full conversation, update the ticket status, and keep the requester informed with a clear next step.
-            </p>
+            <p className="mt-2 max-w-[78ch] text-[17px] leading-8 text-[#746861]">{st("Review the full conversation, update the ticket status, and keep the requester informed with a clear next step.")}</p>
           </div>
         </div>
       </section>

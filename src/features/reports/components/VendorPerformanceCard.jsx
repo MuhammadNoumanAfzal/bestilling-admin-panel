@@ -1,7 +1,9 @@
+import { rt, useReportLanguage, reportError } from "../reportsTranslation.js";
 import { ArrowUpRight } from "lucide-react";
 import ReportsSectionCard from "./ReportsSectionCard.jsx";
 
 function VendorAvatar({ avatar, avatarUrl, name }) {
+  useReportLanguage();
   if (avatarUrl) {
     return (
       <img
@@ -20,39 +22,37 @@ function VendorAvatar({ avatar, avatarUrl, name }) {
 }
 
 function VendorRow({ name, region, revenue, orders, avatar, avatarUrl }) {
+  useReportLanguage();
   return (
     <div className="flex items-center gap-3 rounded-[12px] border border-[#efe5de] bg-[#fffdfa] px-3 py-2.5">
       <VendorAvatar avatar={avatar} avatarUrl={avatarUrl} name={name} />
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[12px] font-bold text-[#1f1711]">{name}</p>
-        <p className="text-[10px] font-medium text-[#8b7f76]">{region}</p>
+        <p className="truncate text-[12px] font-bold text-[#1f1711]">{name === "Unknown vendor" ? rt(name) : name}</p>
+        <p className="text-[10px] font-medium text-[#8b7f76]">{region === "Unknown region" ? rt(region) : region}</p>
       </div>
 
       <div className="text-right">
         <p className="text-[12px] font-extrabold text-[#1f1711]">{revenue}</p>
-        <p className="text-[10px] font-medium text-[#8b7f76]">{orders} orders</p>
+        <p className="text-[10px] font-medium text-[#8b7f76]">{rt("{{count}} orders", { count: orders })}</p>
       </div>
     </div>
   );
 }
 
 export default function VendorPerformanceCard({ vendors, registration, warning = "" }) {
+  useReportLanguage();
   return (
     <ReportsSectionCard className="h-full">
       <div className="space-y-4">
         <div>
-          <h2 className="text-[20px] font-extrabold tracking-[-0.04em] text-[#18120f]">
-            Vendor Performance
-          </h2>
-          <p className="text-[12px] font-medium text-[#8a7d74]">
-            Top contributors by revenue this month
-          </p>
+          <h2 className="text-[20px] font-extrabold tracking-[-0.04em] text-[#18120f]">{rt("Vendor Performance")}</h2>
+          <p className="text-[12px] font-medium text-[#8a7d74]">{rt("Top contributors by revenue this month")}</p>
         </div>
 
         {warning ? (
           <div className="rounded-[12px] border border-[#f1d8cd] bg-[#fff6f1] px-3 py-2 text-[12px] font-medium text-[#a35a39]">
-            {warning}
+            {reportError(warning)}
           </div>
         ) : null}
 
@@ -60,19 +60,17 @@ export default function VendorPerformanceCard({ vendors, registration, warning =
           {vendors.length ? (
             vendors.map((vendor) => <VendorRow key={vendor.id} {...vendor} />)
           ) : (
-            <div className="rounded-[14px] border border-dashed border-[#e1d7d0] bg-[#fbf8f5] px-4 py-10 text-center text-[14px] font-medium text-[#7a6e67]">
-              No vendor performance data is available for the selected period.
-            </div>
+            <div className="rounded-[14px] border border-dashed border-[#e1d7d0] bg-[#fbf8f5] px-4 py-10 text-center text-[14px] font-medium text-[#7a6e67]">{rt("No vendor performance data is available for the selected period.")}</div>
           )}
         </div>
 
         <div className="flex items-end justify-between rounded-[16px] border border-[#f1c7b6] bg-[#fff1ea] px-4 py-3">
           <div>
-            <p className="text-[12px] font-bold text-[#cc6031]">New Registrations</p>
+            <p className="text-[12px] font-bold text-[#cc6031]">{rt("New Registrations")}</p>
             <p className="mt-1 text-[32px] font-extrabold leading-none tracking-[-0.05em] text-[#d66030]">
               {registration.count}
             </p>
-            <p className="mt-1 text-[11px] font-medium text-[#a56748]">{registration.note}</p>
+            <p className="mt-1 text-[11px] font-medium text-[#a56748]">{rt(registration.note)}</p>
           </div>
 
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] bg-white text-[#d86a38] shadow-[0_10px_20px_rgba(216,106,56,0.12)]">

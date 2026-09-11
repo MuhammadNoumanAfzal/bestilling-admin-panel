@@ -1,3 +1,4 @@
+import { dt, useDeliveryLanguage } from "../../deliveryTranslation.js";
 import { Search, SlidersHorizontal, SquarePen, Trash2, UsersRound } from "lucide-react";
 import { useMemo, useState } from "react";
 import DeliveryStatusPill from "./DeliveryStatusPill.jsx";
@@ -15,6 +16,7 @@ const initialFormState = {
 };
 
 function PostalCodeTableAction({ children, tone = "default", onClick }) {
+  useDeliveryLanguage();
   const toneClasses =
     tone === "danger"
       ? "text-[#d15b42] hover:bg-[#fff4f1]"
@@ -41,6 +43,7 @@ export default function DeliveryPostalAreasCard({
   onImportComplete,
   onUpdate,
 }) {
+  useDeliveryLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [modalOpen, setModalOpen] = useState(false);
@@ -123,10 +126,9 @@ export default function DeliveryPostalAreasCard({
 
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <h2 className="text-[28px] font-bold tracking-[-0.03em] text-[#18120f]">Postal Codes</h2>
+              <h2 className="text-[28px] font-bold tracking-[-0.03em] text-[#18120f]">{dt("Postal Codes")}</h2>
               <p className="mt-2 text-[16px] leading-7 text-[#6f645d]">
-                Manage the zones available inside {areaName} with the same coverage structure used across the
-                admin panel.
+                {dt("Manage the zones available inside {{area}} with the same coverage structure used across the admin panel.", { area: areaName })}
               </p>
             </div>
 
@@ -134,9 +136,7 @@ export default function DeliveryPostalAreasCard({
               className="inline-flex h-11 cursor-pointer items-center justify-center rounded-[10px] bg-[#cf6e38] px-4 text-[14px] font-semibold text-white transition hover:bg-[#bc6030]"
               onClick={handleOpenCreate}
               type="button"
-            >
-              Add Code
-            </button>
+            >{dt("Add Code")}</button>
           </div>
 
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -149,7 +149,7 @@ export default function DeliveryPostalAreasCard({
                 <input
                   className="h-11 w-full rounded-[12px] border border-[#2f241d] bg-[#f8f5f2] pl-12 pr-4 text-[15px] font-medium leading-none text-[#18120f] outline-none transition placeholder:text-[15px] placeholder:font-medium placeholder:text-[#aa9f96] focus:border-[#cf6e38] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
                   onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Search postal code, area name, or vendor count"
+                  placeholder={dt("Search postal code, area name, or vendor count")}
                   value={searchTerm}
                 />
               </label>
@@ -168,14 +168,14 @@ export default function DeliveryPostalAreasCard({
                     type="button"
                   >
                     {option === "All" && <SlidersHorizontal size={15} />}
-                    <span>{option}</span>
+                    <span>{dt(option)}</span>
                   </button>
                 ))}
               </div>
             </div>
 
             <p className="text-[14px] font-medium text-[#7c7068]">
-              {filteredRows.length} of {(rows || []).length} postal zones visible
+              {dt("{{visible}} of {{total}} postal zones visible", { visible: filteredRows.length, total: (rows || []).length })}
             </p>
           </div>
         </div>
@@ -184,20 +184,18 @@ export default function DeliveryPostalAreasCard({
           <table className="min-w-[980px] w-full border-collapse">
             <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
               <tr className="text-left">
-                <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">Postal Code</th>
-                <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Area Name</th>
-                <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
-                <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">Vendors</th>
-                <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">Actions</th>
+                <th className="px-4 py-4 text-[13px] font-bold text-[#9b8f86]">{dt("Postal Code")}</th>
+                <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">{dt("Area Name")}</th>
+                <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">{dt("Status")}</th>
+                <th className="px-3 py-4 text-[13px] font-bold text-[#9b8f86]">{dt("Vendors")}</th>
+                <th className="px-4 py-4 text-right text-[13px] font-bold text-[#9b8f86]">{dt("Actions")}</th>
               </tr>
             </thead>
 
             <tbody>
               {filteredRows.length === 0 ? (
                 <tr className="border-t border-[#f1e9e2]">
-                  <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={5}>
-                    No postal codes match the current search or filter.
-                  </td>
+                  <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={5}>{dt("No postal codes match the current search or filter.")}</td>
                 </tr>
               ) : (
                 filteredRows.map((row) => (

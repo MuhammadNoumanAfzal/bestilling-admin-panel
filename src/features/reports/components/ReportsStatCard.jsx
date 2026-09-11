@@ -1,3 +1,4 @@
+import { rt, useReportLanguage } from "../reportsTranslation.js";
 import {
   CircleDollarSign,
   Clock3,
@@ -23,6 +24,7 @@ const statIcons = {
 };
 
 export default function ReportsStatCard({ label, value, icon, accent = "soft" }) {
+  useReportLanguage();
   const Icon = statIcons[icon] || CircleDollarSign;
 
   return (
@@ -39,7 +41,7 @@ export default function ReportsStatCard({ label, value, icon, accent = "soft" })
 
         <div className="space-y-1">
           <p className="text-[11px] font-semibold uppercase tracking-[0.03em] text-[#8c7f76]">
-            {label}
+            {rt(label)}
           </p>
           <p className="break-words text-[15px] font-extrabold leading-[1.05] tracking-[-0.04em] text-[#1f1711] sm:text-[17px] xl:text-[18px]">
             {value}

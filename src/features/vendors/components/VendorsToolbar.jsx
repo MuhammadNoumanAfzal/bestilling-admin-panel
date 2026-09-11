@@ -1,3 +1,4 @@
+import { vt, useVendorLanguage } from "../utils/vendorTranslation.js";
 import { useState, useEffect, useRef } from "react";
 import { Search, ChevronDown, Star, MapPin } from "lucide-react";
 
@@ -13,6 +14,7 @@ export default function VendorsToolbar({
   onResetFilters,
   cities,
 }) {
+  useVendorLanguage();
   const [activeDropdown, setActiveDropdown] = useState(null);
   const toolbarRef = useRef(null);
 
@@ -63,7 +65,7 @@ export default function VendorsToolbar({
             type="text"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by vendor, cuisine, or city..."
+            placeholder={vt("Search by vendor, cuisine, or city...")}
             className="h-9 w-full rounded-[8px] border border-[#ddd4cb] bg-white pl-9 pr-4 text-[13px] text-[#231913] outline-none transition placeholder:text-[#baaea0] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]"
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#baaea0]">
@@ -74,13 +76,13 @@ export default function VendorsToolbar({
         {/* Dropdowns */}
         <div className="flex flex-wrap items-center gap-2">
           <label className="relative min-w-[180px]">
-            <span className="sr-only">Filter by city</span>
+            <span className="sr-only">{vt("Filter by city")}</span>
             <input
               list="vendor-city-filter-options"
               type="text"
               value={cityFilter}
               onChange={(event) => handleSelectCity(event.target.value)}
-              placeholder="Filter by city..."
+              placeholder={vt("Filter by city...")}
               className="h-9 w-full rounded-[8px] border border-[#ddd4cb] bg-white pl-9 pr-4 text-[12px] font-semibold text-[#231913] outline-none transition placeholder:text-[#baaea0] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]"
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#baaea0]">
@@ -103,8 +105,8 @@ export default function VendorsToolbar({
               <span className="inline-flex items-center gap-1.5">
                 <Star size={13} fill="#ffb020" stroke="none" />
                 {ratingFilter
-                  ? ratingOptions.find((o) => o.value === ratingFilter)?.label
-                  : "Rating"}
+                  ? vt(ratingOptions.find((o) => o.value === ratingFilter)?.label)
+                  : vt("Rating")}
               </span>
               <ChevronDown size={13} className="text-[#8c8077]" />
             </button>
@@ -122,7 +124,7 @@ export default function VendorsToolbar({
                     }`}
                     type="button"
                   >
-                    {opt.label}
+                    {vt(opt.label)}
                   </button>
                 ))}
               </div>
@@ -134,9 +136,7 @@ export default function VendorsToolbar({
             className="inline-flex h-9 items-center justify-center rounded-[8px] border border-[#ead7ca] bg-[#fff8f4] px-3 text-[12px] font-semibold text-[#cf6e38] transition hover:bg-[#fff1e8]"
             onClick={onResetFilters}
             type="button"
-          >
-            Clear Filters
-          </button>
+          >{vt("Clear Filters")}</button>
         </div>
       </div>
 
@@ -155,7 +155,7 @@ export default function VendorsToolbar({
               }`}
               type="button"
             >
-              {tab.label}
+              {vt(tab.label)}
             </button>
           );
         })}

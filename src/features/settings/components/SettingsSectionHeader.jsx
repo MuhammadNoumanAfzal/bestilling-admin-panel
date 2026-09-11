@@ -1,4 +1,6 @@
+import { st, useSettingsLanguage } from "../settingsTranslation.js";
 export default function SettingsSectionHeader({ icon: Icon, title }) {
+  useSettingsLanguage();
   return (
     <div className="mb-4 flex items-center gap-3">
       {Icon ? (
@@ -6,7 +8,7 @@ export default function SettingsSectionHeader({ icon: Icon, title }) {
           <Icon size={16} />
         </span>
       ) : null}
-      <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#2a1f18]">{title}</h2>
+      <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#2a1f18]">{st(title)}</h2>
     </div>
   );
 }

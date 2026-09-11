@@ -1,6 +1,8 @@
+import { pt, usePayoutLanguage } from "../../payoutTranslation.js";
 import { ArrowRight, Banknote, CircleDollarSign, Landmark } from "lucide-react";
 
 function FlowNode({ icon: Icon, label, tone = "default", value }) {
+  usePayoutLanguage();
   const toneClass =
     tone === "orange"
       ? "bg-[#fff0e7] text-[#cf6e38]"
@@ -13,34 +15,35 @@ function FlowNode({ icon: Icon, label, tone = "default", value }) {
       <span className={`inline-flex h-14 w-14 items-center justify-center rounded-full border border-white ${toneClass}`}>
         <Icon size={22} />
       </span>
-      <p className="mt-3 text-[15px] font-semibold text-[#18120f]">{label}</p>
+      <p className="mt-3 text-[15px] font-semibold text-[#18120f]">{pt(label)}</p>
       <p className="mt-1 text-[14px] font-semibold text-[#cf6e38]">{value}</p>
     </div>
   );
 }
 
 export default function PaymentLifecycleCard({ payout }) {
+  usePayoutLanguage();
   return (
     <section className="rounded-[24px] border border-[#ddd4cd] bg-white px-5 py-5 shadow-[0_14px_34px_rgba(55,31,13,0.06)]">
       <div className="text-center">
-        <p className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#6f645d]">Transaction Lifecycle Flow</p>
+        <p className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#6f645d]">{pt("Transaction Lifecycle Flow")}</p>
       </div>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center">
-        <FlowNode icon={CircleDollarSign} label="Customer Pays" tone="blue" value={payout.financials.orderAmount} />
+        <FlowNode icon={CircleDollarSign} label={pt("Customer Pays")} tone="blue" value={payout.financials.orderAmount} />
         <div className="hidden justify-center lg:flex">
           <ArrowRight className="text-[#c9b7ab]" size={20} />
         </div>
         <FlowNode
           icon={Banknote}
-          label="Commission"
+          label={pt("Commission")}
           tone="orange"
           value={payout.financials.platformCommission}
         />
         <div className="hidden justify-center lg:flex">
           <ArrowRight className="text-[#c9b7ab]" size={20} />
         </div>
-        <FlowNode icon={Landmark} label="Vendor Receives" value={payout.financials.vendorAmount} />
+        <FlowNode icon={Landmark} label={pt("Vendor Receives")} value={payout.financials.vendorAmount} />
       </div>
     </section>
   );

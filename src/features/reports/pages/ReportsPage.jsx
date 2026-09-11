@@ -1,3 +1,4 @@
+import { rt, useReportLanguage, reportError } from "../reportsTranslation.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { getAdminReportsSnapshotRequest } from "../api/reportsApi.js";
@@ -316,6 +317,7 @@ function mergeReportsWithOrderData(baseSnapshot, ordersResponse, filters) {
 }
 
 export default function ReportsPage() {
+  useReportLanguage();
   const { setPageHeaderAction } = useOutletContext();
   const [selectedFilter, setSelectedFilter] = useState("Last 7 days");
   const [customStartDate, setCustomStartDate] = useState("");
@@ -408,12 +410,12 @@ export default function ReportsPage() {
 
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-10 text-center text-[15px] font-medium text-[#9f4d33]">
-          {loadError}
+          {reportError(loadError)}
         </div>
       ) : null}
 
       {isLoading ? (
-        <AdminLoadingState cards={4} columns={6} title="Loading reports snapshot" description="Calculating the latest financial and operational performance." />
+        <AdminLoadingState cards={4} columns={6} title={rt("Loading reports snapshot")} description={rt("Calculating the latest financial and operational performance.")} />
       ) : (
         <>
           {reportSnapshot.summary.length ? (
@@ -423,9 +425,7 @@ export default function ReportsPage() {
               ))}
             </section>
           ) : (
-            <section className="rounded-[16px] border border-dashed border-[#e3d7cf] bg-[#fffdfa] px-5 py-8 text-center text-[14px] font-medium text-[#7a6d66]">
-              No report summary data is available for the selected period.
-            </section>
+            <section className="rounded-[16px] border border-dashed border-[#e3d7cf] bg-[#fffdfa] px-5 py-8 text-center text-[14px] font-medium text-[#7a6d66]">{rt("No report summary data is available for the selected period.")}</section>
           )}
 
           <section className="grid items-stretch gap-3 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">

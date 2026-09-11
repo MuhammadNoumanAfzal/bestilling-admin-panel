@@ -1,3 +1,4 @@
+import { st, useSupportLanguage, supportError } from "../supportTranslation.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
@@ -73,6 +74,7 @@ function buildDateFilters(timeframe, customStart, customEnd) {
 }
 
 export default function SupportPage() {
+  useSupportLanguage();
   const { setPageHeaderAction } = useOutletContext();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -346,12 +348,12 @@ export default function SupportPage() {
 
         {loadError ? (
           <div className="border-t border-[#eee4dd] px-4 py-10 text-center text-[15px] font-medium text-[#9f4d33]">
-            {loadError}
+            {supportError(loadError)}
           </div>
         ) : null}
 
         {isLoading ? (
-          <AdminLoadingState columns={5} title="Loading support tickets" description="Retrieving customer conversations and their latest status." />
+          <AdminLoadingState columns={5} title={st("Loading support tickets")} description={st("Retrieving customer conversations and their latest status.")} />
         ) : (
           <SupportTicketsTable
             currentPage={currentPage}

@@ -1,3 +1,4 @@
+import { payoutHtml, payoutDate, pt, usePayoutLanguage, payoutError, payoutDialog } from "../payoutTranslation.js";
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -24,15 +25,17 @@ import VendorBankDetailsCard from "../components/details/VendorBankDetailsCard.j
 import { showPaymentConfirmation } from "../components/details/paymentConfirmation.js";
 
 function HeaderBadge({ label, value }) {
+  usePayoutLanguage();
   return (
     <div className="rounded-[18px] border border-[#efd9cb] bg-white/85 px-4 py-3 shadow-[0_10px_24px_rgba(52,30,16,0.05)]">
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a88b7b]">{label}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a88b7b]">{pt(label)}</p>
       <p className="mt-2 text-[15px] font-semibold text-[#1e1713]">{value}</p>
     </div>
   );
 }
 
 function LoadingState() {
+  usePayoutLanguage();
   return (
     <div className="space-y-6">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -53,6 +56,7 @@ function LoadingState() {
 }
 
 export default function PaymentDetailsPage() {
+  usePayoutLanguage();
   const { payoutId } = useParams();
   const navigate = useNavigate();
   const [paymentDetail, setPaymentDetail] = useState(null);
@@ -115,19 +119,19 @@ export default function PaymentDetailsPage() {
     try {
       setIsRefreshing(true);
       await refreshPaymentDetail();
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "success",
         title: "Details refreshed",
         text: "The latest payment detail has been loaded.",
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "error",
         title: "Refresh failed",
-        text: error instanceof Error ? error.message : "Unable to refresh payment details.",
+        text: payoutError(error, "Unable to refresh payment details."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsRefreshing(false);
     }
@@ -152,19 +156,19 @@ export default function PaymentDetailsPage() {
       setIsUpdatingCustomerPayment(true);
       const result = await markCustomerPaymentReceivedRequest(paymentDetail.invoiceId, prompt.value || {});
       await refreshPaymentDetail();
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "success",
         title: "Customer payment updated",
-        text: result.message,
+        text: payoutError(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "error",
         title: "Unable to mark payment received",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: payoutError(error, "Please try again."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsUpdatingCustomerPayment(false);
     }
@@ -214,20 +218,20 @@ export default function PaymentDetailsPage() {
         );
       }
 
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "success",
         title: "Vendor payout updated",
-        text: result.message,
+        text: payoutError(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
       await refreshPaymentDetail().catch(() => {});
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "error",
         title: "Unable to mark vendor payout paid",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: payoutError(error, "Please try again."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsUpdatingVendorPayout(false);
     }
@@ -240,7 +244,7 @@ export default function PaymentDetailsPage() {
       return;
     }
 
-    const prompt = await Swal.fire({
+    const prompt = await Swal.fire(payoutDialog({
       title: "Verify vendor bank details",
       text: "Confirm that the account holder, bank, and account number match the vendor records before enabling payout release.",
       input: "textarea",
@@ -249,7 +253,7 @@ export default function PaymentDetailsPage() {
       confirmButtonText: "Verify bank details",
       confirmButtonColor: "#cf6e38",
       cancelButtonColor: "#c8b9aa",
-    });
+    }));
 
     if (!prompt.isConfirmed) {
       return;
@@ -261,19 +265,19 @@ export default function PaymentDetailsPage() {
         verificationNote: prompt.value || "",
       });
       await refreshPaymentDetail();
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "success",
         title: "Bank details verified",
-        text: result.message,
+        text: payoutError(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "error",
         title: "Unable to verify bank details",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: payoutError(error, "Please try again."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsVerifyingBankProfile(false);
     }
@@ -288,13 +292,13 @@ export default function PaymentDetailsPage() {
       return;
     }
 
-    const prompt = await Swal.fire({
+    const prompt = await Swal.fire(payoutDialog({
       title: "Approve invoice payment",
       html: `
         <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
           <div>
-            <label for="approve-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Verification note</label>
-            <textarea id="approve-note" class="swal2-textarea" placeholder="Payment verified in bank statement" style="margin:0;width:100%;min-height:110px;"></textarea>
+            <label for="approve-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">${payoutHtml("Verification note")}</label>
+            <textarea id="approve-note" class="swal2-textarea" placeholder="${payoutHtml("Payment verified in bank statement")}" style="margin:0;width:100%;min-height:110px;"></textarea>
           </div>
         </div>
       `,
@@ -306,7 +310,7 @@ export default function PaymentDetailsPage() {
       preConfirm: () => ({
         note: document.getElementById("approve-note")?.value?.trim() || "",
       }),
-    });
+    }));
 
     if (!prompt.isConfirmed) {
       return;
@@ -316,19 +320,19 @@ export default function PaymentDetailsPage() {
       setIsApprovingInvoice(true);
       const result = await approveInvoicePaymentRequest(paymentDetail.invoiceId, prompt.value || {});
       await refreshPaymentDetail();
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "success",
         title: "Invoice approved",
-        text: result.message,
+        text: payoutError(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "error",
         title: "Unable to approve invoice payment",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: payoutError(error, "Please try again."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsApprovingInvoice(false);
     }
@@ -343,13 +347,13 @@ export default function PaymentDetailsPage() {
       return;
     }
 
-    const prompt = await Swal.fire({
+    const prompt = await Swal.fire(payoutDialog({
       title: "Reject invoice payment report",
       html: `
         <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
           <div>
-            <label for="reject-reason" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Reason</label>
-            <textarea id="reject-reason" class="swal2-textarea" placeholder="Explain why the reported payment is rejected" style="margin:0;width:100%;min-height:110px;"></textarea>
+            <label for="reject-reason" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">${payoutHtml("Reason")}</label>
+            <textarea id="reject-reason" class="swal2-textarea" placeholder="${payoutHtml("Explain why the reported payment is rejected")}" style="margin:0;width:100%;min-height:110px;"></textarea>
           </div>
         </div>
       `,
@@ -361,7 +365,7 @@ export default function PaymentDetailsPage() {
       preConfirm: () => ({
         reason: document.getElementById("reject-reason")?.value?.trim() || "",
       }),
-    });
+    }));
 
     if (!prompt.isConfirmed) {
       return;
@@ -371,19 +375,19 @@ export default function PaymentDetailsPage() {
       setIsRejectingInvoice(true);
       const result = await rejectInvoicePaymentRequest(paymentDetail.invoiceId, prompt.value || {});
       await refreshPaymentDetail();
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "success",
         title: "Invoice report rejected",
-        text: result.message,
+        text: payoutError(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "error",
         title: "Unable to reject invoice payment report",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: payoutError(error, "Please try again."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsRejectingInvoice(false);
     }
@@ -398,13 +402,13 @@ export default function PaymentDetailsPage() {
       return;
     }
 
-    const prompt = await Swal.fire({
+    const prompt = await Swal.fire(payoutDialog({
       title: "Mark invoice paid",
       html: `
         <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
           <div>
-            <label for="invoice-paid-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Internal note</label>
-            <textarea id="invoice-paid-note" class="swal2-textarea" placeholder="Optional admin note" style="margin:0;width:100%;min-height:110px;"></textarea>
+            <label for="invoice-paid-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">${payoutHtml("Internal note")}</label>
+            <textarea id="invoice-paid-note" class="swal2-textarea" placeholder="${payoutHtml("Optional admin note")}" style="margin:0;width:100%;min-height:110px;"></textarea>
           </div>
         </div>
       `,
@@ -416,7 +420,7 @@ export default function PaymentDetailsPage() {
       preConfirm: () => ({
         note: document.getElementById("invoice-paid-note")?.value?.trim() || "",
       }),
-    });
+    }));
 
     if (!prompt.isConfirmed) {
       return;
@@ -426,19 +430,19 @@ export default function PaymentDetailsPage() {
       setIsMarkingInvoicePaid(true);
       const result = await markInvoicePaidRequest(paymentDetail.invoiceId, prompt.value || {});
       await refreshPaymentDetail();
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "success",
         title: "Invoice updated",
-        text: result.message,
+        text: payoutError(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "error",
         title: "Unable to mark invoice paid",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: payoutError(error, "Please try again."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsMarkingInvoicePaid(false);
     }
@@ -452,12 +456,12 @@ export default function PaymentDetailsPage() {
     const canReleaseFromSettlement = Boolean(paymentDetail?.vendor?.id && paymentDetail?.settlementId);
 
     if (!canReleaseFromSettlement) {
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "info",
         title: "Payout record is not ready",
         text: "The customer payment is approved, but no payout or settlement record is available for release yet. Refresh after the payment settlement is created.",
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
@@ -468,13 +472,13 @@ export default function PaymentDetailsPage() {
       return;
     }
 
-    const prompt = await Swal.fire({
+    const prompt = await Swal.fire(payoutDialog({
       title: "Release vendor payout",
       html: `
         <div style="display:flex;flex-direction:column;gap:12px;text-align:left;">
           <div>
-            <label for="release-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Release note</label>
-            <textarea id="release-note" class="swal2-textarea" placeholder="Approved for payout batch" style="margin:0;width:100%;min-height:110px;"></textarea>
+            <label for="release-note" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">${payoutHtml("Release note")}</label>
+            <textarea id="release-note" class="swal2-textarea" placeholder="${payoutHtml("Approved for payout batch")}" style="margin:0;width:100%;min-height:110px;"></textarea>
           </div>
         </div>
       `,
@@ -486,7 +490,7 @@ export default function PaymentDetailsPage() {
       preConfirm: () => ({
         note: document.getElementById("release-note")?.value?.trim() || "",
       }),
-    });
+    }));
 
     if (!prompt.isConfirmed) {
       return;
@@ -502,19 +506,19 @@ export default function PaymentDetailsPage() {
         prompt.value || {},
       );
       await refreshPaymentDetail();
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "success",
         title: "Vendor payout released",
-        text: result.message,
+        text: payoutError(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(payoutDialog({
         icon: "error",
         title: "Unable to release vendor payout",
-        text: error instanceof Error ? error.message : "Please try again.",
+        text: payoutError(error, "Please try again."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsReleasingVendorPayout(false);
     }
@@ -529,7 +533,7 @@ export default function PaymentDetailsPage() {
     if (loadError) {
       return (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-10 text-center text-[15px] font-medium text-[#9f4d33]">
-          {loadError}
+          {payoutError(loadError)}
         </div>
       );
     }
@@ -541,7 +545,7 @@ export default function PaymentDetailsPage() {
     <div className="space-y-6 [&_button:enabled]:cursor-pointer [&_button:disabled]:cursor-not-allowed [&_a[href]]:cursor-pointer">
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
-          {loadError}
+          {payoutError(loadError)}
         </div>
       ) : null}
 
@@ -557,26 +561,22 @@ export default function PaymentDetailsPage() {
               type="button"
             >
               <ArrowLeft size={15} />
-              <span>Back to payouts</span>
+              <span>{pt("Back to payouts")}</span>
             </button>
 
             <div className="mt-4">
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#b07a5b]">
-                Payment Operations
-              </p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#b07a5b]">{pt("Payment Operations")}</p>
               <h1 className="mt-2 text-[32px] font-bold tracking-[-0.05em] text-[#191310] sm:text-[40px]">
                 {paymentDetail.invoiceNumber}
               </h1>
-              <p className="mt-3 max-w-3xl text-[15px] leading-7 text-[#665a53]">
-                Review customer payment proof, vendor payout readiness, settlement details, and finance activity from one place.
-              </p>
+              <p className="mt-3 max-w-3xl text-[15px] leading-7 text-[#665a53]">{pt("Review customer payment proof, vendor payout readiness, settlement details, and finance activity from one place.")}</p>
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <HeaderBadge label="Customer" value={paymentDetail.customer.fullName} />
-              <HeaderBadge label="Vendor" value={paymentDetail.vendor.name} />
-              <HeaderBadge label="Order Status" value={paymentDetail.order.status} />
-              <HeaderBadge label="Last Updated" value={paymentDetail.updatedAtLabel} />
+              <HeaderBadge label={pt("Customer")} value={paymentDetail.customer.fullName} />
+              <HeaderBadge label={pt("Vendor")} value={paymentDetail.vendor.name} />
+              <HeaderBadge label={pt("Order Status")} value={pt(paymentDetail.order.status)} />
+              <HeaderBadge label={pt("Last Updated")} value={payoutDate(paymentDetail.updatedAtLabel)} />
             </div>
           </div>
 
@@ -587,7 +587,7 @@ export default function PaymentDetailsPage() {
                 onClick={() => navigate(`/orders/${encodeURIComponent(paymentDetail.order.id)}`)}
                 type="button"
               >
-                <span>View Order</span>
+                <span>{pt("View Order")}</span>
                 <ArrowUpRight size={16} />
               </button>
             ) : null}
@@ -598,17 +598,17 @@ export default function PaymentDetailsPage() {
               type="button"
             >
               <RefreshCw size={16} />
-              <span>{isRefreshing ? "Refreshing..." : "Refresh details"}</span>
+              <span>{isRefreshing ? pt("Refreshing...") : pt("Refresh details")}</span>
             </button>
           </div>
         </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <PaymentDetailsOverviewCard label="Total Order Amount" value={paymentDetail.financials.orderAmount} />
-        <PaymentDetailsOverviewCard label="Platform Commission" value={paymentDetail.financials.platformCommission} />
-        <PaymentDetailsOverviewCard label="Vendor Receives" value={paymentDetail.financials.vendorAmount} />
-        <PaymentDetailsOverviewCard label="Customer Payment Status" value={paymentDetail.statuses.customerPaymentStatus} />
+        <PaymentDetailsOverviewCard label={pt("Total Order Amount")} value={paymentDetail.financials.orderAmount} />
+        <PaymentDetailsOverviewCard label={pt("Platform Commission")} value={paymentDetail.financials.platformCommission} />
+        <PaymentDetailsOverviewCard label={pt("Vendor Receives")} value={paymentDetail.financials.vendorAmount} />
+        <PaymentDetailsOverviewCard label={pt("Customer Payment Status")} value={pt(paymentDetail.statuses.customerPaymentStatus)} />
       </section>
 
           <PaymentStatusCards

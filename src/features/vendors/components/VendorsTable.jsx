@@ -1,3 +1,4 @@
+import { vt, useVendorLanguage, vendorDate, vendorNumber } from "../utils/vendorTranslation.js";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, MoreVertical, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,7 @@ const statusClasses = {
 };
 
 function PersonCell({ name, src, subtitle, avatar }) {
+  useVendorLanguage();
   return (
     <div className="flex items-center gap-2.5">
       {src ? (
@@ -60,6 +62,7 @@ export default function VendorsTable({
   onToggleStatus,
   isUpdatingStatusId = "",
 }) {
+  useVendorLanguage();
   const navigate = useNavigate();
   const [selectedIds, setSelectedIds] = useState([]);
   const [activeMenuId, setActiveMenuId] = useState(null);
@@ -135,29 +138,28 @@ export default function VendorsTable({
               <th className="w-10 px-2 py-4 text-center">
                 <input
                   type="checkbox"
+                  aria-label={vt("Select all vendors")}
                   checked={vendors.length > 0 && selectedIds.length === vendors.length}
                   onChange={handleSelectAll}
                   className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
                 />
               </th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] w-48">Vendor</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Business Type</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">City</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] text-center">Order</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Revenue</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Rating</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Join Date</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">Status</th>
-              <th className="w-44 px-2 py-4 text-center text-[13px] font-bold text-[#9b8f86]">Actions</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] w-48">{vt("Vendor")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{vt("Business Type")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{vt("City")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] text-center">{vt("Order")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{vt("Revenue")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{vt("Rating")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{vt("Join Date")}</th>
+              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{vt("Status")}</th>
+              <th className="w-44 px-2 py-4 text-center text-[13px] font-bold text-[#9b8f86]">{vt("Actions")}</th>
             </tr>
           </thead>
 
           <tbody>
             {vendors.length === 0 ? (
               <tr>
-                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={10}>
-                  No vendors match the current filters.
-                </td>
+                <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={10}>{vt("No vendors match the current filters.")}</td>
               </tr>
             ) : (
               vendors.map((row) => {
@@ -174,6 +176,7 @@ export default function VendorsTable({
                     <td className="px-3 py-4 text-center align-middle">
                       <input
                         type="checkbox"
+                        aria-label={vt("Select vendor") + ": " + row.name}
                         checked={isSelected}
                         onChange={() => handleSelectRow(row.id)}
                         className="h-4 w-4 rounded border-[#d8ccc2] text-[#d96834] focus:ring-[#cf6e38] cursor-pointer"
@@ -194,25 +197,25 @@ export default function VendorsTable({
                       </button>
                     </td>
                     <td className="px-2 py-4 text-[15px] text-[#18120f] font-semibold align-middle">
-                      {row.businessType}
+                      {vt(row.businessType)}
                     </td>
                     <td className="px-2 py-4 text-[15px] text-[#5a4d46] align-middle">
                       {row.city}
                     </td>
                     <td className="px-2 py-4 text-[15px] text-[#18120f] font-semibold align-middle text-center">
-                      {row.ordersCount}
+                      {vendorNumber(row.ordersCount)}
                     </td>
                     <td className="px-2 py-4 text-[15px] font-bold text-[#18120f] align-middle">
-                      {row.revenue}
+                      {row.revenueValue != null ? "NOK " + vendorNumber(row.revenueValue, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : row.revenue}
                     </td>
                     <td className="px-2 py-4 text-[15px] font-semibold text-[#18120f] align-middle">
                       <span className="inline-flex items-center gap-1">
                         <Star size={13} fill="#ffc107" stroke="none" />
-                        {row.rating}
+                        {vendorNumber(row.ratingValue, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
                       </span>
                     </td>
                     <td className="px-2 py-4 text-[15px] text-[#5a4d46] align-middle">
-                      {row.joinDate}
+                      {vendorDate(row.joinDateValue || row.joinDate)}
                     </td>
                     <td className="px-2 py-4 align-middle">
                       <button
@@ -222,7 +225,7 @@ export default function VendorsTable({
                         onClick={() => navigate(getVendorNavigationPath(row))}
                         type="button"
                       >
-                        {row.status}
+                        {vt(row.status)}
                       </button>
                     </td>
                     <td className="relative px-2 py-4 text-center align-middle">
@@ -232,11 +235,11 @@ export default function VendorsTable({
                           onClick={() => navigate(getVendorNavigationPath(row))}
                           type="button"
                         >
-                          {getReviewActionLabel(row)}
+                          {vt(getReviewActionLabel(row))}
                         </button>
                         {!["Pending Approval", "Changes Requested"].includes(row.status) ? (
                           <button
-                            aria-label={`More actions for ${row.name}`}
+                            aria-label={vt("More actions for {{value0}}", { value0: row.name })}
                             onClick={() => setActiveMenuId(activeMenuId === row.id ? null : row.id)}
                             className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[#6f655e] transition hover:bg-[#f1e9e2] hover:text-[#1f1711] cursor-pointer"
                             type="button"
@@ -259,10 +262,10 @@ export default function VendorsTable({
                               type="button"
                             >
                               {isUpdatingStatusId === row.id
-                                ? "Updating..."
+                                ? vt("Updating...")
                                 : row.status === "Suspended" || row.status === "Deactivated"
-                                  ? "Activate Vendor"
-                                  : "Suspend Vendor"}
+                                  ? vt("Activate Vendor")
+                                  : vt("Suspend Vendor")}
                             </button>
                           ) : null}
                         </div>
@@ -278,12 +281,11 @@ export default function VendorsTable({
 
       {/* Pagination controls */}
       <footer className="flex flex-col items-center justify-between gap-4 border-t border-[#eee4dd] bg-[#fcfbfa] px-6 py-4 sm:flex-row">
-        <p className="text-[13px] font-semibold text-[#6f645d]">
-          Showing {start} - {end} of {totalItems} Vendors
-        </p>
+        <p className="text-[13px] font-semibold text-[#6f645d]">{vt("Showing {{start}} - {{end}} of {{total}} Vendors", { start: vendorNumber(start), end: vendorNumber(end), total: vendorNumber(totalItems) })}</p>
 
         <div className="flex items-center gap-1">
           <button
+            aria-label={vt("Previous page")}
             disabled={currentPage === 1}
             onClick={() => onPageChange(currentPage - 1)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#d8ccc2] bg-white text-[#4d423b] transition hover:bg-[#faf5f1] disabled:opacity-40 disabled:hover:bg-white cursor-pointer"
@@ -318,6 +320,7 @@ export default function VendorsTable({
           })}
 
           <button
+            aria-label={vt("Next page")}
             disabled={currentPage === totalPages}
             onClick={() => onPageChange(currentPage + 1)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#d8ccc2] bg-white text-[#4d423b] transition hover:bg-[#faf5f1] disabled:opacity-40 disabled:hover:bg-white cursor-pointer"

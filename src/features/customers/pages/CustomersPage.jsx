@@ -1,3 +1,4 @@
+import { ct, useCustomerLanguage, customerError, customerMessage } from "../customerTranslation.js";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -104,6 +105,7 @@ function normalizeCityOptions(cities) {
 }
 
 export default function CustomersPage() {
+  useCustomerLanguage();
   const navigate = useNavigate();
   const { setPageHeaderAction } = useOutletContext();
   const [searchTerm, setSearchTerm] = useState("");
@@ -299,14 +301,14 @@ export default function CustomersPage() {
 
       const confirmation = await Swal.fire({
         icon: "warning",
-        title: isBlocked ? "Unblock customer?" : "Block customer?",
+        title: isBlocked ? ct("Unblock customer?") : ct("Block customer?"),
         text: isBlocked
-          ? `Restore access for ${row.name}?`
-          : `Block ${row.name} from logging in and placing new orders?`,
+          ? ct("Restore access for {{value0}}?", { value0: row.name })
+          : ct("Block {{value0}} from logging in and placing new orders?", { value0: row.name }),
         width: "min(32rem, calc(100vw - 2rem))",
         showCancelButton: true,
-        confirmButtonText: isBlocked ? "Yes, unblock" : "Yes, block",
-        cancelButtonText: "Cancel",
+        confirmButtonText: isBlocked ? ct("Yes, unblock") : ct("Yes, block"),
+        cancelButtonText: ct("Cancel"),
         confirmButtonColor: isBlocked ? "#2b9e62" : "#d83f3f",
         cancelButtonColor: "#c8b9aa",
     });
@@ -319,14 +321,14 @@ export default function CustomersPage() {
 
     if (!isBlocked) {
       const result = await Swal.fire({
-        title: "Block reason",
+        title: ct("Block reason"),
         input: "text",
-        inputLabel: "Optional reason",
-        inputPlaceholder: "Add a note for why this customer is being blocked",
+        inputLabel: ct("Optional reason"),
+        inputPlaceholder: ct("Add a note for why this customer is being blocked"),
         width: "min(32rem, calc(100vw - 2rem))",
         showCancelButton: true,
-        confirmButtonText: "Continue",
-        cancelButtonText: "Cancel",
+        confirmButtonText: ct("Continue"),
+        cancelButtonText: ct("Cancel"),
         confirmButtonColor: "#d83f3f",
         cancelButtonColor: "#c8b9aa",
       });
@@ -358,16 +360,18 @@ export default function CustomersPage() {
       customerListCache.clear();
 
       await Swal.fire({
+      confirmButtonText: ct("OK"),
         icon: "success",
-        title: isBlocked ? "Customer unblocked" : "Customer blocked",
-        text: response.message,
+        title: isBlocked ? ct("Customer unblocked") : ct("Customer blocked"),
+        text: customerMessage(response.message),
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
+      confirmButtonText: ct("OK"),
         icon: "error",
-        title: isBlocked ? "Unable to unblock customer" : "Unable to block customer",
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: isBlocked ? ct("Unable to unblock customer") : ct("Unable to block customer"),
+        text: customerError(error, "Please try again."),
         confirmButtonColor: "#cf6e38",
       });
     } finally {
@@ -395,7 +399,7 @@ export default function CustomersPage() {
 
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
-          {loadError}
+          {customerError(loadError, "Unable to load customers.")}
         </div>
       ) : null}
 
@@ -419,8 +423,8 @@ export default function CustomersPage() {
         />
         {isLoading && rows.length === 0 ? (
           <AdminLoadingState
-            title="Loading customer records"
-            description="Fetching account details, status filters, recent registrations, and customer activity."
+            title={ct("Loading customer records")}
+            description={ct("Fetching account details, status filters, recent registrations, and customer activity.")}
             rows={5}
             columns={6}
           />

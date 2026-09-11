@@ -1,9 +1,11 @@
+import { vt, useVendorLanguage } from "../../utils/vendorTranslation.js";
 function DocumentCard({ document, onDownload, onPreview }) {
+  useVendorLanguage();
   return (
     <article className="rounded-[16px] border border-[#ddd6cf] bg-white p-5 shadow-[0_8px_20px_rgba(53,34,20,0.05)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-[16px] font-bold text-[#18120f]">{document.title}</h3>
+          <h3 className="text-[16px] font-bold text-[#18120f]">{vt(document.title)}</h3>
           <p className="mt-1 text-[12px] text-[#8c8077]">{document.subtitle}</p>
         </div>
         <span
@@ -14,7 +16,7 @@ function DocumentCard({ document, onDownload, onPreview }) {
               : "bg-[#fff7e8] text-[#b97914]",
           ].join(" ")}
         >
-          {document.status}
+          {vt(document.status)}
         </span>
       </div>
 
@@ -23,29 +25,24 @@ function DocumentCard({ document, onDownload, onPreview }) {
           className="flex-1 rounded-[8px] border border-[#ddd4cb] bg-white px-3 py-2.5 text-[12px] font-semibold text-[#4d423b]"
           onClick={() => onPreview?.(document)}
           type="button"
-        >
-          Preview
-        </button>
+        >{vt("Preview")}</button>
         <button
           className="flex-1 rounded-[8px] border border-[#ddd4cb] bg-white px-3 py-2.5 text-[12px] font-semibold text-[#4d423b]"
           onClick={() => onDownload?.(document)}
           type="button"
-        >
-          Download
-        </button>
+        >{vt("Download")}</button>
       </div>
     </article>
   );
 }
 
 export default function VendorVerificationSection({ documents, onDownload, onPreview }) {
+  useVendorLanguage();
   return (
     <section className="space-y-4">
       <div className="flex items-center gap-2 px-1">
         <span className="h-6 w-[4px] rounded-full bg-[#d96834]" />
-        <h2 className="text-[22px] font-extrabold tracking-tight text-[#18120f]">
-          Verification Documents
-        </h2>
+        <h2 className="text-[22px] font-extrabold tracking-tight text-[#18120f]">{vt("Verification Documents")}</h2>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

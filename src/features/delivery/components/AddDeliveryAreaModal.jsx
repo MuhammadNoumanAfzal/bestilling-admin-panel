@@ -1,3 +1,4 @@
+import { dt, useDeliveryLanguage } from "../deliveryTranslation.js";
 import { CircleDot, Plus, X } from "lucide-react";
 import { useState } from "react";
 import AddDeliveryAreaField from "./add-area/AddDeliveryAreaField.jsx";
@@ -16,6 +17,7 @@ const initialPostalForm = {
 };
 
 function SectionTitle({ children }) {
+  useDeliveryLanguage();
   return (
     <div className="mb-2.5 flex items-center gap-2">
       <span className="inline-flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[#fff0e7] text-[#cf6e38]">
@@ -32,6 +34,7 @@ export default function AddDeliveryAreaModal({
   onSubmit,
   regionOptions = [],
 }) {
+  useDeliveryLanguage();
   const [form, setForm] = useState({
     country: "Norway",
     region: "",
@@ -109,16 +112,14 @@ export default function AddDeliveryAreaModal({
       <div className="flex max-h-[88vh] w-full max-w-[690px] flex-col overflow-hidden rounded-[22px] border border-[#ecdccf] bg-[linear-gradient(180deg,#fffdfa_0%,#fff8f3_100%)] shadow-[0_30px_80px_rgba(28,18,12,0.22)]">
         <div className="flex items-start justify-between gap-4 border-b border-[#f1e2d8] px-5 py-3.5">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#cf6e38]">Add New Delivery Area</p>
-            <h2 className="mt-1.5 text-[20px] font-bold tracking-[-0.03em] text-[#1d1612]">Add New Delivery Area</h2>
-            <p className="mt-1 text-[11px] leading-5 text-[#8d8077]">
-              Configure a new delivery area before it becomes available.
-            </p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#cf6e38]">{dt("Add New Delivery Area")}</p>
+            <h2 className="mt-1.5 text-[20px] font-bold tracking-[-0.03em] text-[#1d1612]">{dt("Add New Delivery Area")}</h2>
+            <p className="mt-1 text-[11px] leading-5 text-[#8d8077]">{dt("Configure a new delivery area before it becomes available.")}</p>
           </div>
 
           <button
             className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#efddd1] bg-white text-[#685b53] transition hover:border-[#cf6e38]/30 hover:bg-[#fff2ea] hover:text-[#cf6e38]"
-            onClick={onClose}
+            title={dt("Close")} aria-label={dt("Close")} onClick={onClose}
             type="button"
           >
             <X size={16} />
@@ -128,46 +129,46 @@ export default function AddDeliveryAreaModal({
         <div className="overflow-y-auto px-5 py-4">
           <div className="space-y-4">
             <section className="rounded-[14px] border border-[#eee3db] bg-white p-3.5">
-              <SectionTitle>Basic Information</SectionTitle>
+              <SectionTitle>{dt("Basic Information")}</SectionTitle>
               <div className="grid gap-2.5 sm:grid-cols-2">
                 <AddDeliveryAreaField
-                  label="Country"
+                  label={dt("Country")}
                   onChange={(event) => updateField("country", event.target.value)}
                   value={form.country}
                 />
                 <AddDeliveryAreaField
-                  label="Region"
+                  label={dt("Region")}
                   onChange={(event) => updateField("region", event.target.value)}
-                  placeholder="Enter region"
+                  placeholder={dt("Enter region")}
                   value={form.region}
                 />
                 <AddDeliveryAreaField
-                  label="City Name"
+                  label={dt("City Name")}
                   onChange={(event) => updateField("city", event.target.value)}
-                  placeholder="Enter city"
+                  placeholder={dt("Enter city")}
                   value={form.city}
                 />
               </div>
             </section>
 
             <section className="rounded-[14px] border border-[#eee3db] bg-white p-3.5">
-              <SectionTitle>Postal Codes</SectionTitle>
+              <SectionTitle>{dt("Postal Codes")}</SectionTitle>
               <div className="mb-3 grid gap-2.5 sm:grid-cols-3">
                 <AddDeliveryAreaField
-                  label="Postal Code"
+                  label={dt("Postal Code")}
                   onChange={(event) => updatePostalField("postalCode", event.target.value)}
-                  placeholder="Enter postal code"
+                  placeholder={dt("Enter postal code")}
                   value={postalForm.postalCode}
                 />
                 <AddDeliveryAreaField
-                  label="Area Name"
+                  label={dt("Area Name")}
                   onChange={(event) => updatePostalField("areaName", event.target.value)}
-                  placeholder="Enter area name"
+                  placeholder={dt("Enter area name")}
                   value={postalForm.areaName}
                 />
                 <AddDeliveryAreaField
                   as="select"
-                  label="Status"
+                  label={dt("Status")}
                   onChange={(event) => updatePostalField("status", event.target.value)}
                   options={postalStatusOptions}
                   value={postalForm.status}
@@ -181,7 +182,7 @@ export default function AddDeliveryAreaModal({
                   type="button"
                 >
                   <Plus size={12} />
-                  <span>{postalForm.id ? "Update Code" : "Add Code"}</span>
+                  <span>{postalForm.id ? dt("Update Code") : dt("Add Code")}</span>
                 </button>
               </div>
 
@@ -199,18 +200,16 @@ export default function AddDeliveryAreaModal({
             <div className="flex flex-wrap items-center justify-end gap-2.5">
               <button
                 className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[8px] border border-[#d5ccc5] bg-white px-4 text-[12px] font-bold text-[#332822] transition hover:bg-[#faf6f2]"
-                onClick={onClose}
+                title={dt("Close")} aria-label={dt("Close")} onClick={onClose}
                 type="button"
-              >
-                Cancel
-              </button>
+              >{dt("Cancel")}</button>
               <button
                 className="inline-flex h-9 cursor-pointer items-center justify-center rounded-[8px] bg-[#cf6e38] px-4 text-[12px] font-bold text-white transition hover:bg-[#bc6030] disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={isSubmitting}
                 onClick={handleSave}
                 type="button"
               >
-                {isSubmitting ? "Saving..." : "Save Delivery Area"}
+                {isSubmitting ? dt("Saving...") : dt("Save Delivery Area")}
               </button>
             </div>
           </div>

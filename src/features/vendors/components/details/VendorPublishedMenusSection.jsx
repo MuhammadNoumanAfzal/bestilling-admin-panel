@@ -1,8 +1,10 @@
+import { vt, useVendorLanguage } from "../../utils/vendorTranslation.js";
 import { useMemo, useState } from "react";
 import MenuPreviewModal from "./MenuPreviewModal.jsx";
 export { MenuPreviewModal };
 
 function MenuTab({ tab, isActive, onClick }) {
+  useVendorLanguage();
   return (
     <button
       className={[
@@ -12,21 +14,22 @@ function MenuTab({ tab, isActive, onClick }) {
       onClick={onClick}
       type="button"
     >
-      {tab.label}
+      {vt(tab.label)}
     </button>
   );
 }
 
 function MenuCard({ menu, onView }) {
+  useVendorLanguage();
   return (
     <article className="overflow-hidden rounded-[14px] border border-[#ddd6cf] bg-white shadow-[0_8px_20px_rgba(53,34,20,0.04)]">
       <div className="relative">
         <img alt={menu.title} className="h-36 w-full object-cover" src={menu.imageUrl} />
         <span className="absolute left-3 top-3 rounded-full bg-[#d96834] px-2.5 py-1 text-[10px] font-bold text-white">
-          {menu.status}
+          {vt(menu.status)}
         </span>
         <span className="absolute right-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold text-[#5f534b]">
-          {menu.badge}
+          {vt(menu.badge)}
         </span>
       </div>
       <div className="space-y-2.5 p-4">
@@ -41,9 +44,7 @@ function MenuCard({ menu, onView }) {
             className="text-[12px] font-bold text-[#8c7f76] transition hover:text-[#d96834]"
             onClick={() => onView(menu)}
             type="button"
-          >
-            View
-          </button>
+          >{vt("View")}</button>
         </div>
       </div>
     </article>
@@ -52,6 +53,7 @@ function MenuCard({ menu, onView }) {
 
 
 export default function VendorPublishedMenusSection({ menus, onViewMenu, tabs }) {
+  useVendorLanguage();
   const [activeTab, setActiveTab] = useState(() => tabs.find((tab) => tab.active)?.value || tabs[0]?.value || "all");
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [selectedMenuDetail, setSelectedMenuDetail] = useState(null);
@@ -98,9 +100,7 @@ export default function VendorPublishedMenusSection({ menus, onViewMenu, tabs })
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-1">
           <span className="h-6 w-[4px] rounded-full bg-[#d96834]" />
-          <h2 className="text-[22px] font-extrabold tracking-tight text-[#18120f]">
-            Published Menus
-          </h2>
+          <h2 className="text-[22px] font-extrabold tracking-tight text-[#18120f]">{vt("Published Menus")}</h2>
         </div>
 
         <div className="flex flex-wrap gap-2">

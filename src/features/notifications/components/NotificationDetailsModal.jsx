@@ -1,3 +1,4 @@
+import { nt, useNotificationLanguage, notificationDate } from "../notificationTranslation.js";
 import {
   BellRing,
   CheckCheck,
@@ -31,6 +32,7 @@ const methodMeta = {
 };
 
 function MethodTag({ method }) {
+  useNotificationLanguage();
   const meta = methodMeta[method];
 
   if (!meta) {
@@ -42,21 +44,23 @@ function MethodTag({ method }) {
   return (
     <span className="inline-flex items-center gap-2 rounded-full border border-[#ffd9c7] bg-[linear-gradient(180deg,#fff7f2_0%,#fff0e7_100%)] px-3 py-1.5 text-[12px] font-semibold text-[#b85f30]">
       <Icon size={14} />
-      {meta.label}
+      {nt(meta.label)}
     </span>
   );
 }
 
 function DetailRow({ label, value }) {
+  useNotificationLanguage();
   return (
     <div className="rounded-[14px] border border-[#f0e2d8] bg-[linear-gradient(180deg,#fffdfa_0%,#faf5f0_100%)] px-4 py-3 shadow-[0_6px_18px_rgba(69,38,19,0.04)]">
-      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{label}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{nt(label)}</p>
       <p className="mt-1 break-words text-[13px] font-semibold leading-5 text-[#2a1f19]">{value}</p>
     </div>
   );
 }
 
 function DeliveryChip({ active, label }) {
+  useNotificationLanguage();
   return (
     <span
       className={[
@@ -65,43 +69,43 @@ function DeliveryChip({ active, label }) {
       ].join(" ")}
     >
       <CheckCheck size={13} />
-      {label}: {active ? "Yes" : "No"}
+      {nt(label)}: {active ? nt("Yes") : nt("No")}
     </span>
   );
 }
 
 function formatLinkedResource(notification) {
   if (notification.payoutId) {
-    return `Payout #${notification.payoutId}`;
+    return nt("Payout #{{id}}", { id: notification.payoutId });
   }
 
   if (notification.orderId) {
-    return `Order #${notification.orderId}`;
+    return nt("Order #{{id}}", { id: notification.orderId });
   }
 
   if (notification.invoiceId) {
-    return `Invoice #${notification.invoiceId}`;
+    return nt("Invoice #{{id}}", { id: notification.invoiceId });
   }
 
   if (notification.entityType && notification.entityId) {
-    return `${notification.entityType} #${notification.entityId}`;
+    return `${nt(notification.entityType)} #${notification.entityId}`;
   }
 
   if (notification.entityType) {
-    return notification.entityType;
+    return nt(notification.entityType);
   }
 
-  return "Not available";
+  return nt("Not available");
 }
 
 function getAttachmentFileNameFromUrl(url) {
   try {
     const parsedUrl = new URL(url);
     const pathnameParts = parsedUrl.pathname.split("/").filter(Boolean);
-    return pathnameParts[pathnameParts.length - 1] || "Attachment";
+    return pathnameParts[pathnameParts.length - 1] || nt("Attachment");
   } catch {
     const pathnameParts = String(url || "").split("/").filter(Boolean);
-    return pathnameParts[pathnameParts.length - 1] || "Attachment";
+    return pathnameParts[pathnameParts.length - 1] || nt("Attachment");
   }
 }
 
@@ -127,6 +131,7 @@ function extractAttachmentsFromMessage(message) {
 }
 
 export default function NotificationDetailsModal({ notification, onClose, onOpenAction }) {
+  useNotificationLanguage();
   if (!notification) {
     return null;
   }
@@ -140,9 +145,7 @@ export default function NotificationDetailsModal({ notification, onClose, onOpen
         <div className="flex max-h-[calc(100vh-3rem)] w-full max-w-[620px] flex-col overflow-hidden rounded-[24px] border border-[#f2dfd3] bg-[linear-gradient(180deg,#fffdfa_0%,#fff7f2_100%)] shadow-[0_28px_80px_rgba(28,18,12,0.20)]">
           <div className="flex items-start justify-between gap-4 border-b border-[#f1e2d8] px-4 py-4 sm:px-5">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#cf6e38]">
-                Notification Details
-              </p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#cf6e38]">{nt("Notification Details")}</p>
               <h2 className="mt-2 max-w-[420px] break-words text-[20px] font-bold leading-7 tracking-[-0.03em] text-[#1d1612] sm:text-[22px]">
                 {notification.title}
               </h2>
@@ -150,7 +153,7 @@ export default function NotificationDetailsModal({ notification, onClose, onOpen
 
             <button
               className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#efddd1] bg-white text-[#685b53] transition hover:border-[#cf6e38]/30 hover:bg-[#fff2ea] hover:text-[#cf6e38]"
-              onClick={onClose}
+              title={nt("Close")} aria-label={nt("Close")} onClick={onClose}
               type="button"
             >
               <X size={16} />
@@ -159,16 +162,16 @@ export default function NotificationDetailsModal({ notification, onClose, onOpen
 
           <div className="space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
             <div className="grid gap-3 md:grid-cols-2">
-              <DetailRow label="Audience" value={notification.audience} />
-              <DetailRow label="Status" value={notification.statusLabel || notification.status} />
-              <DetailRow label="Type" value={notification.typeLabel || notification.type || "Not available"} />
-              <DetailRow label="Created At" value={notification.createdAtDisplay || notification.createdAt} />
-              <DetailRow label="Read At" value={notification.readAtDisplay || "Not available"} />
-              <DetailRow label="Linked Resource" value={formatLinkedResource(notification)} />
+              <DetailRow label={nt("Audience")} value={nt(notification.audience)} />
+              <DetailRow label={nt("Status")} value={nt(notification.statusLabel || notification.status)} />
+              <DetailRow label={nt("Type")} value={nt(notification.typeLabel || notification.type || nt("Not available"))} />
+              <DetailRow label={nt("Created At")} value={notificationDate(notification.createdAt)} />
+              <DetailRow label={nt("Read At")} value={notification.readAt ? notificationDate(notification.readAt) : nt(notification.readAtDisplay || nt("Not available"))} />
+              <DetailRow label={nt("Linked Resource")} value={formatLinkedResource(notification)} />
             </div>
 
             <div className="rounded-[16px] border border-[#f0e2d8] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">Delivery Channels</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{nt("Delivery Channels")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {notification.channels.map((channel) => (
                   <MethodTag key={channel} method={channel} />
@@ -177,34 +180,32 @@ export default function NotificationDetailsModal({ notification, onClose, onOpen
             </div>
 
             <div className="rounded-[16px] border border-[#f0e2d8] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">Delivery Preferences</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{nt("Delivery Preferences")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <DeliveryChip active={notification.sendInApp} label="In-App" />
-                <DeliveryChip active={notification.sendEmail} label="Email" />
-                <DeliveryChip active={notification.sendPush} label="Push" />
+                <DeliveryChip active={notification.sendInApp} label={nt("In-App")} />
+                <DeliveryChip active={notification.sendEmail} label={nt("Email")} />
+                <DeliveryChip active={notification.sendPush} label={nt("Push")} />
               </div>
             </div>
 
             {showSubject ? (
               <div className="rounded-[16px] border border-[#f0e2d8] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">Subject</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{nt("Subject")}</p>
                 <p className="mt-2 text-[15px] font-bold leading-6 text-[#261b16]">{notification.subject}</p>
               </div>
             ) : null}
 
             <div className="rounded-[16px] border border-[#f0e2d8] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">Message</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{nt("Message")}</p>
               {parsedMessage.message ? (
                 <p className="mt-2 break-words text-[14px] leading-6 text-[#40342e]">{parsedMessage.message}</p>
               ) : (
-                <p className="mt-2 text-[14px] leading-6 text-[#8c7d74]">No message provided.</p>
+                <p className="mt-2 text-[14px] leading-6 text-[#8c7d74]">{nt("No message provided.")}</p>
               )}
 
               {parsedMessage.attachments.length ? (
                 <div className="mt-4 space-y-3">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">
-                    Attachments
-                  </p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{nt("Attachments")}</p>
                   <div className="grid gap-3 sm:grid-cols-2">
                     {parsedMessage.attachments.map((attachment) => (
                       <a
@@ -220,16 +221,14 @@ export default function NotificationDetailsModal({ notification, onClose, onOpen
                           </span>
                           <span className="min-w-0">
                             <span className="block truncate text-[13px] font-bold text-[#2a1f19]">
-                              {attachment.isImage ? "Open image" : "Open attachment"}
+                              {attachment.isImage ? nt("Open image") : nt("Open attachment")}
                             </span>
                             <span className="block truncate text-[12px] text-[#8b7d73]">
                               {attachment.fileName}
                             </span>
                           </span>
                         </span>
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#cf6e38]">
-                          View
-                          <ExternalLink size={12} />
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#cf6e38]">{nt("View")}<ExternalLink size={12} />
                         </span>
                       </a>
                     ))}
@@ -240,14 +239,14 @@ export default function NotificationDetailsModal({ notification, onClose, onOpen
 
             {notification.note ? (
               <div className="rounded-[16px] border border-[#f0e2d8] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">Admin Note</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{nt("Admin Note")}</p>
                 <p className="mt-2 text-[14px] leading-6 text-[#40342e]">{notification.note}</p>
               </div>
             ) : null}
 
             {notification.rejectionReason ? (
               <div className="rounded-[16px] border border-[#f2d9d1] bg-[#fff7f4] px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#b56b58]">Rejection Reason</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#b56b58]">{nt("Rejection Reason")}</p>
                 <p className="mt-2 text-[14px] leading-6 text-[#5f4339]">{notification.rejectionReason}</p>
               </div>
             ) : null}
@@ -255,32 +254,30 @@ export default function NotificationDetailsModal({ notification, onClose, onOpen
             {notification.receiptUrl || notification.transferReference || notification.paymentDate ? (
               <div className="grid gap-3 md:grid-cols-2">
                 {notification.paymentDate ? (
-                  <DetailRow label="Payment Date" value={notification.paymentDate} />
+                  <DetailRow label={nt("Payment Date")} value={notificationDate(notification.paymentDate, true)} />
                 ) : null}
                 {notification.transferReference ? (
-                  <DetailRow label="Transfer Reference" value={notification.transferReference} />
+                  <DetailRow label={nt("Transfer Reference")} value={notification.transferReference} />
                 ) : null}
                 {notification.paymentStatus ? (
-                  <DetailRow label="Payment Status" value={notification.paymentStatus} />
+                  <DetailRow label={nt("Payment Status")} value={nt(notification.paymentStatus)} />
                 ) : null}
                 {notification.settlementStatus ? (
-                  <DetailRow label="Settlement Status" value={notification.settlementStatus} />
+                  <DetailRow label={nt("Settlement Status")} value={nt(notification.settlementStatus)} />
                 ) : null}
               </div>
             ) : null}
 
             {notification.receiptUrl ? (
               <div className="rounded-[16px] border border-[#f0e2d8] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(74,41,21,0.05)]">
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">Receipt Proof</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{nt("Receipt Proof")}</p>
                 <a
                   className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-[12px] bg-[#fff2e9] px-4 py-2.5 text-[13px] font-bold text-[#cf6e38] no-underline transition hover:bg-[#ffe8d9] hover:text-[#bc6030]"
                   href={notification.receiptUrl}
                   rel="noreferrer"
                   target="_blank"
                 >
-                  <ExternalLink size={15} />
-                  Open Uploaded Receipt
-                </a>
+                  <ExternalLink size={15} />{nt("Open Uploaded Receipt")}</a>
               </div>
             ) : null}
 
@@ -289,7 +286,7 @@ export default function NotificationDetailsModal({ notification, onClose, onOpen
                 <UserRound size={17} />
               </span>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">Triggered By</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#aa8f81]">{nt("Triggered By")}</p>
                 <p className="text-[13px] font-semibold text-[#2a1f19]">{notification.sentBy}</p>
               </div>
             </div>
@@ -301,16 +298,12 @@ export default function NotificationDetailsModal({ notification, onClose, onOpen
               className="inline-flex h-11 items-center justify-center rounded-[12px] border border-[#dfd3ca] bg-white px-4 text-[13px] font-bold text-[#3d322b] transition hover:bg-[#faf6f2]"
               onClick={onClose}
               type="button"
-            >
-              Close
-            </button>
+            >{nt("Close")}</button>
             <button
               className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] bg-[#cf6e38] px-4 text-[13px] font-bold text-white shadow-[0_12px_24px_rgba(207,110,56,0.22)] transition hover:bg-[#bc6030]"
               onClick={() => onOpenAction(notification)}
               type="button"
-            >
-              Open Destination
-              <ExternalLink size={15} />
+            >{nt("Open Destination")}<ExternalLink size={15} />
             </button>
           </div>
         </div>

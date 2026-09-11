@@ -1,3 +1,4 @@
+import { cmt, useCommissionLanguage, commissionError, commissionDialog } from "../commissionTranslation.js";
 import { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import {
@@ -98,6 +99,7 @@ function getDateRangeError(effectiveFrom, effectiveTo) {
 }
 
 function LoadingBlock() {
+  useCommissionLanguage();
   return (
     <div className="space-y-5">
       <section className="space-y-1">
@@ -125,6 +127,7 @@ function readCommissionCache() {
 }
 
 export default function CommissionSettingsPage() {
+  useCommissionLanguage();
   const [commissionState, setCommissionState] = useState(createEmptyCommissionState);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -197,12 +200,12 @@ export default function CommissionSettingsPage() {
       setLoadError(message);
 
       if (!silent) {
-        await Swal.fire({
+        await Swal.fire(commissionDialog({
           icon: "error",
           title: "Unable to load commission settings",
-          text: message,
+          text: commissionError(message, "Unable to load commission settings."),
           confirmButtonColor: "#cf6e38",
-        });
+        }));
       }
     } finally {
       setIsLoading(false);
@@ -430,12 +433,12 @@ export default function CommissionSettingsPage() {
 
   async function handleGlobalSubmit() {
     if (!globalForm.label.trim() || !globalForm.currentRate.trim() || !globalForm.description.trim()) {
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "warning",
         title: "Missing details",
         text: "Please complete the label, rate, and description.",
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
@@ -444,19 +447,19 @@ export default function CommissionSettingsPage() {
       const result = await updateGlobalCommissionRequest(globalForm);
       await loadCommissionSettings({ silent: true });
       closeModal();
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "success",
         title: "Global commission updated",
-        text: result.message,
+        text: commissionError(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "error",
         title: "Unable to update global commission",
-        text: error?.message || "Please try again.",
+        text: commissionError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsSubmittingGlobal(false);
     }
@@ -464,23 +467,23 @@ export default function CommissionSettingsPage() {
 
   async function handleVendorSubmit() {
     if (!vendorForm.vendorId || !vendorForm.areaId || !vendorForm.currentCommission.trim() || !vendorForm.effectiveFrom) {
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "warning",
         title: "Missing details",
         text: "Please select a vendor, area, commission rate, and effective start date.",
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
     const dateRangeError = getDateRangeError(vendorForm.effectiveFrom, vendorForm.effectiveTo);
     if (dateRangeError) {
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "warning",
         title: "Invalid date range",
         text: dateRangeError,
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
@@ -492,19 +495,19 @@ export default function CommissionSettingsPage() {
           : await createVendorCommissionRequest(vendorForm);
       await loadCommissionSettings({ silent: true });
       closeModal();
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "success",
         title: modalState.mode === "edit" ? "Vendor commission updated" : "Vendor commission created",
-        text: result.message,
+        text: commissionError(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "error",
         title: modalState.mode === "edit" ? "Unable to update vendor commission" : "Unable to create vendor commission",
-        text: error?.message || "Please try again.",
+        text: commissionError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsSubmittingVendor(false);
     }
@@ -512,23 +515,23 @@ export default function CommissionSettingsPage() {
 
   async function handleAreaSubmit() {
     if (!areaForm.areaId || !areaForm.commissionRate.trim() || !areaForm.effectiveFrom) {
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "warning",
         title: "Missing details",
         text: "Please select an area, commission rate, and effective start date.",
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
     const dateRangeError = getDateRangeError(areaForm.effectiveFrom, areaForm.effectiveTo);
     if (dateRangeError) {
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "warning",
         title: "Invalid date range",
         text: dateRangeError,
         confirmButtonColor: "#cf6e38",
-      });
+      }));
       return;
     }
 
@@ -540,19 +543,19 @@ export default function CommissionSettingsPage() {
           : await createAreaCommissionRequest(areaForm);
       await loadCommissionSettings({ silent: true });
       closeModal();
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "success",
         title: modalState.mode === "edit" ? "Area commission updated" : "Area commission created",
-        text: result.message,
+        text: commissionError(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "error",
         title: modalState.mode === "edit" ? "Unable to update area commission" : "Unable to create area commission",
-        text: error?.message || "Please try again.",
+        text: commissionError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsSubmittingArea(false);
     }
@@ -572,19 +575,19 @@ export default function CommissionSettingsPage() {
           : await deleteAreaCommissionRequest(deleteTarget.id);
       await loadCommissionSettings({ silent: true });
       closeModal();
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "success",
         title: "Commission entry removed",
-        text: result.message,
+        text: commissionError(result.message, "Changes saved successfully."),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } catch (error) {
-      await Swal.fire({
+      await Swal.fire(commissionDialog({
         icon: "error",
         title: "Unable to remove commission entry",
-        text: error?.message || "Please try again.",
+        text: commissionError(error),
         confirmButtonColor: "#cf6e38",
-      });
+      }));
     } finally {
       setIsDeleting(false);
     }
@@ -601,8 +604,8 @@ export default function CommissionSettingsPage() {
     <div className="space-y-5">
       {(loadError || isRefreshing) ? (
         <section className="space-y-1">
-          {loadError ? <p className="text-[14px] font-medium text-[#c65736]">{loadError}</p> : null}
-          {isRefreshing ? <p className="text-[13px] text-[#8d8077]">Refreshing latest commission data...</p> : null}
+          {loadError ? <p className="text-[14px] font-medium text-[#c65736]">{commissionError(loadError, "Unable to load commission settings.")}</p> : null}
+          {isRefreshing ? <p className="text-[13px] text-[#8d8077]">{cmt("Refreshing latest commission data...")}</p> : null}
         </section>
       ) : null}
 
@@ -653,8 +656,8 @@ export default function CommissionSettingsPage() {
         onChange={handleGlobalChange}
         onClose={closeModal}
         onSubmit={handleGlobalSubmit}
-        submitLabel="Save Global Commission"
-        title="Edit Global Commission"
+        submitLabel={cmt("Save Global Commission")}
+        title={cmt("Edit Global Commission")}
       />
 
       <CommissionModal
@@ -673,8 +676,8 @@ export default function CommissionSettingsPage() {
             disabled: modalState.mode === "edit",
             helperText:
               modalState.mode === "edit"
-                ? "Vendor is locked for existing commission overrides."
-                : "Search and choose the vendor to override.",
+                ? cmt("Vendor is locked for existing commission overrides.")
+                : cmt("Search and choose the vendor to override."),
           },
           {
             key: "areaId",
@@ -716,8 +719,8 @@ export default function CommissionSettingsPage() {
         onChange={handleVendorChange}
         onClose={closeModal}
         onSubmit={handleVendorSubmit}
-        submitLabel={modalState.mode === "edit" ? "Save Vendor Commission" : "Add Vendor Commission"}
-        title={modalState.mode === "edit" ? "Edit Vendor Commission" : "Assign Vendor Commission"}
+        submitLabel={modalState.mode === "edit" ? cmt("Save Vendor Commission") : cmt("Add Vendor Commission")}
+        title={modalState.mode === "edit" ? cmt("Edit Vendor Commission") : cmt("Assign Vendor Commission")}
       />
 
       <CommissionModal
@@ -736,8 +739,8 @@ export default function CommissionSettingsPage() {
             disabled: modalState.mode === "edit",
             helperText:
               modalState.mode === "edit"
-                ? "Area is locked for existing commission overrides."
-                : "Search and choose the area to override.",
+                ? cmt("Area is locked for existing commission overrides.")
+                : cmt("Search and choose the area to override."),
           },
           {
             key: "commissionRate",
@@ -766,23 +769,21 @@ export default function CommissionSettingsPage() {
         onChange={handleAreaChange}
         onClose={closeModal}
         onSubmit={handleAreaSubmit}
-        submitLabel={modalState.mode === "edit" ? "Save Area Commission" : "Add Area Commission"}
-        title={modalState.mode === "edit" ? "Edit Area Commission" : "Add Area Commission"}
+        submitLabel={modalState.mode === "edit" ? cmt("Save Area Commission") : cmt("Add Area Commission")}
+        title={modalState.mode === "edit" ? cmt("Edit Area Commission") : cmt("Add Area Commission")}
       />
 
       <DeleteConfirmModal
         description={
           deleteTarget
-            ? `This will deactivate the ${modalState.type === "delete-vendor" ? "vendor" : "area"} commission override for ${
-                modalState.type === "delete-vendor" ? deleteTarget.vendor : deleteTarget.area
-              }.`
+            ? cmt(modalState.type === "delete-vendor" ? "This will deactivate the vendor commission override for {{name}}." : "This will deactivate the area commission override for {{name}}.", { name: modalState.type === "delete-vendor" ? deleteTarget.vendor : deleteTarget.area })
             : ""
         }
         isOpen={modalState.type === "delete-vendor" || modalState.type === "delete-area"}
         isSubmitting={isDeleting}
         onClose={closeModal}
         onConfirm={handleDeleteConfirm}
-        title="Delete Commission Entry"
+        title={cmt("Delete Commission Entry")}
       />
     </div>
   );

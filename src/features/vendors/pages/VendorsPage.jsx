@@ -1,3 +1,4 @@
+import { vt, useVendorLanguage, vendorError, vendorMessage } from "../utils/vendorTranslation.js";
 import { useEffect, useMemo, useState } from "react";
 import { loadCompleteList, paginateFilteredRows } from "../../shared/completeList.js";
 import { useOutletContext, useSearchParams } from "react-router-dom";
@@ -170,6 +171,7 @@ function clearVendorCache() {
 }
 
 export default function VendorsPage() {
+  useVendorLanguage();
   const { setPageHeaderAction } = useOutletContext();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
@@ -382,16 +384,16 @@ export default function VendorsPage() {
     const isReactivating = row.status === "Suspended" || row.status === "Deactivated";
 
     const reasonResult = await Swal.fire({
-      title: isReactivating ? "Reactivate vendor?" : "Suspend vendor?",
+      title: isReactivating ? vt("Reactivate vendor?") : vt("Suspend vendor?"),
       text: isReactivating
-        ? `Restore ${row.name} to active marketplace status?`
-        : `${row.name} will stop receiving new orders while suspended.`,
+        ? vt("Restore {{value0}} to active marketplace status?", { value0: row.name })
+        : vt("{{value0}} will stop receiving new orders while suspended.", { value0: row.name }),
       input: "text",
-      inputLabel: "Reason",
-      inputPlaceholder: isReactivating ? "Issue resolved" : "Compliance issue",
+      inputLabel: vt("Reason"),
+      inputPlaceholder: isReactivating ? vt("Issue resolved") : vt("Compliance issue"),
       showCancelButton: true,
-      confirmButtonText: isReactivating ? "Reactivate vendor" : "Suspend vendor",
-      cancelButtonText: "Cancel",
+      confirmButtonText: isReactivating ? vt("Reactivate vendor") : vt("Suspend vendor"),
+      cancelButtonText: vt("Cancel"),
       confirmButtonColor: isReactivating ? "#2b9e62" : "#d83f3f",
       cancelButtonColor: "#c8b9aa",
     });
@@ -420,16 +422,18 @@ export default function VendorsPage() {
       clearVendorCache();
 
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "success",
-        title: isReactivating ? "Vendor reactivated" : "Vendor suspended",
-        text: result.message,
+        title: isReactivating ? vt("Vendor reactivated") : vt("Vendor suspended"),
+        text: vendorMessage(result.message),
         confirmButtonColor: "#cf6e38",
       });
     } catch (error) {
       await Swal.fire({
+      confirmButtonText: vt("OK"),
         icon: "error",
-        title: isReactivating ? "Unable to reactivate vendor" : "Unable to suspend vendor",
-        text: error instanceof Error ? error.message : "Please try again.",
+        title: isReactivating ? vt("Unable to reactivate vendor") : vt("Unable to suspend vendor"),
+        text: vendorError(error),
         confirmButtonColor: "#cf6e38",
       });
     } finally {
@@ -451,7 +455,7 @@ export default function VendorsPage() {
       </section>
       {loadError ? (
         <div className="rounded-[16px] border border-[#efd7cc] bg-white px-5 py-8 text-center text-[15px] font-medium text-[#9f4d33]">
-          {loadError}
+          {vendorError(loadError)}
         </div>
       ) : null}
 
@@ -459,7 +463,7 @@ export default function VendorsPage() {
         {stats.map((stat) => (
           <StatCard
             key={stat.id}
-            title={stat.title}
+            title={vt(stat.title)}
             value={stat.value}
             icon={iconMap[stat.id] || CircleAlert}
             onClick={() => handleStatCardClick(stat.id)}
@@ -483,7 +487,7 @@ export default function VendorsPage() {
 
         <div className="px-4 pb-4">
           {isLoading && rows.length === 0 ? (
-            <AdminLoadingState columns={6} title="Loading vendor records" description="Synchronizing vendor profiles, reviews, and approval status." />
+            <AdminLoadingState columns={6} title={vt("Loading vendor records")} description={vt("Synchronizing vendor profiles, reviews, and approval status.")} />
           ) : (
             <VendorsTable
               currentPage={pageInfo.page}

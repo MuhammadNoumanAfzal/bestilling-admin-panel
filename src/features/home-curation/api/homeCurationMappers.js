@@ -7,12 +7,23 @@ function formatRating(value) {
   return Number.isFinite(nextValue) ? nextValue.toFixed(1) : "0.0";
 }
 
+function getVendorRating(item) {
+  return (
+    item?.rating ??
+    item?.averageRating ??
+    item?.ratingValue ??
+    item?.reviewSummary?.averageRating ??
+    item?.reviews?.summary?.averageRating ??
+    0
+  );
+}
+
 function mapVendorCard(item) {
   return {
     id: item?.id || "",
     name: item?.name || "Unknown vendor",
     city: item?.city || "Unknown city",
-    rating: formatRating(item?.rating),
+    rating: formatRating(getVendorRating(item)),
     avatarUrl: item?.avatarUrl || "",
     imageUrl: item?.coverPhotoUrl || item?.avatarUrl || "",
     deliveryFeeLabel: item?.deliveryFeeLabel || "",

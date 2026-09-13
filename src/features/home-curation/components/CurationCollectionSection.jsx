@@ -1,3 +1,4 @@
+import { Star } from "lucide-react";
 import { hct, useHomeCurationLanguage, homeCurationRating } from "../homeCurationTranslation.js";
 function PaginationControls({ currentPage, onPageChange, totalItems, itemsPerPage }) {
   useHomeCurationLanguage();
@@ -57,6 +58,12 @@ function SearchResultCard({ item, itemType, onAdd }) {
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[14px] font-bold text-[#241912]">{["Unknown vendor", "Untitled product"].includes(item.name) ? hct(item.name) : item.name}</span>
         <span className="mt-1 block truncate text-[12px] text-[#7d7068]">{secondaryText}</span>
+        {itemType === "product" ? null : (
+          <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#fff3ea] px-2 py-1 text-[11px] font-bold text-[#cf6e38]">
+            <Star size={12} className="fill-current" />
+            {hct("{{rating}} star", { rating: homeCurationRating(item.rating) })}
+          </span>
+        )}
       </span>
       <span className="rounded-full bg-[#1f1712] px-3 py-1.5 text-[11px] font-bold text-white">{hct("Add")}</span>
     </button>
@@ -87,7 +94,8 @@ function SelectedItemCard({ item, itemType, onRemove, removeLabel }) {
               {item.priceLabel || hct("Product")}
             </span>
           ) : (
-            <span className="rounded-full bg-[#fff3ea] px-2.5 py-1 text-[11px] font-bold text-[#cf6e38]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#fff3ea] px-2.5 py-1 text-[11px] font-bold text-[#cf6e38]">
+              <Star size={12} className="fill-current" />
               {hct("{{rating}} star", { rating: homeCurationRating(item.rating) })}
             </span>
           )}

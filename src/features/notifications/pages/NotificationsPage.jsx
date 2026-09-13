@@ -94,12 +94,6 @@ function invalidateNotificationCache() {
 function buildSummary(pageInfo) {
   return [
     {
-      id: "total",
-      label: "Total Notifications",
-      value: String(pageInfo.totalItems || 0),
-      accent: "soft",
-    },
-    {
       id: "sent",
       label: "Unread Notifications",
       value: String(pageInfo.unreadCount || 0),

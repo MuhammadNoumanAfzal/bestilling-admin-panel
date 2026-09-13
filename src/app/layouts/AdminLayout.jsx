@@ -11,6 +11,7 @@ import {
   Home,
   LifeBuoy,
   LogOut,
+  MailQuestion,
   Menu,
   Search,
   Settings as SettingsIcon,
@@ -184,6 +185,14 @@ const navigation = [
     matchPaths: ["/support"],
   },
   {
+    label: "Contact Responses",
+    to: "/contact-responses",
+    icon: MailQuestion,
+    description: "Review client contact form submissions.",
+    keywords: ["contact", "inquiries", "responses", "leads", "messages"],
+    matchPaths: ["/contact-responses"],
+  },
+  {
     label: "Notifications",
     to: "/notifications",
     icon: Bell,
@@ -257,6 +266,10 @@ const pageMeta = {
   "/support": {
     title: "Support",
     subtitle: "Handle tickets, escalations, and operational follow-up.",
+  },
+  "/contact-responses": {
+    title: "Contact Responses",
+    subtitle: "Review client contact form submissions and route follow-up.",
   },
   "/home-curation": {
     title: "Home Curation",

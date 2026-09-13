@@ -30,7 +30,7 @@ const iconMap = {
   revenue: DollarSign,
 };
 
-const DEFAULT_DATE_FILTER = "Last 7 days";
+const DEFAULT_DATE_FILTER = "All time";
 
 function matchesTab(row, tab) {
   if (tab === "All" || tab === "Top Performing") {
@@ -248,6 +248,24 @@ export default function VendorsPage() {
     };
   }
 
+  function getActiveSidePanels(response) {
+    const activeVendorById = new Map(
+      response.rows
+        .filter((row) => row.status === "Active")
+        .map((row) => [String(row.id), row]),
+    );
+
+    return {
+      ...response.sidePanels,
+      topPerformers: response.sidePanels.topPerformers
+        .filter((vendor) => activeVendorById.has(String(vendor.id)))
+        .map((vendor) => ({
+          ...vendor,
+          status: activeVendorById.get(String(vendor.id))?.status || "Active",
+        })),
+    };
+  }
+
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab") || "All";
     setActiveTab(tabFromUrl);
@@ -263,7 +281,7 @@ export default function VendorsPage() {
       setPageInfo(filteredResponse.pageInfo);
       setStats(cachedResponse.stats);
       setFilterOptions(cachedResponse.filterOptions);
-      setSidePanels(cachedResponse.sidePanels);
+      setSidePanels(getActiveSidePanels(cachedResponse));
       setIsLoading(false);
     }
 
@@ -286,7 +304,7 @@ export default function VendorsPage() {
         setPageInfo(filteredResponse.pageInfo);
         setStats(response.stats);
         setFilterOptions(response.filterOptions);
-        setSidePanels(response.sidePanels);
+        setSidePanels(getActiveSidePanels(response));
         writeVendorCache(vendorCacheKey, response);
       } catch (error) {
         if (isMounted) {

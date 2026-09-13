@@ -11,6 +11,7 @@ function Dropdown({
   selectedValue,
   defaultLabel,
   clearLabel,
+  showClearOption = true,
   onSelect,
 }) {
   usePayoutLanguage();
@@ -27,6 +28,7 @@ function Dropdown({
 
       {isOpen ? (
         <div className="absolute left-0 z-30 mt-1 w-full min-w-[12rem] rounded-[10px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] sm:w-48">
+          {showClearOption ? (
           <button
             className={`block w-full px-3.5 py-2 text-left text-[12px] font-semibold transition ${
               !selectedValue
@@ -38,6 +40,7 @@ function Dropdown({
           >
             {pt(clearLabel || defaultLabel)}
           </button>
+          ) : null}
 
           {options.map((option) => (
             <button
@@ -120,6 +123,7 @@ export default function PayoutToolbar({
           onToggle={() => setActiveDropdown((current) => (current === "status" ? "" : "status"))}
           options={statusOptions}
           selectedValue={statusFilter === "all" ? "" : statusFilter}
+          showClearOption={false}
         />
 
         <Dropdown

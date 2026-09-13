@@ -6,6 +6,7 @@ export default function TopPerformingVendorsCard({ vendors = [], onViewAll }) {
   useVendorLanguage();
   const navigate = useNavigate();
   const topPerformingVendors = [...vendors]
+    .filter((vendor) => vendor.status === "Active")
     .sort((left, right) => right.revenueValue - left.revenueValue)
     .slice(0, 5);
 

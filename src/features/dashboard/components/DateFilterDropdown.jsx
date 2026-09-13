@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronDown, Calendar, X } from "lucide-react";
@@ -220,5 +220,3 @@ export default function DateFilterDropdown({
     </div>
   );
 }
-
-

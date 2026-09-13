@@ -26,6 +26,7 @@ const DeliveryAreaDetailPage = lazy(() => import("../../features/delivery/pages/
 const ReportsPage = lazy(() => import("../../features/reports/pages/ReportsPage.jsx"));
 const SettingsPage = lazy(() => import("../../features/settings/pages/SettingsPage.jsx"));
 const SupportPage = lazy(() => import("../../features/support/pages/SupportPage.jsx"));
+const ContactResponsesPage = lazy(() => import("../../features/contact-responses/pages/ContactResponsesPage.jsx"));
 const SupportTicketDetailPage = lazy(() => import("../../features/support/pages/SupportTicketDetailPage.jsx"));
 const NotificationsPage = lazy(() => import("../../features/notifications/pages/NotificationsPage.jsx"));
 const CreateNotificationPage = lazy(() => import("../../features/notifications/pages/CreateNotificationPage.jsx"));
@@ -79,6 +80,7 @@ export default function AppRouter() {
             <Route path="/reports" element={<Suspense fallback={<PageLoadingFallback />}><ReportsPage /></Suspense>} />
             <Route path="/support" element={<Suspense fallback={<PageLoadingFallback />}><SupportPage /></Suspense>} />
             <Route path="/support/:ticketId" element={<Suspense fallback={<PageLoadingFallback />}><SupportTicketDetailPage /></Suspense>} />
+            <Route path="/contact-responses" element={<Suspense fallback={<PageLoadingFallback />}><ContactResponsesPage /></Suspense>} />
             <Route path="/notifications" element={<Suspense fallback={<PageLoadingFallback />}><NotificationsPage /></Suspense>} />
             <Route path="/notifications/create" element={<Suspense fallback={<PageLoadingFallback />}><CreateNotificationPage /></Suspense>} />
             <Route path="/home-curation" element={<Suspense fallback={<PageLoadingFallback />}><HomeCurationPage /></Suspense>} />

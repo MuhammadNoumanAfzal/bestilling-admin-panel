@@ -11,7 +11,7 @@ import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 const PAGE_SIZE = 10;
-const DEFAULT_DATE_FILTER = "Last 7 days";
+const DEFAULT_DATE_FILTER = "All time";
 const CUSTOMER_CACHE_TTL_MS = 60_000;
 const customerListCache = new Map();
 

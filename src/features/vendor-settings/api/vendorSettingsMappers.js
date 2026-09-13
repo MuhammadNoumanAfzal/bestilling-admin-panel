@@ -18,6 +18,21 @@ function normalizeLabel(value) {
   return String(value || "").trim();
 }
 
+function resolveIconUrl(value) {
+  const url = normalizeLabel(value);
+  if (!url || /^(?:data:|blob:)/i.test(url)) return url;
+
+  const apiUrl = import.meta.env.VITE_GRAPHQL_API_URL ?? import.meta.env.VITE_GRAPHQL_URL ?? "https://api.gocatering.no/graphql/";
+  const parsedUrl = new URL(url, apiUrl);
+  // Media files belong to the API server. Some API deployments return a
+  // development host in iconUrl (for example localhost:8000), which browsers
+  // outside that server cannot reach.
+  if (parsedUrl.pathname.startsWith("/media/")) {
+    return new URL(`${parsedUrl.pathname}${parsedUrl.search}`, apiUrl).toString();
+  }
+  return parsedUrl.toString();
+}
+
 const ALLOWED_LANGUAGE_DEFINITIONS = [
   { code: "en", label: "English" },
   { code: "no", label: "Norwegian" },
@@ -51,12 +66,13 @@ export function mapVendorSettingsTaxonomy(data) {
 
   const foodTypes = safeArray(data?.foodTypes).map((item) => ({
     ...mapTaxonomyItem(item, "Shown in vendor food type selectors"),
+    iconUrl: resolveIconUrl(item.iconUrl),
     raw: item,
   }));
 
   const occasions = safeArray(data?.occasions).map((item) => ({
     ...mapTaxonomyItem(item, "Shown in vendor occasion selectors"),
-    iconUrl: item.iconUrl || "",
+    iconUrl: resolveIconUrl(item.iconUrl),
     raw: item,
   }));
 
@@ -76,6 +92,7 @@ export function mapVendorSettingsTaxonomy(data) {
     })),
     cuisineTypes: safeArray(data?.cuisineTypes).map((item) => ({
       ...mapTaxonomyItem(item, "Shown in vendor operating information"),
+      iconUrl: resolveIconUrl(item.iconUrl),
       raw: item,
     })),
     businessTypes: safeArray(data?.businessTypes).map((item) => ({

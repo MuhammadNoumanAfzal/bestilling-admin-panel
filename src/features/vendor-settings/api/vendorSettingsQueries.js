@@ -12,6 +12,9 @@ export const GET_VENDOR_SETTINGS_TAXONOMY_QUERY = `
       id
       name
       slug
+      iconUrl
+      isActive
+      sortOrder
     }
     occasions {
       id
@@ -35,6 +38,7 @@ export const GET_VENDOR_SETTINGS_TAXONOMY_QUERY = `
       id
       name
       slug
+      iconUrl
       isActive
       sortOrder
     }
@@ -90,6 +94,8 @@ export const CREATE_FOOD_TYPE_MUTATION = `
         id
         name
         slug
+        isActive
+        sortOrder
       }
     }
   }
@@ -172,6 +178,7 @@ export const CREATE_CUISINE_TYPE_MUTATION = `
         id
         name
         slug
+        iconUrl
         isActive
         sortOrder
       }

@@ -62,7 +62,14 @@ export async function saveFoodTypeRequest(input) {
   const variables =
     typeof input === "string"
       ? { name: input }
-      : { id: input?.id || null, name: input?.name || "" };
+      : {
+          id: input?.id || null,
+          name: input?.name || "",
+          slug: input?.slug || null,
+          iconUrl: input?.iconUrl ?? null,
+          isActive: typeof input?.isActive === "boolean" ? input.isActive : true,
+          sortOrder: Number.isInteger(input?.sortOrder) ? input.sortOrder : null,
+        };
 
   const result = await executeProtectedGraphqlRequest(CREATE_FOOD_TYPE_MUTATION, {
     input: variables,
@@ -134,6 +141,7 @@ export async function saveCuisineTypeRequest(input) {
     id: input?.id || null,
     name: input?.name || "",
     slug: input?.slug || null,
+    iconUrl: input?.iconUrl ?? null,
     isActive: typeof input?.isActive === "boolean" ? input.isActive : true,
     sortOrder: Number.isInteger(input?.sortOrder) ? input.sortOrder : null,
   };

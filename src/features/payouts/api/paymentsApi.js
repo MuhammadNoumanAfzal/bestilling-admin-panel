@@ -3,12 +3,14 @@ import {
   ADMIN_VENDOR_PAYOUT_PROFILE_QUERY,
   ADMIN_PAYMENT_DETAIL_QUERY,
   ADMIN_PAYMENT_FINANCE_CONTRACT_QUERY,
+  ADMIN_PAYMENTS_LEGACY_STATUS_FALLBACK_QUERY,
   ADMIN_PAYMENTS_QUERY,
   APPROVE_VENDOR_PAYOUT_PROFILE_MUTATION,
   APPROVE_INVOICE_PAYMENT_MUTATION,
   MARK_INVOICE_PAID_MUTATION,
   MARK_CUSTOMER_PAYMENT_RECEIVED_MUTATION,
   MARK_VENDOR_PAYOUT_PAID_MUTATION,
+  MARK_VENDOR_SETTLEMENT_PAID_MUTATION,
   REQUEST_VENDOR_PAYOUT_PROFILE_CHANGES_MUTATION,
   REJECT_INVOICE_PAYMENT_MUTATION,
   RELEASE_VENDOR_PAYOUT_MUTATION,
@@ -1045,7 +1047,7 @@ function toIsoOrNull(value) {
 }
 
 export async function getAdminPaymentsRequest(filters) {
-  const data = await executeProtectedGraphqlRequest(ADMIN_PAYMENTS_QUERY, {
+  const variables = {
     search: filters?.search?.trim() || null,
     status: filters?.status || null,
     vendorId: filters?.vendorId || null,
@@ -1055,7 +1057,25 @@ export async function getAdminPaymentsRequest(filters) {
     pageSize: Number(filters?.pageSize || 10),
     sortBy: filters?.sortBy || "CREATED_AT",
     sortOrder: filters?.sortOrder || "DESC",
-  });
+  };
+
+  let data;
+  try {
+    data = await executeProtectedGraphqlRequest(ADMIN_PAYMENTS_QUERY, variables);
+  } catch (error) {
+    const message = String(error?.message || "");
+    const hasRetiredVendorPayoutStatus =
+      /VendorPayoutStatus/i.test(message) && /RELEASED/i.test(message);
+
+    if (!hasRetiredVendorPayoutStatus) {
+      throw error;
+    }
+
+    data = await executeProtectedGraphqlRequest(
+      ADMIN_PAYMENTS_LEGACY_STATUS_FALLBACK_QUERY,
+      variables,
+    );
+  }
 
   const response = data?.adminPayments;
   if (!response) {
@@ -1347,6 +1367,34 @@ export async function markVendorPayoutPaidRequest(
     message: result.message || "Vendor payout marked as paid.",
     status: normalizePaymentStatus(result.payout.status),
     payoutCompletedAt: result.payout.completedAt || result.payout.paidAt || "",
+    payoutReference: result.payout.payoutReference || result.payout.transferReference || "",
+  };
+}
+
+export async function markVendorSettlementPaidRequest(
+  settlementId,
+  { reference = "", note = "", paymentDate = "" } = {},
+) {
+  if (!settlementId) {
+    throw new Error("The settlement is not available yet. Refresh and retry.");
+  }
+  const data = await executeProtectedGraphqlRequest(MARK_VENDOR_SETTLEMENT_PAID_MUTATION, {
+    settlementId,
+    input: {
+      transferReference: reference || null,
+      payoutReference: reference || null,
+      paymentDate: paymentDate || null,
+      note: note || null,
+    },
+  });
+  const result = data?.markVendorSettlementPaid;
+  if (!result?.success || !result?.payout?.id) {
+    throw new Error(getErrorMessage(result, "Unable to mark vendor settlement paid."));
+  }
+  return {
+    message: result.message || "Vendor settlement marked as paid.",
+    status: normalizePaymentStatus(result.payout.status),
+    paidAt: result.payout.paidAt || "",
     payoutReference: result.payout.payoutReference || result.payout.transferReference || "",
   };
 }

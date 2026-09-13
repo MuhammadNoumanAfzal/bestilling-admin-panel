@@ -115,6 +115,12 @@ export const ADMIN_PAYMENTS_QUERY = `
   }
 `;
 
+// Older payment services can return the retired RELEASED value for the
+// VendorPayoutStatus GraphQL enum. Reading that field makes GraphQL reject the
+// complete result set, so this fallback omits only the unsafe field.
+export const ADMIN_PAYMENTS_LEGACY_STATUS_FALLBACK_QUERY =
+  ADMIN_PAYMENTS_QUERY.replace(/^\s*vendorPayoutStatus\s*$/m, "");
+
 export const ADMIN_PAYMENT_DETAIL_QUERY = `
   query AdminPaymentDetail($id: ID!) {
     adminPayment(id: $id) {
@@ -549,6 +555,25 @@ export const MARK_VENDOR_PAYOUT_PAID_MUTATION = `
         }
         payoutReference
         completedAt
+      }
+    }
+  }
+`;
+
+export const MARK_VENDOR_SETTLEMENT_PAID_MUTATION = `
+  mutation MarkVendorSettlementPaid($settlementId: ID!, $input: MarkVendorPayoutPaidInput) {
+    markVendorSettlementPaid(settlementId: $settlementId, input: $input) {
+      success
+      message
+      payout {
+        id
+        status
+        paidAt
+        payoutReference
+        transferReference
+        grossAmount { amount formatted }
+        commissionAmount { amount formatted }
+        netAmount { amount formatted }
       }
     }
   }

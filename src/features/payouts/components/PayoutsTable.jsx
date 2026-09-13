@@ -242,7 +242,7 @@ export default function PayoutsTable({
                             onClick={() => onQuickAction?.(row, "markVendorPaid")}
                             type="button"
                           >
-                            {activeActionKey === `${row.id}:markVendorPaid` ? pt("Updating...") : pt("Mark Received")}
+                            {activeActionKey === `${row.id}:markVendorPaid` ? pt("Updating...") : pt("Mark Paid")}
                           </button>
                         ) : null}
                         {showVendorPaymentWaiting ? (

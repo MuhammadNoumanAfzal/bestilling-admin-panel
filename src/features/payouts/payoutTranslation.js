@@ -8,6 +8,9 @@ export function pt(value, values = {}) {
 }
 export function payoutError(value, fallback = "Please try again.") {
   const message = String(value?.message || value || "");
+  if (/Enum ['"]VendorPayoutStatus['"] cannot represent value: ['"]RELEASED['"]/i.test(message)) {
+    return pt("Vendor payout release is unavailable until the payment service is updated.");
+  }
   return i18n.exists(message, options) ? pt(message) : i18n.resolvedLanguage === "en" && message ? message : pt(fallback);
 }
 export function payoutDialog(options) {

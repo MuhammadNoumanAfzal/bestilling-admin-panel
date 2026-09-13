@@ -6,6 +6,7 @@ import {
   ArrowUp,
   Banknote,
   ChefHat,
+  ImagePlus,
   Globe2,
   Languages,
   LayoutList,
@@ -38,6 +39,7 @@ import {
   saveVendorCategoryRequest,
 } from "../api/vendorSettingsApi.js";
 import { mapVendorSettingsTaxonomy } from "../api/vendorSettingsMappers.js";
+import { uploadTaxonomyIcon } from "../api/vendorSettingsUploadApi.js";
 
 const SECTION_GROUPS = [
   {
@@ -173,6 +175,7 @@ const SECTION_CONFIG = [
         required: true,
         type: "text",
       },
+      { key: "iconUrl", label: "Icon image", required: false, type: "image" },
     ],
   },
   {
@@ -197,6 +200,7 @@ const SECTION_CONFIG = [
         required: true,
         type: "text",
       },
+      { key: "iconUrl", label: "Icon image", required: false, type: "image" },
     ],
   },
   {
@@ -282,6 +286,7 @@ const SECTION_CONFIG = [
         required: true,
         type: "text",
       },
+      { key: "iconUrl", label: "Icon image", required: false, type: "image" },
       {
         key: "sortOrder",
         label: "Sort Order",
@@ -590,7 +595,24 @@ function getNextSortOrder(items = []) {
   return Math.max(...sortOrders) + 1;
 }
 
-function renderFieldInput({ field, value, onChange }) {
+function IconImageField({ field, value, onChange, onUpload, uploading }) {
+  return <div className="space-y-2">
+    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8d7c70]">{vst(field.label)}</p>
+    <div className="flex min-h-11 items-center gap-3 rounded-[12px] border border-[#dfd2c8] bg-white p-2">
+      {value ? <img alt="" className="h-10 w-10 rounded-[9px] border border-[#eadfd6] object-cover" src={value} /> : <span className="inline-flex h-10 w-10 items-center justify-center rounded-[9px] bg-[#fff2e8] text-[#cf6e38]"><ImagePlus size={17} /></span>}
+      <label className="min-w-0 flex-1 cursor-pointer text-[12px] font-semibold text-[#6e5e53]">
+        <span>{uploading ? vst("Uploading...") : vst("Upload PNG, WebP or JPEG (max 2 MB)")}</span>
+        <input accept="image/png,image/webp,image/jpeg" className="sr-only" disabled={uploading} onChange={async (event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) { const url = await onUpload(file); if (url) onChange(field.key, url); } }} type="file" />
+      </label>
+      {value ? <button aria-label={vst("Remove icon")} className="h-9 rounded-[9px] border border-[#f0d6d0] px-2 text-[11px] font-bold text-[#c35d4c]" onClick={() => onChange(field.key, "")} type="button">{vst("Remove")}</button> : null}
+    </div>
+  </div>;
+}
+
+function renderFieldInput({ field, value, onChange, onUpload, uploading }) {
+  if (field.type === "image") {
+    return <IconImageField field={field} onChange={onChange} onUpload={onUpload} uploading={uploading} value={value} />;
+  }
   if (field.type === "checkbox") {
     return (
       <label className="flex h-11 items-center gap-3 rounded-[12px] border border-[#dfd2c8] bg-white px-3.5 text-[13px] font-semibold text-[#312721]">
@@ -663,6 +685,8 @@ function SectionCard({
   onCancelEdit,
   onSaveEdit,
   onDelete,
+  onUploadIcon,
+  uploadingIcon,
 }) {
   useVendorSettingsLanguage();
   const Icon = section.icon;
@@ -699,6 +723,8 @@ function SectionCard({
                     field,
                     value: draftValues[field.key],
                     onChange: (fieldKey, value) => onDraftChange(section.key, fieldKey, value),
+                    onUpload: onUploadIcon,
+                    uploading: uploadingIcon,
                   })}
                 </div>
               ))}
@@ -742,9 +768,11 @@ function SectionCard({
                         {section.fields.map((field) => (
                           <div key={field.key}>
                             {renderFieldInput({
-                              field,
-                              value: editingState.values[field.key],
-                              onChange: onEditingValueChange,
+                            field,
+                            value: editingState.values[field.key],
+                            onChange: onEditingValueChange,
+                            onUpload: onUploadIcon,
+                            uploading: uploadingIcon,
                             })}
                           </div>
                         ))}
@@ -769,6 +797,7 @@ function SectionCard({
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
+                          {item.iconUrl ? <img alt="" className="h-9 w-9 rounded-[9px] border border-[#eadfd6] object-cover" src={item.iconUrl} /> : null}
                           <p className="truncate text-[15px] font-bold text-[#251b15]">
                             {item.name}
                           </p>
@@ -846,9 +875,27 @@ export default function VendorSettingsPage() {
   const [isLoading, setIsLoading] = useState(!initialTaxonomyRef.current);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [savingKey, setSavingKey] = useState("");
+  const [isUploadingIcon, setIsUploadingIcon] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showScrollDown, setShowScrollDown] = useState(true);
   const sectionRefs = useRef({});
+
+  async function handleIconUpload(file) {
+    try {
+      setIsUploadingIcon(true);
+      return await uploadTaxonomyIcon(file);
+    } catch (error) {
+      await Swal.fire(vendorSettingsDialog({
+        icon: "error",
+        title: "Image upload failed",
+        text: vendorSettingsError(error),
+        confirmButtonColor: "#cf6e38",
+      }));
+      return "";
+    } finally {
+      setIsUploadingIcon(false);
+    }
+  }
 
   async function loadVendorSettings({ silent = false } = {}) {
     const cachedTaxonomy = readVendorSettingsCache();
@@ -1273,6 +1320,8 @@ export default function VendorSettingsPage() {
                       }
                       onSaveEdit={handleSaveEdit}
                       onStartEdit={startEditing}
+                      onUploadIcon={handleIconUpload}
+                      uploadingIcon={isUploadingIcon}
                     />
                   </div>
                 );

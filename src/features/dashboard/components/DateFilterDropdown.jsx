@@ -15,6 +15,90 @@ const filterTranslationKeys = {
   "Clear Filter": "clearFilter",
 };
 
+const monthKeys = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+const weekdayKeys = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+function toIsoDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function fromIsoDate(value) {
+  if (!value) return null;
+  const [year, month, day] = String(value).split("-").map(Number);
+  return Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)
+    ? new Date(year, month - 1, day)
+    : null;
+}
+
+function LocalizedDateField({ label, onChange, value }) {
+  const { t, i18n } = useTranslation();
+  const selectedDate = fromIsoDate(value);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [visibleMonth, setVisibleMonth] = useState(() => selectedDate || new Date());
+
+  useEffect(() => {
+    if (selectedDate && !isCalendarOpen) setVisibleMonth(selectedDate);
+  }, [isCalendarOpen, value]);
+
+  const year = visibleMonth.getFullYear();
+  const month = visibleMonth.getMonth();
+  const firstDayOffset = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const displayValue = selectedDate
+    ? new Intl.DateTimeFormat(i18n.language === "nb" ? "nb-NO" : "en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(selectedDate)
+    : "";
+
+  function changeMonth(amount) {
+    setVisibleMonth((current) => new Date(current.getFullYear(), current.getMonth() + amount, 1));
+  }
+
+  function selectDay(day) {
+    onChange(toIsoDate(new Date(year, month, day)));
+    setIsCalendarOpen(false);
+  }
+
+  return (
+    <div className="relative">
+      <button
+        aria-expanded={isCalendarOpen}
+        aria-label={label}
+        className="flex h-10 w-full cursor-pointer items-center justify-between rounded-[10px] border border-[#d8ccc2] bg-white px-3 text-left text-[12px] font-semibold text-[#231913] outline-none transition focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]"
+        onClick={() => setIsCalendarOpen((current) => !current)}
+        type="button"
+      >
+        <span className={displayValue ? "" : "text-[#9a8f86]"}>{displayValue || label}</span>
+        <Calendar size={15} className="text-[#1f1711]" />
+      </button>
+
+      {isCalendarOpen ? (
+        <div className="absolute left-0 top-[calc(100%+6px)] z-[110] w-full rounded-[12px] border border-[#d8ccc2] bg-white p-3 shadow-[0_16px_36px_rgba(45,28,16,0.18)]">
+          <div className="mb-3 flex items-center justify-between">
+            <button aria-label={t("adminDashboard.filters.previousMonth")} className="rounded p-1.5 hover:bg-[#fff3ec]" onClick={() => changeMonth(-1)} type="button">‹</button>
+            <strong className="text-[13px]">{t(`adminDashboard.filters.months.${monthKeys[month]}`)} {year}</strong>
+            <button aria-label={t("adminDashboard.filters.nextMonth")} className="rounded p-1.5 hover:bg-[#fff3ec]" onClick={() => changeMonth(1)} type="button">›</button>
+          </div>
+          <div className="grid grid-cols-7 gap-1 text-center">
+            {weekdayKeys.map((day) => <span key={day} className="py-1 text-[10px] font-bold text-[#746a62]">{t(`adminDashboard.filters.weekdays.${day}`)}</span>)}
+            {Array.from({ length: firstDayOffset }).map((_, index) => <span key={`empty-${index}`} />)}
+            {Array.from({ length: daysInMonth }, (_, index) => index + 1).map((day) => {
+              const dayValue = toIsoDate(new Date(year, month, day));
+              const isSelected = value === dayValue;
+              return <button key={day} className={`h-8 rounded-full text-[11px] font-semibold transition ${isSelected ? "bg-[#cf6e38] text-white" : "hover:bg-[#fff3ec]"}`} onClick={() => selectDay(day)} type="button">{day}</button>;
+            })}
+          </div>
+          <div className="mt-3 flex justify-between border-t border-[#f1e9e2] pt-2">
+            <button className="text-[11px] font-bold text-[#c75f2e]" onClick={() => { onChange(""); setIsCalendarOpen(false); }} type="button">{t("adminDashboard.filters.clearDate")}</button>
+            <button className="text-[11px] font-bold text-[#c75f2e]" onClick={() => { const today = new Date(); onChange(toIsoDate(today)); setVisibleMonth(today); setIsCalendarOpen(false); }} type="button">{t("adminDashboard.filters.today")}</button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function DateFilterDropdown({
   selectedFilter,
   onChangeFilter,
@@ -44,14 +128,14 @@ export default function DateFilterDropdown({
     const position = () => {
       const anchor = dropdownRef.current.getBoundingClientRect();
       const width = Math.min(256, window.innerWidth - 32);
-      const height = menuRef.current?.offsetHeight || 304;
+      const height = menuRef.current?.offsetHeight || (showCustomFields ? 430 : 304);
       const below = window.innerHeight - anchor.bottom - 22;
       const above = anchor.top - 22;
       const opensAbove = below < height && above > below;
       setMenuPosition({
         left: Math.max(16, Math.min(anchor.right - width, window.innerWidth - width - 16)),
         top: opensAbove ? Math.max(16, anchor.top - height - 6) : anchor.bottom + 6,
-        maxHeight: Math.max(80, opensAbove ? above : below),
+        maxHeight: showCustomFields ? Math.max(430, opensAbove ? above : below) : Math.max(80, opensAbove ? above : below),
       });
     };
     position();
@@ -167,7 +251,7 @@ export default function DateFilterDropdown({
       </button>
 
       {isOpen && createPortal(
-        <div ref={menuRef} style={menuPosition} className="fixed z-[100] w-64 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-[16px] border border-[#eadfd5] bg-white p-2 shadow-[0_18px_44px_rgba(45,28,16,0.14)]">
+        <div ref={menuRef} style={menuPosition} className={`fixed z-[100] w-64 max-w-[calc(100vw-2rem)] rounded-[16px] border border-[#eadfd5] bg-white p-2 shadow-[0_18px_44px_rgba(45,28,16,0.14)] ${showCustomFields ? "overflow-visible" : "overflow-y-auto"}`}>
           {!showCustomFields ? (
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 px-2.5 pb-2 pt-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#8c8077]">
@@ -198,12 +282,12 @@ export default function DateFilterDropdown({
               <div className="space-y-2">
                 <div>
                   <label className="mb-1 block text-[11px] font-bold text-[#6f655e]">{t("adminDashboard.filters.startDate")}</label>
-                  <input type="date" aria-label={t("adminDashboard.filters.startDate")} required value={tempStart} onChange={(e) => setTempStart(e.target.value)} className="h-10 w-full cursor-pointer rounded-[10px] border border-[#d8ccc2] bg-white px-3 py-1 text-[12px] font-semibold text-[#231913] outline-none transition focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]" />
+                  <LocalizedDateField label={t("adminDashboard.filters.startDate")} onChange={setTempStart} value={tempStart} />
                 </div>
 
                 <div>
                   <label className="mb-1 block text-[11px] font-bold text-[#6f655e]">{t("adminDashboard.filters.endDate")}</label>
-                  <input type="date" aria-label={t("adminDashboard.filters.endDate")} required value={tempEnd} onChange={(e) => setTempEnd(e.target.value)} className="h-10 w-full cursor-pointer rounded-[10px] border border-[#d8ccc2] bg-white px-3 py-1 text-[12px] font-semibold text-[#231913] outline-none transition focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]" />
+                  <LocalizedDateField label={t("adminDashboard.filters.endDate")} onChange={setTempEnd} value={tempEnd} />
                 </div>
               </div>
 

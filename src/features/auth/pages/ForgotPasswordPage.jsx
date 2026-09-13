@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { requestAdminPasswordResetMail } from "../api/authApi.js";
@@ -7,6 +8,7 @@ import { useAuth } from "../hooks/useAuth.js";
 import AuthLayout from "../../../app/layouts/AuthLayout.jsx";
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [identifier, setIdentifier] = useState("");
@@ -20,8 +22,8 @@ export default function ForgotPasswordPage() {
     if (!identifier.trim()) {
       await Swal.fire({
         icon: "warning",
-        title: "Missing email",
-        text: "Enter the email linked to the admin account.",
+        title: t("auth.forgot.missingTitle", { defaultValue: "Missing email" }),
+        text: t("auth.forgot.missingText", { defaultValue: "Enter the email linked to the admin account." }),
         confirmButtonColor: "#cf6e38",
       });
       return;
@@ -32,7 +34,7 @@ export default function ForgotPasswordPage() {
       const result = await requestAdminPasswordResetMail({ email: identifier });
       await Swal.fire({
         icon: "success",
-        title: "Code sent",
+        title: t("auth.forgot.sentTitle", { defaultValue: "Code sent" }),
         text: result.message,
         confirmButtonColor: "#cf6e38",
       });
@@ -40,8 +42,8 @@ export default function ForgotPasswordPage() {
     } catch (error) {
       await Swal.fire({
         icon: "error",
-        title: "Unable to send code",
-        text: error?.message || "Please try again in a moment.",
+        title: t("auth.forgot.failedTitle", { defaultValue: "Unable to send code" }),
+        text: error?.message || t("auth.forgot.failedText", { defaultValue: "Please try again in a moment." }),
         confirmButtonColor: "#cf6e38",
       });
     } finally {
@@ -53,24 +55,24 @@ export default function ForgotPasswordPage() {
     <AuthLayout>
       <AuthCard
         actionDisabled={isSubmitting}
-        actionLabel={isSubmitting ? "Sending..." : "Send Code"}
-        backLinkLabel="Back to login"
+        actionLabel={isSubmitting ? t("auth.forgot.sending", { defaultValue: "Sending..." }) : t("auth.forgot.submit", { defaultValue: "Send Code" })}
+        backLinkLabel={t("auth.forgot.back", { defaultValue: "Back to login" })}
         backLinkTo="/auth/login"
-        eyebrow="Password reset"
+        eyebrow={t("auth.forgot.eyebrow", { defaultValue: "Password reset" })}
         fields={[
           {
             autoComplete: "email",
-            label: "Email Address",
+            label: t("auth.forgot.email", { defaultValue: "Email Address" }),
             name: "identifier",
             onChange: (event) => setIdentifier(event.target.value),
-            placeholder: "Enter admin email",
+            placeholder: t("auth.forgot.emailPlaceholder", { defaultValue: "Enter admin email" }),
             type: "email",
             value: identifier,
           },
         ]}
         onAction={handleSubmit}
-        subtitle="Enter your admin email and we will send a verification code."
-        title="Forgot your password?"
+        subtitle={t("auth.forgot.subtitle", { defaultValue: "Enter your admin email and we will send a verification code." })}
+        title={t("auth.forgot.title", { defaultValue: "Forgot your password?" })}
       />
     </AuthLayout>
   );

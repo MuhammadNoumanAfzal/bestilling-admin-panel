@@ -228,7 +228,7 @@ const navigation = [
 
 const pageMeta = {
   "/dashboard": {
-    title: "Dashboard",
+    title: "Admin Dashboard",
     subtitle: "A clean overview of admin activity, vendor movement, and platform health.",
   },
   "/vendors": {

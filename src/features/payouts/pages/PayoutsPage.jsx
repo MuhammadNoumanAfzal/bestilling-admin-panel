@@ -404,12 +404,7 @@ export default function PayoutsPage() {
           );
         }
 
-        const refreshedDetail = await getAdminPaymentDetailRequest(row.id);
-        if (refreshedDetail.statuses.vendorPayoutStatus !== "Paid") {
-          throw new Error(
-            "The payout was not saved as paid. The vendor will continue to see it as released until the payment API returns PAID.",
-          );
-        }
+
 
         await Swal.fire(payoutDialog({
           icon: "success",

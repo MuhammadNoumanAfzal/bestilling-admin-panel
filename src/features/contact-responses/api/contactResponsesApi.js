@@ -1,4 +1,11 @@
-﻿import { getStoredAccessToken } from "../../auth/store/authStorage.js";
+import { getStoredAccessToken } from "../../auth/store/authStorage.js";
+
+const STATUS_LABELS = {
+  OPEN: "Open",
+  IN_PROGRESS: "In Progress",
+  RESOLVED: "Resolved",
+  CLOSED: "Closed",
+};
 
 function getContactRestBaseUrl() {
   const explicitBaseUrl = import.meta.env.VITE_API_BASE_URL ?? import.meta.env.VITE_BACKEND_BASE_URL ?? "";
@@ -13,6 +20,18 @@ function getContactRestBaseUrl() {
     "https://api.gocatering.no/graphql/";
 
   return `${graphqlUrl}`.replace(/\/graphql\/?$/i, "").replace(/\/+$/, "");
+}
+
+function getAccessTokenOrThrow() {
+  const accessToken = getStoredAccessToken();
+
+  if (!accessToken) {
+    const error = new Error("Your session has expired. Please log in again.");
+    error.isAuthenticationError = true;
+    throw error;
+  }
+
+  return accessToken;
 }
 
 async function parseJsonResponse(response) {
@@ -53,13 +72,18 @@ function formatDate(value) {
   }).format(date);
 }
 
-function normalizeStatus(value) {
-  const normalized = `${value ?? ""}`.trim().toUpperCase();
+export function toContactInquiryApiStatus(value) {
+  const normalized = `${value ?? ""}`.trim().toUpperCase().replace(/[\s-]+/g, "_");
 
-  if (["NEW", "OPEN", "PENDING"].includes(normalized)) return "Open";
-  if (["IN_PROGRESS", "IN PROGRESS", "REVIEWING"].includes(normalized)) return "In Progress";
-  if (["RESOLVED", "CLOSED", "DONE"].includes(normalized)) return "Resolved";
-  return normalized ? normalized.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()) : "Open";
+  if (["NEW", "PENDING", "OPEN"].includes(normalized)) return "OPEN";
+  if (["IN_PROGRESS", "REVIEWING", "PROCESSING"].includes(normalized)) return "IN_PROGRESS";
+  if (["RESOLVED", "DONE", "ANSWERED"].includes(normalized)) return "RESOLVED";
+  if (["CLOSED", "ARCHIVED"].includes(normalized)) return "CLOSED";
+  return normalized || "OPEN";
+}
+
+export function toContactInquiryDisplayStatus(value) {
+  return STATUS_LABELS[toContactInquiryApiStatus(value)] || "Open";
 }
 
 function normalizeInquiry(item) {
@@ -67,6 +91,7 @@ function normalizeInquiry(item) {
   const name = item?.name || requester.fullName || requester.name || "Unknown sender";
   const email = item?.email || requester.email || "";
   const createdAt = item?.createdAt || item?.submittedAt || item?.created_on || item?.created || "";
+  const rawStatus = toContactInquiryApiStatus(item?.status || item?.ticket?.status);
 
   return {
     id: `${item?.id ?? item?.ticketId ?? item?.uuid ?? `${email}-${createdAt}`}`,
@@ -76,7 +101,8 @@ function normalizeInquiry(item) {
     company: item?.company || requester.company || "",
     phone: item?.phone || requester.phone || "",
     topic: item?.topic || item?.category || item?.subject || "General question",
-    status: normalizeStatus(item?.status || item?.ticket?.status),
+    rawStatus,
+    status: toContactInquiryDisplayStatus(rawStatus),
     message: item?.message || item?.description || item?.body || "",
     source: item?.source || "web-contact-page",
     locale: item?.locale || "",
@@ -100,19 +126,12 @@ function buildQueryString(filters = {}) {
 }
 
 export async function getAdminContactInquiriesRequest(filters = {}) {
-  const accessToken = getStoredAccessToken();
-
-  if (!accessToken) {
-    const error = new Error("Your session has expired. Please log in again.");
-    error.isAuthenticationError = true;
-    throw error;
-  }
-
+  const accessToken = getAccessTokenOrThrow();
   const page = Number(filters.page || 1);
   const pageSize = Number(filters.pageSize || 10);
   const url = `${getContactRestBaseUrl()}/api/contact/inquiries${buildQueryString({
     search: filters.search,
-    status: filters.status,
+    status: filters.status ? toContactInquiryApiStatus(filters.status) : null,
     topic: filters.topic,
     page,
     pageSize,
@@ -146,11 +165,40 @@ export async function getAdminContactInquiriesRequest(filters = {}) {
     items,
     pageInfo: {
       page: Number(pageInfo.page ?? page),
-      pageSize: Number(pageInfo.pageSize ?? pageInfo.limit ?? pageSize),
+      pageSize: Number(pageInfo.pageSize ?? pageInfo.page_size ?? pageInfo.limit ?? pageSize),
       totalItems,
       totalPages,
       hasNextPage: Boolean(pageInfo.hasNextPage ?? page < totalPages),
       hasPreviousPage: Boolean(pageInfo.hasPreviousPage ?? page > 1),
     },
   };
+}
+
+export async function updateAdminContactInquiryStatusRequest({ id, ticketId, status }) {
+  const accessToken = getAccessTokenOrThrow();
+  const normalizedStatus = toContactInquiryApiStatus(status);
+  const body = id ? { id, status: normalizedStatus } : { ticketId, status: normalizedStatus };
+
+  const response = await fetch(`${getContactRestBaseUrl()}/api/contact/inquiries`, {
+    method: "PATCH",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `JWT ${accessToken}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const payload = await parseJsonResponse(response);
+
+  if (!response.ok || payload?.success === false) {
+    throw new Error(payload?.message || "Unable to update contact inquiry status.");
+  }
+
+  return normalizeInquiry({
+    id,
+    ticketId,
+    ...(payload?.item || {}),
+    status: payload?.item?.status || normalizedStatus,
+  });
 }

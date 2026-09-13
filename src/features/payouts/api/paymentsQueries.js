@@ -30,6 +30,9 @@ export const ADMIN_PAYMENTS_QUERY = `
       items {
         id
         invoiceNumber
+        customerPaymentStatus
+        vendorPayoutStatus
+        settlementStatus
         order {
           id
           status
@@ -533,20 +536,19 @@ export const RELEASE_VENDOR_PAYOUT_MUTATION = `
 `;
 
 export const MARK_VENDOR_PAYOUT_PAID_MUTATION = `
-  mutation MarkVendorPayoutPaid($input: MarkVendorPayoutPaidInput!) {
-    markVendorPayoutPaid(input: $input) {
+  mutation MarkVendorPayoutPaid($id: ID!, $input: MarkVendorPayoutPaidInput) {
+    markVendorPayoutPaid(id: $id, input: $input) {
       success
       message
       payout {
         id
-        payoutNumber
         status
-        paidAt
-        transferReference
-        note
-        grossAmount { amount formatted }
-        commissionAmount { amount formatted }
-        netAmount { amount formatted }
+        vendorAmount {
+          amount
+          formatted
+        }
+        payoutReference
+        completedAt
       }
     }
   }

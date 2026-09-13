@@ -211,12 +211,8 @@ export default function PaymentDetailsPage() {
         );
       }
 
-      const refreshedDetail = await refreshPaymentDetail();
-      if (refreshedDetail.statuses.vendorPayoutStatus !== "Paid") {
-        throw new Error(
-          "The payout was not saved as paid. The vendor will continue to see it as released until the payment API returns PAID.",
-        );
-      }
+      await refreshPaymentDetail();
+
 
       await Swal.fire(payoutDialog({
         icon: "success",

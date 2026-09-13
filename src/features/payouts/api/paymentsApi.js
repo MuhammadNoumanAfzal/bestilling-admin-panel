@@ -123,16 +123,20 @@ function resolvePaymentOrderStatus(order) {
 }
 
 function resolveCustomerPaymentStatusForOrder(status, order) {
-  if (!isCancelledOrder(order) || status === "Paid") {
-    return status;
+  const normalizedStatus = normalizePaymentStatus(status);
+
+  if (!isCancelledOrder(order) || normalizedStatus === "Paid") {
+    return normalizedStatus;
   }
 
   return "Canceled";
 }
 
 function resolveVendorPayoutStatusForOrder(status, order) {
-  if (!isCancelledOrder(order) || status === "Paid") {
-    return status;
+  const normalizedStatus = normalizePaymentStatus(status);
+
+  if (!isCancelledOrder(order) || normalizedStatus === "Paid") {
+    return normalizedStatus;
   }
 
   return "Canceled";
@@ -144,6 +148,7 @@ function normalizePaymentStatus(status) {
   switch (normalized) {
     case "PAID":
     case "PAYOUT_PAID":
+    case "SETTLED":
       return "Paid";
     case "SCHEDULED":
       return "Scheduled";
@@ -490,6 +495,10 @@ export function summarizePaymentRows(rows) {
 }
 
 function deriveCustomerPaymentStatus(item) {
+  if (item?.customerPaymentStatus) {
+    return normalizePaymentStatus(item.customerPaymentStatus);
+  }
+
   if (item?.lifecycle?.paymentReceivedAt || item?.paidAt) {
     return "Paid";
   }
@@ -498,6 +507,11 @@ function deriveCustomerPaymentStatus(item) {
 }
 
 function deriveVendorPayoutStatus(item) {
+  const explicitStatus = item?.vendorPayoutStatus || item?.settlementStatus;
+  if (explicitStatus) {
+    return normalizePaymentStatus(explicitStatus);
+  }
+
   if (item?.lifecycle?.payoutCompletedAt) {
     return "Paid";
   }
@@ -556,6 +570,10 @@ function deriveCustomerPaymentStatusFromDetail(payment) {
 }
 
 function deriveVendorPayoutStatusFromDetail(payment) {
+  const explicitStatus = payment?.vendorPayoutStatus || payment?.settlementStatus;
+  if (explicitStatus) {
+    return normalizePaymentStatus(explicitStatus);
+  }
   if (payment?.lifecycle?.payoutCompletedAt) {
     return "Paid";
   }
@@ -1312,11 +1330,10 @@ export async function markVendorPayoutPaidRequest(
   const data = await executeProtectedGraphqlRequest(
     MARK_VENDOR_PAYOUT_PAID_MUTATION,
     {
+      id,
       input: {
-        transferReference: reference || null,
-        payoutId: id,
+        reference: reference || null,
         note: note || null,
-        paymentDate: paymentDate || null,
       },
     },
   );
@@ -1329,8 +1346,8 @@ export async function markVendorPayoutPaidRequest(
   return {
     message: result.message || "Vendor payout marked as paid.",
     status: normalizePaymentStatus(result.payout.status),
-    payoutCompletedAt: result.payout.paidAt || "",
-    payoutReference: result.payout.transferReference || "",
+    payoutCompletedAt: result.payout.completedAt || result.payout.paidAt || "",
+    payoutReference: result.payout.payoutReference || result.payout.transferReference || "",
   };
 }
 

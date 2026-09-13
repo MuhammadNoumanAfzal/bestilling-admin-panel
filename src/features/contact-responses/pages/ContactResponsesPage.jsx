@@ -1,16 +1,28 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
 import { ExternalLink, Inbox, Mail, Phone, RefreshCw, Search, Ticket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
-import { getAdminContactInquiriesRequest } from "../api/contactResponsesApi.js";
+import {
+  getAdminContactInquiriesRequest,
+  updateAdminContactInquiryStatusRequest,
+} from "../api/contactResponsesApi.js";
 
 const PAGE_SIZE = 10;
-const statusOptions = ["", "Open", "In Progress", "Resolved"];
+const statusOptions = [
+  { value: "", label: "All statuses" },
+  { value: "OPEN", label: "Open" },
+  { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "RESOLVED", label: "Resolved" },
+  { value: "CLOSED", label: "Closed" },
+];
 
 function getStatusClasses(status) {
   switch (`${status}`.toLowerCase()) {
     case "resolved":
       return "border-[#cfe8d8] bg-[#f0fbf4] text-[#267446]";
+    case "closed":
+      return "border-[#d9dde4] bg-[#f5f6f8] text-[#56606c]";
     case "in progress":
       return "border-[#f0dfbd] bg-[#fff8e8] text-[#9a6514]";
     default:
@@ -29,7 +41,7 @@ function EmptyState({ missingApi }) {
       </h3>
       <p className="mx-auto mt-2 max-w-[620px] text-[13px] font-medium leading-6 text-[#74685f]">
         {missingApi
-          ? "The client contact form posts to POST /api/contact/inquiries. To show submissions here, the backend needs an admin list endpoint: GET /api/contact/inquiries with JWT admin auth, returning items and pageInfo."
+          ? "Backend endpoint GET /api/contact/inquiries was not found. Confirm the admin contact inquiries API is deployed."
           : "New client contact form submissions will appear here when they match the current filters."}
       </p>
       {missingApi ? (
@@ -54,6 +66,7 @@ export default function ContactResponsesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [missingApi, setMissingApi] = useState(false);
+  const [updatingStatusId, setUpdatingStatusId] = useState("");
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => setDebouncedSearchTerm(searchTerm), 250);
@@ -126,6 +139,48 @@ export default function ContactResponsesPage() {
     setCurrentPage(1);
   }
 
+  async function handleStatusUpdate(item, nextStatus) {
+    if (!item || !nextStatus || nextStatus === item.rawStatus) {
+      return;
+    }
+
+    setUpdatingStatusId(item.id);
+
+    try {
+      const updatedItem = await updateAdminContactInquiryStatusRequest({
+        id: item.id,
+        ticketId: item.ticketId,
+        status: nextStatus,
+      });
+
+      setRows((currentRows) =>
+        currentRows.map((row) =>
+          row.id === item.id
+            ? { ...row, rawStatus: updatedItem.rawStatus, status: updatedItem.status }
+            : row,
+        ),
+      );
+
+      void Swal.fire({
+        icon: "success",
+        title: "Status updated",
+        text: "Contact inquiry status has been updated.",
+        timer: 1800,
+        showConfirmButton: false,
+        toast: true,
+        position: "top-end",
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Unable to update status",
+        text: error instanceof Error ? error.message : "Unable to update contact inquiry status.",
+      });
+    } finally {
+      setUpdatingStatusId("");
+    }
+  }
+
   return (
     <div className="space-y-5">
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -135,7 +190,7 @@ export default function ContactResponsesPage() {
         </div>
         <div className="rounded-[14px] border border-[#ddd6cf] bg-white p-4 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
           <p className="text-[12px] font-bold text-[#7b6d63]">Open</p>
-          <p className="mt-2 text-[28px] font-extrabold text-[#18120f]">{rows.filter((item) => item.status === "Open").length.toLocaleString()}</p>
+          <p className="mt-2 text-[28px] font-extrabold text-[#18120f]">{rows.filter((item) => item.rawStatus === "OPEN").length.toLocaleString()}</p>
         </div>
         <div className="rounded-[14px] border border-[#ddd6cf] bg-white p-4 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
           <p className="text-[12px] font-bold text-[#7b6d63]">Linked Tickets</p>
@@ -161,7 +216,7 @@ export default function ContactResponsesPage() {
             value={statusFilter}
           >
             {statusOptions.map((status) => (
-              <option key={status || "all"} value={status}>{status || "All statuses"}</option>
+              <option key={status.value || "all"} value={status.value}>{status.label}</option>
             ))}
           </select>
           <select
@@ -241,7 +296,16 @@ export default function ContactResponsesPage() {
                         <h3 className="truncate text-[18px] font-extrabold text-[#18120f]">{selectedResponse.topic}</h3>
                         <p className="mt-1 text-[12px] font-semibold text-[#7b6d63]">{selectedResponse.createdAtLabel}</p>
                       </div>
-                      <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-extrabold ${getStatusClasses(selectedResponse.status)}`}>{selectedResponse.status}</span>
+                      <select
+                        className={`h-9 shrink-0 cursor-pointer rounded-full border px-2.5 text-[11px] font-extrabold outline-none disabled:cursor-not-allowed disabled:opacity-60 ${getStatusClasses(selectedResponse.status)}`}
+                        disabled={updatingStatusId === selectedResponse.id}
+                        onChange={(event) => handleStatusUpdate(selectedResponse, event.target.value)}
+                        value={selectedResponse.rawStatus}
+                      >
+                        {statusOptions.filter((status) => status.value).map((status) => (
+                          <option key={status.value} value={status.value}>{status.label}</option>
+                        ))}
+                      </select>
                     </div>
                     <p className="mt-4 whitespace-pre-wrap text-[14px] font-medium leading-6 text-[#3b3029]">{selectedResponse.message}</p>
                   </div>

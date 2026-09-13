@@ -36,6 +36,67 @@ const scheduleModeOptions = [
   { value: "later", label: "Schedule for Later" },
 ];
 
+function mapAudienceToApi(value) {
+  return {
+    "all-users": "ALL_USERS",
+    customers: "CUSTOMERS",
+    vendors: "VENDORS",
+    admins: "ADMINS",
+  }[value] || "ALL_USERS";
+}
+
+function mapChannelsToApi(channels) {
+  const normalizedChannels = new Set();
+
+  if (channels.includes("push")) {
+    normalizedChannels.add("IN_APP");
+    normalizedChannels.add("PUSH");
+  }
+
+  if (channels.includes("email")) {
+    normalizedChannels.add("EMAIL");
+  }
+
+  return Array.from(normalizedChannels);
+}
+
+function getTimeZoneOffset(date, timeZone) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date).reduce((acc, part) => {
+    if (part.type !== "literal") acc[part.type] = part.value;
+    return acc;
+  }, {});
+
+  const zonedAsUtc = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour) % 24,
+    Number(parts.minute),
+    Number(parts.second),
+  );
+
+  return zonedAsUtc - date.getTime();
+}
+
+function buildScheduledForIso(dateValue, timeValue) {
+  if (!dateValue || !timeValue) return null;
+
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const [hour, minute] = timeValue.split(":").map(Number);
+  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute || 0, 0));
+  const offset = getTimeZoneOffset(utcGuess, "Europe/Oslo");
+
+  return new Date(utcGuess.getTime() - offset).toISOString();
+}
 function ScheduleModeRadio({ label, value, checked, onChange }) {
   useNotificationLanguage();
   return (
@@ -116,47 +177,25 @@ export default function CreateNotificationPage() {
       return;
     }
 
-    const audience = {
-      "all-users": "ALL_USERS",
-      customers: "CUSTOMERS",
-      vendors: "VENDORS",
-    }[form.audience];
+    const sendNow = form.scheduleMode === "immediately";
 
     setIsSubmitting(true);
     try {
       const result = await createAdminNotificationRequest({
         title: form.title.trim(),
-        message: form.message.trim(),
         emailSubject: form.channels.includes("email") ? form.emailSubject.trim() : null,
-        audience,
-        channels: form.channels.map((channel) => (channel === "push" ? "PUSH" : "EMAIL")),
-        // The inbox is the durable delivery record, including for email-only sends.
-        saveToInbox: true,
-        sendBrowserPush: form.channels.includes("push"),
-        sendEmail: form.channels.includes("email"),
-        schedule:
-          form.scheduleMode === "later"
-            ? {
-                date: form.scheduleDate,
-                time: form.scheduleTime,
-                timezone: "Europe/Oslo",
-              }
-            : null,
+        message: form.message.trim(),
+        audience: mapAudienceToApi(form.audience),
+        channels: mapChannelsToApi(form.channels),
+        priority: "NORMAL",
+        sendNow,
+        scheduledFor: sendNow ? null : buildScheduledForIso(form.scheduleDate, form.scheduleTime),
       });
-
-      const delivery = result?.delivery;
-      const deliveryText = [
-        delivery?.inboxCreated ? nt(delivery.inboxCreated === 1 ? "{{count}} inbox recipient" : "{{count}} inbox recipients", { count: delivery.inboxCreated }) : "",
-        delivery?.browserPushQueued ? nt(delivery.browserPushQueued === 1 ? "{{count}} browser alert queued" : "{{count}} browser alerts queued", { count: delivery.browserPushQueued }) : "",
-        delivery?.emailQueued ? nt(delivery.emailQueued === 1 ? "{{count}} email queued" : "{{count}} emails queued", { count: delivery.emailQueued }) : "",
-      ]
-        .filter(Boolean)
-        .join(". ");
 
       await Swal.fire(notificationDialog({
         icon: "success",
-        title: form.scheduleMode === "immediately" ? "Notification created" : "Notification scheduled",
-        text: deliveryText || notificationError(result?.message, "The notification was accepted by the delivery service."),
+        title: sendNow ? "Notification created" : "Notification scheduled",
+        text: notificationError(result?.message, "The notification was accepted by the delivery service."),
         confirmButtonColor: "#cf6e38",
       }));
       navigate("/notifications");

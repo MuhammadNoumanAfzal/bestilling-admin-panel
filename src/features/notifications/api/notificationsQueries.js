@@ -78,6 +78,11 @@ export const CREATE_ADMIN_NOTIFICATION_MUTATION = `
       }
       notification {
         id
+        title
+        audience
+        channels
+        status
+        createdAt
       }
     }
   }

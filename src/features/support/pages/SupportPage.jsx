@@ -107,6 +107,7 @@ export default function SupportPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [refreshVersion, setRefreshVersion] = useState(0);
   const hasLoadedTicketsRef = useRef(false);
 
   useEffect(() => {
@@ -125,8 +126,9 @@ export default function SupportPage() {
       userType: userFilter,
       page: currentPage,
       ...dateFilters,
+      refreshVersion,
     }),
-    [currentPage, dateFilters, debouncedSearchTerm, statusFilter, userFilter],
+    [currentPage, dateFilters, debouncedSearchTerm, refreshVersion, statusFilter, userFilter],
   );
 
   const supportSummary = useMemo(
@@ -163,6 +165,15 @@ export default function SupportPage() {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, userFilter, timeframe, customStart, customEnd]);
 
+  useEffect(() => {
+    function handleSupportTicketsUpdated() {
+      supportPageCache.clear();
+      setRefreshVersion((version) => version + 1);
+    }
+
+    window.addEventListener("admin-support-tickets-updated", handleSupportTicketsUpdated);
+    return () => window.removeEventListener("admin-support-tickets-updated", handleSupportTicketsUpdated);
+  }, []);
   useEffect(() => {
     let isMounted = true;
 
@@ -268,7 +279,7 @@ export default function SupportPage() {
     return () => {
       isMounted = false;
     };
-  }, [dateFilters, debouncedSearchTerm, currentPage, statusFilter, supportCacheKey, timeframe, userFilter]);
+  }, [dateFilters, debouncedSearchTerm, currentPage, refreshVersion, statusFilter, supportCacheKey, timeframe, userFilter]);
 
   function handlePageChange(nextPage) {
     const safePage = Math.min(Math.max(nextPage, 1), pageInfo.totalPages || 1);

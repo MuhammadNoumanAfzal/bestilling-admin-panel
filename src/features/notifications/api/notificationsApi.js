@@ -1,4 +1,5 @@
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
+import { getAdminSupportTicketsRequest } from "../../support/api/supportApi.js";
 import {
   ADMIN_ORDER_NOTIFICATIONS_QUERY,
   CREATE_ADMIN_NOTIFICATION_MUTATION,
@@ -340,6 +341,84 @@ function normalizeNotification(item) {
   };
 }
 
+function getSupportNotificationId(ticketId) {
+  return `support-ticket-${ticketId}`;
+}
+
+function isSupportNotificationId(id) {
+  return String(id || "").startsWith("support-ticket-");
+}
+
+function isOrderNotification(notificationOrId) {
+  if (typeof notificationOrId === "string") {
+    return String(notificationOrId).startsWith("order-");
+  }
+
+  return String(notificationOrId?.entityType || "").toUpperCase() === "ORDER";
+}
+
+function normalizeSupportNotification(item) {
+  const unreadCount = Number(item?.unreadAdminCount || 0) || 0;
+  const requesterType = String(item?.requester?.type || item?.type || "").toUpperCase();
+  const audience = requesterType === "VENDOR" ? "Vendors" : "Customers";
+  const createdAt = item?.lastMessageAt || item?.updatedAt || item?.createdAt || "";
+  const requesterName = item?.requester?.fullName || item?.user || "Support requester";
+  const subject = item?.subject || "Support ticket";
+
+  return {
+    id: getSupportNotificationId(item?.id),
+    title: unreadCount > 1 ? `${unreadCount} unread support messages` : "New support response",
+    subject,
+    message: `${requesterName}: ${subject}`,
+    code: "SUPPORT_REPLY",
+    type: "SUPPORT_REPLY",
+    typeLabel: "Support Reply",
+    status: "UNREAD",
+    statusLabel: "Unread",
+    createdAt,
+    createdAtDisplay: formatDisplayDate(createdAt),
+    readAt: "",
+    readAtDisplay: "",
+    scheduledAt: formatDisplayDate(createdAt),
+    audience,
+    channels: ["in-app"],
+    sendEmail: false,
+    sendPush: false,
+    sendInApp: true,
+    sentBy: requesterName,
+    actionUrl: `/support/${encodeURIComponent(item?.id || "")}`,
+    entityId: item?.id || "",
+    entityType: "SUPPORT_TICKET",
+    entityCode: item?.id || "",
+    priority: "high",
+    audienceType: requesterType || "ADMIN",
+    audienceId: "",
+    actorType: requesterType,
+    actorId: item?.requester?.id || "",
+    isRead: false,
+    isArchived: false,
+    metadata: {
+      supportTicketId: item?.id || "",
+      unreadAdminCount: unreadCount,
+      requesterType,
+      type: "SUPPORT_REPLY",
+    },
+    rawMetadata: "",
+    timeLabel: formatRelativeTime(createdAt),
+    note: "",
+    rejectionReason: "",
+    receiptUrl: "",
+    transferReference: "",
+    paymentDate: "",
+    invoiceId: "",
+    orderId: "",
+    payoutId: "",
+    paymentStatus: "",
+    settlementStatus: "",
+    payoutStatus: "",
+    notificationSource: "support",
+  };
+}
 function normalizeOrderNotification(item) {
   const statusLabel = formatStatusLabel(item);
   const typeLabel = formatTypeLabel(item?.type || "NEW_ORDER_PLACED");
@@ -413,6 +492,41 @@ async function fetchAdminFinanceNotifications({ first = 50, status = null } = {}
   };
 }
 
+async function fetchAdminSupportNotifications({ first = 50, status = null } = {}) {
+  if (status === "READ") {
+    return {
+      items: [],
+      unreadCount: 0,
+      totalCount: 0,
+    };
+  }
+
+  const result = await getAdminSupportTicketsRequest({
+    search: null,
+    status: null,
+    userType: null,
+    dateFrom: null,
+    dateTo: null,
+    page: 1,
+    pageSize: Math.max(first, 25),
+    sortBy: "updatedAt",
+    sortOrder: "DESC",
+  });
+  const unreadTickets = (result.items || []).filter(
+    (item) => Number(item?.unreadAdminCount || 0) > 0,
+  );
+  const items = unreadTickets.slice(0, first).map(normalizeSupportNotification);
+  const unreadCount = unreadTickets.reduce(
+    (sum, item) => sum + (Number(item?.unreadAdminCount || 0) || 0),
+    0,
+  );
+
+  return {
+    items,
+    unreadCount,
+    totalCount: unreadTickets.length,
+  };
+}
 async function fetchAdminOrderNotifications({ first = 50, status = null } = {}) {
   const data = await executeProtectedGraphqlRequest(ADMIN_ORDER_NOTIFICATIONS_QUERY, {
     first,
@@ -427,10 +541,15 @@ async function fetchAdminOrderNotifications({ first = 50, status = null } = {}) 
 }
 
 async function fetchCombinedAdminNotifications({ first = 50, status = null } = {}) {
-  const [financeConnection, orderConnection] = await Promise.all([
+  const [financeConnection, orderConnection, supportConnection] = await Promise.all([
     fetchAdminFinanceNotifications({ first, status }),
     fetchAdminOrderNotifications({ first, status }).catch(() => ({
       edges: [],
+      unreadCount: 0,
+      totalCount: 0,
+    })),
+    fetchAdminSupportNotifications({ first, status }).catch(() => ({
+      items: [],
       unreadCount: 0,
       totalCount: 0,
     })),
@@ -442,15 +561,16 @@ async function fetchCombinedAdminNotifications({ first = 50, status = null } = {
   const orderItems = Array.isArray(orderConnection?.edges)
     ? orderConnection.edges.map((edge) => normalizeOrderNotification(edge?.node)).filter(Boolean)
     : [];
-  const dedupedItems = dedupeNotifications([...financeItems, ...orderItems]);
+  const supportItems = Array.isArray(supportConnection?.items) ? supportConnection.items : [];
+  const dedupedItems = dedupeNotifications([...financeItems, ...orderItems, ...supportItems]);
   const items = sortNotificationsByCreatedAtDesc(dedupedItems);
   const unreadCount = Math.max(
     items.filter((item) => !item.isRead && !item.isArchived).length,
-    Number(financeConnection?.unreadCount || 0) + Number(orderConnection?.unreadCount || 0),
+    Number(financeConnection?.unreadCount || 0) + Number(orderConnection?.unreadCount || 0) + Number(supportConnection?.unreadCount || 0),
   );
   const totalCount = Math.max(
     items.length,
-    Number(financeConnection?.totalCount || 0) + Number(orderConnection?.totalCount || 0),
+    Number(financeConnection?.totalCount || 0) + Number(orderConnection?.totalCount || 0) + Number(supportConnection?.totalCount || 0),
   );
 
   return {
@@ -509,19 +629,30 @@ export async function getNotificationCountsRequest() {
   };
 }
 
-export async function markNotificationReadRequest(id) {
+export async function markNotificationReadRequest(id, notification = null) {
+  if (isSupportNotificationId(id) || isOrderNotification(notification)) {
+    return {
+      id,
+      status: "READ",
+      statusLabel: "Read",
+      isRead: true,
+      readAt: "",
+      readAtDisplay: "Opened in app",
+    };
+  }
+
   const data = await executeProtectedGraphqlRequest(MARK_FINANCE_NOTIFICATION_READ_MUTATION, {
     id,
   });
   const result = data?.markFinanceNotificationRead;
-  const notification = result?.notification;
+  const readNotification = result?.notification;
 
-  if (!result?.success || !notification?.id) {
+  if (!result?.success || !readNotification?.id) {
     throw new Error(result?.message || "Unable to mark notification as read.");
   }
 
   return {
-    id: notification.id,
+    id: readNotification.id,
     status: "READ",
     statusLabel: "Read",
     isRead: true,

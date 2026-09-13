@@ -69,6 +69,71 @@ function formatRelativeDate(value) {
   return formatDisplayDate(value, { includeTime: false });
 }
 
+const ADMIN_SUPPORT_READ_KEY = "bestilling-admin-support-read-v1";
+
+function readAdminSupportReadState() {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(ADMIN_SUPPORT_READ_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeAdminSupportReadState(state) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(ADMIN_SUPPORT_READ_KEY, JSON.stringify(state));
+  } catch {
+    // Local read markers are best-effort UI state.
+  }
+}
+
+function getComparableTime(value) {
+  const time = new Date(value || 0).getTime();
+  return Number.isNaN(time) ? 0 : time;
+}
+
+export function markAdminSupportTicketReadLocally(ticketId, lastActivityAt = "") {
+  const id = String(ticketId || "").trim();
+
+  if (!id) {
+    return;
+  }
+
+  const state = readAdminSupportReadState();
+  const nextSeenAt = lastActivityAt || new Date().toISOString();
+  const currentTime = getComparableTime(state[id]);
+  const nextTime = getComparableTime(nextSeenAt);
+
+  state[id] = nextTime >= currentTime ? nextSeenAt : state[id];
+  writeAdminSupportReadState(state);
+}
+
+function isAdminSupportTicketReadLocally(ticketId, lastActivityAt = "") {
+  const id = String(ticketId || "").trim();
+
+  if (!id) {
+    return false;
+  }
+
+  const state = readAdminSupportReadState();
+  const seenAt = state[id];
+
+  if (!seenAt) {
+    return false;
+  }
+
+  const lastActivityTime = getComparableTime(lastActivityAt);
+  return lastActivityTime === 0 || getComparableTime(seenAt) >= lastActivityTime;
+}
 function getInitials(name) {
   return String(name || "")
     .split(/\s+/)
@@ -92,6 +157,10 @@ function normalizeRequester(requester) {
 
 function normalizeSupportTicketListItem(item) {
   const requester = normalizeRequester(item?.requester);
+  const lastActivityAt = item?.lastMessageAt || item?.updatedAt || item?.createdAt || "";
+  const unreadAdminCount = isAdminSupportTicketReadLocally(item?.id, lastActivityAt)
+    ? 0
+    : Number(item?.unreadAdminCount ?? 0) || 0;
 
   return {
     id: item?.id ?? "",
@@ -103,7 +172,7 @@ function normalizeSupportTicketListItem(item) {
     updatedAt: item?.updatedAt ?? "",
     created: formatRelativeDate(item?.createdAt),
     lastMessageAt: item?.lastMessageAt ?? "",
-    unreadAdminCount: item?.unreadAdminCount ?? 0,
+    unreadAdminCount,
     assignee: item?.assignee
       ? {
           id: item.assignee.id ?? "",

@@ -9,6 +9,7 @@ import {
   addSupportInternalNoteRequest,
   assignSupportTicketRequest,
   getAdminSupportTicketRequest,
+  markAdminSupportTicketReadLocally,
   getSupportFilterOptionsRequest,
   reopenSupportTicketRequest,
   replyToSupportTicketRequest,
@@ -88,8 +89,15 @@ export default function SupportTicketDetailPage() {
           return;
         }
 
+        const lastActivityAt = ticketResult.conversation?.length
+          ? ticketResult.conversation[ticketResult.conversation.length - 1]?.createdAt
+          : ticketResult.updatedAt || ticketResult.createdAt;
+
+        markAdminSupportTicketReadLocally(ticketId, lastActivityAt);
         setTicket(ticketResult);
         setPriorityOptions(filterOptionsResult.priorities || []);
+        window.dispatchEvent(new Event("admin-support-tickets-updated"));
+        window.dispatchEvent(new Event("admin-notifications-updated"));
       } catch (error) {
         if (!isMounted) {
           return;
@@ -185,7 +193,14 @@ export default function SupportTicketDetailPage() {
 
   async function refreshTicket() {
     const result = await getAdminSupportTicketRequest(ticketId);
+    const lastActivityAt = result.conversation?.length
+      ? result.conversation[result.conversation.length - 1]?.createdAt
+      : result.updatedAt || result.createdAt;
+
+    markAdminSupportTicketReadLocally(ticketId, lastActivityAt);
     setTicket(result);
+    window.dispatchEvent(new Event("admin-support-tickets-updated"));
+    window.dispatchEvent(new Event("admin-notifications-updated"));
   }
 
   async function handleSendReply() {

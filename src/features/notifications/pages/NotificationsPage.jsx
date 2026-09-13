@@ -232,28 +232,31 @@ export default function NotificationsPage() {
     setCurrentPage(safePage);
   }
 
-  async function handleViewDetails(notification) {
-    let nextNotification = notification;
+  async function markRowRead(notification, { showError = true } = {}) {
+    if (notification.isRead || notification.isArchived) {
+      return notification;
+    }
 
-    if (!notification.isRead && !notification.isArchived) {
-      try {
-        const result = await markNotificationReadRequest(notification.id);
+    try {
+      const result = await markNotificationReadRequest(notification.id, notification);
+      const nextNotification = {
+        ...notification,
+        ...result,
+      };
 
-        nextNotification = {
-          ...notification,
-          ...result,
-        };
+      setRows((currentRows) =>
+        currentRows.map((row) => (row.id === notification.id ? { ...row, ...result } : row)),
+      );
+      setPageInfo((currentInfo) => ({
+        ...currentInfo,
+        unreadCount: Math.max(0, (currentInfo.unreadCount || 0) - 1),
+      }));
+      invalidateNotificationCache();
+      window.dispatchEvent(new Event("admin-notifications-updated"));
 
-        setRows((currentRows) =>
-          currentRows.map((row) => (row.id === notification.id ? { ...row, ...result } : row)),
-        );
-        setPageInfo((currentInfo) => ({
-          ...currentInfo,
-          unreadCount: Math.max(0, (currentInfo.unreadCount || 0) - 1),
-        }));
-        invalidateNotificationCache();
-        window.dispatchEvent(new Event("admin-notifications-updated"));
-      } catch (error) {
+      return nextNotification;
+    } catch (error) {
+      if (showError) {
         await Swal.fire(notificationDialog({
           icon: "error",
           title: "Unable to update notification",
@@ -261,8 +264,13 @@ export default function NotificationsPage() {
           confirmButtonColor: "#d96834",
         }));
       }
-    }
 
+      return notification;
+    }
+  }
+
+  async function handleViewDetails(notification) {
+    const nextNotification = await markRowRead(notification);
     setSelectedNotification(nextNotification);
   }
 
@@ -358,8 +366,9 @@ export default function NotificationsPage() {
     }
   }
 
-  function handleOpenAction(notification) {
-    const target = resolveAdminNotificationTarget(notification);
+  async function handleOpenAction(notification) {
+    const nextNotification = await markRowRead(notification, { showError: false });
+    const target = resolveAdminNotificationTarget(nextNotification);
 
     if (/^https?:\/\//i.test(target)) {
       window.location.assign(target);

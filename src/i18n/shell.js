@@ -94,6 +94,7 @@ export default {
   "Curate homepage popular vendors, featured vendors, and products.": "Velg populære leverandører, fremhevede leverandører og produkter til forsiden.",
   "Control vendor-side categories, food types, occasions, and allergens.": "Administrer leverandørkategorier, mattyper, anledninger og allergener.",
   "Update profile, preferences, and platform defaults.": "Oppdater profil, preferanser og plattforminnstillinger.",
+  "Update platform defaults, permissions, and admin preferences.": "Oppdater plattforminnstillinger, tillatelser og administratorpreferanser.",
   "Review client contact form submissions and route follow-up.": "Se gjennom innsendinger fra kundens kontaktskjema og fordel oppfølging.",
   "Track onboarding, approvals, and store readiness in one place.": "Følg registrering, godkjenninger og butikkberedskap på ett sted.",
   "Vendor Details": "Leverandørdetaljer",

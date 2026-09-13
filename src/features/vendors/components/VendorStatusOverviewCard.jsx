@@ -48,35 +48,35 @@ export default function VendorStatusOverviewCard({ breakdown = [], vendors = [] 
   const donutBackground = buildDonutGradient(overviewItems);
 
   return (
-    <article className="self-start rounded-[14px] border border-[#ddd6cf] bg-white p-3.5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
+    <article className="w-full self-start rounded-[14px] border border-[#ddd6cf] bg-white p-3.5 shadow-[0_6px_16px_rgba(53,34,20,0.05)]">
       <h3 className="mb-3 text-[16px] font-bold tracking-[-0.03em] text-[#18120f]">{vt("Vendor Status Overview")}</h3>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-4 min-[380px]:justify-start">
         <div className="relative h-[104px] w-[104px] shrink-0">
           <div
             className="h-full w-full rounded-full"
             style={{ background: donutBackground }}
           />
-          <div className="absolute inset-[14px] flex flex-col items-center justify-center rounded-full bg-white">
+          <div className="absolute inset-[14px] flex flex-col items-center justify-center rounded-full bg-white px-1 text-center">
             <span className="text-[22px] font-extrabold leading-none tracking-[-0.04em] text-[#17110d]">
               {totalVendors}
             </span>
-            <span className="mt-1 text-[9px] font-medium text-[#8c8077]">{vt("Total Vendors")}</span>
+            <span className="mt-1 max-w-[58px] text-[8px] font-medium leading-[1.05] text-[#8c8077]">{vt("Total Vendors")}</span>
           </div>
         </div>
 
-        <div className="min-w-0 flex-1 space-y-2.5">
+        <div className="grid min-w-[150px] flex-1 gap-2.5">
           {overviewItems.map((item) => (
-            <div key={item.key} className="flex items-start gap-2.5">
+            <div key={item.key} className="grid min-w-0 grid-cols-[10px_minmax(0,1fr)] items-start gap-2.5">
               <span
                 className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: item.color }}
               />
               <div className="min-w-0">
-                <p className="text-[11px] font-bold leading-none text-[#1f1711]">
+                <p className="break-words text-[11px] font-bold leading-tight text-[#1f1711]">
                   {vt(item.label)}
                 </p>
-                <p className="mt-1 text-[10px] font-medium leading-none text-[#8c8077]">
+                <p className="mt-0.5 text-[10px] font-medium leading-tight text-[#8c8077]">
                   {item.count} ({item.percentage}%)
                 </p>
               </div>

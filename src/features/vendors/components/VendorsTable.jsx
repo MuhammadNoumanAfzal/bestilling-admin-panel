@@ -132,7 +132,7 @@ export default function VendorsTable({
       className="mt-4 overflow-hidden rounded-[14px] border border-[#d9cdc4] bg-white shadow-[0_10px_22px_rgba(56,33,17,0.04)]"
     >
       <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-[980px] border-collapse">
+        <table className="w-full min-w-[720px] border-collapse">
           <thead className="border-b border-[#eee4dd] bg-[#fcfbfa]">
             <tr className="text-left">
               <th className="w-10 px-2 py-4 text-center">
@@ -145,14 +145,14 @@ export default function VendorsTable({
                 />
               </th>
               <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] w-48">{vt("Vendor")}</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{vt("Business Type")}</th>
+              <th className="hidden px-2 py-4 text-[13px] font-bold text-[#9b8f86] 2xl:table-cell">{vt("Business Type")}</th>
               <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{vt("City")}</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86] text-center">{vt("Order")}</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{vt("Revenue")}</th>
+              <th className="hidden px-2 py-4 text-center text-[13px] font-bold text-[#9b8f86] 2xl:table-cell">{vt("Order")}</th>
+              <th className="hidden px-2 py-4 text-[13px] font-bold text-[#9b8f86] 2xl:table-cell">{vt("Revenue")}</th>
               <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{vt("Rating")}</th>
-              <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{vt("Join Date")}</th>
+              <th className="hidden px-2 py-4 text-[13px] font-bold text-[#9b8f86] 2xl:table-cell">{vt("Join Date")}</th>
               <th className="px-2 py-4 text-[13px] font-bold text-[#9b8f86]">{vt("Status")}</th>
-              <th className="w-44 px-2 py-4 text-center text-[13px] font-bold text-[#9b8f86]">{vt("Actions")}</th>
+              <th className="w-36 px-2 py-4 text-center text-[13px] font-bold text-[#9b8f86] 2xl:w-44">{vt("Actions")}</th>
             </tr>
           </thead>
 
@@ -196,16 +196,16 @@ export default function VendorsTable({
                         />
                       </button>
                     </td>
-                    <td className="px-2 py-4 text-[15px] text-[#18120f] font-semibold align-middle">
+                    <td className="hidden px-2 py-4 text-[15px] font-semibold text-[#18120f] align-middle 2xl:table-cell">
                       {vt(row.businessType)}
                     </td>
                     <td className="px-2 py-4 text-[15px] text-[#5a4d46] align-middle">
                       {row.city}
                     </td>
-                    <td className="px-2 py-4 text-[15px] text-[#18120f] font-semibold align-middle text-center">
+                    <td className="hidden px-2 py-4 text-center text-[15px] font-semibold text-[#18120f] align-middle 2xl:table-cell">
                       {vendorNumber(row.ordersCount)}
                     </td>
-                    <td className="px-2 py-4 text-[15px] font-bold text-[#18120f] align-middle">
+                    <td className="hidden px-2 py-4 text-[15px] font-bold text-[#18120f] align-middle 2xl:table-cell">
                       {row.revenueValue != null ? "NOK " + vendorNumber(row.revenueValue, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : row.revenue}
                     </td>
                     <td className="px-2 py-4 text-[15px] font-semibold text-[#18120f] align-middle">
@@ -214,7 +214,7 @@ export default function VendorsTable({
                         {vendorNumber(row.ratingValue, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
                       </span>
                     </td>
-                    <td className="px-2 py-4 text-[15px] text-[#5a4d46] align-middle">
+                    <td className="hidden px-2 py-4 text-[15px] text-[#5a4d46] align-middle 2xl:table-cell">
                       {vendorDate(row.joinDateValue || row.joinDate)}
                     </td>
                     <td className="px-2 py-4 align-middle">
@@ -250,7 +250,7 @@ export default function VendorsTable({
                       </div>
 
                       {isMenuOpen && (
-                        <div className="absolute right-4 top-10 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
+                        <div className="absolute bottom-10 right-4 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
                           {!["Pending Approval", "Changes Requested"].includes(row.status) ? (
                             <button
                               onClick={() => {

@@ -58,7 +58,7 @@ export default function VendorsToolbar({
   return (
     <div ref={toolbarRef} className="flex flex-col gap-4 border-b border-[#eee4dd] bg-[#fcfbfa] p-4 select-none">
       {/* Top Filter selectors */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-center">
         {/* Search Bar */}
         <div className="relative flex-1 min-w-0">
           <input

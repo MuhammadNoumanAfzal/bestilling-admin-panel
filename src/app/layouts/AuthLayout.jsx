@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 export default function AuthLayout({ children, allowScroll = false }) {
   return (
     <main
@@ -30,7 +31,7 @@ export default function AuthLayout({ children, allowScroll = false }) {
                 Go Catering
               </p>
               <p className="max-w-[360px] text-[15px] font-medium leading-6 text-[#7d7066]">
-                Secure access to the control center
+                {t("auth.login.controlCenter")}
               </p>
             </div>
           </div>

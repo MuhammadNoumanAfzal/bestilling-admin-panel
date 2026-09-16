@@ -87,10 +87,9 @@ function buildFilterOptions(rows) {
   };
 }
 
-function filterVendorRows(rows, { search, city, minRating, activeTab, dateRange }) {
+function filterVendorRows(rows, { search, city, activeTab, dateRange }) {
   const normalizedSearch = `${search ?? ""}`.trim().toLowerCase();
   const normalizedCity = `${city ?? ""}`.trim().toLowerCase();
-  const minimumRating = Number(minRating || 0);
 
   return sortRows(
     (rows || []).filter((row) => {
@@ -117,9 +116,6 @@ function filterVendorRows(rows, { search, city, minRating, activeTab, dateRange 
         return false;
       }
 
-      if (minimumRating && Number(row.ratingValue || 0) < minimumRating) {
-        return false;
-      }
 
       return withinDateRange(row.joinDateValue, dateRange);
     }),
@@ -176,7 +172,6 @@ export default function VendorsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [cityFilter, setCityFilter] = useState("");
-  const [ratingFilter, setRatingFilter] = useState("");
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "All");
   const [currentPage, setCurrentPage] = useState(1);
   const [timeframe, setTimeframe] = useState(DEFAULT_DATE_FILTER);
@@ -216,7 +211,6 @@ export default function VendorsPage() {
     () => ({
       search: debouncedSearchTerm,
       city: cityFilter || null,
-      minRating: ratingFilter ? Number(ratingFilter) : null,
       // The API status enum differs from its display values, so the normalized UI filters below are reliable.
       status: null,
       joinedFrom: dateRange?.start || null,
@@ -226,7 +220,7 @@ export default function VendorsPage() {
       sortBy: "JOINED_AT",
       sortOrder: "DESC",
     }),
-    [activeTab, cityFilter, currentPage, dateRange, debouncedSearchTerm, ratingFilter],
+    [activeTab, cityFilter, currentPage, dateRange, debouncedSearchTerm],
   );
   const vendorCacheKey = useMemo(
     () => JSON.stringify({ ...normalizedFilters, activeTab }),
@@ -237,7 +231,6 @@ export default function VendorsPage() {
     const visibleRows = filterVendorRows(response.rows, {
       search: searchTerm,
       city: cityFilter,
-      minRating: ratingFilter,
       activeTab,
       dateRange,
     });
@@ -333,7 +326,7 @@ export default function VendorsPage() {
     const filteredResponse = applyActiveFilters(cachedResponse);
     setRows(filteredResponse.rows);
     setPageInfo(filteredResponse.pageInfo);
-  }, [activeTab, cityFilter, dateRange, ratingFilter, searchTerm, vendorCacheKey]);
+  }, [activeTab, cityFilter, dateRange, searchTerm, vendorCacheKey]);
 
   function handleTimeframeChange(value) {
     setTimeframe(value);
@@ -385,7 +378,6 @@ export default function VendorsPage() {
   function handleResetFilters() {
     setSearchTerm("");
     setCityFilter("");
-    setRatingFilter("");
     setActiveTab("All");
     setSearchParams((currentParams) => {
       const nextParams = new URLSearchParams(currentParams);
@@ -495,8 +487,6 @@ export default function VendorsPage() {
           onSearchChange={(value) => { setSearchTerm(value); setCurrentPage(1); }}
           cityFilter={cityFilter}
           onCityFilterChange={(value) => { setCityFilter(value); setCurrentPage(1); }}
-          ratingFilter={ratingFilter}
-          onRatingFilterChange={(value) => { setRatingFilter(value); setCurrentPage(1); }}
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onResetFilters={handleResetFilters}

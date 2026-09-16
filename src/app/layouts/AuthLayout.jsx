@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 export default function AuthLayout({ children, allowScroll = false }) {
+  const { t } = useTranslation();
   return (
     <main
       className={[

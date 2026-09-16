@@ -53,6 +53,23 @@ function isApprovedApplication(status) {
   return ["APPROVED", "ACTIVE"].includes(String(status || "").trim().toUpperCase());
 }
 
+function ImageWithFallback({ alt, className, fallbackClassName, src }) {
+  const [hasImage, setHasImage] = useState(Boolean(src));
+
+  useEffect(() => {
+    setHasImage(Boolean(src));
+  }, [src]);
+
+  if (!hasImage) {
+    return (
+      <div aria-label={alt} className={fallbackClassName} role="img">
+        <ImageIcon aria-hidden="true" size={24} />
+      </div>
+    );
+  }
+
+  return <img alt={alt} className={className} onError={() => setHasImage(false)} src={src} />;
+}
 function ChecklistItem({ item }) {
   useVendorLanguage();
   return (
@@ -83,14 +100,12 @@ function AssetCard({ imageUrl, label }) {
   return (
     <article className="overflow-hidden rounded-[16px] border border-[#d8d0c8] bg-white shadow-[0_6px_14px_rgba(53,34,20,0.05)]">
       <div className="flex h-[220px] items-center justify-center bg-[#f5f1ed]">
-        {imageUrl ? (
-          <img alt={label} className="h-full w-full object-cover" src={imageUrl} />
-        ) : (
-          <div className="flex flex-col items-center gap-2 text-[#9f9188]">
-            <ImageIcon size={22} />
-            <p className="text-[13px] font-medium">{vt("Not uploaded")}</p>
-          </div>
-        )}
+        <ImageWithFallback
+          alt={label}
+          className="h-full w-full object-cover"
+          fallbackClassName="flex h-full w-full flex-col items-center justify-center gap-2 text-[#9f9188]"
+          src={imageUrl}
+        />
       </div>
       <div className="border-t border-[#eee4dd] px-4 py-3">
         <p className="text-[14px] font-bold text-[#18120f]">{label}</p>
@@ -786,9 +801,10 @@ export default function VendorApplicationReviewPage() {
 
           <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
             <div className="flex min-w-0 gap-4">
-              <img
+              <ImageWithFallback
                 alt={vendor.name}
                 className="h-20 w-20 rounded-[16px] object-cover shadow-[0_8px_18px_rgba(53,34,20,0.14)]"
+                fallbackClassName="flex h-20 w-20 shrink-0 items-center justify-center rounded-[16px] bg-[#f2e8df] text-[#b28b70] shadow-[0_8px_18px_rgba(53,34,20,0.10)]"
                 src={vendor.assets.logoUrl || vendor.logoUrl}
               />
               <div className="min-w-0">

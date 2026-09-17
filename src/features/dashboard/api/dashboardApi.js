@@ -1,4 +1,4 @@
-﻿import i18n from "../../../i18n";
+import i18n from "../../../i18n";
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
 import {
   ADMIN_DASHBOARD_OVERVIEW_QUERY,
@@ -144,8 +144,6 @@ export async function getAdminDashboardOverviewRequest(filters) {
           priority: approval?.priority || tr("common.normal"),
           canApprove: Boolean(approval?.canApprove),
           canReject: Boolean(approval?.canReject),
-          canMarkReviewing: Boolean(approval?.canMarkReviewing),
-          canMarkPending: Boolean(approval?.canMarkPending),
         }))
       : [],
     quickActions: Array.isArray(overview?.quickActions)

@@ -54,8 +54,6 @@ export const ADMIN_DASHBOARD_OVERVIEW_QUERY = `
         priority
         canApprove
         canReject
-        canMarkReviewing
-        canMarkPending
       }
       quickActions {
         key

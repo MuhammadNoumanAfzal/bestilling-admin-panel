@@ -22,6 +22,12 @@ function getErrorMessage(result, fallbackMessage) {
   return firstError || result?.message || fallbackMessage;
 }
 
+function createValidationError(result, fallbackMessage) {
+  const error = new Error(getErrorMessage(result, fallbackMessage));
+  error.validationErrors = Array.isArray(result?.errors) ? result.errors : [];
+  return error;
+}
+
 function toInitials(value) {
   return `${value ?? ""}`
     .split(/\s+/)
@@ -738,7 +744,7 @@ export async function approveVendorApplicationRequest(id, input) {
 
   const result = data?.approveVendorApplication;
   if (!result?.success) {
-    throw new Error(getErrorMessage(result, "Unable to approve this vendor application."));
+    throw createValidationError(result, "Unable to approve this vendor application.");
   }
 
   return {
@@ -759,7 +765,7 @@ export async function rejectVendorApplicationRequest(id, input) {
 
   const result = data?.rejectVendorApplication;
   if (!result?.success) {
-    throw new Error(getErrorMessage(result, "Unable to reject this vendor application."));
+    throw createValidationError(result, "Unable to reject this vendor application.");
   }
 
   return {

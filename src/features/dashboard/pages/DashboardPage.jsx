@@ -41,6 +41,23 @@ export default function DashboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { setPageHeaderAction } = useOutletContext();
+  function getApprovalFailureText(error) {
+    if (error?.isAuthenticationError) {
+      return t("adminDashboard.alerts.sessionExpired");
+    }
+
+    const validationErrors = Array.isArray(error?.validationErrors) ? error.validationErrors : [];
+    const messages = validationErrors
+      .map((item) => {
+        const key = `${item?.code || item?.field || ""}`.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_");
+        return key
+          ? t(`adminDashboard.approvalBlockers.${key}`, { defaultValue: item?.message || "" })
+          : item?.message;
+      })
+      .filter(Boolean);
+
+    return messages[0] || error?.message || t("adminDashboard.alerts.updateFallback");
+  }
   const [timeframe, setTimeframe] = useState("Last 7 days");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
@@ -206,14 +223,6 @@ export default function DashboardPage() {
                   nextStatus === "APPROVED" || nextStatus === "REJECTED"
                     ? false
                     : response.approval.rawStatus === "PENDING" || response.approval.rawStatus === "REVIEWING",
-                canMarkReviewing:
-                  nextStatus === "APPROVED" || nextStatus === "REJECTED"
-                    ? false
-                    : response.approval.rawStatus === "PENDING",
-                canMarkPending:
-                  nextStatus === "APPROVED" || nextStatus === "REJECTED"
-                    ? false
-                    : response.approval.rawStatus === "REVIEWING",
               }
             : item,
         ),
@@ -229,8 +238,8 @@ export default function DashboardPage() {
     } catch (error) {
       await Swal.fire({
         icon: "error",
-        title: t("adminDashboard.alerts.updateFailed"),
-        text: t(error?.isAuthenticationError ? "adminDashboard.alerts.sessionExpired" : "adminDashboard.alerts.updateFallback"),
+        title: t(error?.isAuthenticationError ? "adminDashboard.alerts.sessionExpired" : "adminDashboard.alerts.approvalBlocked"),
+        text: getApprovalFailureText(error),
         confirmButtonText: t("adminDashboard.common.ok"),
         confirmButtonColor: "#cf6e38",
       });

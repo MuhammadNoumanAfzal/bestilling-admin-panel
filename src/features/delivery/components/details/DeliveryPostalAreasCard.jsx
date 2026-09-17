@@ -1,11 +1,12 @@
 import { dt, useDeliveryLanguage } from "../../deliveryTranslation.js";
-import { Search, SlidersHorizontal, SquarePen, Trash2, UsersRound } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, SquarePen, Trash2, UsersRound } from "lucide-react";
 import { useMemo, useState } from "react";
 import DeliveryStatusPill from "./DeliveryStatusPill.jsx";
 import DeliveryPostalCodeModal from "./DeliveryPostalCodeModal.jsx";
 import PostalCodeImportPanel from "../PostalCodeImportPanel.jsx";
 
 const statusFilterOptions = ["All", "Active", "Inactive", "Limited"];
+const POSTAL_CODES_PER_PAGE = 15;
 
 const initialFormState = {
   id: "",
@@ -46,6 +47,7 @@ export default function DeliveryPostalAreasCard({
   useDeliveryLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create");
   const [form, setForm] = useState(initialFormState);
@@ -65,6 +67,12 @@ export default function DeliveryPostalAreasCard({
       return matchesSearch && matchesStatus;
     });
   }, [rows, searchTerm, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / POSTAL_CODES_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = filteredRows.length ? (currentPage - 1) * POSTAL_CODES_PER_PAGE : 0;
+  const pageEnd = Math.min(pageStart + POSTAL_CODES_PER_PAGE, filteredRows.length);
+  const paginatedRows = filteredRows.slice(pageStart, pageEnd);
 
   function updateFormField(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -148,7 +156,7 @@ export default function DeliveryPostalAreasCard({
                 />
                 <input
                   className="h-11 w-full rounded-[12px] border border-[#2f241d] bg-[#f8f5f2] pl-12 pr-4 text-[15px] font-medium leading-none text-[#18120f] outline-none transition placeholder:text-[15px] placeholder:font-medium placeholder:text-[#aa9f96] focus:border-[#cf6e38] focus:bg-white focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
-                  onChange={(event) => setSearchTerm(event.target.value)}
+                  onChange={(event) => { setSearchTerm(event.target.value); setPage(1); }}
                   placeholder={dt("Search postal code, area name, or vendor count")}
                   value={searchTerm}
                 />
@@ -164,7 +172,7 @@ export default function DeliveryPostalAreasCard({
                         ? "border-[#cf6e38] bg-[#cf6e38] text-white"
                         : "border-[#e4d8d0] bg-white text-[#4a3d36] hover:border-[#cf6e38]/40 hover:bg-[#fff8f3]",
                     ].join(" ")}
-                    onClick={() => setStatusFilter(option)}
+                    onClick={() => { setStatusFilter(option); setPage(1); }}
                     type="button"
                   >
                     {option === "All" && <SlidersHorizontal size={15} />}
@@ -175,7 +183,7 @@ export default function DeliveryPostalAreasCard({
             </div>
 
             <p className="text-[14px] font-medium text-[#7c7068]">
-              {dt("{{visible}} of {{total}} postal zones visible", { visible: filteredRows.length, total: (rows || []).length })}
+              {dt("Showing {{start}}-{{end}} of {{total}} postal zones", { start: filteredRows.length ? pageStart + 1 : 0, end: pageEnd, total: filteredRows.length })}
             </p>
           </div>
         </div>
@@ -198,7 +206,7 @@ export default function DeliveryPostalAreasCard({
                   <td className="px-4 py-10 text-center text-[15px] font-medium text-[#6f645d]" colSpan={5}>{dt("No postal codes match the current search or filter.")}</td>
                 </tr>
               ) : (
-                filteredRows.map((row) => (
+                paginatedRows.map((row) => (
                   <tr key={row.id} className="border-t border-[#f1e9e2] transition hover:bg-[#fffdfa]">
                     <td className="px-4 py-4 text-[15px] font-medium text-[#18120f]">{row.postalCode}</td>
                     <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.areaName}</td>
@@ -227,6 +235,16 @@ export default function DeliveryPostalAreasCard({
             </tbody>
           </table>
         </div>
+
+        {filteredRows.length > 0 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#eee4dd] bg-[#fcfbfa] px-4 py-3">
+            <p className="text-[13px] font-medium text-[#7c7068]">{dt("Page {{current}} of {{total}}", { current: currentPage, total: totalPages })}</p>
+            <div className="flex items-center gap-2">
+              <button aria-label={dt("Previous page")} className="inline-flex h-9 w-9 items-center justify-center rounded-[8px] border border-[#dfd5ce] bg-white text-[#71645b] transition hover:border-[#cf6e38] hover:text-[#cf6e38] disabled:cursor-not-allowed disabled:opacity-45" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)} type="button"><ChevronLeft size={16} /></button>
+              <button aria-label={dt("Next page")} className="inline-flex h-9 w-9 items-center justify-center rounded-[8px] border border-[#dfd5ce] bg-white text-[#71645b] transition hover:border-[#cf6e38] hover:text-[#cf6e38] disabled:cursor-not-allowed disabled:opacity-45" disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)} type="button"><ChevronRight size={16} /></button>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <DeliveryPostalCodeModal

@@ -1,4 +1,4 @@
-import { ot, useOrderLanguage, orderDate, orderError, orderMessage } from "../orderTranslation.js";
+import { ot, useOrderLanguage, orderDate, orderError } from "../orderTranslation.js";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -10,7 +10,6 @@ import {
   CreditCard,
   XCircle,
   Clock,
-  BadgeCheck,
 } from "lucide-react";
 
 import CustomerInfoCard from "../components/details/CustomerInfoCard.jsx";
@@ -25,7 +24,6 @@ import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 import {
   getCommissionPreviewForOrderRequest,
   getAdminOrderDetailRequest,
-  updateOrderPaymentStatusRequest,
 } from "../api/ordersApi.js";
 
 function OverviewCard({ icon: Icon, label, value, valueClassName = "text-[#221914]", children }) {
@@ -89,7 +87,6 @@ export default function OrderDetailPage() {
   const [commissionPreview, setCommissionPreview] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [isWorking, setIsWorking] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [selectedMenuDetail, setSelectedMenuDetail] = useState(null);
   const [isLoadingMenu, setIsLoadingMenu] = useState(false);
@@ -164,7 +161,7 @@ export default function OrderDetailPage() {
     }
 
     const intervalId = window.setInterval(() => {
-      if (!document.hidden && !isWorking) {
+      if (!document.hidden) {
         void loadOrder({ silent: true });
       }
     }, 15000);
@@ -172,42 +169,7 @@ export default function OrderDetailPage() {
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [isWorking, orderId]);
-
-  async function runAction(task) {
-    try {
-      setIsWorking(true);
-      const message = await task();
-      await loadOrder({ silent: true });
-      await Swal.fire({
-          confirmButtonText: ot("OK"),
-        icon: "success",
-        title: ot("Order updated"),
-        text: orderMessage(message),
-        confirmButtonColor: "#cf6e38",
-      });
-    } catch (error) {
-      await Swal.fire({
-          confirmButtonText: ot("OK"),
-        icon: "error",
-        title: ot("Action failed"),
-        text: orderError(error, "Please try again."),
-        confirmButtonColor: "#cf6e38",
-      });
-    } finally {
-      setIsWorking(false);
-    }
-  }
-
-  async function handleMarkPaid() {
-    await runAction(async () => {
-      const result = await updateOrderPaymentStatusRequest({
-        orderId: order.id,
-        paymentStatus: "PAID",
-      });
-      return result.message;
-    });
-  }
+  }, [orderId]);
 
   function handleViewCustomerProfile() {
     if (!order?.customer?.id) {
@@ -307,18 +269,6 @@ export default function OrderDetailPage() {
             </p>
             <p className="text-[13px] text-[#8c8077]">{ot("Internal ID {{id}} · Last updated {{date}}", { id: order.id, date: orderDate(order.updatedAtValue || order.updatedAtLabel) })}
             </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {order.actions.canMarkPaid ? (
-              <button
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] bg-[#2b9e62] px-4 text-[13px] font-semibold text-white transition hover:bg-[#238251] disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={isWorking}
-                onClick={handleMarkPaid}
-                type="button"
-              >
-                <BadgeCheck size={15} />{ot("Mark Paid")}</button>
-            ) : null}
           </div>
         </div>
       </section>

@@ -78,16 +78,22 @@ function withinDateRange(value, dateRange) {
   return true;
 }
 
+function ratingBucket(value) {
+  const rating = Number(value);
+  return Number.isFinite(rating) ? Math.max(0, Math.min(5, Math.round(rating))) : 0;
+}
+
 function buildFilterOptions(rows) {
   return {
     cities: [...new Set(rows.map((row) => row.city).filter(Boolean))].sort((left, right) =>
       left.localeCompare(right),
     ),
     statuses: [...new Set(rows.map((row) => row.status).filter(Boolean))],
+    ratings: [...new Set(rows.map((row) => ratingBucket(row.ratingValue)))].sort((left, right) => right - left),
   };
 }
 
-function filterVendorRows(rows, { search, city, activeTab, dateRange }) {
+function filterVendorRows(rows, { search, city, rating, activeTab, dateRange }) {
   const normalizedSearch = `${search ?? ""}`.trim().toLowerCase();
   const normalizedCity = `${city ?? ""}`.trim().toLowerCase();
 
@@ -116,6 +122,9 @@ function filterVendorRows(rows, { search, city, activeTab, dateRange }) {
         return false;
       }
 
+      if (rating != null && rating !== "" && ratingBucket(row.ratingValue) !== Number(rating)) {
+        return false;
+      }
 
       return withinDateRange(row.joinDateValue, dateRange);
     }),
@@ -172,6 +181,7 @@ export default function VendorsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [cityFilter, setCityFilter] = useState("");
+  const [ratingFilter, setRatingFilter] = useState("");
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "All");
   const [currentPage, setCurrentPage] = useState(1);
   const [timeframe, setTimeframe] = useState(DEFAULT_DATE_FILTER);
@@ -183,6 +193,7 @@ export default function VendorsPage() {
   const [filterOptions, setFilterOptions] = useState({
     cities: [],
     statuses: [],
+    ratings: [],
   });
   const [sidePanels, setSidePanels] = useState({
     topPerformers: [],
@@ -231,6 +242,7 @@ export default function VendorsPage() {
     const visibleRows = filterVendorRows(response.rows, {
       search: searchTerm,
       city: cityFilter,
+      rating: ratingFilter,
       activeTab,
       dateRange,
     });
@@ -273,7 +285,7 @@ export default function VendorsPage() {
       setRows(filteredResponse.rows);
       setPageInfo(filteredResponse.pageInfo);
       setStats(cachedResponse.stats);
-      setFilterOptions(cachedResponse.filterOptions);
+      setFilterOptions(buildFilterOptions(cachedResponse.rows));
       setSidePanels(getActiveSidePanels(cachedResponse));
       setIsLoading(false);
     }
@@ -296,7 +308,7 @@ export default function VendorsPage() {
         setRows(filteredResponse.rows);
         setPageInfo(filteredResponse.pageInfo);
         setStats(response.stats);
-        setFilterOptions(response.filterOptions);
+        setFilterOptions(buildFilterOptions(response.rows));
         setSidePanels(getActiveSidePanels(response));
         writeVendorCache(vendorCacheKey, response);
       } catch (error) {
@@ -326,7 +338,7 @@ export default function VendorsPage() {
     const filteredResponse = applyActiveFilters(cachedResponse);
     setRows(filteredResponse.rows);
     setPageInfo(filteredResponse.pageInfo);
-  }, [activeTab, cityFilter, dateRange, searchTerm, vendorCacheKey]);
+  }, [activeTab, cityFilter, dateRange, ratingFilter, searchTerm, vendorCacheKey]);
 
   function handleTimeframeChange(value) {
     setTimeframe(value);
@@ -487,6 +499,9 @@ export default function VendorsPage() {
           onSearchChange={(value) => { setSearchTerm(value); setCurrentPage(1); }}
           cityFilter={cityFilter}
           onCityFilterChange={(value) => { setCityFilter(value); setCurrentPage(1); }}
+          ratingFilter={ratingFilter}
+          onRatingFilterChange={(value) => { setRatingFilter(value); setCurrentPage(1); }}
+          ratings={filterOptions.ratings}
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onResetFilters={handleResetFilters}

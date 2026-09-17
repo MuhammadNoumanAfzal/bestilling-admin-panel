@@ -1,11 +1,14 @@
 import { vt, useVendorLanguage } from "../utils/vendorTranslation.js";
-import { Search, MapPin } from "lucide-react";
+import { Search, MapPin, Star } from "lucide-react";
 
 export default function VendorsToolbar({
   searchTerm,
   onSearchChange,
   cityFilter,
   onCityFilterChange,
+  ratingFilter,
+  onRatingFilterChange,
+  ratings,
   activeTab,
   onTabChange,
   onResetFilters,
@@ -49,6 +52,20 @@ export default function VendorsToolbar({
             <datalist id="vendor-city-filter-options">
               {cities.map((city) => <option key={city} value={city} />)}
             </datalist>
+          </label>
+          <label className="relative min-w-[132px]">
+            <span className="sr-only">{vt("Filter by rating")}</span>
+            <select
+              className="h-9 w-full appearance-none rounded-[8px] border border-[#ddd4cb] bg-white pl-8 pr-8 text-[12px] font-semibold text-[#231913] outline-none transition focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(207,110,56,0.12)]"
+              onChange={(event) => onRatingFilterChange(event.target.value)}
+              value={ratingFilter}
+            >
+              <option value="">{vt("Rating")}</option>
+              {ratings.map((rating) => (
+                <option key={rating} value={rating}>{rating === 1 ? `${rating} Star` : `${rating} Stars`}</option>
+              ))}
+            </select>
+            <Star className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#d99a21]" fill="currentColor" size={13} />
           </label>
           <button className="inline-flex h-9 items-center justify-center rounded-[8px] border border-[#ead7ca] bg-[#fff8f4] px-3 text-[12px] font-semibold text-[#cf6e38] transition hover:bg-[#fff1e8]" onClick={onResetFilters} type="button">
             {vt("Clear Filters")}

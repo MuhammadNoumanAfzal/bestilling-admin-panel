@@ -9,7 +9,6 @@ function Dropdown({
   options,
   selectedValue,
   defaultLabel,
-  clearLabel,
   onSelect,
   translateOptions = true,
 }) {
@@ -27,17 +26,6 @@ function Dropdown({
 
       {isOpen ? (
         <div className="absolute left-0 z-30 mt-1 w-full min-w-[12rem] rounded-[10px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] sm:w-48">
-          <button
-            className={`block w-full px-3.5 py-2 text-left text-[12px] font-semibold transition ${
-              !selectedValue
-                ? "bg-[#fff3ec] text-[#d96834]"
-                : "text-[#6f655e] hover:bg-[#faf5f1] hover:text-[#cf6e38]"
-            }`}
-            onClick={() => onSelect("")}
-            type="button"
-          >
-            {clearLabel || defaultLabel}
-          </button>
 
           {options.map((option) => {
             const key = typeof option === "string" ? option : option.id;
@@ -122,7 +110,6 @@ export default function OrdersToolbar({
       <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
         <Dropdown
           translateOptions={false}
-          clearLabel={ot("Any vendor")}
           defaultLabel={ot("Vendor")}
           isOpen={activeDropdown === "vendor"}
           label={vendors.find((item) => item.id === vendorFilter)?.label}
@@ -135,7 +122,6 @@ export default function OrdersToolbar({
         />
 
         <Dropdown
-          clearLabel={ot("Any order status")}
           defaultLabel={ot("Order Status")}
           isOpen={activeDropdown === "status"}
           label={statusFilter}
@@ -148,7 +134,6 @@ export default function OrdersToolbar({
         />
 
         <Dropdown
-          clearLabel={ot("Any payment status")}
           defaultLabel={ot("Payment Status")}
           isOpen={activeDropdown === "payment"}
           label={paymentFilter}

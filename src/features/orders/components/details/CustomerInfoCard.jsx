@@ -1,6 +1,6 @@
 import { ot, useOrderLanguage } from "../../orderTranslation.js";
 import { hasDetailValue } from "./hasDetailValue.js";
-import { ArrowUpRight, User } from "lucide-react";
+import { Eye, User } from "lucide-react";
 
 function displayValue(value, fallback = "Not available") {
   if (value === null || value === undefined) {
@@ -22,12 +22,12 @@ export default function CustomerInfoCard({ customer, onViewProfile }) {
         </div>
         {onViewProfile ? (
           <button
-            className="inline-flex min-h-10 max-w-[126px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#efcfbf] bg-[linear-gradient(180deg,#fff8f3_0%,#fff1e8_100%)] px-3 py-2 text-center text-[10px] font-extrabold uppercase leading-tight tracking-[0.1em] text-[#c86434] shadow-[0_8px_18px_rgba(207,110,56,0.12)] transition hover:-translate-y-0.5 hover:border-[#cf6e38] hover:bg-[linear-gradient(180deg,#fff3ec_0%,#ffe7d8_100%)] hover:text-[#a94f24]"
+            className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[8px] border border-[#efcfbf] bg-[#fff8f3] px-2.5 text-[12px] font-semibold text-[#c86434] transition hover:border-[#cf6e38] hover:bg-[#fff1e8] hover:text-[#a94f24]"
             onClick={onViewProfile}
             type="button"
           >
-            <span className="min-w-0 break-words">{ot("View Profile")}</span>
-            <ArrowUpRight size={12} className="shrink-0" />
+            <Eye size={14} className="shrink-0" />
+            <span>{ot("View Profile")}</span>
           </button>
         ) : null}
       </header>

@@ -148,8 +148,8 @@ export default function OrdersPage() {
         setPageInfo(cachedResponse.pageInfo);
         setFilterOptions({
           vendors: uniqueVendorOptions(cachedResponse.filterOptions.vendors),
-          statuses: uniqueTextOptions(cachedResponse.filterOptions.statuses),
-          paymentStatuses: uniqueTextOptions(cachedResponse.filterOptions.paymentStatuses),
+          statuses: uniqueTextOptions(cachedResponse.filterOptions.statuses).filter((status) => status !== "Refunded"),
+          paymentStatuses: uniqueTextOptions(cachedResponse.filterOptions.paymentStatuses).filter((status) => !["Failed", "Refunded", "Partially refunded"].includes(status)),
         });
         setIsLoading(false);
       });
@@ -177,8 +177,8 @@ export default function OrdersPage() {
         setPageInfo(ordersResponse.pageInfo);
         setFilterOptions({
           vendors: uniqueVendorOptions(ordersResponse.filterOptions.vendors),
-          statuses: uniqueTextOptions(ordersResponse.filterOptions.statuses),
-          paymentStatuses: uniqueTextOptions(ordersResponse.filterOptions.paymentStatuses),
+          statuses: uniqueTextOptions(ordersResponse.filterOptions.statuses).filter((status) => status !== "Refunded"),
+          paymentStatuses: uniqueTextOptions(ordersResponse.filterOptions.paymentStatuses).filter((status) => !["Failed", "Refunded", "Partially refunded"].includes(status)),
         });
         writeOrderCache(orderCacheKey, ordersResponse);
       } catch (error) {

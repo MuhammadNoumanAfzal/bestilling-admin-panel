@@ -1,6 +1,6 @@
 import { vt, useVendorLanguage, vendorDate, vendorNumber } from "../utils/vendorTranslation.js";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, MoreVertical, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, ClipboardCheck, Eye, MoreVertical, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getVendorDetailPath } from "../utils/vendorRoutes.js";
 
@@ -165,6 +165,7 @@ export default function VendorsTable({
               vendors.map((row) => {
                 const isSelected = selectedIds.includes(row.id);
                 const isMenuOpen = activeMenuId === row.id;
+                const needsReview = ["Pending Approval", "Changes Requested"].includes(row.status);
 
                 return (
                   <tr
@@ -231,13 +232,20 @@ export default function VendorsTable({
                     <td className="relative px-2 py-4 text-center align-middle">
                       <div className="flex items-center justify-center gap-1">
                         <button
-                          className="inline-flex min-h-8 items-center justify-center rounded-[9px] border border-[#e4d5cb] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#6f5145] transition hover:border-[#d96834] hover:bg-[#fff8f4] hover:text-[#c75f2e]"
+                          aria-label={vt(getReviewActionLabel(row))}
+                          className={`inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-[8px] border px-2.5 text-[12px] font-semibold transition ${
+                            needsReview
+                              ? "border-[#f0c9b2] bg-[#fff5ef] text-[#b65428] hover:border-[#dc7743] hover:bg-[#ffeadf]"
+                              : "border-[#e4d5cb] bg-white text-[#6f5145] hover:border-[#d96834] hover:bg-[#fff8f4] hover:text-[#c75f2e]"
+                          }`}
                           onClick={() => navigate(getVendorNavigationPath(row))}
+                          title={vt(getReviewActionLabel(row))}
                           type="button"
                         >
-                          {vt(getReviewActionLabel(row))}
+                          {needsReview ? <ClipboardCheck size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />}
+                          <span>{needsReview ? vt("Review") : vt("View")}</span>
                         </button>
-                        {!["Pending Approval", "Changes Requested"].includes(row.status) ? (
+                        {!needsReview ? (
                           <button
                             aria-label={vt("More actions for {{value0}}", { value0: row.name })}
                             onClick={() => setActiveMenuId(activeMenuId === row.id ? null : row.id)}
@@ -251,7 +259,7 @@ export default function VendorsTable({
 
                       {isMenuOpen && (
                         <div className="absolute bottom-10 right-4 z-30 w-36 rounded-[8px] border border-[#d8ccc2] bg-white py-1 shadow-[0_6px_16px_rgba(53,34,20,0.1)] text-left">
-                          {!["Pending Approval", "Changes Requested"].includes(row.status) ? (
+                          {!needsReview ? (
                             <button
                               onClick={() => {
                                 onToggleStatus?.(row);

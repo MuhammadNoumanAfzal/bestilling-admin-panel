@@ -147,7 +147,6 @@ export default function VendorRecentOrdersSection({ orders = [] }) {
               onChange={(event) => setStatusFilter(event.target.value)}
               value={statusFilter}
             >
-              <option value="">{vt("All statuses")}</option>
               {statusOptions.map((status) => (
                 <option key={status} value={status}>
                   {vt(status)}

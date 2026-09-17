@@ -134,6 +134,7 @@ export default function PayoutToolbar({
           onSelect={(value) => handleSelect(onVendorFilterChange, value)}
           onToggle={() => setActiveDropdown((current) => (current === "vendor" ? "" : "vendor"))}
           translateOptions={false} options={vendorOptions}
+          showClearOption={false}
           selectedValue={vendorFilter === "all" ? "" : vendorFilter}
         />
 

@@ -40,13 +40,10 @@ export default function CustomersToolbar({
     setActiveDropdown(null);
   };
 
-  const statusOptions = [
-    { label: "Any Status", value: "" },
-    ...statuses.map((status) => ({
-      label: status,
-      value: status,
-    })),
-  ];
+  const statusOptions = statuses.map((status) => ({
+    label: status,
+    value: status,
+  }));
 
   return (
     <div ref={toolbarRef} className="flex flex-col gap-4 border-b border-[#e7ddd5] bg-[#fcfbfa] p-4 select-none">

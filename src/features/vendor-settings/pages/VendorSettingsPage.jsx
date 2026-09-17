@@ -596,7 +596,7 @@ function getNextSortOrder(items = []) {
 }
 
 function IconImageField({ field, value, onChange, onUpload, uploading }) {
-  return <div className="space-y-2">
+  return <div className="space-y-1">
     <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8d7c70]">{vst(field.label)}</p>
     <div className="flex min-h-11 items-center gap-3 rounded-[12px] border border-[#dfd2c8] bg-white p-2">
       {value ? <img alt="" className="h-10 w-10 rounded-[9px] border border-[#eadfd6] object-cover" src={value} /> : <span className="inline-flex h-10 w-10 items-center justify-center rounded-[9px] bg-[#fff2e8] text-[#cf6e38]"><ImagePlus size={17} /></span>}

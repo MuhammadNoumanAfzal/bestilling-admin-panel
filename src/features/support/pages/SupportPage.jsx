@@ -1,6 +1,7 @@
 import { st, useSupportLanguage, supportError } from "../supportTranslation.js";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
+import { Inbox } from "lucide-react";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import {
   getAdminSupportSummaryRequest,
@@ -315,7 +316,18 @@ export default function SupportPage() {
   }
 
   useEffect(() => {
-    setPageHeaderAction(<DateFilterDropdown selectedFilter={timeframe} onChangeFilter={setTimeframe} startDate={customStart} endDate={customEnd} onCustomDateChange={handleCustomDateChange} />);
+    setPageHeaderAction(
+      <div className="flex items-center gap-3">
+        <DateFilterDropdown selectedFilter={timeframe} onChangeFilter={setTimeframe} startDate={customStart} endDate={customEnd} onCustomDateChange={handleCustomDateChange} />
+        <Link
+          to="/contact-responses"
+          className="inline-flex h-[40px] items-center justify-center gap-2 rounded-[10px] border border-[#cf6e38] bg-[#cf6e38] px-4 text-[14px] font-bold text-white no-underline shadow-sm transition hover:bg-[#b85d2b] hover:border-[#b85d2b] active:scale-[0.98]"
+        >
+          <Inbox size={16} />
+          <span>{st("Vis innboks", "Vis innboks")}</span>
+        </Link>
+      </div>
+    );
     return () => setPageHeaderAction(null);
   }, [customEnd, customStart, setPageHeaderAction, timeframe]);
 

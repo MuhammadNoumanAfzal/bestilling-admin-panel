@@ -62,7 +62,7 @@ export default function DeliverySettingsCard({ area, form, onChange }) {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField label={dt("City Name")} onChange={() => {}} readOnly value={area.city} />
-          <TextField label={dt("Region")} onChange={() => {}} readOnly value={area.region} />
+          <TextField label={dt("Region")} onChange={(event) => onChange("region", event.target.value)} value={form.region} />
           <TextField label={dt("Country")} onChange={() => {}} readOnly value={area.country} />
           <TextField label={dt("Coverage Type")} onChange={() => {}} readOnly value={dt(area.coverageType)} />
         </div>

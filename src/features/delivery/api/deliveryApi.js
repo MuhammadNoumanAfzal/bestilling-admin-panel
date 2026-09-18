@@ -430,6 +430,7 @@ export async function updateDeliveryAreaRequest(id, input) {
   const data = await executeProtectedGraphqlRequest(UPDATE_DELIVERY_AREA_MUTATION, {
     id,
     input: {
+      region: `${input?.region ?? ""}`.trim(),
       maxDeliveryRadius: parseNumberOrNull(input?.maxDeliveryRadius),
       leadTimeDays: parseNumberOrNull(input?.leadTimeDays),
       coverageType: getDefaultCoverageType(input?.coverageType),

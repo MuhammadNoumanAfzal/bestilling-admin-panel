@@ -25,6 +25,7 @@ function createInitialSettingsForm(area) {
     minimumOrderAmount: area?.settings?.minimumOrderAmount || "",
     deliveryFee: area?.settings?.deliveryFee || "",
     notes: area?.settings?.notes || "",
+    region: area?.region || "",
   };
 }
 
@@ -85,10 +86,16 @@ export default function DeliveryAreaDetailPage() {
 
     try {
       setIsSaving(true);
+      const requestedRegion = `${settingsForm.region ?? ""}`.trim();
+      const previousRegion = `${area.region ?? ""}`.trim();
       const result = await updateDeliveryAreaRequest(area.id, settingsForm);
       const refreshedArea = await getAdminDeliveryAreaRequest(area.id);
       setArea(refreshedArea);
       setSettingsForm(createInitialSettingsForm(refreshedArea));
+
+      if (requestedRegion !== previousRegion && `${refreshedArea.region ?? ""}`.trim() !== requestedRegion) {
+        throw new Error("The server did not save the updated region.");
+      }
 
       await Swal.fire(deliveryDialog({
         icon: "success",

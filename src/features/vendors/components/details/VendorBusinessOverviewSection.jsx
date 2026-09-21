@@ -25,6 +25,64 @@ const logisticsIcons = {
   "Delivery Zones": MapPin,
 };
 
+function getUniqueListItems(value) {
+  const rawValue = `${value ?? ""}`.trim();
+
+  if (!rawValue.includes(",")) {
+    return [];
+  }
+
+  const seen = new Set();
+  return rawValue
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .filter((entry) => {
+      const key = entry.toLowerCase();
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+}
+
+function LogisticsValue({ value }) {
+  const listItems = getUniqueListItems(value);
+
+  if (listItems.length > 1) {
+    const visibleItems = listItems.slice(0, 8);
+    const hiddenCount = listItems.length - visibleItems.length;
+
+    return (
+      <div
+        className="flex max-w-[260px] flex-wrap justify-end gap-1.5 text-right"
+        title={listItems.join(", ")}
+      >
+        {visibleItems.map((entry) => (
+          <span
+            key={entry}
+            className="inline-flex max-w-full items-center rounded-full border border-[#ecd8ca] bg-[#fff7f2] px-2.5 py-1 text-[12px] font-bold leading-none text-[#1f1711]"
+          >
+            {vt(entry)}
+          </span>
+        ))}
+        {hiddenCount > 0 ? (
+          <span className="inline-flex items-center rounded-full border border-[#d9c6b8] bg-[#f6eee8] px-2.5 py-1 text-[12px] font-bold leading-none text-[#6d5b51]">
+            +{hiddenCount} more
+          </span>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <span className="max-w-[260px] break-words text-right text-[14px] font-bold leading-6 text-[#1f1711]">
+      {vt(value)}
+    </span>
+  );
+}
+
 function LogisticsCard({ title, items }) {
   useVendorLanguage();
   return (
@@ -38,15 +96,15 @@ function LogisticsCard({ title, items }) {
             <div
               key={item.label}
               className={[
-                "flex items-center justify-between gap-4 py-3",
+                "flex items-start justify-between gap-4 py-3",
                 index !== items.length - 1 ? "border-b border-[#e9dfd8]" : "",
               ].join(" ")}
             >
-              <div className="flex items-center gap-2.5 text-[#8a7f76]">
-                <Icon size={15} className="text-[#d96834]" />
+              <div className="flex min-w-0 items-center gap-2.5 text-[#8a7f76]">
+                <Icon size={15} className="shrink-0 text-[#d96834]" />
                 <span className="text-[13px] font-medium">{vt(item.label)}</span>
               </div>
-              <span className="text-[14px] font-bold text-[#1f1711]">{vt(item.value)}</span>
+              <LogisticsValue value={item.value} />
             </div>
           );
         })}

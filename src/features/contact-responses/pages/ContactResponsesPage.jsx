@@ -9,6 +9,16 @@ import {
 } from "../api/contactResponsesApi.js";
 
 const PAGE_SIZE = 10;
+function getSupportTicketRouteId(ticketId) {
+  const value = `${ticketId ?? ""}`.trim();
+
+  if (/^\d+$/.test(value)) {
+    return value;
+  }
+
+  const prefixedMatch = value.match(/^(?:tkt|ticket|support)[_-]?(\d+)$/i);
+  return prefixedMatch?.[1] || "";
+}
 const statusOptions = [
   { value: "", label: "All statuses" },
   { value: "OPEN", label: "Open" },
@@ -321,10 +331,10 @@ export default function ContactResponsesPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    {selectedResponse.ticketId ? (
+                    {getSupportTicketRouteId(selectedResponse.ticketId) ? (
                       <button
                         className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-[10px] bg-[#cf6e38] px-3 text-[13px] font-bold text-white shadow-[0_10px_20px_rgba(207,110,56,0.18)]"
-                        onClick={() => navigate(`/support/${encodeURIComponent(selectedResponse.ticketId)}`)}
+                        onClick={() => navigate(`/support/${encodeURIComponent(getSupportTicketRouteId(selectedResponse.ticketId))}`)}
                         type="button"
                       >
                         <Ticket size={15} />

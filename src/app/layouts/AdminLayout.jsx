@@ -552,7 +552,7 @@ export default function AdminLayout() {
   }
 
   useEffect(() => {
-    document.title = `${t(meta.title, { keySeparator: false })} | Bestilling Admin`;
+    document.title = `${t(meta.title, { keySeparator: false })} | Go Catering`;
   }, [meta.title, t]);
 
   useEffect(() => {

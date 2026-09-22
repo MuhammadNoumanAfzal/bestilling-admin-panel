@@ -41,6 +41,75 @@ function appendNotificationContext(path, notification) {
   const separator = normalizedPath.includes("?") ? "&" : "?";
   return `${normalizedPath}${separator}notificationId=${encodeURIComponent(notificationId)}`;
 }
+function parseNotificationMetadata(value) {
+  if (!value) {
+    return {};
+  }
+
+  if (typeof value === "object") {
+    return value;
+  }
+
+  try {
+    const parsed = JSON.parse(String(value));
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function normalizeSupportTicketId(value) {
+  const rawValue = String(value || "").trim();
+
+  if (!rawValue) {
+    return "";
+  }
+
+  const withoutQuery = rawValue.split(/[?#]/)[0].replace(/^\/+|\/+$/g, "");
+  const lastSegment = withoutQuery.split("/").filter(Boolean).pop() || rawValue;
+  const cleanValue = lastSegment.replace(/^support-ticket-/i, "").trim();
+
+  return cleanValue && cleanValue !== ":id" ? cleanValue : "";
+}
+
+function getSupportTicketIdFromNotification(notification) {
+  const metadata = parseNotificationMetadata(notification?.metadata);
+  const rawMetadata = parseNotificationMetadata(notification?.rawMetadata);
+  const actionUrl = String(notification?.actionUrl || "").trim();
+  const supportPathMatch = actionUrl.match(/(?:^|\/)support\/([^/?#]+)/i);
+
+  const candidates = [
+    notification?.supportTicketId,
+    notification?.ticketId,
+    notification?.entityId,
+    metadata.supportTicketId,
+    metadata.ticketId,
+    metadata.id,
+    rawMetadata.supportTicketId,
+    rawMetadata.ticketId,
+    rawMetadata.id,
+    supportPathMatch?.[1],
+    isSupportNotificationId(notification?.id) ? notification.id : "",
+  ];
+
+  for (const candidate of candidates) {
+    const ticketId = normalizeSupportTicketId(candidate);
+    if (ticketId) {
+      return ticketId;
+    }
+  }
+
+  return "";
+}
+
+function buildSupportTicketTarget(notification) {
+  const ticketId = getSupportTicketIdFromNotification(notification);
+
+  return appendNotificationContext(
+    ticketId ? `/support/${encodeURIComponent(ticketId)}` : "/support",
+    notification,
+  );
+}
 
 function formatDisplayDate(value, options = {}) {
   if (!value) {
@@ -187,6 +256,7 @@ export function resolveAdminNotificationTarget(notification) {
   const entityId = String(notification?.entityId || "").trim();
   const entityType = String(notification?.entityType || "").trim().toUpperCase();
   const type = String(notification?.type || "").trim().toUpperCase();
+  const isSupportNotification = entityType === "SUPPORT_TICKET" || type === "SUPPORT_REPLY" || type === "SUPPORT_TICKET_UPDATED" || isSupportNotificationId(notification?.id);
 
   if (/^https?:\/\//i.test(actionUrl)) {
     return actionUrl;
@@ -194,6 +264,10 @@ export function resolveAdminNotificationTarget(notification) {
 
   if (actionUrl) {
     let normalizedPath = actionUrl.replace(/^\/admin\b/i, "");
+
+    if (isSupportNotification || /(?:^|\/)support(?:\/|$)/i.test(normalizedPath)) {
+      return buildSupportTicketTarget(notification);
+    }
 
     if (entityId && normalizedPath.includes(":id")) {
       normalizedPath = normalizedPath.replace(":id", encodeURIComponent(entityId));
@@ -204,11 +278,8 @@ export function resolveAdminNotificationTarget(notification) {
     }
   }
 
-  if (entityType === "SUPPORT_TICKET" || type === "SUPPORT_REPLY" || type === "SUPPORT_TICKET_UPDATED") {
-    return appendNotificationContext(
-      entityId ? `/support/${encodeURIComponent(entityId)}` : "/support",
-      notification,
-    );
+  if (isSupportNotification) {
+    return buildSupportTicketTarget(notification);
   }
 
   if (entityType === "ORDER" || type === "ORDER_UPDATED" || type === "ORDER_CANCELLED") {

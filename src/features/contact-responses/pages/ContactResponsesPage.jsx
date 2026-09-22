@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
-import { ExternalLink, Inbox, Mail, Phone, RefreshCw, Search, Ticket } from "lucide-react";
+import { Inbox, Mail, Phone, RefreshCw, Search, Ticket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 import {
@@ -340,12 +340,6 @@ export default function ContactResponsesPage() {
                         <Ticket size={15} />
                         Open Ticket
                       </button>
-                    ) : null}
-                    {selectedResponse.pageUrl ? (
-                      <a className="inline-flex h-10 items-center gap-2 rounded-[10px] border border-[#d8ccc2] px-3 text-[13px] font-bold text-[#2f241d]" href={selectedResponse.pageUrl} rel="noreferrer" target="_blank">
-                        <ExternalLink size={15} />
-                        Source Page
-                      </a>
                     ) : null}
                   </div>
                 </div>

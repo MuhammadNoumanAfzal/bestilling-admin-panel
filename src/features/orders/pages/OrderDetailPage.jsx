@@ -26,6 +26,63 @@ import {
   getAdminOrderDetailRequest,
 } from "../api/ordersApi.js";
 
+function parseDisplayAmount(value) {
+  const parsed = Number(
+    String(value ?? "")
+      .replace(/[^0-9,.-]/g, "")
+      .replace(/,(?=\d{1,2}$)/, ".")
+      .replace(/,/g, ""),
+  );
+
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatDisplayAmount(amount) {
+  return `NOK ${Number(amount || 0).toLocaleString("en-GB", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function buildVatInclusiveAdminAmount(order, commissionPreview) {
+  const grossAmount = parseDisplayAmount(commissionPreview?.grossOrderAmount);
+
+  if (grossAmount <= 0) {
+    return order.amount;
+  }
+
+  return {
+    ...order.amount,
+    subtotal: commissionPreview.grossOrderAmount,
+    tax: formatDisplayAmount(grossAmount - grossAmount / 1.15),
+    total: commissionPreview.grossOrderAmount,
+    balanceDue: commissionPreview.grossOrderAmount,
+  };
+}
+
+function buildVatInclusiveAdminItems(order, displayAmount) {
+  const grossAmount = parseDisplayAmount(displayAmount?.total);
+  const rawTotal = parseDisplayAmount(order?.amount?.total);
+  const items = Array.isArray(order?.items) ? order.items : [];
+  const itemTotal = items.reduce((sum, item) => sum + parseDisplayAmount(item.totalPrice), 0);
+
+  if (grossAmount <= 0 || itemTotal <= 0 || Math.abs(itemTotal - rawTotal) > 0.05) {
+    return items;
+  }
+
+  const ratio = grossAmount / itemTotal;
+
+  return items.map((item) => {
+    const totalPrice = parseDisplayAmount(item.totalPrice) * ratio;
+    const unitPrice = item.quantity > 0 ? totalPrice / item.quantity : parseDisplayAmount(item.unitPrice) * ratio;
+
+    return {
+      ...item,
+      unitPrice: formatDisplayAmount(unitPrice),
+      totalPrice: formatDisplayAmount(totalPrice),
+    };
+  });
+}
 function OverviewCard({ icon: Icon, label, value, valueClassName = "text-[#221914]", children }) {
   useOrderLanguage();
   return (
@@ -251,6 +308,9 @@ export default function OrderDetailPage() {
     Cancelled: "text-[#6f645d]",
   };
 
+  const displayAmount = buildVatInclusiveAdminAmount(order, commissionPreview);
+  const displayItems = buildVatInclusiveAdminItems(order, displayAmount);
+
   return (
     <div className="space-y-6 [&_button:enabled]:cursor-pointer [&_button:disabled]:cursor-not-allowed [&_a[href]]:cursor-pointer">
       <section className="space-y-3">
@@ -274,7 +334,7 @@ export default function OrderDetailPage() {
       </section>
 
       <section className="grid gap-3.5 grid-cols-2 lg:grid-cols-4">
-        <OverviewCard icon={DollarSign} label={ot("Order Amount")} value={order.amount.total} />
+        <OverviewCard icon={DollarSign} label={ot("Order Amount")} value={displayAmount.total} />
         <OverviewCard icon={Calendar} label={ot("Order Type")} value={ot(order.eventType)} />
         <OverviewCard
           icon={order.status === "Canceled" ? XCircle : order.status === "Delivered" ? CheckCircle : Clock}
@@ -299,7 +359,7 @@ export default function OrderDetailPage() {
       </section>
 
       <section>
-        <OrderItemsTable items={order.items} onViewItemSource={handleViewItemSource} />
+        <OrderItemsTable items={displayItems} onViewItemSource={handleViewItemSource} />
       </section>
 
       <MenuPreviewModal
@@ -311,7 +371,7 @@ export default function OrderDetailPage() {
 
       <section className="grid gap-6 grid-cols-1 md:grid-cols-2">
         <EventInfoCard order={order} />
-        <OrderSummaryCard amount={order.amount} payment={order.payment} />
+        <OrderSummaryCard amount={displayAmount} payment={order.payment} />
       </section>
 
       <section>

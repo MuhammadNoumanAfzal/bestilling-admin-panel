@@ -308,6 +308,20 @@ function normalizeVendorDocument(document) {
   };
 }
 
+function normalizeAdminVendorServiceAreas(serviceAreas = []) {
+  if (!Array.isArray(serviceAreas)) {
+    return [];
+  }
+
+  return serviceAreas
+    .filter((area) => area && area.isActive !== false)
+    .map((area) => ({
+      id: `${area.id || area.postCode || ""}`.trim(),
+      name: `${area.name || ""}`.trim(),
+      postCode: `${area.postCode || ""}`.trim().padStart(4, "0"),
+    }))
+    .filter((area) => area.id || area.postCode);
+}
 function normalizeVendorDetail(vendor) {
   if (!vendor?.id) {
     return null;
@@ -336,6 +350,7 @@ function normalizeVendorDetail(vendor) {
     overview: {
       contact: Array.isArray(vendor.overview?.contact) ? vendor.overview.contact : [],
       logistics: Array.isArray(vendor.overview?.logistics) ? vendor.overview.logistics : [],
+      serviceAreas: normalizeAdminVendorServiceAreas(vendor.serviceAreas),
     },
     payoutProfile: null,
     menuTabs: Array.isArray(vendor.menuTabs)

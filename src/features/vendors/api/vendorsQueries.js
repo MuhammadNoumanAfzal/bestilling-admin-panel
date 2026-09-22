@@ -118,6 +118,12 @@ export const ADMIN_VENDOR_DETAIL_QUERY = `
       location
       approvedAt
       updatedAt
+      serviceAreas {
+        id
+        name
+        postCode
+        isActive
+      }
       summaryStats {
         id
         label

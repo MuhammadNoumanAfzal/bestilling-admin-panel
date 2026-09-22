@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { vt, useVendorLanguage } from "../../utils/vendorTranslation.js";
-import { BriefcaseBusiness, Gauge, MapPin, PackageCheck, Truck } from "lucide-react";
+import { BriefcaseBusiness, ChevronLeft, ChevronRight, Gauge, MapPin, PackageCheck, Truck } from "lucide-react";
 
 function OverviewCard({ title, items }) {
   useVendorLanguage();
@@ -83,6 +84,130 @@ function LogisticsValue({ value }) {
   );
 }
 
+function groupServiceAreas(serviceAreas = []) {
+  return serviceAreas.reduce((groups, area) => {
+    const groupName = `${area.name || ""}`.trim() || vt("Unassigned area");
+    const existingGroup = groups.find((group) => group.name === groupName);
+    const normalizedArea = {
+      id: area.id || `${groupName}-${area.postCode}`,
+      postCode: area.postCode,
+    };
+
+    if (existingGroup) {
+      existingGroup.areas.push(normalizedArea);
+      return groups;
+    }
+
+    return [...groups, { name: groupName, areas: [normalizedArea] }];
+  }, []);
+}
+
+const SERVICE_AREA_PAGE_SIZE = 40;
+
+function ServiceAreasPanel({ serviceAreas = [] }) {
+  useVendorLanguage();
+  const [groupPages, setGroupPages] = useState({});
+
+  if (!serviceAreas.length) {
+    return null;
+  }
+
+  const groupedAreas = groupServiceAreas(serviceAreas).map((group) => ({
+    ...group,
+    areas: [...group.areas].sort((left, right) => Number(left.postCode) - Number(right.postCode)),
+  }));
+  const totalCount = serviceAreas.length;
+
+  function setGroupPage(groupName, nextPage) {
+    setGroupPages((current) => ({
+      ...current,
+      [groupName]: nextPage,
+    }));
+  }
+
+  return (
+    <article className="rounded-[16px] border border-[#ddd6cf] bg-white p-5 shadow-[0_8px_20px_rgba(53,34,20,0.05)] lg:col-span-2">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[#d96834]">{vt("Delivery coverage")}</p>
+          <h3 className="mt-1 text-[20px] font-bold text-[#18120f]">{vt("Service areas")}</h3>
+          <p className="mt-1 text-[12px] font-medium text-[#81736a]">
+            {groupedAreas.length} {vt(groupedAreas.length === 1 ? "area" : "areas")} • {totalCount} {vt(totalCount === 1 ? "postal code" : "postal codes")}
+          </p>
+        </div>
+        <span className="rounded-full border border-[#d8ebdc] bg-[#f1fbf4] px-3 py-1.5 text-[12px] font-bold text-[#2d7446]">
+          {vt("Active coverage")}
+        </span>
+      </div>
+
+      <div className="grid gap-3 xl:grid-cols-2">
+        {groupedAreas.map((group) => {
+          const pageCount = Math.max(1, Math.ceil(group.areas.length / SERVICE_AREA_PAGE_SIZE));
+          const currentPage = Math.min(Math.max(groupPages[group.name] || 1, 1), pageCount);
+          const startIndex = (currentPage - 1) * SERVICE_AREA_PAGE_SIZE;
+          const visibleAreas = group.areas.slice(startIndex, startIndex + SERVICE_AREA_PAGE_SIZE);
+          const startLabel = startIndex + 1;
+          const endLabel = startIndex + visibleAreas.length;
+
+          return (
+            <div key={group.name} className="rounded-[14px] border border-[#eee2d9] bg-[#fffdfb] p-4">
+              <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <h4 className="text-[15px] font-extrabold text-[#211913]">{vt(group.name)}</h4>
+                  <p className="mt-1 text-[11px] font-semibold text-[#8a7a70]">
+                    {vt("Showing")} {startLabel}-{endLabel} {vt("of")} {group.areas.length}
+                  </p>
+                </div>
+                <span className="rounded-full bg-[#fff0e7] px-3 py-1 text-[11px] font-bold text-[#a85b31]">
+                  {group.areas.length} {vt(group.areas.length === 1 ? "postal code" : "postal codes")}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6">
+                {visibleAreas.map((area) => (
+                  <span
+                    key={area.id}
+                    className="flex h-9 items-center justify-center rounded-[10px] border border-[#ead8ca] bg-[#fff7f2] px-3 text-[13px] font-bold tabular-nums text-[#2d241f]"
+                  >
+                    {area.postCode}
+                  </span>
+                ))}
+              </div>
+
+              {pageCount > 1 ? (
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#f0e5dc] pt-3">
+                  <span className="text-[12px] font-bold text-[#7b6d63]">
+                    {vt("Page")} {currentPage} {vt("of")} {pageCount}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-[9px] border border-[#e4d5ca] bg-white px-2.5 text-[12px] font-bold text-[#58483e] disabled:cursor-not-allowed disabled:opacity-45"
+                      disabled={currentPage <= 1}
+                      onClick={() => setGroupPage(group.name, currentPage - 1)}
+                      type="button"
+                    >
+                      <ChevronLeft size={14} />
+                      {vt("Prev")}
+                    </button>
+                    <button
+                      className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-[9px] border border-[#e4d5ca] bg-white px-2.5 text-[12px] font-bold text-[#58483e] disabled:cursor-not-allowed disabled:opacity-45"
+                      disabled={currentPage >= pageCount}
+                      onClick={() => setGroupPage(group.name, currentPage + 1)}
+                      type="button"
+                    >
+                      {vt("Next")}
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </article>
+  );
+}
 function LogisticsCard({ title, items }) {
   useVendorLanguage();
   return (
@@ -128,6 +253,7 @@ export default function VendorBusinessOverviewSection({ overview }) {
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,1fr)]">
         <OverviewCard items={overview.contact} title={vt("Contact & Identity")} />
         <LogisticsCard items={overview.logistics} title={vt("Logistics & Capacity")} />
+        <ServiceAreasPanel serviceAreas={overview.serviceAreas} />
       </div>
     </section>
   );

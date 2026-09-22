@@ -3,6 +3,54 @@ import { useMemo, useState } from "react";
 import MenuPreviewModal from "./MenuPreviewModal.jsx";
 export { MenuPreviewModal };
 
+const STATUS_TABS = [
+  { label: "All", value: "all", active: true },
+  { label: "Active", value: "active" },
+  { label: "Draft", value: "draft" },
+  { label: "Archived", value: "archived" },
+];
+
+function normalizeText(value) {
+  return `${value ?? ""}`.trim().toLowerCase();
+}
+
+function isAddOnMenu(menu) {
+  const searchableValues = [
+    menu?.type,
+    menu?.productType,
+    menu?.menuType,
+    menu?.badge,
+    menu?.category,
+    menu?.title,
+    menu?.description,
+  ];
+  const haystack = searchableValues.map(normalizeText).join(" ");
+
+  return /\b(add[-_ ]?on|addon|extra|tillegg)\b/.test(haystack);
+}
+
+function buildTabs(items) {
+  return STATUS_TABS.map((tab) => {
+    const count = tab.value === "all"
+      ? items.length
+      : items.filter((item) => normalizeText(item.status) === tab.value).length;
+
+    return {
+      ...tab,
+      label: `${tab.label} (${count})`,
+      count,
+    };
+  });
+}
+
+function filterByTab(items, activeTab) {
+  if (activeTab === "all") {
+    return items;
+  }
+
+  return items.filter((item) => normalizeText(item.status) === activeTab);
+}
+
 function MenuTab({ tab, isActive, onClick }) {
   useVendorLanguage();
   return (
@@ -51,26 +99,61 @@ function MenuCard({ menu, onView }) {
   );
 }
 
-
-export default function VendorPublishedMenusSection({ menus, onViewMenu, tabs }) {
+function MenuCollectionSection({ title, items, activeTab, onTabChange, onView }) {
   useVendorLanguage();
-  const [activeTab, setActiveTab] = useState(() => tabs.find((tab) => tab.active)?.value || tabs[0]?.value || "all");
+  const tabs = useMemo(() => buildTabs(items), [items]);
+  const filteredItems = useMemo(() => filterByTab(items, activeTab), [activeTab, items]);
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center gap-2 px-1">
+        <span className="h-6 w-[4px] rounded-full bg-[#d96834]" />
+        <h2 className="text-[22px] font-extrabold tracking-tight text-[#18120f]">{vt(title)}</h2>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((tab) => (
+          <MenuTab
+            key={tab.value}
+            isActive={activeTab === tab.value}
+            onClick={() => onTabChange(tab.value)}
+            tab={tab}
+          />
+        ))}
+      </div>
+
+      {filteredItems.length > 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {filteredItems.map((menu) => (
+            <MenuCard key={menu.id} menu={menu} onView={onView} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-[14px] border border-dashed border-[#e6dad1] bg-white px-4 py-8 text-center text-[13px] font-semibold text-[#8a7f76]">
+          {vt("No items found.")}
+        </div>
+      )}
+    </section>
+  );
+}
+
+export default function VendorPublishedMenusSection({ menus, onViewMenu }) {
+  useVendorLanguage();
+  const [activeMenuTab, setActiveMenuTab] = useState("all");
+  const [activeAddOnTab, setActiveAddOnTab] = useState("all");
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [selectedMenuDetail, setSelectedMenuDetail] = useState(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [detailError, setDetailError] = useState("");
 
-  const filteredMenus = useMemo(() => {
-    if (activeTab === "active") {
-      return menus.filter((menu) => menu.status === "Active");
-    }
+  const { addOns, publishedMenus } = useMemo(() => {
+    const sourceMenus = Array.isArray(menus) ? menus : [];
 
-    if (activeTab === "draft") {
-      return menus.filter((menu) => menu.status === "Draft");
-    }
-
-    return menus;
-  }, [activeTab, menus]);
+    return {
+      addOns: sourceMenus.filter(isAddOnMenu),
+      publishedMenus: sourceMenus.filter((menu) => !isAddOnMenu(menu)),
+    };
+  }, [menus]);
 
   async function handleViewMenu(menu) {
     setSelectedMenu(menu);
@@ -97,29 +180,23 @@ export default function VendorPublishedMenusSection({ menus, onViewMenu, tabs })
 
   return (
     <>
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 px-1">
-          <span className="h-6 w-[4px] rounded-full bg-[#d96834]" />
-          <h2 className="text-[22px] font-extrabold tracking-tight text-[#18120f]">{vt("Published Menus")}</h2>
-        </div>
+      <div className="space-y-8">
+        <MenuCollectionSection
+          activeTab={activeMenuTab}
+          items={publishedMenus}
+          onTabChange={setActiveMenuTab}
+          onView={handleViewMenu}
+          title="Published Menus"
+        />
 
-        <div className="flex flex-wrap gap-2">
-          {tabs.map((tab) => (
-            <MenuTab
-              key={tab.value}
-              isActive={activeTab === tab.value}
-              onClick={() => setActiveTab(tab.value)}
-              tab={tab}
-            />
-          ))}
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {filteredMenus.map((menu) => (
-            <MenuCard key={menu.id} menu={menu} onView={handleViewMenu} />
-          ))}
-        </div>
-      </section>
+        <MenuCollectionSection
+          activeTab={activeAddOnTab}
+          items={addOns}
+          onTabChange={setActiveAddOnTab}
+          onView={handleViewMenu}
+          title="Add-ons"
+        />
+      </div>
 
       <MenuPreviewModal
         errorMessage={detailError}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { vt, useVendorLanguage } from "../../utils/vendorTranslation.js";
-import { BriefcaseBusiness, ChevronLeft, ChevronRight, Gauge, MapPin, PackageCheck, Truck } from "lucide-react";
+import { BadgeCheck, BriefcaseBusiness, ChevronLeft, ChevronRight, Gauge, MapPin, PackageCheck, ShieldAlert, Truck } from "lucide-react";
 
 function OverviewCard({ title, items }) {
   useVendorLanguage();
@@ -208,6 +208,52 @@ function ServiceAreasPanel({ serviceAreas = [] }) {
     </article>
   );
 }
+function formatIdentityProvider(provider) {
+  const normalized = `${provider ?? ""}`.trim();
+
+  if (!normalized) {
+    return vt("BankID");
+  }
+
+  return normalized.replace(/[_-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function IdentityVerificationCard({ identityVerification = {} }) {
+  useVendorLanguage();
+  const isVerified = Boolean(identityVerification.isVerified);
+  const Icon = isVerified ? BadgeCheck : ShieldAlert;
+
+  return (
+    <article className="rounded-[16px] border border-[#ddd6cf] bg-white p-5 shadow-[0_8px_20px_rgba(53,34,20,0.05)] lg:col-span-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className={`inline-flex h-11 w-11 items-center justify-center rounded-[14px] ${isVerified ? "bg-[#edf9f0] text-[#23884a]" : "bg-[#fff2ea] text-[#d96834]"}`}>
+            <Icon size={20} />
+          </span>
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[#9b7a65]">{vt("Identity verification")}</p>
+            <h3 className="mt-1 text-[19px] font-extrabold text-[#18120f]">
+              {isVerified ? vt("Verified with BankID") : vt("Not verified yet")}
+            </h3>
+          </div>
+        </div>
+        <span className={`rounded-full border px-3 py-1.5 text-[12px] font-bold ${isVerified ? "border-[#cfead7] bg-[#f1fbf4] text-[#247245]" : "border-[#f0d9bf] bg-[#fff7f0] text-[#b15f31]"}`}>
+          {isVerified ? vt("Verified") : vt("Pending")}
+        </span>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-[12px] border border-[#eee2d9] bg-[#fffdfb] px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9b7a65]">{vt("Provider")}</p>
+          <p className="mt-1 text-[14px] font-bold text-[#211913]">{formatIdentityProvider(identityVerification.provider)}</p>
+        </div>
+        <div className="rounded-[12px] border border-[#eee2d9] bg-[#fffdfb] px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9b7a65]">{vt("Verified at")}</p>
+          <p className="mt-1 text-[14px] font-bold text-[#211913]">{identityVerification.verifiedAt || vt("Not available")}</p>
+        </div>
+      </div>
+    </article>
+  );
+}
 function LogisticsCard({ title, items }) {
   useVendorLanguage();
   return (
@@ -253,6 +299,7 @@ export default function VendorBusinessOverviewSection({ overview }) {
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,1fr)]">
         <OverviewCard items={overview.contact} title={vt("Contact & Identity")} />
         <LogisticsCard items={overview.logistics} title={vt("Logistics & Capacity")} />
+        <IdentityVerificationCard identityVerification={overview.identityVerification} />
         <ServiceAreasPanel serviceAreas={overview.serviceAreas} />
       </div>
     </section>

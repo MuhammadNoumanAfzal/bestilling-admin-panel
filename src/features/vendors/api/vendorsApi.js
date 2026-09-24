@@ -351,6 +351,11 @@ function normalizeVendorDetail(vendor) {
       contact: Array.isArray(vendor.overview?.contact) ? vendor.overview.contact : [],
       logistics: Array.isArray(vendor.overview?.logistics) ? vendor.overview.logistics : [],
       serviceAreas: normalizeAdminVendorServiceAreas(vendor.serviceAreas),
+      identityVerification: {
+        isVerified: Boolean(vendor.identityVerified),
+        verifiedAt: vendor.signicatVerifiedAt || "",
+        provider: vendor.signicatProvider || "",
+      },
     },
     payoutProfile: null,
     menuTabs: Array.isArray(vendor.menuTabs)

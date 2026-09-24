@@ -111,6 +111,9 @@ export const ADMIN_VENDOR_DETAIL_QUERY = `
       legalName
       businessType
       status
+      identityVerified
+      signicatVerifiedAt
+      signicatProvider
       avatarUrl
       supportContactLabel
       managerName

@@ -87,14 +87,22 @@ function LogisticsValue({ value }) {
 function groupServiceAreas(serviceAreas = []) {
   return serviceAreas.reduce((groups, area) => {
     const groupName = `${area.name || ""}`.trim() || vt("Unassigned area");
+    const postCode = `${area.postCode || ""}`.trim();
+
+    if (!postCode) {
+      return groups;
+    }
+
     const existingGroup = groups.find((group) => group.name === groupName);
     const normalizedArea = {
-      id: area.id || `${groupName}-${area.postCode}`,
-      postCode: area.postCode,
+      id: `${groupName}-${postCode}`,
+      postCode,
     };
 
     if (existingGroup) {
-      existingGroup.areas.push(normalizedArea);
+      if (!existingGroup.areas.some((item) => item.postCode === postCode)) {
+        existingGroup.areas.push(normalizedArea);
+      }
       return groups;
     }
 
@@ -116,7 +124,7 @@ function ServiceAreasPanel({ serviceAreas = [] }) {
     ...group,
     areas: [...group.areas].sort((left, right) => Number(left.postCode) - Number(right.postCode)),
   }));
-  const totalCount = serviceAreas.length;
+  const totalCount = groupedAreas.reduce((count, group) => count + group.areas.length, 0);
 
   function setGroupPage(groupName, nextPage) {
     setGroupPages((current) => ({
@@ -286,6 +294,11 @@ function LogisticsCard({ title, items }) {
 
 export default function VendorBusinessOverviewSection({ overview }) {
   useVendorLanguage();
+  const logisticsItems = (overview.logistics || []).filter((item) => {
+    const label = `${item?.label || ""}`.trim().toLowerCase();
+    return label !== "service areas" && label !== "service area";
+  });
+
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2 px-1">
@@ -298,7 +311,7 @@ export default function VendorBusinessOverviewSection({ overview }) {
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,1fr)]">
         <OverviewCard items={overview.contact} title={vt("Contact & Identity")} />
-        <LogisticsCard items={overview.logistics} title={vt("Logistics & Capacity")} />
+        <LogisticsCard items={logisticsItems} title={vt("Logistics & Capacity")} />
         <IdentityVerificationCard identityVerification={overview.identityVerification} />
         <ServiceAreasPanel serviceAreas={overview.serviceAreas} />
       </div>

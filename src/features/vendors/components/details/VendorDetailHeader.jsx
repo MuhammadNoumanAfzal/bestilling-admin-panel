@@ -1,5 +1,5 @@
 import { vt, useVendorLanguage, vendorDate } from "../../utils/vendorTranslation.js";
-import { ArrowLeft, Calendar, Check, Copy, MapPin, UserRound } from "lucide-react";
+import { ArrowLeft, Calendar, Check, Copy, MapPin, UserRound, Store } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -31,6 +31,7 @@ export default function VendorDetailHeader({
   useVendorLanguage();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   async function handleCopyId() {
     try {
@@ -63,11 +64,18 @@ export default function VendorDetailHeader({
 
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-              <img
-                alt={vendor.name}
-                className="h-[4.5rem] w-[4.5rem] rounded-[14px] object-cover shadow-[0_10px_24px_rgba(53,34,20,0.12)] sm:h-20 sm:w-20"
-                src={vendor.avatarUrl}
-              />
+              {vendor.avatarUrl && !imgError ? (
+                <img
+                  alt={vendor.name}
+                  className="h-[4.5rem] w-[4.5rem] rounded-[14px] object-cover shadow-[0_10px_24px_rgba(53,34,20,0.12)] sm:h-20 sm:w-20"
+                  src={vendor.avatarUrl}
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <div className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-[14px] border border-[#efc5b1] bg-[#fff4ec] text-[#d96834] shadow-[0_10px_24px_rgba(53,34,20,0.06)] sm:h-20 sm:w-20">
+                  <Store size={36} />
+                </div>
+              )}
 
               <div className="space-y-2.5">
                 <div>

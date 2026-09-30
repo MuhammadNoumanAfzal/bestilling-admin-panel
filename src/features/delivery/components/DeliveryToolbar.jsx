@@ -1,22 +1,89 @@
 import { dt, useDeliveryLanguage } from "../deliveryTranslation.js";
-import { Plus, Search } from "lucide-react";
+import { ChevronDown, Plus, Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-function FilterSelect({ value, onChange, options, translateOptions = true }) {
+function uniqueOptions(options = []) {
+  const seen = new Set();
+
+  return options.filter((option) => {
+    const key = `${option?.value ?? ""}`.trim().toLowerCase();
+
+    if (!key || seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+}
+
+function FilterSelect({ value, onChange, options, emptyLabel, translateOptions = true }) {
   useDeliveryLanguage();
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef(null);
+  const selectableOptions = useMemo(() => uniqueOptions(options), [options]);
+  const selectedOption = selectableOptions.find((option) => option.value === value);
+  const buttonLabel = value
+    ? translateOptions
+      ? dt(selectedOption?.label || value)
+      : selectedOption?.label || value
+    : dt(emptyLabel);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    function handlePointerDown(event) {
+      if (!menuRef.current?.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isOpen]);
+
   return (
-    <label>
-      <select
-        className="h-9 cursor-pointer appearance-none rounded-[10px] border border-[#ddd2ca] bg-white px-3.5 pr-9 text-[13px] font-semibold text-[#3f3530] outline-none transition hover:border-[#cf6e38]/50 hover:bg-[#fff9f5] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
-        onChange={(event) => onChange(event.target.value)}
-        value={value}
+    <div ref={menuRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+        className="inline-flex h-9 min-w-[140px] cursor-pointer items-center justify-between gap-2 rounded-[10px] border border-[#ddd2ca] bg-white px-3.5 text-left text-[13px] font-semibold text-[#3f3530] outline-none transition hover:border-[#cf6e38]/50 hover:bg-[#fff9f5] focus:border-[#cf6e38] focus:shadow-[0_0_0_3px_rgba(206,105,56,0.12)]"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
       >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {translateOptions || !option.value ? dt(option.label) : option.label}
-          </option>
-        ))}
-      </select>
-    </label>
+        <span className="truncate">{buttonLabel}</span>
+        <ChevronDown size={14} className={`shrink-0 text-[#9b8f86] transition ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {isOpen ? (
+        <div className="absolute left-0 top-[calc(100%+6px)] z-30 max-h-72 min-w-full overflow-y-auto rounded-[10px] border border-[#ddd2ca] bg-white py-1 shadow-[0_14px_34px_rgba(40,26,16,0.14)]" role="listbox">
+          {selectableOptions.length > 0 ? (
+            selectableOptions.map((option) => {
+              const isSelected = option.value === value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={`block w-full cursor-pointer whitespace-nowrap px-3.5 py-2 text-left text-[13px] font-semibold transition ${isSelected ? "bg-[#fff0e8] text-[#cf6e38]" : "text-[#3f3530] hover:bg-[#fff9f5]"}`}
+                >
+                  {translateOptions ? dt(option.label) : option.label}
+                </button>
+              );
+            })
+          ) : (
+            <div className="px-3.5 py-2 text-[13px] font-semibold text-[#9b8f86]">{dt("No options available")}</div>
+          )}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -77,23 +144,25 @@ export default function DeliveryToolbar({
         >{dt("All")}</button>
 
         <FilterSelect
+          emptyLabel="All Status"
           onChange={onStatusFilterChange}
-          options={[
-            { label: "All Status", value: "" },
-            ...(statusOptions || []).map((item) => ({ label: item, value: item })),
-          ]}
+          options={(statusOptions || []).map((item) => ({ label: item, value: item }))}
           value={statusFilter}
         />
 
         <FilterSelect
-          translateOptions={false} onChange={onRegionFilterChange}
-          options={[{ label: "All Region", value: "" }, ...regionOptions.map((item) => ({ label: item, value: item }))]}
+          emptyLabel="All Region"
+          translateOptions={false}
+          onChange={onRegionFilterChange}
+          options={(regionOptions || []).map((item) => ({ label: item, value: item }))}
           value={regionFilter}
         />
 
         <FilterSelect
-          translateOptions={false} onChange={onCityFilterChange}
-          options={[{ label: "All City", value: "" }, ...cityOptions.map((item) => ({ label: item, value: item }))]}
+          emptyLabel="All City"
+          translateOptions={false}
+          onChange={onCityFilterChange}
+          options={(cityOptions || []).map((item) => ({ label: item, value: item }))}
           value={cityFilter}
         />
       </div>

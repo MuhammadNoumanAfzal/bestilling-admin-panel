@@ -32,6 +32,10 @@ const iconMap = {
 
 const DEFAULT_DATE_FILTER = "All time";
 
+function hasVendorPerformance(row) {
+  return Number(row?.revenueValue || 0) > 0 || Number(row?.ordersCount || 0) > 0;
+}
+
 function matchesTab(row, tab) {
   if (tab === "All" || tab === "Top Performing") {
     return true;
@@ -103,7 +107,7 @@ function filterVendorRows(rows, { search, city, rating, activeTab, dateRange }) 
         return false;
       }
 
-      if (activeTab === "Top Performing" && row.status !== "Active") {
+      if (activeTab === "Top Performing" && (row.status !== "Active" || !hasVendorPerformance(row))) {
         return false;
       }
 

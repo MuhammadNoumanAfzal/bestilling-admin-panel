@@ -2,11 +2,15 @@ import { vt, useVendorLanguage, vendorNumber } from "../utils/vendorTranslation.
 import { useNavigate } from "react-router-dom";
 import { getVendorDetailPath } from "../utils/vendorRoutes.js";
 
+function hasVendorPerformance(vendor) {
+  return Number(vendor?.revenueValue || 0) > 0 || Number(vendor?.ordersCount || 0) > 0;
+}
+
 export default function TopPerformingVendorsCard({ vendors = [], onViewAll }) {
   useVendorLanguage();
   const navigate = useNavigate();
   const topPerformingVendors = [...vendors]
-    .filter((vendor) => vendor.status === "Active")
+    .filter((vendor) => vendor.status === "Active" && hasVendorPerformance(vendor))
     .sort((left, right) => right.revenueValue - left.revenueValue)
     .slice(0, 5);
 

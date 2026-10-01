@@ -32,19 +32,7 @@ export default function CustomerInfoCard({ customer, onViewProfile }) {
         ) : null}
       </header>
 
-      <div className="mb-5 flex items-center gap-3">
-        {customer.avatarUrl ? (
-          <img
-            src={customer.avatarUrl}
-            alt={customer.fullName}
-            className="h-12 w-12 rounded-full border border-[#eee4dd] object-cover"
-          />
-        ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f6eee8] text-[13px] font-bold text-[#2f241d]">
-            {customer.avatar}
-          </div>
-        )}
-
+      <div className="mb-5 flex items-center">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[16px] font-bold text-[#18120f]">{customer.fullName}</span>

@@ -127,19 +127,8 @@ export default function CustomerReviewsCard({ reviewsData = [] }) {
             displayedReviews.map((review) => (
               <article
                 key={review.id}
-                className="flex flex-col gap-4 rounded-[12px] border border-[#f0eae4]/60 bg-[#faf9f8] p-4 shadow-[0_2px_8px_rgba(55,31,13,0.01)] transition duration-200 hover:bg-[#f5f2ef] sm:flex-row"
+                className="rounded-[12px] border border-[#f0eae4]/60 bg-[#faf9f8] p-4 shadow-[0_2px_8px_rgba(55,31,13,0.01)] transition duration-200 hover:bg-[#f5f2ef]"
               >
-                {review.avatarUrl ? (
-                  <img
-                    src={review.avatarUrl}
-                    alt={review.name}
-                    className="h-12 w-12 shrink-0 rounded-full border border-[#eee4dd] object-cover shadow-sm"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#eee4dd] bg-white text-[13px] font-bold text-[#2f241d] shadow-sm">
-                    {review.name?.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "AW"}
-                  </div>
-                )}
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">

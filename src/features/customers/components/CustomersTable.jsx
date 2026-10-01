@@ -8,25 +8,11 @@ const statusClasses = {
   Blocked: "bg-[#d83f3f] text-white",
 };
 
-function PersonCell({ name, src, email, avatar }) {
+function PersonCell({ name, email }) {
   useCustomerLanguage();
-  const [imageFailed, setImageFailed] = useState(false);
-  const shouldShowAvatar = Boolean(src) && !imageFailed;
 
   return (
-    <div className="flex items-center gap-2.5">
-      {shouldShowAvatar ? (
-        <img
-          alt={name}
-          className="h-9 w-9 shrink-0 rounded-full object-cover border border-[#eee4dd]"
-          src={src}
-          onError={() => setImageFailed(true)}
-        />
-      ) : (
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f6eee8] text-[10px] font-bold text-[#2f241d]">
-          {avatar}
-        </span>
-      )}
+    <div className="flex items-center">
       <div className="min-w-0">
         <p className="truncate text-[14px] font-bold leading-5 text-[#18120f]">{name}</p>
         <p className="truncate text-[11px] text-[#5a4d46]">{email}</p>
@@ -111,9 +97,7 @@ export default function CustomersTable({
                     </td>
                     <td className="px-2 py-4 align-middle">
                       <PersonCell
-                        avatar={row.avatar}
                         name={row.name}
-                        src={row.avatarUrl}
                         email={row.email}
                       />
                     </td>

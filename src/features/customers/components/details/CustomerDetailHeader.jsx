@@ -12,9 +12,7 @@ export default function CustomerDetailHeader({
   useCustomerLanguage();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
-  const [avatarFailed, setAvatarFailed] = useState(false);
   const isActive = customer.status !== "Blocked";
-  const shouldShowAvatar = Boolean(customer.avatarUrl) && !avatarFailed;
 
   const handleCopyId = () => {
     navigator.clipboard.writeText(customer.id);
@@ -24,7 +22,7 @@ export default function CustomerDetailHeader({
 
   return (
     <div className="flex flex-col items-start justify-between gap-4 rounded-[16px] border border-[#ddd6cf] bg-gradient-to-br from-white via-white to-[#fffbf9] px-4 py-4 shadow-[0_8px_30px_rgba(53,34,20,0.04)] transition-all duration-300 hover:border-[#cf6e38]/20 hover:shadow-[0_12px_40px_rgba(53,34,20,0.06)] sm:px-6 sm:py-5 md:flex-row md:items-center md:gap-5">
-      {/* Left: Back Link, Avatar, Name & Metadata */}
+      {/* Left: Back Link, Name & Metadata */}
       <div className="flex w-full min-w-0 items-start gap-3 sm:gap-4.5 md:w-auto md:items-center">
         <button
           onClick={() => navigate("/customers")}
@@ -34,27 +32,6 @@ export default function CustomerDetailHeader({
         >
           <ArrowLeft size={18} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
         </button>
-
-        {/* Avatar Container */}
-        <div className="relative shrink-0">
-          {shouldShowAvatar ? (
-            <img
-              src={customer.avatarUrl}
-              alt={customer.name}
-              className="h-14 w-14 rounded-full border-2 border-white object-cover shadow-[0_6px_16px_rgba(53,34,20,0.08)] transition duration-300 hover:rotate-3 hover:scale-105 sm:h-16 sm:w-16"
-              onError={() => setAvatarFailed(true)}
-            />
-          ) : (
-            <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border-2 border-white bg-[#f6eee8] text-[16px] font-extrabold text-[#2f241d] shadow-[0_6px_16px_rgba(53,34,20,0.08)] sm:h-16 sm:w-16 sm:text-[17px]">
-              {customer.avatar || "CU"}
-            </span>
-          )}
-          <span className="absolute bottom-0 right-0 flex h-4.5 w-4.5">
-            <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping ${isActive ? "bg-[#2b9e62]" : "bg-[#d83f3f]"}`} />
-            <span className={`relative inline-flex h-4.5 w-4.5 rounded-full border-2 border-white ${isActive ? "bg-[#2b9e62]" : "bg-[#d83f3f]"}`} />
-          </span>
-        </div>
-
         {/* Name and Meta */}
         <div className="min-w-0 space-y-1.5">
           <h2 className="text-[20px] font-extrabold leading-none tracking-tight text-[#18120f] sm:text-[24px]">

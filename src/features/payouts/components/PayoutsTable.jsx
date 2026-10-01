@@ -114,11 +114,11 @@ function Avatar({ label, src }) {
   );
 }
 
-function PersonCell({ name, src, subtitle, avatar }) {
+function PersonCell({ name, src, subtitle, avatar, showAvatar = true }) {
   usePayoutLanguage();
   return (
     <div className="flex max-w-[200px] items-center gap-2.5">
-      <Avatar label={avatar} src={src} />
+      {showAvatar ? <Avatar label={avatar} src={src} /> : null}
       <div className="min-w-0">
         <p className="truncate text-[15px] font-bold leading-5 text-[#18120f]">{name}</p>
         <p className="truncate text-[11px] text-[#5a4d46]">{subtitle}</p>
@@ -196,7 +196,7 @@ export default function PayoutsTable({
                     <td className="whitespace-nowrap px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.invoiceNumber}</td>
                     <td className="whitespace-nowrap px-3 py-4 text-[13px] font-medium text-[#6c6058]">{payoutDate(row.createdAt || row.date, false)}</td>
                     <td className="payout-order-column payout-customer-column px-3 py-4">
-                      <PersonCell avatar={row.customerAvatar} name={row.customer} src={row.customerAvatarUrl} subtitle={row.customerEmail} />
+                      <PersonCell name={row.customer} subtitle={row.customerEmail} showAvatar={false} />
                     </td>
                     <td className="payout-order-column payout-vendor-column px-3 py-4">
                       <PersonCell avatar={row.vendorAvatar} name={row.vendor} src={row.vendorAvatarUrl} subtitle={row.vendorCity} />

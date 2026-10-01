@@ -80,17 +80,19 @@ function PaginationIconButton({ children, disabled = false, onClick, label }) {
   );
 }
 
-function PersonCell({ name, src, subtitle, avatar }) {
+function PersonCell({ name, src, subtitle, avatar, showAvatar = true }) {
   useOrderLanguage();
   return (
     <div className="flex items-center gap-2.5">
-      {src ? (
-        <img alt={name} className="h-9 w-9 rounded-full border border-[#eee4dd] object-cover" src={src} />
-      ) : (
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#f6eee8] text-[10px] font-bold text-[#2f241d]">
-          {avatar}
-        </span>
-      )}
+      {showAvatar ? (
+        src ? (
+          <img alt={name} className="h-9 w-9 rounded-full border border-[#eee4dd] object-cover" src={src} />
+        ) : (
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#f6eee8] text-[10px] font-bold text-[#2f241d]">
+            {avatar}
+          </span>
+        )
+      ) : null}
 
       <div className="min-w-0">
         <p className="truncate text-[14px] font-bold leading-5 text-[#18120f]">{name}</p>
@@ -173,10 +175,9 @@ export default function OrdersTable({
                     </td>
                     <td className="px-3 py-4 align-middle">
                       <PersonCell
-                        avatar={row.customerAvatar}
                         name={row.customer}
-                        src={row.customerAvatarUrl}
                         subtitle={row.customerEmail}
+                        showAvatar={false}
                       />
                     </td>
                     <td className="px-3 py-4 align-middle">

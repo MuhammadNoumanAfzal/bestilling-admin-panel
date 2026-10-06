@@ -244,7 +244,11 @@ function formatMoneyLabel(value, fallback = "NOK 0.00") {
     return fallback;
   }
 
-  return `${currency} ${amount.toFixed(2)}`;
+  const roundedAmount = Math.round(amount);
+  const formatted = Math.abs(amount - roundedAmount) < 0.005
+    ? `${new Intl.NumberFormat("nb-NO", { maximumFractionDigits: 0 }).format(roundedAmount)}`
+    : new Intl.NumberFormat("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+  return `${currency} ${formatted}`;
 }
 
 function parseMoneyAmount(value) {
@@ -281,7 +285,11 @@ function resolvePreferredMoneyLabel(primaryValue, fallbackValue, defaultValue = 
 }
 
 function formatComputedMoney(amount, currency = "NOK") {
-  return `${currency} ${amount.toFixed(2)}`;
+  const roundedAmount = Math.round(amount);
+  const formatted = Math.abs(amount - roundedAmount) < 0.005
+    ? `${new Intl.NumberFormat("nb-NO", { maximumFractionDigits: 0 }).format(roundedAmount)}`
+    : new Intl.NumberFormat("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+  return `${currency} ${formatted}`;
 }
 
 function resolveConfiguredCommissionRate(commissionSettings, vendorId) {

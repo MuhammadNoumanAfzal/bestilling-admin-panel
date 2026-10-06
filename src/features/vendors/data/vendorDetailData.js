@@ -1,7 +1,12 @@
 import { initialVendors } from "./vendorsData.js";
 
 function formatCurrency(value) {
-  return `NOK ${Number(value || 0).toLocaleString("en-US")}`;
+  const amount = Number(value || 0);
+  const roundedAmount = Math.round(amount);
+  const formatted = Math.abs(amount - roundedAmount) < 0.005
+    ? `${new Intl.NumberFormat("nb-NO", { maximumFractionDigits: 0 }).format(roundedAmount)}`
+    : new Intl.NumberFormat("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+  return `NOK ${formatted}`;
 }
 
 function cleanVendorId(value) {

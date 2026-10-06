@@ -101,10 +101,11 @@ function formatMoney(value, currency = "NOK") {
   }
 
   const amount = Number(value ?? 0);
-  return `${currency} ${amount.toLocaleString("en-GB", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  const roundedAmount = Math.round(amount);
+  const formatted = Math.abs(amount - roundedAmount) < 0.005
+    ? `${new Intl.NumberFormat("nb-NO", { maximumFractionDigits: 0 }).format(roundedAmount)}`
+    : new Intl.NumberFormat("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+  return `${currency} ${formatted}`;
 }
 
 function getMoneyNumber(value) {

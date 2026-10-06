@@ -38,10 +38,12 @@ function parseDisplayAmount(value) {
 }
 
 function formatDisplayAmount(amount) {
-  return `NOK ${Number(amount || 0).toLocaleString("en-GB", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  const value = Number(amount || 0);
+  const roundedAmount = Math.round(value);
+  const formatted = Math.abs(value - roundedAmount) < 0.005
+    ? `${new Intl.NumberFormat("nb-NO", { maximumFractionDigits: 0 }).format(roundedAmount)}`
+    : new Intl.NumberFormat("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+  return `NOK ${formatted}`;
 }
 
 function buildVatInclusiveAdminAmount(order, commissionPreview) {

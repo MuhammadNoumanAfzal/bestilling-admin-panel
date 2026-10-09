@@ -1,5 +1,6 @@
 import { vt, useVendorLanguage, vendorDate, vendorNumber } from "../utils/vendorTranslation.js";
 import { useEffect, useRef, useState } from "react";
+import { formatMoney } from "../../../utils/formatMoney.js";
 import { ChevronLeft, ChevronRight, ClipboardCheck, Eye, MoreVertical, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getVendorDetailPath } from "../utils/vendorRoutes.js";
@@ -207,7 +208,7 @@ export default function VendorsTable({
                       {vendorNumber(row.ordersCount)}
                     </td>
                     <td className="hidden px-2 py-4 text-[15px] font-bold text-[#18120f] align-middle 2xl:table-cell">
-                      {row.revenueValue != null ? "NOK " + vendorNumber(row.revenueValue, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : row.revenue}
+                      {formatMoney(row.revenueValue ?? row.revenue)}
                     </td>
                     <td className="px-2 py-4 text-[15px] font-semibold text-[#18120f] align-middle">
                       <span className="inline-flex items-center gap-1">

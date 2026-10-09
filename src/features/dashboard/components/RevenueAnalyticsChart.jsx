@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { formatMoney } from "../../../utils/formatMoney.js";
 import { useTranslation } from "react-i18next";
 import AdminLoadingState from "../../shared/components/AdminLoadingState.jsx";
 
 function formatMetricValue(metric, value) {
   if (metric === "REVENUE") {
-    return value >= 1000 ? `${(value / 1000).toFixed(0)}k` : `${value}`;
+    return formatMoney(value);
   }
 
   return `${value}`;
@@ -12,7 +13,7 @@ function formatMetricValue(metric, value) {
 
 function getMetricLabel(metric, value, t, locale) {
   if (metric === "REVENUE") {
-    return `NOK ${value.toLocaleString(locale)}`;
+    return formatMoney(value);
   }
 
   return t("adminDashboard.chart.ordersValue", { count: value, formattedCount: value.toLocaleString(locale) });

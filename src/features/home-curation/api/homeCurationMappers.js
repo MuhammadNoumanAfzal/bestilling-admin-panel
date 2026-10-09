@@ -1,5 +1,14 @@
+import { formatMoney } from "../../../utils/formatMoney.js";
+
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
+}
+
+function formatPriceLabel(value) {
+  if (!value) return "";
+  const match = String(value).trim().match(/^(?:NOK|kr)?\s*(-?\d(?:[\d\s.,]*\d)?(?:,-)?)(?:\s*(?:NOK|kr))?(.*)$/i);
+  if (!match) return value;
+  return [formatMoney(match[1]), match[2].trim()].filter(Boolean).join(" ");
 }
 
 function formatRating(value) {
@@ -26,7 +35,7 @@ function mapVendorCard(item) {
     rating: formatRating(getVendorRating(item)),
     avatarUrl: item?.avatarUrl || "",
     imageUrl: item?.coverPhotoUrl || item?.avatarUrl || "",
-    deliveryFeeLabel: item?.deliveryFeeLabel || "",
+    deliveryFeeLabel: formatPriceLabel(item?.deliveryFeeLabel),
     isPopular: Boolean(item?.isPopular),
     isFeatured: Boolean(item?.isFeatured),
   };
@@ -37,7 +46,7 @@ function mapProductCard(item) {
     id: item?.id || "",
     name: item?.name || "Untitled product",
     description: item?.description || "",
-    priceLabel: item?.priceLabel || "",
+    priceLabel: formatPriceLabel(item?.priceLabel),
     imageUrl: item?.imageUrl || "",
     isPopular: Boolean(item?.isPopular),
     menuStatus: item?.menuStatus || "",

@@ -1,4 +1,5 @@
 import { rt, useReportLanguage, reportError } from "../reportsTranslation.js";
+import { formatMoney } from "../../../utils/formatMoney.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { getAdminReportsSnapshotRequest } from "../api/reportsApi.js";
@@ -55,14 +56,7 @@ function buildReportsFilters(filterLabel, customStartDate, customEndDate) {
   };
 }
 
-function formatMoney(amount, currency = "NOK") {
-  const normalizedAmount = Number(amount ?? 0);
 
-  return `${currency} ${normalizedAmount.toLocaleString("en-GB", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
 
 function differenceInDays(start, end) {
   if (!start || !end) {

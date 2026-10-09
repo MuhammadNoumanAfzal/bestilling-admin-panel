@@ -15,6 +15,7 @@ import {
   VENDOR_MENU_DETAIL_QUERY,
   VENDOR_DOCUMENT_ACCESS_QUERY,
 } from "./vendorsQueries.js";
+import { formatMoney } from "../../../utils/formatMoney.js";
 import { getVendorSlug } from "../utils/vendorRoutes.js";
 
 function getErrorMessage(result, fallbackMessage) {
@@ -189,7 +190,7 @@ function normalizeVendorRow(item) {
     businessType: item?.businessType || "Not specified",
     city: item?.city || "Unknown",
     ordersCount: Number(item?.ordersCount ?? 0),
-    revenue: item?.revenue?.formatted || "NOK 0.00",
+    revenue: formatMoney(item?.revenue),
     revenueValue: Number(item?.revenue?.amount ?? 0),
     rating: Number(item?.rating ?? 0).toFixed(1),
     ratingValue: Number(item?.rating ?? 0),
@@ -241,7 +242,7 @@ function normalizeVendorListResponse(response) {
       {
         id: "revenue",
         title: "Total Vendor Revenue",
-        value: summary.totalVendorRevenue?.formatted || "NOK 0.00",
+        value: formatMoney(summary.totalVendorRevenue),
       },
     ],
     filterOptions: {
@@ -259,7 +260,7 @@ function normalizeVendorListResponse(response) {
         ? response.sidePanels.topPerformers.map((item) => ({
             id: item?.id || "",
             name: item?.name || "Unknown vendor",
-            revenue: item?.revenue?.formatted || "NOK 0.00",
+            revenue: formatMoney(item?.revenue),
             revenueValue: Number(item?.revenue?.amount ?? 0),
             avatar: toInitials(item?.name),
             avatarUrl: item?.avatarUrl || "",
@@ -371,7 +372,7 @@ function normalizeVendorDetail(vendor) {
           id: menu?.id || "",
           title: menu?.title || "",
           category: menu?.category || "",
-          price: menu?.price?.formatted || "NOK 0.00",
+          price: formatMoney(menu?.price),
           imageUrl: menu?.imageUrl || "",
           status: normalizeVendorStatus(menu?.status).replace("Pending Approval", "Pending"),
           badge: menu?.badge || "",
@@ -394,7 +395,7 @@ function normalizeVendorDetail(vendor) {
       chartSubtitle: vendor.financial?.chartSubtitle || "",
       filterLabel: vendor.financial?.filterLabel || "",
       revenueSeries: Array.isArray(vendor.financial?.revenueSeries) ? vendor.financial.revenueSeries : [],
-      pendingPayout: vendor.financial?.pendingPayout?.formatted || "NOK 0.00",
+      pendingPayout: formatMoney(vendor.financial?.pendingPayout),
       payoutStatus: vendor.financial?.payoutStatus || "Pending",
       estimatedPayout: formatDateLabel(vendor.financial?.estimatedPayoutAt),
       lastPayout: formatDateLabel(vendor.financial?.lastPayoutAt),
@@ -402,7 +403,7 @@ function normalizeVendorDetail(vendor) {
       breakdown: Array.isArray(vendor.financial?.breakdown)
         ? vendor.financial.breakdown.map((item) => ({
             label: item?.label || "",
-            value: item?.value?.formatted || "NOK 0.00",
+            value: formatMoney(item?.value),
             tone: item?.tone || "neutral",
           }))
         : [],
@@ -560,7 +561,7 @@ function normalizeVendorMenuDetail(menu) {
     badge: menu.category?.name || menu.menuType || "",
     imageUrl: coverImageUrl,
     galleryImages,
-    price: menu.priceWithTax ? `kr ${menu.priceWithTax}` : "Not provided",
+    price: menu.priceWithTax ? formatMoney(menu.priceWithTax) : "Not provided",
     basePrice: menu.priceWithTax || "",
     pricingType: formatPricingType(menu.pricingType),
     taxPercent: menu.taxPercent || "",

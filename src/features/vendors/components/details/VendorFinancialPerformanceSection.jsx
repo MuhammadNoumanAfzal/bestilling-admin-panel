@@ -1,11 +1,8 @@
-import { vt, useVendorLanguage, vendorLocale, vendorDate } from "../../utils/vendorTranslation.js";
+import { vt, useVendorLanguage, vendorDate } from "../../utils/vendorTranslation.js";
 import { BadgeDollarSign, CalendarDays, CircleAlert, TrendingUp } from "lucide-react";
+import { formatMoney } from "../../../../utils/formatMoney.js";
 
-function formatNok(value) {
-  return `NOK ${Number(value || 0).toLocaleString(vendorLocale(), {
-    maximumFractionDigits: 0,
-  })}`;
-}
+const formatNok = formatMoney;
 
 function RevenueChart({ series }) {
   useVendorLanguage();
@@ -60,7 +57,7 @@ function RevenueChart({ series }) {
           <div className="relative h-[220px] w-[72px] shrink-0 pr-2">
             {Array.from({ length: 5 }, (_, i) => (
               <span key={i} className="absolute right-2 -translate-y-1/2 text-[11px] tabular-nums text-[#796659]" style={{ top: `${i * 25}%` }}>
-                {((maxValue / 4) * (4 - i)).toLocaleString(vendorLocale(), { maximumFractionDigits: 0 })}
+                {formatMoney((maxValue / 4) * (4 - i))}
               </span>
             ))}
           </div>

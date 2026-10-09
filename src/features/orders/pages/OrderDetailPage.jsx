@@ -1,5 +1,6 @@
 import { ot, useOrderLanguage, orderDate, orderError } from "../orderTranslation.js";
 import { useEffect, useState } from "react";
+import { formatMoney, parseMoney } from "../../../utils/formatMoney.js";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
@@ -26,25 +27,9 @@ import {
   getAdminOrderDetailRequest,
 } from "../api/ordersApi.js";
 
-function parseDisplayAmount(value) {
-  const parsed = Number(
-    String(value ?? "")
-      .replace(/[^0-9,.-]/g, "")
-      .replace(/,(?=\d{1,2}$)/, ".")
-      .replace(/,/g, ""),
-  );
+const parseDisplayAmount = parseMoney;
 
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function formatDisplayAmount(amount) {
-  const value = Number(amount || 0);
-  const roundedAmount = Math.round(value);
-  const formatted = Math.abs(value - roundedAmount) < 0.005
-    ? `${new Intl.NumberFormat("nb-NO", { maximumFractionDigits: 0 }).format(roundedAmount)}`
-    : new Intl.NumberFormat("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
-  return `NOK ${formatted}`;
-}
+const formatDisplayAmount = formatMoney;
 
 function buildVatInclusiveAdminAmount(order, commissionPreview) {
   const grossAmount = parseDisplayAmount(commissionPreview?.grossOrderAmount);

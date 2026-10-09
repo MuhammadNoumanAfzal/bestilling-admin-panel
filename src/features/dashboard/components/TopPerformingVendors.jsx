@@ -1,11 +1,10 @@
 ﻿import { Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { formatMoney } from "../../../utils/formatMoney.js";
 import { useNavigate } from "react-router-dom";
 import { getVendorDetailPath } from "../../vendors/utils/vendorRoutes.js";
 
-function formatRevenue(value, locale) {
-  return `NOK ${Number(value ?? 0).toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
+const formatRevenue = formatMoney;
 
 export default function TopPerformingVendors({ vendors = [] }) {
   const navigate = useNavigate();

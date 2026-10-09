@@ -1,4 +1,5 @@
 import { ct, useCustomerLanguage, customerDate } from "../../customerTranslation.js";
+import { formatMoney } from "../../../../utils/formatMoney.js";
 import { useState, useMemo } from "react";
 import { ShoppingBag, XCircle, TrendingUp, Search, Users, ArrowUpRight, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -28,11 +29,7 @@ export default function CustomerOrderHistoryCard({ ordersData = [], summary = nu
       summary?.totalCancelled ?? ordersData.filter((o) => o.status === "Canceled").length,
     );
     const rawSpent = ordersData.reduce((s, o) => s + (o.amountValue || 0), 0);
-    const spending = summary?.totalSpent || new Intl.NumberFormat("no-NO", {
-      style: "currency",
-      currency: "NOK",
-      minimumFractionDigits: 2,
-    }).format(rawSpent);
+    const spending = formatMoney(summary?.totalSpent ?? rawSpent);
 
     return [
       { label: "Total Orders", value: total, icon: ShoppingBag, color: "text-[#d96834]", bg: "bg-[#fff0e7]" },

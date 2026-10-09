@@ -1,13 +1,7 @@
+import { formatMoney } from "../../../utils/formatMoney.js";
 import { initialVendors } from "./vendorsData.js";
 
-function formatCurrency(value) {
-  const amount = Number(value || 0);
-  const roundedAmount = Math.round(amount);
-  const formatted = Math.abs(amount - roundedAmount) < 0.005
-    ? `${new Intl.NumberFormat("nb-NO", { maximumFractionDigits: 0 }).format(roundedAmount)}`
-    : new Intl.NumberFormat("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
-  return `NOK ${formatted}`;
-}
+const formatCurrency = formatMoney;
 
 function cleanVendorId(value) {
   return String(value || "").replace(/^#/, "");

@@ -8,6 +8,7 @@ import {
   UNBLOCK_CUSTOMER_MUTATION,
   UPDATE_CUSTOMER_PROFILE_MUTATION,
 } from "./customersQueries.js";
+import { formatMoney } from "../../../utils/formatMoney.js";
 
 function getErrorMessage(result, fallbackMessage) {
   const firstError = result?.errors?.find((item) => item?.message)?.message;
@@ -232,8 +233,8 @@ function normalizeCustomerRow(item) {
     city: resolvedCity,
     defaultAddressCity: `${item?.defaultAddressCity ?? ""}`.trim(),
     totalOrders: Number(item?.totalOrders ?? 0),
-    amount: item?.totalSpend?.formatted || "NOK 0.00",
-    averageOrderValue: item?.averageOrderValue?.formatted || "NOK 0.00",
+    amount: formatMoney(item?.totalSpend),
+    averageOrderValue: formatMoney(item?.averageOrderValue),
     amountValue: Number(item?.totalSpend?.amount ?? 0),
     status: normalizeStatus(item?.status),
     rawStatus: `${item?.status ?? ""}`.trim().toUpperCase() || "ACTIVE",
@@ -273,13 +274,13 @@ function normalizeCustomerSummary(summary) {
     {
       id: "average",
       label: "Avg. Order Value",
-      value: summary?.averageOrderValue?.formatted || "NOK 0.00",
+      value: formatMoney(summary?.averageOrderValue),
       accent: "soft",
     },
     {
       id: "spending",
       label: "Total Spending",
-      value: summary?.totalSpending?.formatted || "NOK 0.00",
+      value: formatMoney(summary?.totalSpending),
       accent: "warm",
     },
   ];
@@ -319,8 +320,8 @@ function normalizeCustomerDetail(customer) {
     joinDate: formatDateLabel(customer.joinedAt),
     joinDateValue: customer.joinedAt || "",
     totalOrders: Number(customer.totalOrders ?? 0),
-    totalSpend: customer.totalSpend?.formatted || "NOK 0.00",
-    averageOrderValue: customer.averageOrderValue?.formatted || "NOK 0.00",
+    totalSpend: formatMoney(customer.totalSpend),
+    averageOrderValue: formatMoney(customer.averageOrderValue),
     profile: {
       companyName: customer.profile?.companyName || "",
       preferredContactMethod: customer.profile?.preferredContactMethod || "Not specified",
@@ -336,7 +337,7 @@ function normalizeCustomerDetail(customer) {
         totalOrders: Number(customer.orderHistory?.summary?.totalOrders ?? 0),
         totalDelivered: Number(customer.orderHistory?.summary?.totalDelivered ?? 0),
         totalCancelled: Number(customer.orderHistory?.summary?.totalCancelled ?? 0),
-        totalSpent: customer.orderHistory?.summary?.totalSpent?.formatted || "NOK 0.00",
+        totalSpent: formatMoney(customer.orderHistory?.summary?.totalSpent),
       },
       items: Array.isArray(customer.orderHistory?.items)
         ? customer.orderHistory.items.map((item) => ({
@@ -348,7 +349,7 @@ function normalizeCustomerDetail(customer) {
             paymentStatus: item?.paymentStatus || "Not available",
             deliveryStatus: item?.deliveryStatus || "Not available",
             dateTime: item?.createdAt ? formatDateTimeLabel(item.createdAt) : "Not scheduled",
-            amount: item?.amount?.formatted || "NOK 0.00",
+            amount: formatMoney(item?.amount),
             amountValue: Number(item?.amount?.amount ?? 0),
             status: normalizeOrderStatus(item?.status),
           }))

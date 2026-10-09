@@ -20,6 +20,7 @@ import {
   ADMIN_UPDATE_ORDER_STATUS_MUTATION,
   ADMIN_UPDATE_PAYMENT_STATUS_MUTATION,
 } from "./ordersQueries.js";
+import { formatMoney } from "../../../utils/formatMoney.js";
 
 function getErrorMessage(result, fallbackMessage) {
   const firstError = result?.errors?.find((item) => item?.message)?.message;
@@ -91,22 +92,7 @@ function formatDateTimeLabel(value) {
   }).format(date);
 }
 
-function formatMoney(value, currency = "NOK") {
-  if (value && typeof value === "object") {
-    if (value.formatted) {
-      return value.formatted;
-    }
 
-    return formatMoney(value.amount, value.currency || currency);
-  }
-
-  const amount = Number(value ?? 0);
-  const roundedAmount = Math.round(amount);
-  const formatted = Math.abs(amount - roundedAmount) < 0.005
-    ? `${new Intl.NumberFormat("nb-NO", { maximumFractionDigits: 0 }).format(roundedAmount)}`
-    : new Intl.NumberFormat("nb-NO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
-  return `${currency} ${formatted}`;
-}
 
 function getMoneyNumber(value) {
   if (value && typeof value === "object") {
@@ -790,8 +776,7 @@ function normalizeOrderDetail(order) {
         currency,
       ),
       total:
-        order?.amount?.formattedTotal ||
-        formatMoney(order?.amount?.total, currency),
+        formatMoney(order?.amount?.total ?? order?.amount?.formattedTotal),
       balanceDue: formatMoney(
         Number(order?.amount?.total ?? 0) -
           Number(order?.amount?.refunded ?? order?.amount?.refundAmount ?? 0),

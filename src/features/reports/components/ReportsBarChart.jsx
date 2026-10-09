@@ -1,4 +1,5 @@
 import { rt, useReportLanguage, reportLocale } from "../reportsTranslation.js";
+import { formatMoney } from "../../../utils/formatMoney.js";
 import { useState } from "react";
 
 export default function ReportsBarChart({
@@ -44,15 +45,12 @@ export default function ReportsBarChart({
       maximumFractionDigits: 1,
     }).format(value);
 
-    return valueType === "currency" ? `NOK ${compactValue}` : `${valuePrefix}${compactValue}`;
+    return valueType === "currency" ? formatMoney(value) : `${valuePrefix}${compactValue}`;
   }
 
   function formatTooltipValue(value) {
     if (valueType === "currency") {
-      return `NOK ${new Intl.NumberFormat(reportLocale(), {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(value)}`;
+      return formatMoney(value);
     }
 
     return `${valuePrefix}${new Intl.NumberFormat(reportLocale(), {

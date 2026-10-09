@@ -1,5 +1,6 @@
 import i18n from "../../../i18n";
 import { executeProtectedGraphqlRequest } from "../../../app/api/protectedGraphqlClient.js";
+import { formatMoney } from "../../../utils/formatMoney.js";
 import {
   ADMIN_DASHBOARD_OVERVIEW_QUERY,
   ADMIN_UPDATE_VENDOR_APPROVAL_STATUS_MUTATION,
@@ -92,7 +93,9 @@ export async function getAdminDashboardOverviewRequest(filters) {
       ? overview.stats.map((item) => ({
           id: `${item?.id ?? ""}`.trim().toUpperCase(),
           title: item?.title || tr("common.metric"),
-          value: item?.value || "0",
+          value: item?.currency || `${item?.id ?? ""}`.toUpperCase() === "REVENUE"
+            ? formatMoney(item?.rawValue ?? item?.value)
+            : item?.value || "0",
           rawValue: Number(item?.rawValue ?? 0),
           currency: item?.currency || "",
           note: item?.note || "",

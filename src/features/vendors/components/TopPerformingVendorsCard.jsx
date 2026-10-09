@@ -1,5 +1,6 @@
-import { vt, useVendorLanguage, vendorNumber } from "../utils/vendorTranslation.js";
+import { vt, useVendorLanguage } from "../utils/vendorTranslation.js";
 import { useNavigate } from "react-router-dom";
+import { formatMoney } from "../../../utils/formatMoney.js";
 import { getVendorDetailPath } from "../utils/vendorRoutes.js";
 
 function hasVendorPerformance(vendor) {
@@ -50,7 +51,7 @@ export default function TopPerformingVendorsCard({ vendors = [], onViewAll }) {
                   </span>
                 </div>
                 <span className="text-[14px] font-bold text-[#18120f] shrink-0">
-                  {vendor.revenueValue != null ? "NOK " + vendorNumber(vendor.revenueValue) : vendor.revenue}
+                  {formatMoney(vendor.revenueValue ?? vendor.revenue)}
                 </span>
               </button>
             ))}

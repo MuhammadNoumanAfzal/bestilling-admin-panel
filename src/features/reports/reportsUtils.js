@@ -9,6 +9,7 @@ export const reportFilterOptions = [
 ];
 
 export const exportSectionOptions = ["SUMMARY", "REVENUE", "ORDERS", "VENDORS", "CUSTOMERS", "CATEGORY", "OPERATIONS"];
+import { formatMoney } from "../../utils/formatMoney.js";
 
 export function createEmptyReportsSnapshot(filterLabel = "Last 7 days") {
   return {
@@ -93,7 +94,7 @@ function getVendorInitials(name) {
 }
 
 function normalizeMoney(value) {
-  return value?.formatted || `${value?.currency || ""}${value?.amount ?? 0}`;
+  return formatMoney(value);
 }
 
 function normalizeChart(analytics, options = {}) {

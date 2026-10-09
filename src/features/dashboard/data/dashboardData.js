@@ -1,5 +1,6 @@
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const REFERENCE_DATE = new Date("2026-07-21T12:00:00Z");
+import { formatMoney } from "../../../utils/formatMoney.js";
 
 function createDate(daysAgo) {
   return new Date(REFERENCE_DATE.getTime() - daysAgo * MS_PER_DAY);
@@ -657,7 +658,7 @@ function buildCustomStats(days, approvalsCount) {
     {
       id: "revenue",
       title: "Total Revenue",
-      value: `NOK ${revenue.toLocaleString()}`,
+      value: formatMoney(revenue),
       note: `${days}-day custom period`,
       accent: "orange",
     },

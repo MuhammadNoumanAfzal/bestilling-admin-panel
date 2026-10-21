@@ -8,7 +8,6 @@ import StatCard from "../../dashboard/components/StatCard.jsx";
 import DateFilterDropdown from "../../dashboard/components/DateFilterDropdown.jsx";
 import { getDateRangeForFilter } from "../../dashboard/data/dashboardData.js";
 import {
-  deactivateVendorRequest,
   getAdminVendorsRequest,
   updateVendorStatusRequest,
 } from "../api/vendorsApi.js";
@@ -432,7 +431,7 @@ export default function VendorsPage() {
       setIsUpdatingStatusId(row.id);
       const result = isReactivating
         ? await updateVendorStatusRequest(row.id, "ACTIVE", reasonResult.value || "")
-        : await deactivateVendorRequest(row.id, reasonResult.value || "");
+        : await updateVendorStatusRequest(row.id, "SUSPENDED", reasonResult.value || "");
 
       setRows((current) =>
         current.map((item) =>

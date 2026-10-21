@@ -166,7 +166,7 @@ export default function VendorDetailPage() {
       setIsSuspending(true);
       const response = isReactivating
         ? await updateVendorStatusRequest(vendor.id, "ACTIVE", result.value || "")
-        : await deactivateVendorRequest(vendor.id, result.value || "");
+        : await updateVendorStatusRequest(vendor.id, "SUSPENDED", result.value || "");
       setVendor((current) =>
         current
           ? {

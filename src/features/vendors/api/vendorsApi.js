@@ -6,7 +6,6 @@ import {
   ADMIN_VENDOR_PAYOUT_PROFILE_QUERY,
   ADMIN_VENDORS_QUERY,
   APPROVE_VENDOR_APPLICATION_MUTATION,
-  DEACTIVATE_VENDOR_MUTATION,
   DELETE_VENDOR_MUTATION,
   REJECT_VENDOR_APPLICATION_MUTATION,
   REQUEST_VENDOR_APPLICATION_CHANGES_MUTATION,
@@ -838,22 +837,7 @@ export async function updateVendorStatusRequest(id, status, reason) {
 }
 
 export async function deactivateVendorRequest(id, reason) {
-  const data = await executeProtectedGraphqlRequest(DEACTIVATE_VENDOR_MUTATION, {
-    id,
-    reason: `${reason ?? ""}`.trim() || null,
-  });
-
-  const result = data?.deactivateVendor;
-  if (!result?.success || !result?.vendor?.id) {
-    throw new Error(getErrorMessage(result, "Unable to deactivate this vendor."));
-  }
-
-  return {
-    message: result.message || "Vendor deactivated successfully.",
-    status: normalizeVendorStatus(result.vendor.status),
-    rawStatus: `${result.vendor.status ?? ""}`.trim().toUpperCase() || "DEACTIVATED",
-    updatedAt: result.vendor.updatedAt || "",
-  };
+  return updateVendorStatusRequest(id, "DEACTIVATED", reason);
 }
 
 export async function deleteVendorRequest(id) {

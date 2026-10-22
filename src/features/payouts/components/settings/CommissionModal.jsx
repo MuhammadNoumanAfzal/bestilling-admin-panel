@@ -1,5 +1,5 @@
 import { cmt, useCommissionLanguage } from "../../commissionTranslation.js";
-import { Save, X } from "lucide-react";
+import { Save, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 function Field({ children, label }) {
   useCommissionLanguage();
@@ -94,6 +94,24 @@ export default function CommissionModal({
                           : cmt(field.helperText) ||
                             (field.options.length === 0 ? cmt("No matching options found.") : "")}
                       </p>
+                      {field.error ? <p role="alert" className="text-sm text-red-700">{cmt(field.error)}</p> : null}
+                      {field.pageInfo?.totalPages > 1 ? (
+                        <div className="flex items-center justify-between gap-2">
+                          <button type="button" title={cmt("Previous page")} aria-label={cmt("Previous page")}
+                            disabled={isSubmitting || field.isLoadingOptions || !field.pageInfo.hasPreviousPage}
+                            onClick={() => field.onPageChange(field.pageInfo.page - 1)}
+                            className="h-8 w-8 inline-flex items-center justify-center border rounded disabled:opacity-40">
+                            <ChevronLeft size={16} />
+                          </button>
+                          <span className="text-xs">{field.pageInfo.page} / {field.pageInfo.totalPages}</span>
+                          <button type="button" title={cmt("Next page")} aria-label={cmt("Next page")}
+                            disabled={isSubmitting || field.isLoadingOptions || !field.pageInfo.hasNextPage}
+                            onClick={() => field.onPageChange(field.pageInfo.page + 1)}
+                            className="h-8 w-8 inline-flex items-center justify-center border rounded disabled:opacity-40">
+                            <ChevronRight size={16} />
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                   ) : field.type === "textarea" ? (
                     <textarea

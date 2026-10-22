@@ -141,24 +141,20 @@ export default function CommissionSettingsPage() {
   const [vendorForm, setVendorForm] = useState(EMPTY_VENDOR_FORM);
   const [areaForm, setAreaForm] = useState(EMPTY_AREA_FORM);
   const [vendorOptions, setVendorOptions] = useState([]);
-  const [vendorAreaOptions, setVendorAreaOptions] = useState([]);
   const [areaOptions, setAreaOptions] = useState([]);
   const [isLoadingVendorOptions, setIsLoadingVendorOptions] = useState(false);
-  const [isLoadingVendorAreaOptions, setIsLoadingVendorAreaOptions] = useState(false);
   const [isLoadingAreaOptions, setIsLoadingAreaOptions] = useState(false);
   const [debouncedVendorSearch, setDebouncedVendorSearch] = useState("");
-  const [debouncedVendorAreaSearch, setDebouncedVendorAreaSearch] = useState("");
   const [debouncedAreaSearch, setDebouncedAreaSearch] = useState("");
+  const [areaType, setAreaType] = useState("");
+  const [areaPage, setAreaPage] = useState(1);
+  const [areaPageInfo, setAreaPageInfo] = useState({});
+  const [areaOptionsError, setAreaOptionsError] = useState("");
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => setDebouncedVendorSearch(vendorForm.vendorSearch), 250);
     return () => window.clearTimeout(timeoutId);
   }, [vendorForm.vendorSearch]);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setDebouncedVendorAreaSearch(vendorForm.areaSearch), 250);
-    return () => window.clearTimeout(timeoutId);
-  }, [vendorForm.areaSearch]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => setDebouncedAreaSearch(areaForm.areaSearch), 250);
@@ -257,45 +253,6 @@ export default function CommissionSettingsPage() {
   }, [debouncedVendorSearch, modalState.type, vendorForm.vendorId, vendorForm.vendorName]);
 
   useEffect(() => {
-    if (modalState.type !== "vendor") {
-      return undefined;
-    }
-
-    let isActive = true;
-    setIsLoadingVendorAreaOptions(true);
-
-    getCommissionAreaOptionsRequest(debouncedVendorAreaSearch)
-      .then((options) => {
-        if (!isActive) {
-          return;
-        }
-
-        setVendorAreaOptions(
-          mergeSelectedOption(
-            options.map((option) => toOptionValue(option)),
-            vendorForm.areaId ? { value: vendorForm.areaId, label: vendorForm.areaName } : null,
-          ),
-        );
-      })
-      .catch(() => {
-        if (isActive) {
-          setVendorAreaOptions(
-            vendorForm.areaId ? [{ value: vendorForm.areaId, label: vendorForm.areaName }] : [],
-          );
-        }
-      })
-      .finally(() => {
-        if (isActive) {
-          setIsLoadingVendorAreaOptions(false);
-        }
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [debouncedVendorAreaSearch, modalState.type, vendorForm.areaId, vendorForm.areaName]);
-
-  useEffect(() => {
     if (modalState.type !== "area") {
       return undefined;
     }
@@ -303,12 +260,14 @@ export default function CommissionSettingsPage() {
     let isActive = true;
     setIsLoadingAreaOptions(true);
 
-    getCommissionAreaOptionsRequest(debouncedAreaSearch)
-      .then((options) => {
+    setAreaOptionsError("");
+    getCommissionAreaOptionsRequest(debouncedAreaSearch, { areaType, page: areaPage })
+      .then(({ items: options, pageInfo }) => {
         if (!isActive) {
           return;
         }
 
+        setAreaPageInfo(pageInfo);
         setAreaOptions(
           mergeSelectedOption(
             options.map((option) => toOptionValue(option)),
@@ -318,6 +277,8 @@ export default function CommissionSettingsPage() {
       })
       .catch(() => {
         if (isActive) {
+          setAreaOptionsError("Unable to load commission areas.");
+          setAreaPageInfo({});
           setAreaOptions(areaForm.areaId ? [{ value: areaForm.areaId, label: areaForm.areaName }] : []);
         }
       })
@@ -330,7 +291,7 @@ export default function CommissionSettingsPage() {
     return () => {
       isActive = false;
     };
-  }, [areaForm.areaId, areaForm.areaName, debouncedAreaSearch, modalState.type]);
+  }, [areaForm.areaId, areaForm.areaName, debouncedAreaSearch, modalState.type, areaType, areaPage]);
 
   function closeModal() {
     setModalState({ type: null, mode: "create", rowId: null });
@@ -365,6 +326,8 @@ export default function CommissionSettingsPage() {
   }
 
   function openAreaModal(mode, row = null) {
+    setAreaPage(1);
+    setAreaType("");
     setAreaForm(
       row
         ? {
@@ -394,16 +357,6 @@ export default function CommissionSettingsPage() {
         ...current,
         vendorId: value,
         vendorName: selectedOption?.label || "",
-      }));
-      return;
-    }
-
-    if (key === "areaId") {
-      const selectedOption = vendorAreaOptions.find((option) => option.value === value);
-      setVendorForm((current) => ({
-        ...current,
-        areaId: value,
-        areaName: selectedOption?.label || "",
       }));
       return;
     }
@@ -466,11 +419,11 @@ export default function CommissionSettingsPage() {
   }
 
   async function handleVendorSubmit() {
-    if (!vendorForm.vendorId || !vendorForm.areaId || !vendorForm.currentCommission.trim() || !vendorForm.effectiveFrom) {
+    if (!vendorForm.vendorId || !vendorForm.currentCommission.trim()) {
       await Swal.fire(commissionDialog({
         icon: "warning",
         title: "Missing details",
-        text: "Please select a vendor, area, commission rate, and effective start date.",
+        text: "Please select a vendor and commission rate.",
         confirmButtonColor: "#cf6e38",
       }));
       return;
@@ -514,11 +467,11 @@ export default function CommissionSettingsPage() {
   }
 
   async function handleAreaSubmit() {
-    if (!areaForm.areaId || !areaForm.commissionRate.trim() || !areaForm.effectiveFrom) {
+    if (!areaForm.areaId || !areaForm.commissionRate.trim()) {
       await Swal.fire(commissionDialog({
         icon: "warning",
         title: "Missing details",
-        text: "Please select an area, commission rate, and effective start date.",
+        text: "Please select an area and commission rate.",
         confirmButtonColor: "#cf6e38",
       }));
       return;
@@ -679,19 +632,12 @@ export default function CommissionSettingsPage() {
                 ? cmt("Vendor is locked for existing commission overrides.")
                 : cmt("Search and choose the vendor to override."),
           },
-          {
+          ...(modalState.mode === "edit" && vendorForm.areaId ? [{
             key: "areaId",
-            label: "Area",
-            value: vendorForm.areaId,
-            type: "search-select",
-            placeholder: "Select area",
-            searchPlaceholder: "Search delivery area",
-            searchValue: vendorForm.areaSearch,
-            onSearchChange: (value) => setVendorForm((current) => ({ ...current, areaSearch: value })),
-            options: vendorAreaOptions,
-            isLoadingOptions: isLoadingVendorAreaOptions,
-            helperText: "Choose the area where this vendor override applies.",
-          },
+            label: "Legacy area",
+            value: vendorForm.areaName,
+            readOnly: true,
+          }] : []),
           {
             key: "currentCommission",
             label: "Commission Rate",
@@ -704,7 +650,7 @@ export default function CommissionSettingsPage() {
             label: "Effective From",
             type: "datetime-local",
             value: vendorForm.effectiveFrom,
-            helperText: "Required. This override becomes active from this date and time.",
+            helperText: "Optional. Leave blank to apply immediately.",
           },
           {
             key: "effectiveTo",
@@ -726,6 +672,17 @@ export default function CommissionSettingsPage() {
       <CommissionModal
         fields={[
           {
+            key: "areaType",
+            label: "Area type",
+            type: "select",
+            value: areaType,
+            disabled: modalState.mode === "edit",
+            options: [
+              { value: "", label: cmt("All area types") },
+              ...["REGION", "COUNTY", "MUNICIPALITY", "CITY", "POSTAL_CLUSTER"].map((value) => ({ value, label: cmt(value) })),
+            ],
+          },
+          {
             key: "areaId",
             label: "Area",
             value: areaForm.areaId,
@@ -733,9 +690,12 @@ export default function CommissionSettingsPage() {
             placeholder: "Select area",
             searchPlaceholder: "Search area or region",
             searchValue: areaForm.areaSearch,
-            onSearchChange: (value) => setAreaForm((current) => ({ ...current, areaSearch: value })),
+            onSearchChange: (value) => { setAreaPage(1); setAreaForm((current) => ({ ...current, areaSearch: value })); },
             options: areaOptions,
             isLoadingOptions: isLoadingAreaOptions,
+            error: areaOptionsError,
+            pageInfo: areaPageInfo,
+            onPageChange: setAreaPage,
             disabled: modalState.mode === "edit",
             helperText:
               modalState.mode === "edit"
@@ -754,7 +714,7 @@ export default function CommissionSettingsPage() {
             label: "Effective From",
             type: "datetime-local",
             value: areaForm.effectiveFrom,
-            helperText: "Required. This override becomes active from this date and time.",
+            helperText: "Optional. Leave blank to apply immediately.",
           },
           {
             key: "effectiveTo",
@@ -766,7 +726,13 @@ export default function CommissionSettingsPage() {
         ]}
         isOpen={modalState.type === "area"}
         isSubmitting={isSubmittingArea}
-        onChange={handleAreaChange}
+        onChange={(key, value) => {
+          if (key === "areaType") {
+            setAreaType(value);
+            setAreaPage(1);
+            setAreaForm((current) => ({ ...current, areaId: "", areaName: "" }));
+          } else handleAreaChange(key, value);
+        }}
         onClose={closeModal}
         onSubmit={handleAreaSubmit}
         submitLabel={modalState.mode === "edit" ? cmt("Save Area Commission") : cmt("Add Area Commission")}

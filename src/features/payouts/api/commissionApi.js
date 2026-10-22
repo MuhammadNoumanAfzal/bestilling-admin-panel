@@ -13,6 +13,16 @@ import {
 } from "./commissionQueries.js";
 
 function getErrorMessage(result, fallbackMessage) {
+  const messages = {
+    invalid_rate: "Commission must be between 0 and 100.",
+    invalid_effective_window: "The end date must be after the start date.",
+    overlapping_effective_dates: "An active commission already overlaps these dates.",
+    not_found: "The selected vendor or area was not found.",
+    invalid_area_type: "Please select a valid area type.",
+    invalid_parent: "The selected parent area is invalid.",
+  };
+  const code = result?.errors?.find((item) => messages[item?.code])?.code;
+  if (code) return messages[code];
   const firstError = result?.errors?.find((item) => item?.message)?.message;
   return firstError || result?.message || fallbackMessage;
 }
@@ -71,7 +81,9 @@ function normalizeOptionArea(area) {
 
   return {
     id: area.id,
-    label: area.name || "Unnamed area",
+    label: [area.name || "Unnamed area", area.parentArea?.name].filter(Boolean).join(" / "),
+    areaType: area.areaType || "",
+    coverage: area.coverage || null,
     region: area.region || "",
     activeVendorsCount: Number(area.activeVendorsCount ?? 0),
     orderSharePercent: Number(area.orderSharePercent ?? 0),
@@ -119,7 +131,7 @@ function normalizeCommissionSettings(payload) {
             vendorId: row?.vendor?.id || "",
             vendor: row?.vendor?.name || "Unnamed vendor",
             areaId: row?.area?.id || "",
-            area: row?.area?.name || "Unassigned area",
+            area: row?.area?.name || "All delivery areas",
             currentCommission: formatPercentDisplay(row?.rate),
             rawRate: `${row?.rate ?? ""}`,
             avatar: toInitials(row?.vendor?.name),
@@ -200,14 +212,20 @@ export async function getCommissionVendorOptionsRequest(search = "") {
     : [];
 }
 
-export async function getCommissionAreaOptionsRequest(search = "") {
+export async function getCommissionAreaOptionsRequest(search = "", { areaType = "", page = 1 } = {}) {
   const data = await executeProtectedGraphqlRequest(COMMISSION_AREA_OPTIONS_QUERY, {
     search: search.trim() || null,
+    areaType: areaType || null,
+    page,
+    pageSize: 50,
   });
 
-  return Array.isArray(data?.commissionAreaOptions)
-    ? data.commissionAreaOptions.map(normalizeOptionArea).filter(Boolean)
-    : [];
+  const result = data?.commissionAreaOptionsPage;
+  if (!result) throw new Error("Unable to load commission areas.");
+  return {
+    items: (result.items || []).map(normalizeOptionArea).filter(Boolean),
+    pageInfo: result.pageInfo || {},
+  };
 }
 
 export async function updateGlobalCommissionRequest(input) {
@@ -233,7 +251,7 @@ export async function createVendorCommissionRequest(input) {
   const data = await executeProtectedGraphqlRequest(CREATE_VENDOR_COMMISSION_MUTATION, {
     input: {
       vendorId: input?.vendorId || null,
-      areaId: input?.areaId || null,
+      areaId: null,
       rate: parseRate(input?.currentCommission),
       effectiveFrom: parseDateTimeOrNull(input?.effectiveFrom),
       effectiveTo: parseDateTimeOrNull(input?.effectiveTo),

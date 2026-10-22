@@ -28,7 +28,7 @@ function MobileVendorCommissionCard({ row, onDelete, onEdit }) {
         <VendorAvatar label={row.avatar} src={row.avatarUrl} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-bold text-[#18120f]">{row.vendor}</p>
-          <p className="mt-1 text-[12px] text-[#7d7068]">{row.area}</p>
+          <p className="mt-1 text-[12px] text-[#7d7068]">{cmt(row.area)}</p>
         </div>
       </div>
 
@@ -154,7 +154,7 @@ export default function VendorCommissionCard({ onAdd, onDelete, onEdit, rows }) 
                       <span className="truncate text-[15px] font-bold text-[#18120f]">{row.vendor}</span>
                     </div>
                   </td>
-                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{row.area}</td>
+                  <td className="px-3 py-4 text-[15px] font-medium text-[#18120f]">{cmt(row.area)}</td>
                   <td className="px-3 py-4 text-[15px] font-semibold text-[#18120f]">{row.currentCommission}</td>
                   <td className="px-3 py-4 text-right">
                     <div className="inline-flex items-center gap-1">

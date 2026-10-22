@@ -919,6 +919,7 @@ function normalizeCommissionPreview(preview) {
   return {
     orderId: preview.orderId || "",
     appliedRuleType: preview.appliedRuleType || "Not available",
+    appliedRuleSource: preview.appliedRuleSource || preview.appliedRuleType || "Not available",
     appliedRuleId: preview.appliedRuleId || "",
     appliedRuleLabel: preview.appliedRuleLabel || "Not available",
     commissionModel: preview.commissionModel || "Not available",

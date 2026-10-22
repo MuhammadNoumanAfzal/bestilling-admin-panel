@@ -258,104 +258,13 @@ function resolvePreferredMoneyLabel(primaryValue, fallbackValue, defaultValue = 
 
 const formatComputedMoney = formatMoney;
 
-function resolveConfiguredCommissionRate(commissionSettings, vendorId) {
-  const vendorRule = commissionSettings?.vendorRows?.find(
-    (row) => `${row?.vendorId || ""}` === `${vendorId || ""}`,
-  );
-  const rawRate = vendorRule?.rawRate ?? commissionSettings?.globalSettings?.rawRate;
-  const rate = Number(`${rawRate ?? ""}`.replace(/[^\d.-]/g, ""));
-
-  return Number.isFinite(rate) && rate > 0 ? rate : 0;
+// Historical commissions and summary amounts are server-owned snapshots.
+export function applyCommissionDisplayFallback(record) {
+  return record;
 }
 
-function applyCommissionFallback(financials, vendorId, commissionSettings) {
-  const grossAmount = parseMoneyAmount(financials?.orderAmount);
-  const storedCommission = parseMoneyAmount(financials?.platformCommission);
-  const rate = resolveConfiguredCommissionRate(commissionSettings, vendorId);
-
-  if (!Number.isFinite(grossAmount) || grossAmount <= 0 || storedCommission > 0 || rate <= 0) {
-    return financials;
-  }
-
-  const currency = `${financials?.orderAmount || ""}`.match(/^[A-Z]{3}/)?.[0] || "NOK";
-  const commission = Math.min(grossAmount, (grossAmount * rate) / 100);
-  const vendorAmount = parseMoneyAmount(financials?.vendorAmount);
-  const shouldUpdateVendorAmount = !Number.isFinite(vendorAmount) || Math.abs(vendorAmount - grossAmount) < 0.01;
-
-  return {
-    ...financials,
-    platformCommission: formatComputedMoney(commission, currency),
-    vendorAmount: shouldUpdateVendorAmount
-      ? formatComputedMoney(Math.max(grossAmount - commission, 0), currency)
-      : financials.vendorAmount,
-  };
-}
-
-// Legacy invoices may not have a locked commission snapshot. Display the active
-// vendor rule first, then the platform default, without replacing saved amounts.
-export function applyCommissionDisplayFallback(record, commissionSettings) {
-  if (!record || !commissionSettings) {
-    return record;
-  }
-
-  if (record.financials) {
-    return {
-      ...record,
-      financials: applyCommissionFallback(record.financials, record.vendor?.id, commissionSettings),
-    };
-  }
-
-  const financials = applyCommissionFallback(
-    {
-      orderAmount: record.orderAmount,
-      platformCommission: record.platformCommission,
-      vendorAmount: record.vendorAmount,
-    },
-    record.vendorId,
-    commissionSettings,
-  );
-
-  return { ...record, ...financials };
-}
-
-export function applyCommissionDisplayFallbackToPaymentList(result, commissionSettings) {
-  if (!result || !commissionSettings) {
-    return result;
-  }
-
-  const rows = (result.rows || []).map((row) =>
-    applyCommissionDisplayFallback(row, commissionSettings),
-  );
-  const commissionTotal = rows.reduce(
-    (total, row) => total + (parseMoneyAmount(row.platformCommission) || 0),
-    0,
-  );
-
-  const summaryCards = result.summaryCards || [];
-  const totalRevenue = parseMoneyAmount(summaryCards.find((card) => card.id === "total")?.value);
-  const completedPayouts = parseMoneyAmount(summaryCards.find((card) => card.id === "completed")?.value) || 0;
-  const activeCommission = commissionTotal > 0
-    ? commissionTotal
-    : parseMoneyAmount(summaryCards.find((card) => card.id === "commission")?.value) || 0;
-  const computedPendingPayouts = Number.isFinite(totalRevenue)
-    ? Math.max(totalRevenue - activeCommission - completedPayouts, 0)
-    : Number.NaN;
-
-  return {
-    ...result,
-    rows,
-    summaryCards: summaryCards.map((card) => {
-      if (card.id === "commission" && activeCommission > 0) {
-        return { ...card, value: formatComputedMoney(activeCommission) };
-      }
-
-      if (card.id === "pending" && Number.isFinite(computedPendingPayouts)) {
-        return { ...card, value: formatComputedMoney(computedPendingPayouts) };
-      }
-
-      return card;
-    }),
-  };
+export function applyCommissionDisplayFallbackToPaymentList(result) {
+  return result;
 }
 
 function resolveVendorReceivesLabel({

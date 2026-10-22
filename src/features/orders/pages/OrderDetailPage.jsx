@@ -96,6 +96,7 @@ function CommissionPreviewCard({ preview }) {
 
   const rows = [
     { label: "Applied Rule", value: ot(preview.appliedRuleLabel) },
+    { label: "Rule Source", value: ot(preview.appliedRuleSource) },
     { label: "Commission Rate", value: preview.ratePercent },
     { label: "Total Commission", value: preview.totalCommission },
     { label: "Vendor Payable", value: preview.vendorPayable },

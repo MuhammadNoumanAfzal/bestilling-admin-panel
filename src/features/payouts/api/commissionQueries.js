@@ -63,13 +63,18 @@ export const COMMISSION_VENDOR_OPTIONS_QUERY = `
 `;
 
 export const COMMISSION_AREA_OPTIONS_QUERY = `
-  query CommissionAreaOptions($search: String) {
-    commissionAreaOptions(search: $search) {
-      id
-      name
-      region
-      activeVendorsCount
-      orderSharePercent
+  query CommissionAreaOptions($search: String, $areaType: String, $page: Int, $pageSize: Int) {
+    commissionAreaOptionsPage(search: $search, areaType: $areaType, page: $page, pageSize: $pageSize) {
+      items {
+        id
+        name
+        region
+        areaType
+        parentArea { id name areaType }
+        coverage { postalCodeCount postalCodes childAreaCount }
+        activeVendorsCount
+      }
+      pageInfo { page pageSize totalItems totalPages hasNextPage hasPreviousPage }
     }
   }
 `;

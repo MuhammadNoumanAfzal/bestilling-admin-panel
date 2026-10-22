@@ -1,4 +1,9 @@
 export default {
+  "Rule Source": "Regelkilde",
+  "VENDOR_OVERRIDE": "Leverandørregel",
+  "VENDOR_AREA_OVERRIDE": "Leverandør- og områderegel",
+  "AREA_OVERRIDE": "Områderegel",
+  "GLOBAL_DEFAULT": "Global standard",
   "% share": "% andel",
   "Accepted": "Akseptert",
   "Action failed": "Handlingen mislyktes",

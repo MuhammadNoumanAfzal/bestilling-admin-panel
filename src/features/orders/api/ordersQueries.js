@@ -705,6 +705,7 @@ export const COMMISSION_PREVIEW_FOR_ORDER_QUERY = `
     commissionPreviewForOrder(orderId: $orderId) {
       orderId
       appliedRuleType
+      appliedRuleSource
       appliedRuleId
       appliedRuleLabel
       commissionModel

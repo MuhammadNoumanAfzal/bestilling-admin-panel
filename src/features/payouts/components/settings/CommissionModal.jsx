@@ -91,8 +91,9 @@ export default function CommissionModal({
                       <p className="min-h-[18px] text-[11px] text-[#8e7f75]">
                         {field.isLoadingOptions
                           ? cmt("Loading options...")
-                          : cmt(field.helperText) ||
-                            (field.options.length === 0 ? cmt("No matching options found.") : "")}
+                          : field.error ? ""
+                          : field.options.length === 0 ? cmt("No matching options found.")
+                          : cmt(field.helperText)}
                       </p>
                       {field.error ? <p role="alert" className="text-sm text-red-700">{cmt(field.error)}</p> : null}
                       {field.pageInfo?.totalPages > 1 ? (
